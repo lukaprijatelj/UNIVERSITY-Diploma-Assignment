@@ -1,0 +1,48 @@
+.clickable
+{
+    cursor: pointer;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; 
+}
+
+.hidden
+{
+    display: none !important; 
+    opacity: 0 !important;
+}
+
+.visible
+{
+    display: block;
+}
+
+.button
+{
+    text-align: center;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.button.dark
+{
+    color: white;
+    background: black;
+    border-style: solid;
+    border-width: 2px;
+    border-color: black;
+}
+.button.dark:hover
+{
+    background: transparent;
+    color: black;
+}
+
+.center-align-block
+{
+    margin-left: auto;
+    margin-right: auto;
+}
