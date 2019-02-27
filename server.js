@@ -56,7 +56,7 @@ var SERVER =
     fileNotFound: function(request, response)
     {
         response.status(404);
-        response.send('File was not found!');
+        response.send('Page was not found!');
     },
 
     getIndexFile: function(request, response)
