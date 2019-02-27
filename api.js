@@ -1,4 +1,4 @@
-var multer  = require('multer');
+var multer = require('multer');
 var upload = multer({ dest: 'uploads/' });
 
 var API =
