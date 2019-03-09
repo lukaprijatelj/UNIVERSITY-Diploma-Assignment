@@ -1,21 +1,29 @@
-var multer = require('multer');
-var upload = multer({ dest: 'uploads/' });
+var upload = require('./upload.js');
+var DBLogic = require('./DBLogic.js');
+
 
 var API =
 {
-    init: function(baseUrl, app)
-    {
-        baseUrl = baseUrl + 'api/uploadScene';
+	baseUrl: '/api/',
 
+	upload: null,
+
+    init: function(app)
+    {
         // mutiple callbacks separated with comma.
         // first upload.single parses file and saves it into request.file
-        app.post(baseUrl + '', upload.single('fileneki'), API.uploadScene);
+        app.post(API.baseUrl + 'uploadScene', upload.single('fileneki'), API.uploadScene);
     },
 
     uploadScene: function(request, response)
     {
-        var scene = request.param('scene');
-        response.send('Scene was uploaded!');
+		var filename = request.file.filename;
+		var path = request.file.path;
+		
+		DBLogic.addUploadedFile(filename, path, function()
+		{
+			response.send('Scene was uploaded!');
+		});
     }
 };
 
