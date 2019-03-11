@@ -5,6 +5,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+
+
 var url = require('url');
 var fs = require('fs');
 
@@ -14,6 +16,7 @@ var DBLogic = require('./DBLogic.js');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
+var clientRouter = require('./routes/client');
 
 var app = express();
 
@@ -53,6 +56,7 @@ var EXPRESS_APP =
 		// routes
 		app.use('/', indexRouter);
 		app.use('/upload', usersRouter);
+		app.use('/client', clientRouter);
 
 		API.init(app);
 

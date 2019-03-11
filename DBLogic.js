@@ -10,7 +10,7 @@ var DBLogic =
 
 	init: function()
 	{
-		MongoClient.connect(DBLogic.url, DBLogic.onDatabaseConnected);
+		MongoClient.connect(DBLogic.url, { useNewUrlParser: true }, DBLogic.onDatabaseConnected);
 	},
 
 	onDatabaseConnected: function(err, db)
@@ -22,7 +22,7 @@ var DBLogic =
 
         DBLogic.database = db.db("distributedOnlineRenderingDB");        
 
-        console.log("Database connected!");
+        console.log("DBLogic - Database connected!");
 	},
 	
 	addUploadedFile: function(filename, path, callback)
@@ -42,7 +42,21 @@ var DBLogic =
         var usersCollection = DBLogic.database.collection('uploadedFilesCollection');
 
         usersCollection.find({}).toArray(callback);
-    },
+	},
+	
+	addRenderClient: function(name, ipAddress)
+	{
+		var renderClientsCllection = DBLogic.database.collection('renderClientsCllection');
+        var clientEntry =
+        {
+            name: name,
+			ipAddress: ipAddress
+        };
+
+        renderClientsCllection.insertOne(clientEntry, callback);
+	},
+
+	
 
 };
 
