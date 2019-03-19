@@ -6,32 +6,66 @@ var socketIo = io.listen(80);
 
 var API =
 {
+	/**
+	 * Base url API access.
+	 */
 	baseUrl: '/api/',
 
-	upload: null,
 
     init: function(app)
     {
         // mutiple callbacks separated with comma.
         // first upload.single parses file and saves it into request.file
-		app.post(API.baseUrl + 'uploadScene', upload.single('fileneki'), API.uploadScene);
+		app.post(API.baseUrl + 'uploadScene', upload.single('fileneki'), API.onUploadScene);
 		
-		socketIo.on('connection', API.onClientConnect);
+		socketIo.on('connection', API.onConnect);
 	},
+
 	
-	onClientConnect: function(socket)
+	/**
+	 * New client has connected via socket IO.
+	 */
+	onConnect: function(socket)
 	{
-		// user has connected with socket.io
+		console.log('New client has connected');
 
-		console.log('a user connected');
+		var sessionId = socket.id;
+		var ipAddress = socket.handshake.address;
+		var renderProgress = 0;
 
-		socket.on('chat message', function(msg)
-		{
-			console.log('message: ' + msg);
-		});
+		DBLogic.addRenderClient(sessionId, ipAddress, renderProgress);
+
+		socket.on('renderProgress', API.onRenderProgress);		
+		socket.on('disconnect', API.onDisconnect);
 	},
 
-    uploadScene: function(request, response)
+	/**
+	 * One of the clients has disconnected.
+	 */
+	onDisconnect: function()
+	{
+		var socket = this;
+		var sessionId = socket.id;
+
+		DBLogic.removeRenderClient(sessionId);
+
+		console.log("Client has disconnected!");
+	},
+
+	/**
+	 * Updates render progress of certain client.
+	 */
+	onRenderProgress: function(progress)
+	{
+		var socket = this;
+
+		console.log('message: ' + progress);
+	},
+
+	/**
+	 * Catches users scene and saves it to local storage.
+	 */
+    onUploadScene: function(request, response)
     {
 		var filename = request.file.filename;
 		var path = request.file.path;

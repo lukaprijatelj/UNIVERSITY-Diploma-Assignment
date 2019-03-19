@@ -1,13 +1,13 @@
-var GLOBALS = 
+var UPLOAD = 
 {
     /**
      * Main initialize function.
      */
     init: function()
     {
-        document.querySelector('#upload-button-container .button').onclick = GLOBALS.onUploadButtonClick;
+        document.querySelector('#upload-button-container .button').onclick = UPLOAD.onUploadButtonClick;
 
-        document.getElementById('upload-file-input').onchange = GLOBALS.onFileUploadChange;
+        document.getElementById('upload-file-input').onchange = UPLOAD.onFileUploadChange;
     },
 
     /**
