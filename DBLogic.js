@@ -115,6 +115,29 @@ var DBLogic =
         };
 
         renderClientsCllection.deleteOne(clientEntry, callback);
+	},
+
+	/**
+	 * Updates render progress of the client entry.
+	 */
+	updateProgress: function(sessionId, renderProgress, callback)
+	{
+		if (DBLogic.isConnected == false)
+		{
+			return;
+		}	
+
+		var renderClientsCllection = DBLogic.database.collection('renderClientsCllection');
+		var clientEntry =
+        {
+            sessionId: sessionId
+        };
+        var updateData =
+        {
+			renderProgress: renderProgress
+        };
+
+        renderClientsCllection.updateOne(clientEntry, { $set: updateData }, callback);
 	}
 	
 

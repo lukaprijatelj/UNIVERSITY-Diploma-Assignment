@@ -35,7 +35,7 @@ var API =
 
 		DBLogic.addRenderClient(sessionId, ipAddress, renderProgress);
 
-		socket.on('renderProgress', API.onRenderProgress);		
+		socket.on('progressUpdate', API.onProgressUpdate);		
 		socket.on('disconnect', API.onDisconnect);
 	},
 
@@ -55,9 +55,12 @@ var API =
 	/**
 	 * Updates render progress of certain client.
 	 */
-	onRenderProgress: function(progress)
+	onProgressUpdate: function(progress)
 	{
 		var socket = this;
+		var sessionId = socket.id;
+
+		DBLogic.updateProgress(sessionId, progress);
 
 		console.log('message: ' + progress);
 	},

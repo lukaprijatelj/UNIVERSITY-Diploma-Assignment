@@ -1,32 +1,47 @@
-var socketIo = io('http://localhost:80/', { reconnect: true });
-
 var CLIENT =
 {
+	/**
+	 * Is client connected to server.
+	 */
 	isConnected: false,
+
+	/**
+	 * Socket io instance.
+	 */
+	io: null,
+
 
 	init: function()
 	{
-		socketIo.on('connect', function() 
-		{
-			CLIENT.isConnected = true;
+		CLIENT.io = io('http://localhost:80/', { reconnect: true });
 
-			console.log('Connected!');
+		CLIENT.io.on('connect', CLIENT.onConnect);
+	},
 
-			CLIENT.notifyRenderProgress(100);
-		});
+
+	/**
+	 * On server-client connection.
+	 */
+	onConnect: function()
+	{
+		CLIENT.isConnected = true;
+
+		console.log('Connected!');
+
+		CLIENT.notifyProgressUpdate(100);
 	},
 
 	/**
 	 * Notifies server how much has client already rendered.
 	 */
-	notifyRenderProgress: function(value)
+	notifyProgressUpdate: function(value)
 	{
 		if (typeof value === 'undefined')
 		{
 			return;
 		}
 
-		socketIo.emit('renderProgress', value.toString());
+		CLIENT.io.emit('progressUpdate', value.toString());
 	}
 };
 
