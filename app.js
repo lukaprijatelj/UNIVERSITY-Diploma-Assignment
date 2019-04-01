@@ -4,9 +4,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
-
-
 var url = require('url');
 var fs = require('fs');
 
@@ -41,8 +38,6 @@ var EXPRESS_APP =
 
 	init: function()
 	{
-		DBLogic.init();
-
 		// view engine setup
 		app.set('views', path.join(__dirname, 'views'));
 		app.set('view engine', 'ejs');
@@ -65,9 +60,24 @@ var EXPRESS_APP =
 
 		// error handler
 		app.use(EXPRESS_APP.errorHandler);
+
+		/*for(var i=0; i<10; i++)
+		{
+			for (var j=0; j<10; j++)
+			{
+				var width = 192;
+				var height = 108;
+				var sessionId = 1;
+				var row = i;
+				var progress = 0;
+
+				DBLogic.addGridLayout(width, height, sessionId, row, progress, function() {});
+			}
+		}*/
+		
 	}
 };
 
-EXPRESS_APP.init();
+DBLogic.init(EXPRESS_APP.init);
 
 module.exports = app;

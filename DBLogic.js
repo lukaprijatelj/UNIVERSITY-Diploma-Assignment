@@ -20,9 +20,15 @@ var DBLogic =
 	isConnected: false,
 
 
-	init: function()
+	init: function(callback)
 	{
-		MongoClient.connect(DBLogic.url, { useNewUrlParser: true }, DBLogic.onDatabaseConnected);
+		callback = callback ? callback : function() {};
+
+		MongoClient.connect(DBLogic.url, { useNewUrlParser: true }, function(err, db)
+		{
+			DBLogic.onDatabaseConnected(err, db);
+			callback();
+		});		
 	},
 
 
@@ -80,22 +86,22 @@ var DBLogic =
 	/**
 	 * Adds render client.
 	 */
-	addRenderClient: function(sessionId, ipAddress, renderProgress, callback)
+	addRenderClient: function(sessionId, ipAddress, active, callback)
 	{
 		if (DBLogic.isConnected == false)
 		{
 			return;
 		}		
 
-		var renderClientsCllection = DBLogic.database.collection('renderClientsCllection');
+		var renderingClientsCollection = DBLogic.database.collection('renderingClientsCollection');
         var clientEntry =
         {
             sessionId: sessionId,
 			ipAddress: ipAddress,
-			renderProgress: renderProgress
+			active: active
         };
 
-        renderClientsCllection.insertOne(clientEntry, callback);
+        renderingClientsCollection.insertOne(clientEntry, callback);
 	},
 
 	/**
@@ -108,13 +114,45 @@ var DBLogic =
 			return;
 		}	
 
-		var renderClientsCllection = DBLogic.database.collection('renderClientsCllection');
+		var renderingClientsCollection = DBLogic.database.collection('renderingClientsCollection');
         var clientEntry =
         {
             sessionId: sessionId
         };
 
-        renderClientsCllection.deleteOne(clientEntry, callback);
+        renderingClientsCollection.deleteOne(clientEntry, callback);
+	},
+
+	addGridLayout: function(width, height, sessionId, row, progress, callback)
+	{
+		if (DBLogic.isConnected == false)
+		{
+			return;
+		}	
+
+		var gridLayoutCollection = DBLogic.database.collection('gridLayoutCollection');
+        var clientEntry =
+        {
+			width: width,
+			height: height,
+			row: row,
+            sessionId: sessionId,
+			progress: progress
+        };
+
+        gridLayoutCollection.insertOne(clientEntry, callback);
+	},
+
+	getGridLayouts: function(callback)
+	{
+		if (DBLogic.isConnected == false)
+		{
+			return;
+		}	
+
+		var gridLayoutCollection = DBLogic.database.collection('gridLayoutCollection');
+
+        gridLayoutCollection.find({}).toArray(callback);
 	},
 
 	/**
@@ -127,7 +165,7 @@ var DBLogic =
 			return;
 		}	
 
-		var renderClientsCllection = DBLogic.database.collection('renderClientsCllection');
+		var activeRenderingClients = DBLogic.database.collection('activeRenderingClients');
 		var clientEntry =
         {
             sessionId: sessionId
@@ -137,7 +175,7 @@ var DBLogic =
 			renderProgress: renderProgress
         };
 
-        renderClientsCllection.updateOne(clientEntry, { $set: updateData }, callback);
+        activeRenderingClients.updateOne(clientEntry, { $set: updateData }, callback);
 	}
 	
 

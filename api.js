@@ -9,14 +9,16 @@ var API =
 	/**
 	 * Base url API access.
 	 */
-	baseUrl: '/api/',
+	baseUrl: '/api',
 
 
     init: function(app)
     {
-        // mutiple callbacks separated with comma.
+        // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
-		app.post(API.baseUrl + 'uploadScene', upload.single('fileneki'), API.onUploadScene);
+		app.post(API.baseUrl + '/uploadScene', upload.single('fileneki'), API.onUploadScene);
+
+		app.post(API.baseUrl + '/downloadScene', API.onDownloadScene);
 		
 		socketIo.on('connection', API.onConnect);
 	},
@@ -27,13 +29,15 @@ var API =
 	 */
 	onConnect: function(socket)
 	{
-		console.log('New client has connected');
+		console.log('New client has connected!');
 
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
-		var renderProgress = 0;
 
-		DBLogic.addRenderClient(sessionId, ipAddress, renderProgress);
+		DBLogic.addRenderClient(sessionId, ipAddress, false);
+		DBLogic.getGridLayouts(function(err, result) {
+			socketIo.to(`${sessionId}`).emit('gridLayouts', result);
+		});
 
 		socket.on('progressUpdate', API.onProgressUpdate);		
 		socket.on('disconnect', API.onDisconnect);
@@ -77,7 +81,15 @@ var API =
 		{
 			response.send('Scene was uploaded!');
 		});
-    }
+	},
+	
+	/**
+	 * Retrieves scene for the client.
+	 */
+	onDownloadScene: function()
+	{
+
+	}
 };
 
 module.exports = API;

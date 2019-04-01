@@ -1,0 +1,20 @@
+br 
+{
+	height: 0px;
+	line-height: 0px;
+}
+
+#grid-layout
+{
+	position: absolute;
+    white-space: nowrap;
+}
+
+.render-cell
+{
+	display:inline-block;
+	border-style: solid;
+	border-color: black;
+	border-width: 1px;
+	text-align: center;
+}

@@ -2,12 +2,18 @@ var multer = require('multer');
 
 var STORAGE = multer.diskStorage(
 {
+	/**
+	 * Sets destination where files will be stored.
+	 */
 	destination: function (req, file, cb) 
 	{
 		// saves files to uploads folder
-		cb(null, 'uploads/');
+		cb(null, 'fileUploads/');
 	},
 
+	/**
+	 * Sets filename for uploaded file.
+	 */
 	filename: function (req, file, cb) 
 	{
 		var extension = '';
