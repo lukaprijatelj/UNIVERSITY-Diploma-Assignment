@@ -61,12 +61,12 @@ var EXPRESS_APP =
 		// error handler
 		app.use(EXPRESS_APP.errorHandler);
 
-		/*for(var i=0; i<10; i++)
+		/*for(var i=0; i<5; i++)
 		{
-			for (var j=0; j<10; j++)
+			for (var j=0; j<5; j++)
 			{
-				var width = 192;
-				var height = 108;
+				var width = 384;
+				var height = 216;
 				var sessionId = 1;
 				var row = i;
 				var progress = 0;

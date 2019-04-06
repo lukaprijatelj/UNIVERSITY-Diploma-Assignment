@@ -1,3 +1,18 @@
+var loader = new THREE.GLTFLoader();
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 20000 );
+
+var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor( 0xC5C5C3 );
+ // Load the Orbitcontroller
+ var controls = new THREE.OrbitControls( camera, renderer.domElement ); 
+	
+ var ambientLight = new THREE.AmbientLight( 0xcccccc );
+scene.add( ambientLight );
+
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
 
 var RENDERER =
 {
@@ -16,6 +31,51 @@ var RENDERER =
 	{
 		RENDERER.io = io('http://localhost:80/', { reconnect: true });
 
+		// Load a glTF resource
+		loader.load(
+			// resource URL
+			'fileUploads/Scene.gltf',
+			// called when the resource is loaded
+			function ( gltf ) {
+
+				scene.add( gltf.scene );
+
+				gltf.animations; // Array<THREE.AnimationClip>
+				gltf.scene; // THREE.Scene
+				gltf.scenes; // Array<THREE.Scene>
+				gltf.cameras; // Array<THREE.Camera>
+				gltf.asset; // Object
+
+				camera.position.z = 5;
+				camera.position.y = 1;
+
+				var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+var material = new THREE.MeshBasicMaterial( { color: 'red' } );
+var cube = new THREE.Mesh( geometry, material );
+scene.add( cube );
+
+				function animate() {
+					requestAnimationFrame( animate );
+					renderer.render( scene, camera );
+				}
+				animate();
+
+			},
+			// called while loading is progressing
+			function ( xhr ) {
+
+				console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+				
+
+				
+			},
+			// called when loading has errors
+			function ( error ) {
+
+				console.log( 'An error happened' );
+
+			}
+		);
 		
 		RENDERER.io.on('connect', RENDERER.onServerConnected);
 	},
@@ -50,7 +110,15 @@ var RENDERER =
 				gridLayout.innerHTML += '<br>';
 			}
 
-			gridLayout.innerHTML += '<div class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>';
+			if (i == 6)
+			{
+				gridLayout.innerHTML += '<canvas class="render-cell active" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></canvas>';
+			}
+			else
+			{
+				gridLayout.innerHTML += '<div class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>';
+			}
+			
 		}
 	},
 
