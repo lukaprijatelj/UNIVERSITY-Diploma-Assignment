@@ -105,7 +105,6 @@ var RENDERER =
 		var ctx = c.getContext("2d");
 		var imgData = ctx.createImageData(384, 216);
 
-
 		var newCell = 384*216*4;
 
 		// must invert colors by X axis
@@ -122,52 +121,10 @@ var RENDERER =
 
 					cell++;
 					newCell++;
-
-					/*var red = pixelValues[j];
-					j++;
-		
-					var g = pixelValues[j];
-					j++;
-		
-					var b = pixelValues[j];
-					j++;
-		
-					var a = pixelValues[j];
-					j++;
-		
-					imgData.data[r] = red;
-					r++;
-		
-					imgData.data[r] = g;
-					r++;
-		
-					imgData.data[r] = b;
-					r++;
-					
-					imgData.data[r] = a;
-					r++;	*/
 				}
 			}
 			newCell -= (384*4*2);		
 		}
-
-
-/*
-		for (var i=0; i<imgData.data.length;)
-		{
-			imgData.data[i] = pixelValues[i];
-			i++;
-			
-			imgData.data[i] = pixelValues[i];
-			i++;
-
-			imgData.data[i] = pixelValues[i];
-			i++;
-
-			imgData.data[i] = pixelValues[i];
-			i++;
-		}
-		*/
 
 		ctx.putImageData(imgData, 0,0);
 	},
