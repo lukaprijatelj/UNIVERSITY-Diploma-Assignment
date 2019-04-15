@@ -1,5 +1,5 @@
 
-var classes = require('./classes.js');
+var  = require('./classes.js');
 
 
 var DATABASE =
