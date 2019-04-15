@@ -1,64 +1,31 @@
-var MongoClient = require('mongodb').MongoClient;
-var ObjectId = require('mongodb').ObjectID;
+
+var classes = require('./classes.js');
 
 
-var DBLogic =
+var DATABASE =
 {
-	/**
-	 * Database instance.
-	 */
-	database: null,
+	root: 'database/',
 
-	/**
-	 * Database url.
-	 */
-	url: 'mongodb://localhost:27017/distributedOnlineRenderingDB',
-
-	/**
-	 * Is database connected.
-	 */
-	isConnected: false,
-
-
-	init: function(callback)
+	init: function()
 	{
-		callback = callback ? callback : function() {};
+		var tablesRoot = DATABASE.root + "tables/";
+		var tabel = new classes.database.CustomTable(tablesRoot, 'morskaRibica');
 
-		MongoClient.connect(DBLogic.url, { useNewUrlParser: true }, function(err, db)
-		{
-			DBLogic.onDatabaseConnected(err, db);
-			callback();
-		});		
-	},
-
-
-	/**
-	 * Connection with database was successfully established.
-	 */
-	onDatabaseConnected: function(err, db)
-    {
-        if (err)
-        {
-            throw err;
-        } 
-
-		DBLogic.database = db.db("distributedOnlineRenderingDB");    
-		DBLogic.isConnected = true;    
-
-        console.log("DBLogic - Database connected!");
+		var is = Function.isInheriting(tabel, classes.database.Table);
 	},
 	
+	
 	/**
-	 * Adds uploaded file record to database.
+	 * Adds uploaded file record to DATABASE.
 	 */
 	addUploadedFile: function(filename, path, callback)
     {
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-        var uploadedFilesCollection = DBLogic.database.collection('uploadedFilesCollection');
+        var uploadedFilesCollection = DATABASE.DATABASE.collection('uploadedFilesCollection');
         var fileEntry =
         {
             filename: filename,
@@ -73,12 +40,12 @@ var DBLogic =
 	 */
     getUploadedFiles: function(callback)
     {
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-        var usersCollection = DBLogic.database.collection('uploadedFilesCollection');
+        var usersCollection = DATABASE.DATABASE.collection('uploadedFilesCollection');
 
         usersCollection.find({}).toArray(callback);
 	},
@@ -88,12 +55,12 @@ var DBLogic =
 	 */
 	addRenderClient: function(sessionId, ipAddress, active, callback)
 	{
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}		
 
-		var renderingClientsCollection = DBLogic.database.collection('renderingClientsCollection');
+		var renderingClientsCollection = DATABASE.DATABASE.collection('renderingClientsCollection');
         var clientEntry =
         {
             sessionId: sessionId,
@@ -109,12 +76,12 @@ var DBLogic =
 	 */
 	removeRenderClient: function(sessionId, callback)
 	{
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-		var renderingClientsCollection = DBLogic.database.collection('renderingClientsCollection');
+		var renderingClientsCollection = DATABASE.DATABASE.collection('renderingClientsCollection');
         var clientEntry =
         {
             sessionId: sessionId
@@ -125,12 +92,12 @@ var DBLogic =
 
 	addGridLayout: function(width, height, sessionId, row, progress, callback)
 	{
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-		var gridLayoutCollection = DBLogic.database.collection('gridLayoutCollection');
+		var gridLayoutCollection = DATABASE.DATABASE.collection('gridLayoutCollection');
         var clientEntry =
         {
 			width: width,
@@ -145,12 +112,12 @@ var DBLogic =
 
 	getGridLayouts: function(callback)
 	{
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-		var gridLayoutCollection = DBLogic.database.collection('gridLayoutCollection');
+		var gridLayoutCollection = DATABASE.DATABASE.collection('gridLayoutCollection');
 
         gridLayoutCollection.find({}).toArray(callback);
 	},
@@ -160,12 +127,12 @@ var DBLogic =
 	 */
 	updateProgress: function(sessionId, renderProgress, callback)
 	{
-		if (DBLogic.isConnected == false)
+		if (DATABASE.isConnected == false)
 		{
 			return;
 		}	
 
-		var activeRenderingClients = DBLogic.database.collection('activeRenderingClients');
+		var activeRenderingClients = DATABASE.DATABASE.collection('activeRenderingClients');
 		var clientEntry =
         {
             sessionId: sessionId
@@ -181,4 +148,4 @@ var DBLogic =
 
 };
 
-module.exports = DBLogic;
+module.exports = DATABASE;

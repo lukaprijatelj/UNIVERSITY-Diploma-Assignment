@@ -8,8 +8,10 @@ var url = require('url');
 var fs = require('fs');
 
 // local packages
-var API = require('./api.js');
-var DBLogic = require('./DBLogic.js');
+var API = require('./server/api.js');
+var DATABASE = require('./server/database.js');
+
+require('./server/helper.js');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
@@ -71,13 +73,14 @@ var EXPRESS_APP =
 				var row = i;
 				var progress = 0;
 
-				DBLogic.addGridLayout(width, height, sessionId, row, progress, function() {});
+				DATABASE.addGridLayout(width, height, sessionId, row, progress, function() {});
 			}
 		}*/
 		
 	}
 };
 
-DBLogic.init(EXPRESS_APP.init);
+DATABASE.init();
+EXPRESS_APP.init();
 
 module.exports = app;

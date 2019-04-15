@@ -1,5 +1,5 @@
 var upload = require('./upload.js');
-var DBLogic = require('./DBLogic.js');
+var DATABASE = require('./database.js');
 
 var io = require('socket.io');
 var socketIo = io.listen(80);
@@ -34,8 +34,8 @@ var API =
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
 
-		DBLogic.addRenderClient(sessionId, ipAddress, false);
-		DBLogic.getGridLayouts(function(err, result) {
+		DATABASE.addRenderClient(sessionId, ipAddress, false);
+		DATABASE.getGridLayouts(function(err, result) {
 			socketIo.to(`${sessionId}`).emit('gridLayouts', result);
 		});
 
@@ -51,7 +51,7 @@ var API =
 		var socket = this;
 		var sessionId = socket.id;
 
-		DBLogic.removeRenderClient(sessionId);
+		DATABASE.removeRenderClient(sessionId);
 
 		console.log("Client has disconnected!");
 	},
@@ -64,7 +64,7 @@ var API =
 		var socket = this;
 		var sessionId = socket.id;
 
-		DBLogic.updateProgress(sessionId, progress);
+		DATABASE.updateProgress(sessionId, progress);
 
 		console.log('message: ' + progress);
 	},
@@ -77,7 +77,7 @@ var API =
 		var filename = request.file.filename;
 		var path = request.file.path;
 		
-		DBLogic.addUploadedFile(filename, path, function()
+		DATABASE.addUploadedFile(filename, path, function()
 		{
 			response.send('Scene was uploaded!');
 		});
