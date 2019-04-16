@@ -9,4 +9,4 @@ Run VS code debugger and go to browser and type "http://localhost:3000/"
 ## NPM packages used
 - MongoDB
 - ExpressJS
-- 
+- uuidv1 (for GUID key generation for database tables)

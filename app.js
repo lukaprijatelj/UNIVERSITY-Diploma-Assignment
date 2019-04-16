@@ -63,19 +63,26 @@ var EXPRESS_APP =
 		// error handler
 		app.use(EXPRESS_APP.errorHandler);
 
-		/*for(var i=0; i<5; i++)
-		{
-			for (var j=0; j<5; j++)
-			{
-				var width = 384;
-				var height = 216;
-				var sessionId = 1;
-				var row = i;
-				var progress = 0;
+		
+		var NUM_OF_CELLS_HORIZONTALLY = 5;
+		var NUM_OF_CELLS_VERTICALLY = 5;
 
-				DATABASE.addGridLayout(width, height, sessionId, row, progress);
+		var CELL_WIDTH = 384;
+		var CELL_HEIGHT = 216;
+		
+		var startY = 0;
+		while(startY < CELL_HEIGHT * NUM_OF_CELLS_VERTICALLY)
+		{
+			var startX = 0;
+
+			while(startX < CELL_WIDTH * NUM_OF_CELLS_HORIZONTALLY)
+			{
+				DATABASE.addGridLayout(startX, startY, CELL_WIDTH, CELL_HEIGHT);
+				startX += CELL_WIDTH;
 			}
-		}*/
+
+			startY += CELL_HEIGHT;
+		}
 		
 	}
 };

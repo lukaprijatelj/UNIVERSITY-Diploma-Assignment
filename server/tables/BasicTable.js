@@ -25,28 +25,101 @@ function BasicTable(root, name)
 	this.rows = [];
 
 	/**
-	 * Is table synchronized.
+	 * Number of requests to save file.
+	 * @type {number}
+	 */
+	this._saveRequestNumber = 0;
+
+	/**
+	 * Number of miliseconds between intervals for checking if table needs to be saved.
+	 * @type {number} 
+	 */
+	this.CHECK_SAVING_INTERVAL = 1000;
+
+	/**
+	 * Flag indicating if table is currently saving.
 	 * @type {boolean}
 	 */
-	this.isSynchronizing = false;
-
-	this.saveRequest = false;
+	this.isSaving = false;
 
 	/**
 	 * Initializes object.
 	 */
 	this.init = function()
 	{
-		this._checkIfTableAlreadyExists(this._readFromExisting.bind(this));
+		var basicTable = this;
+
+		var tableNeedsReading = basicTable._readExistingTable.bind(basicTable);
+		basicTable._checkIfTableAlreadyExists(tableNeedsReading);
+
+		var intervalCallback = basicTable._checkIfSavingNeeded.bind(basicTable);
+		setInterval(intervalCallback, basicTable.CHECK_SAVING_INTERVAL);
 	};
 	this.init();
 };
 
+/**
+ * Callback for checking if table needs saving to file.
+ */
+BasicTable.prototype._checkIfSavingNeeded = function()
+{
+	if (this.isSaving == true)
+	{
+		return;
+	}
+
+	if (this._saveRequestNumber == 0)
+	{
+		return;
+	}
+
+	this._save();
+};
+
+/**
+ * Saves table to json file.
+ */
+BasicTable.prototype._save = function()
+{
+	var basicTable = this;
+	
+	var currentSaveRequestTimestamp = basicTable._saveRequestNumber;
+	var fileUrl = basicTable.getFullPath();
+	var jsonData = { rows: basicTable.rows };
+	var jsonString = JSON.stringify(jsonData, null, 4);
+
+	basicTable.isSaving = true;
+
+	fs.writeFile(fileUrl, jsonString, 'utf8', function(err)
+	{
+		if (err)
+		{
+			console.error("DATABASE - Error has occured wile writing json data! (aborting)");
+			console.error(err);
+			return;
+		} 
+
+		if (currentSaveRequestTimestamp == basicTable._saveRequestNumber)
+		{
+			// reset counter
+			basicTable._saveRequestNumber = 0;
+		}
+
+		basicTable.isSaving = false;
+	});
+};
+
+/**
+ * Gets full table filepath.
+ */
 BasicTable.prototype.getFullPath = function()
 {
 	return this.root + this.name + ".json";
 };
 
+/**
+ * Checks if ptable file already exists.
+ */
 BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 {
 	callback = callback ? callback : function() {};
@@ -54,14 +127,10 @@ BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 	var basicTable = this;
 	var fileUrl = basicTable.getFullPath();
 
-	basicTable.isSynchronizing = true;
-
 	fs.access(fileUrl, fs.F_OK, (err) => {
 		if (err) 
 		{
 			// file does not exist
-			basicTable.isSynchronizing = false;
-
 			basicTable.save();
 			
 			return;
@@ -71,12 +140,13 @@ BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 	});
 };
 
-BasicTable.prototype._readFromExisting = function()
+/**
+ * Reads data from existing table.
+ */
+BasicTable.prototype._readExistingTable = function()
 {
 	var basicTable = this;
 	var fileUrl = basicTable.getFullPath();
-
-	basicTable.isSynchronizing = true;
 
 	fs.readFile(fileUrl, 'utf8', function(err, contents) 
 	{
@@ -89,49 +159,15 @@ BasicTable.prototype._readFromExisting = function()
 
 		var obj = JSON.parse(contents);
 		basicTable.rows = obj.rows;
-
-		basicTable.isSynchronizing = false;
 	});
 };
 
-BasicTable.prototype.save = function(callback)
+/**
+ * Marks table for saving.
+ */
+BasicTable.prototype.save = function()
 {
-	callback = callback ? callback : function() {};
-
-	var basicTable = this;
-
-	if (basicTable.isSynchronizing == true)
-	{
-		basicTable.saveRequest = true;
-		return;
-	}
-	
-	var fileUrl = basicTable.getFullPath();
-	var jsonData = { rows: basicTable.rows };
-	var jsonString = JSON.stringify(jsonData, null, 4);
-
-	basicTable.isSynchronizing = true;
-
-	fs.writeFile(fileUrl, jsonString, 'utf8', function(err, data)
-	{
-		if (err)
-		{
-			console.error("DATABASE - Error has occured wile writing json data! (aborting)");
-			console.error(err);
-			return;
-		} 
-
-		basicTable.isSynchronizing = false;
-
-		if (basicTable.saveRequest == true)
-		{
-			basicTable.save(callback);
-		}
-		else
-		{
-			callback();
-		}
-	});
+	this._saveRequestNumber++;
 };
 
 module.exports = BasicTable;

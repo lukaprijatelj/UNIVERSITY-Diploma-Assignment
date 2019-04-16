@@ -1,3 +1,46 @@
 {
-    "rows": []
+    "rows": [
+        {
+            "_id": "1ef75030-602d-11e9-8acc-b125813eee1e",
+            "sessionId": "9iEM8HNRVMER0epAAAAA",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "fed8b5f0-6031-11e9-8dd8-cfd60e5d6e6f",
+            "sessionId": "kJwb4jAVoV5uyqveAAAG",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "5f027a60-6032-11e9-86fa-058aa4767439",
+            "sessionId": "9W308U8mC5zB3djbAAAB",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "5fa80930-6032-11e9-86fa-058aa4767439",
+            "sessionId": "2zvgS2BScS4l5jqZAAAC",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "a5297660-6032-11e9-87ef-15dede544059",
+            "sessionId": "JDIN_4X3FivdcSpFAAAB",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "7d71f550-603e-11e9-9e29-8b3761d36963",
+            "sessionId": "TT387ZW6hmO6GmT4AAAG",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "f5676170-603f-11e9-b33c-5ddc1cef31c2",
+            "sessionId": "sHAkxm9FsZDHgVt9AAAF",
+            "ipAddress": "::1",
+            "active": false
+        }
+    ]
 }

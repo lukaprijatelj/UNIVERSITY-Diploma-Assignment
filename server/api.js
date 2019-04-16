@@ -16,9 +16,7 @@ var API =
     {
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
-		app.post(API.baseUrl + '/uploadScene', upload.single('fileneki'), API.onUploadScene);
-
-		app.post(API.baseUrl + '/downloadScene', API.onDownloadScene);
+		app.post(API.baseUrl + '/uploadScene', upload.single('Scene'), API.onUploadFile);
 		
 		socketIo.on('connection', API.onConnect);
 	},
@@ -29,18 +27,19 @@ var API =
 	 */
 	onConnect: function(socket)
 	{
-		console.log('New client has connected!');
+		console.log('[SocketIO] New client has connected!');
 
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
 
-		DATABASE.addRenderClient(sessionId, ipAddress, false);
-		var result = DATABASE.getGridLayouts();
+		DATABASE.addRenderClient(sessionId, ipAddress);
+		
+		socket.on(API.baseUrl + 'request/renderingCells/layout', API.onRenderingCellsList);
+		socket.on(API.baseUrl + 'request/renderingCells/cell', API.onRequestCell);
+		socket.on(API.baseUrl + 'request/renderingCells/updateProgress', API.onUpdateProgress);		
 
-		socketIo.to(`${sessionId}`).emit('gridLayouts', result);
-
-		socket.on('progressUpdate', API.onProgressUpdate);		
-		socket.on('disconnect', API.onDisconnect);
+		// when client closes tab
+		socket.on('disconnect', API.onDisconnect);		
 	},
 
 	/**
@@ -53,26 +52,53 @@ var API =
 
 		DATABASE.removeRenderClient(sessionId);
 
-		console.log("Client has disconnected!");
+		console.log("[SocketIO] Client has disconnected!");
+	},
+
+	onRenderingCellsList: function()
+	{
+		var socket = this;
+		var sessionId = socket.id;
+
+		var result = DATABASE.getRenderingCells();
+
+		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/layout', result);
+	},
+
+	onRequestCell: function()
+	{
+		var socket = this;
+		var sessionId = socket.id;
+
+		var result = DATABASE.getRenderingCells();
+		var freeCell = result.find(element => element.sessionId == "");	
+
+		if (!freeCell)
+		{
+			console.log("[Api] All cells are already rendered! (aborting)");
+			return;
+		}
+
+		freeCell.sessionId = sessionId;
+		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/cell', freeCell);
 	},
 
 	/**
 	 * Updates render progress of certain client.
 	 */
-	onProgressUpdate: function(progress)
+	onUpdateProgress: function(data)
 	{
 		var socket = this;
-		var sessionId = socket.id;
 
-		DATABASE.updateProgress(sessionId, progress);
+		DATABASE.updateProgress(data.renderCellId, data.progress, data.imageData);
 
-		console.log('message: ' + progress);
+		console.log("[Api] Progress was updated");
 	},
 
 	/**
 	 * Catches users scene and saves it to local storage.
 	 */
-    onUploadScene: function(request, response)
+    onUploadFile: function(request, response)
     {
 		var filename = request.file.filename;
 		var path = request.file.path;
@@ -80,14 +106,8 @@ var API =
 		DATABASE.addUploadedFile(filename, path);
 
 		response.send('Scene was uploaded!');
-	},
-	
-	/**
-	 * Retrieves scene for the client.
-	 */
-	onDownloadScene: function()
-	{
 
+		console.log("[Api] File was uploaded");
 	}
 };
 

@@ -28,62 +28,99 @@ function onDocumentMouseMove( event )
 var RENDERER =
 {
 	/**
-	 * Is client connected to server.
+	 * Base url API access.
 	 */
-	isConnected: false,
+	apiUrl: '/api',
+
+	/**
+	 * Url where socketIO will be hosted.
+	 */
+	hostingUrl: 'http://localhost:80/',
 
 	/**
 	 * Socket io instance.
 	 */
 	io: null,
 
+	/**
+	 * Grid layout of cells that are rendered or are waiting for rendering.
+	 */
+	renderingCells: [],
+
+	/**
+	 * Current rendering grid.
+	 */
+	currentGridId: -1,
+
+	/**
+	 * Flag indicating if screenshot should be captured on next frame render.
+	 */
 	getScreenshot: false,
+
 
 	init: function()
 	{
-		RENDERER.io = io('http://localhost:80/', { reconnect: true });
+		RENDERER.io = io(RENDERER.hostingUrl, { reconnect: true });
 
 		// when exporting .obj scene from Cinema4D please use meters as a unit. 
 		// then use coverter command "obj2gltf -i input.obj -o output.gltf"
-
-
-		// Load a glTF resource
-		loader.load(
-			// resource URL
-			'fileUploads/Scene.gltf',
-			// called when the resource is loaded
-			function ( gltf ) {
-
-				scene.add( gltf.scene );
-
-				gltf.animations; // Array<THREE.AnimationClip>
-				gltf.scene; // THREE.Scene
-				gltf.scenes; // Array<THREE.Scene>
-				gltf.cameras; // Array<THREE.Camera>
-				gltf.asset; // Object
-				
-
-				// refresh camera (if not then color of the pixels is incorrect)
-				controls.update();
-
-				RENDERER.getScreenshot = true;				
-			},
-			// called while loading is progressing
-			function ( xhr ) {
-				console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );				
-			},
-			// called when loading has errors
-			function ( error ) {
-				console.log( 'An error happened' );
-			}
-		);
 		
 		RENDERER.io.on('connect', RENDERER.onServerConnected);
 
-		//document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		document.addEventListener('mousemove', onDocumentMouseMove, false);
 
 		// start rendering
 		RENDERER.onRenderFrame();
+	},
+
+
+	/**
+	 * On server-client connection.
+	 */
+	onServerConnected: function()
+	{
+		console.log('[SocketIO] Connected to server!');
+
+		RENDERER.io.on(RENDERER.apiUrl + 'response/renderingCells/layout', RENDERER.onGetLayout);
+		RENDERER.io.on(RENDERER.apiUrl + 'response/renderingCells/cell', RENDERER.onRequestCell);
+
+		RENDERER.getLayoutAsync();
+	},
+
+	/**
+	 * Starts loading 3D GTLF scene from server.
+	 */
+	startLoadingGltfModel: function(filepath)
+	{
+		var onLoadingError = function(error) 
+		{
+			console.error('[glTF loader] Error while loading scene!');
+			console.error(error);
+		};
+		var onLoadingProgress = function(xhr) 
+		{
+			// occurs when one of the files is done loading
+			console.log((xhr.loaded / xhr.total * 100) + '% loaded');				
+		};
+		var onLoadFinished = function(gltf) 
+		{
+			console.error('[glTF loader] Scene finished loading');
+
+			scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+			
+			// refresh camera (if not then color of the pixels is incorrect)
+			controls.update();
+
+			RENDERER.getScreenshot = true;				
+		};
+
+		loader.load(filepath, onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 	/**
@@ -91,42 +128,64 @@ var RENDERER =
 	 */
 	onScreenshot: function()
 	{
+		var canvas = HTML('#canvas-screenshot').elements[0];
+		var ctx = canvas.getContext("2d");
+
+		var renderCell = RENDERER.renderingCells.currentRenderCell;
+		var startX = renderCell.startX;
+		var startY = renderCell.startY;
+		var width = renderCell.width;
+		var height = renderCell.height;
+
+		var imgData = RENDERER.readCanvasPixels_Deprecated(renderer, ctx, startX, startY, width, height);
+		//RENDERER.updateProgressAsync(20, imgData);
+
+		ctx.putImageData(imgData, 0,0);
+	},
+
+	/**
+	 * this function is deprecated, because is uses linear reading of the pixels instead of using graphics card API.
+	 * Linear pixels reading is very slow !
+	 */
+	readCanvasPixels_Deprecated: function(renderer, context2d, startX, startY, width, height)
+	{
 		var gl = renderer.getContext();
 
-		var pixelValues = new Uint8Array(384 * 216 * 4);
-		gl.readPixels(0, 648, 384, 216, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+		// red, green, blue, alpha
+		var NUM_OF_VERTICES = 4;
+
+		var verticesLength = width * height * NUM_OF_VERTICES;
+		var pixelValues = new Uint8Array(verticesLength);
+		gl.readPixels(startX, startY, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
 
 		/*
-		var pixelValues = new Float32Array(384 * 216 * 4);
-		renderer.readRenderTargetPixels(0, 500, 384, 216, pixelValues);
+		var pixelValues = new Float32Array(verticesLength);
+		renderer.readRenderTargetPixels(startX, startY, width, height, pixelValues);
 		*/
 
-		var c = document.getElementById('canvas-screenshot');
-		var ctx = c.getContext("2d");
-		var imgData = ctx.createImageData(384, 216);
+		var imgData = context2d.createImageData(width, height);
+		var newCell = verticesLength;
 
-		var newCell = 384*216*4;
-
-		// must invert colors by X axis
-		newCell -= 384*4;
+		// must invert pixels by X axis
+		newCell -= width*NUM_OF_VERTICES;
 		var cell = 0;
-		for (var j=0; j<216;j++)
+
+		for (var j=0; j<height;j++)
 		{
-			for (var i=0; i<384; i++)
+			for (var i=0; i<width; i++)
 			{
-				for (var k=0; k<4; k++)
-				{
-					
+				for (var k=0; k<NUM_OF_VERTICES; k++)
+				{					
 					imgData.data[newCell] = pixelValues[cell];
 
 					cell++;
 					newCell++;
 				}
 			}
-			newCell -= (384*4*2);		
+			newCell -= (width*NUM_OF_VERTICES*2);		
 		}
 
-		ctx.putImageData(imgData, 0,0);
+		return imgData;
 	},
 
 	/**
@@ -142,6 +201,8 @@ var RENDERER =
 
 		if (RENDERER.getScreenshot == true) 
 		{
+			// rendering must be captured before controls are updated
+
 			RENDERER.onScreenshot();
 			RENDERER.getScreenshot = false;
 		}		
@@ -150,82 +211,73 @@ var RENDERER =
 		controls.update();
 	},
 
-	/**
-	 * On server-client connection.
-	 */
-	onServerConnected: function()
+	onGetLayout: function(data)
 	{
-		RENDERER.isConnected = true;
+		RENDERER.renderingCells = data;
 
-		console.log('Connected!');
+		console.log('[Renderer] Grid layout drawn');
 
-		RENDERER.io.on('gridLayouts', RENDERER.onGridLayout);
-		//RENDERER.notifyProgressUpdate(100);
-	},
+		var gridLayout = HTML('#grid-layout');
 
-	onGridLayout: function(data)
-	{
-		var gridLayout = document.getElementById('grid-layout');
+		gridLayout.empty();
 
-		// clear element
-		gridLayout.innerHTML = '';
-
+		var prevCell = null;
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];
 	
-			if (i > 0 && data[i - 1].row != current.row)
+			if (prevCell && prevCell.startX > current.startX)
 			{
-				gridLayout.innerHTML += '<br>';
+				gridLayout.append('<br>');
 			}
 
-			/*if (i == 6)
-			{
-				gridLayout.innerHTML += '<canvas class="render-cell active" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></canvas>';
-			}
-			else*/
-			{
-				gridLayout.innerHTML += '<div class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>';
-			}
-			
-		}
+			gridLayout.append('<div id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>');
+			prevCell = current;
+		}				
+
+		// Load a glTF resource
+		RENDERER.startLoadingGltfModel('files/Scene.gltf');
+
+		RENDERER.requestCellAsync();
 	},
 
 	/**
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
 	 * @async
 	 */
-	getGridLayout: function()
+	getLayoutAsync: function()
 	{
-
+		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/layout', null);
 	},
 
-	/**
-	 * Gets render job info.
-	 * @async
-	 */
-	getRenderJob: function()
+	requestCellAsync: function()
 	{
-
+		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/cell', null);
 	},
 
-	getScreenshot: function()
+	onRequestCell: function(cell)
 	{
-		//var dataURL = canvas.toDataURL();
+		RENDERER.renderingCells.currentRenderCell = cell;
+
+		HTML('#cell-' + cell._id).addClass('active');
+
+		console.log('[SocketIo] Cell waiting to render received');
 	},
 
 	/**
 	 * Notifies server how much has client already rendered.
 	 * @async
 	 */
-	notifyProgressUpdate: function(value)
+	updateProgressAsync: function(progress, imageData)
 	{
-		if (typeof value === 'undefined')
+		var data = 
 		{
-			return;
-		}
+			renderCellId: RENDERER.renderingCells.currentRenderCell._id,
+			progress: progress,
+			imageData: imageData
+		};
 
-		RENDERER.io.emit('progressUpdate', value.toString());
+		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/updateProgress', data);
 	}
 };
 
