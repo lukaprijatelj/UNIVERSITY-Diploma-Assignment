@@ -73,7 +73,7 @@ var EXPRESS_APP =
 				var row = i;
 				var progress = 0;
 
-				DATABASE.addGridLayout(width, height, sessionId, row, progress, function() {});
+				DATABASE.addGridLayout(width, height, sessionId, row, progress);
 			}
 		}*/
 		

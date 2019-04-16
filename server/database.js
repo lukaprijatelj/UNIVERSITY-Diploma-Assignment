@@ -1,66 +1,58 @@
 
-var  = require('./classes.js');
+var BasicTable = require('./tables/BasicTable.js');
 
 
 var DATABASE =
 {
 	root: 'database/',
 
+	renderingClientsTable: null,
+
+	uploadedFilesTable: null,
+
+	gridLayoutsTable: null,
+
 	init: function()
 	{
 		var tablesRoot = DATABASE.root + "tables/";
-		var tabel = new classes.database.CustomTable(tablesRoot, 'morskaRibica');
-
-		var is = Function.isInheriting(tabel, classes.database.Table);
+		
+		DATABASE.renderingClientsTable = new BasicTable(tablesRoot, 'renderingClients');
+		DATABASE.uploadedFilesTable = new BasicTable(tablesRoot, 'uploadedFiles');
+		DATABASE.gridLayoutsTable = new BasicTable(tablesRoot, 'gridLayouts');
 	},
 	
-	
+
 	/**
 	 * Adds uploaded file record to DATABASE.
 	 */
-	addUploadedFile: function(filename, path, callback)
+	addUploadedFile: function(filename, path)
     {
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
-
-        var uploadedFilesCollection = DATABASE.DATABASE.collection('uploadedFilesCollection');
         var fileEntry =
         {
             filename: filename,
 			path: path
         };
 
-        uploadedFilesCollection.insertOne(fileEntry, callback);
+		var table = DATABASE.uploadedFilesTable;
+		table.rows.push(fileEntry);
+		table.save();
     },
 
 	/**
 	 * Gets all files that are uploaded
 	 */
-    getUploadedFiles: function(callback)
+    getUploadedFiles: function()
     {
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
+		var table = DATABASE.uploadedFilesTable;
 
-        var usersCollection = DATABASE.DATABASE.collection('uploadedFilesCollection');
-
-        usersCollection.find({}).toArray(callback);
+        return table.rows;
 	},
 	
 	/**
 	 * Adds render client.
 	 */
-	addRenderClient: function(sessionId, ipAddress, active, callback)
+	addRenderClient: function(sessionId, ipAddress, active)
 	{
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}		
-
-		var renderingClientsCollection = DATABASE.DATABASE.collection('renderingClientsCollection');
         var clientEntry =
         {
             sessionId: sessionId,
@@ -68,36 +60,25 @@ var DATABASE =
 			active: active
         };
 
-        renderingClientsCollection.insertOne(clientEntry, callback);
+		var table = DATABASE.renderingClientsTable;
+
+		table.rows.push(clientEntry);
+		table.save();
 	},
 
 	/**
 	 * Removes render client.
 	 */
-	removeRenderClient: function(sessionId, callback)
+	removeRenderClient: function(sessionId)
 	{
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
+		var table = DATABASE.renderingClientsTable;
 
-		var renderingClientsCollection = DATABASE.DATABASE.collection('renderingClientsCollection');
-        var clientEntry =
-        {
-            sessionId: sessionId
-        };
-
-        renderingClientsCollection.deleteOne(clientEntry, callback);
+		table.rows = table.rows.filter(item => item.sessionId !== sessionId);
+		table.save();
 	},
 
-	addGridLayout: function(width, height, sessionId, row, progress, callback)
+	addGridLayout: function(width, height, sessionId, row, progress)
 	{
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
-
-		var gridLayoutCollection = DATABASE.DATABASE.collection('gridLayoutCollection');
         var clientEntry =
         {
 			width: width,
@@ -107,42 +88,33 @@ var DATABASE =
 			progress: progress
         };
 
-        gridLayoutCollection.insertOne(clientEntry, callback);
+		var table = DATABASE.gridLayoutsTable;
+
+		table.rows.push(clientEntry);
+		table.save();
 	},
 
-	getGridLayouts: function(callback)
+	getGridLayouts: function()
 	{
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
-
-		var gridLayoutCollection = DATABASE.DATABASE.collection('gridLayoutCollection');
-
-        gridLayoutCollection.find({}).toArray(callback);
+		var table = DATABASE.gridLayoutsTable;
+		
+		return table.rows;
 	},
 
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(sessionId, renderProgress, callback)
+	updateProgress: function(sessionId, renderProgress)
 	{
-		if (DATABASE.isConnected == false)
-		{
-			return;
-		}	
+		var table = DATABASE.renderingClientsTable;
 
-		var activeRenderingClients = DATABASE.DATABASE.collection('activeRenderingClients');
-		var clientEntry =
-        {
-            sessionId: sessionId
-        };
-        var updateData =
-        {
-			renderProgress: renderProgress
-        };
-
-        activeRenderingClients.updateOne(clientEntry, { $set: updateData }, callback);
+		table.rows.forEach((element) => { 
+			if(element.sessionId == sessionId)
+			{
+				element.renderProgress = renderProgress;
+			}
+		});
+        table.save();
 	}
 	
 

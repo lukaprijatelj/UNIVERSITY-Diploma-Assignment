@@ -25,12 +25,21 @@ function BasicTable(root, name)
 	this.rows = [];
 
 	/**
+	 * Is table synchronized.
+	 * @type {boolean}
+	 */
+	this.isSynchronizing = false;
+
+	this.saveRequest = false;
+
+	/**
 	 * Initializes object.
 	 */
 	this.init = function()
 	{
-		
+		this._checkIfTableAlreadyExists(this._readFromExisting.bind(this));
 	};
+	this.init();
 };
 
 BasicTable.prototype.getFullPath = function()
@@ -38,42 +47,90 @@ BasicTable.prototype.getFullPath = function()
 	return this.root + this.name + ".json";
 };
 
-BasicTable.prototype._checkIfTableAlreadyExists = function()
+BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 {
-	var fileUrl = this.getFullPath();
+	callback = callback ? callback : function() {};
+
+	var basicTable = this;
+	var fileUrl = basicTable.getFullPath();
+
+	basicTable.isSynchronizing = true;
 
 	fs.access(fileUrl, fs.F_OK, (err) => {
 		if (err) 
 		{
-			console.log("classes.database.Table - Error while checking if table already exists! (aborting)");
-			console.error(err);
+			// file does not exist
+			basicTable.isSynchronizing = false;
+
+			basicTable.save();
+			
 			return;
 		}
 	
-		//file exists
+		callback();
 	});
 };
 
 BasicTable.prototype._readFromExisting = function()
 {
+	var basicTable = this;
+	var fileUrl = basicTable.getFullPath();
 
+	basicTable.isSynchronizing = true;
+
+	fs.readFile(fileUrl, 'utf8', function(err, contents) 
+	{
+		if (err) 
+		{
+			console.error("BasicTable - Error while reading already existing table! (aborting)");
+			console.error(err);
+			return;
+		}
+
+		var obj = JSON.parse(contents);
+		basicTable.rows = obj.rows;
+
+		basicTable.isSynchronizing = false;
+	});
 };
 
 BasicTable.prototype.save = function(callback)
 {
-	var fileUrl = this.getFullPath();
-	var jsonData = { rows: this.rows };
-	var jsonString = JSON.stringify(jsonData);
+	callback = callback ? callback : function() {};
 
-	fs.writeFile(fileUrl, jsonString, 'utf8', function(err, data){
+	var basicTable = this;
+
+	if (basicTable.isSynchronizing == true)
+	{
+		basicTable.saveRequest = true;
+		return;
+	}
+	
+	var fileUrl = basicTable.getFullPath();
+	var jsonData = { rows: basicTable.rows };
+	var jsonString = JSON.stringify(jsonData, null, 4);
+
+	basicTable.isSynchronizing = true;
+
+	fs.writeFile(fileUrl, jsonString, 'utf8', function(err, data)
+	{
 		if (err)
 		{
-			console.log("DATABASE - Error has occured wile writing json data! (aborting)");
-			console.log(err);
+			console.error("DATABASE - Error has occured wile writing json data! (aborting)");
+			console.error(err);
 			return;
 		} 
-		
-		//obj = JSON.parse(data); //now it an object
+
+		basicTable.isSynchronizing = false;
+
+		if (basicTable.saveRequest == true)
+		{
+			basicTable.save(callback);
+		}
+		else
+		{
+			callback();
+		}
 	});
 };
 

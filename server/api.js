@@ -35,9 +35,9 @@ var API =
 		var ipAddress = socket.handshake.address;
 
 		DATABASE.addRenderClient(sessionId, ipAddress, false);
-		DATABASE.getGridLayouts(function(err, result) {
-			socketIo.to(`${sessionId}`).emit('gridLayouts', result);
-		});
+		var result = DATABASE.getGridLayouts();
+
+		socketIo.to(`${sessionId}`).emit('gridLayouts', result);
 
 		socket.on('progressUpdate', API.onProgressUpdate);		
 		socket.on('disconnect', API.onDisconnect);
@@ -77,10 +77,9 @@ var API =
 		var filename = request.file.filename;
 		var path = request.file.path;
 		
-		DATABASE.addUploadedFile(filename, path, function()
-		{
-			response.send('Scene was uploaded!');
-		});
+		DATABASE.addUploadedFile(filename, path);
+
+		response.send('Scene was uploaded!');
 	},
 	
 	/**
