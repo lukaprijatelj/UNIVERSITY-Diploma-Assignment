@@ -16,49 +16,22 @@ Object.cloneData = function(dst, src)
     return dst;
 }
 
-Function.inherit = function(dst, src)
+/**
+ * Must be called if you want to inherit properties that are assigned when object is created.
+ */
+Function.parentConstructor = function()
 {
-	var that = dst;
+	var dst = arguments.shift();
+	var src = arguments.shift();
 
-	// inherit properties
-	src.call(that);
-
-	if (!that._parentClass)
-	{
-		that._parentClass = [Function];
-	}
-
-	if (src._parentClass)
-	{
-		// copy inherited classes from parents
-		for (var i=0; i<src._parentClass.length; i++)
-		{
-			that._parentClass.push(src._parentClass[i]);
-		}
-	}
-
-	// add to list of parent classes
-	that._parentClass.push(src);	
+	// Call parent constructor
+	src.apply(dst, arguments);
 };
 
-Function.isInheriting = function(dst, obj)
+/**
+ * Inherits static prototype functions.
+ */
+Function.inheritPrototype = function(child, parent)
 {
-	var that = dst;
-
-	if (!that._parentClass)
-	{
-		return false;
-	}
-
-	for (var i=0; i<that._parentClass.length; i++)
-	{
-		var currentParent = that._parentClass[i];
-
-		if (currentParent == obj)
-		{
-			return true;
-		}
-	}
-
-	return false;
+	child.prototype = Object.create(parent.prototype);
 };
