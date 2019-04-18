@@ -1,3 +1,10 @@
+var mouseX, mouseY;
+function onDocumentMouseMove( event ) 
+{
+	mouseX = event.clientX;
+	mouseY = event.clientY;
+}
+
 var loader = new THREE.GLTFLoader();
 var scene = new THREE.Scene();
 
@@ -18,12 +25,6 @@ renderer.setSize(1920, 1080);
 document.body.appendChild(renderer.domElement);
 
 
-var mouseX, mouseY;
-function onDocumentMouseMove( event ) 
-{
-	mouseX = event.clientX;
-	mouseY = event.clientY;
-}
 
 var RENDERER =
 {
@@ -57,9 +58,12 @@ var RENDERER =
 	 */
 	getScreenshot: false,
 
-
+	
 	init: function()
 	{
+		
+
+
 		RENDERER.io = io(RENDERER.hostingUrl, { reconnect: true });
 
 		// when exporting .obj scene from Cinema4D please use meters as a unit. 

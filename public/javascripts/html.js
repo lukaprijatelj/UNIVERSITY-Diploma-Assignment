@@ -1,11 +1,13 @@
-function HTML_ELEMENT(selector)
-{
-    this.elements = document.querySelectorAll(selector);
-}
-
 var HTML = (function(selector) {
     return new HTML_ELEMENT(selector);
 });
+
+function HTML_ELEMENT(selector)
+{
+    this.elements = document.querySelectorAll(selector);
+
+    this.enabled = true;
+}
 
 HTML_ELEMENT.prototype.__parseElementFromString = function(htmlString)
 {
@@ -59,6 +61,30 @@ HTML_ELEMENT.prototype.empty = function()
     this.setHtml('');
 };
 
+HTML_ELEMENT.prototype.hide = function()
+{
+    this.removeClass('visible');
+    this.addClass('hidden');
+};
+
+HTML_ELEMENT.prototype.show = function()
+{
+    this.removeClass('hidden');
+    this.addClass('visible');
+};
+
+HTML_ELEMENT.prototype.enable = function()
+{
+    this.removeClass('disabled');
+    this.enable = false;
+};
+
+HTML_ELEMENT.prototype.disable = function()
+{
+    this.addClass('disabled');
+    this.enable = true;
+};
+
 HTML_ELEMENT.prototype.setHtml = function(value)
 {
     if (typeof value !== 'string')
@@ -92,7 +118,19 @@ HTML_ELEMENT.prototype.append = function(value)
         }
         else if (value instanceof HTML)
         {
-            currentElement.innerHTML += value.getHtml();
+            var elements = this.elements;
+
+            for (var i=0; i<elements.length; i++)
+            {
+                var currentElement = elements[i];
+
+                for (var j=0; j<value.elements.length; j++)
+                {
+                    var newCurrentElement = value.elements[j];
+
+                    currentElement.appendChild(newCurrentElement);
+                }
+            }
         }
     }
 
