@@ -5,8 +5,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-
-
 .vscode
 
 # Runtime data
@@ -67,5 +65,3 @@ typings/
 uploads/
 
 fileUploads/
-
-database/tables/
