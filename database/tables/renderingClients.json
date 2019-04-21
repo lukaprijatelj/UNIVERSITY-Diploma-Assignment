@@ -41,6 +41,24 @@
             "sessionId": "sHAkxm9FsZDHgVt9AAAF",
             "ipAddress": "::1",
             "active": false
+        },
+        {
+            "_id": "d20b0070-63a9-11e9-bd8d-b1660b3da1bc",
+            "sessionId": "JoDLMsssrcFCCTmUAAAi",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "7bed6460-63b0-11e9-87f7-099cb364c382",
+            "sessionId": "_wHTbfh2BC_wOorXAABD",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "050a6060-63b4-11e9-99c5-5fc81b4d177d",
+            "sessionId": "EkIHsIzzSTsf-uGuAAAi",
+            "ipAddress": "::1",
+            "active": false
         }
     ]
 }
