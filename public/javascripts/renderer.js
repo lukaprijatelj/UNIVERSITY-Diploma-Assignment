@@ -24,7 +24,18 @@ scene.add( ambientLight );
 renderer.setSize(1920, 1080);
 document.body.appendChild(renderer.domElement);
 
+var debug = {};
 
+debug.camera = HTML('#debug-info .camera');
+debug.camera.positionX = debug.camera.find('.two-part-item:nth-child(1) .value');
+debug.camera.positionY = debug.camera.find('.two-part-item:nth-child(2) .value');
+debug.camera.positionZ = debug.camera.find('.two-part-item:nth-child(3) .value');
+
+window.setInterval(function(){
+	debug.camera.positionX.setHtml(Math.roundToTwoDecimals(camera.position.x));
+	debug.camera.positionY.setHtml(Math.roundToTwoDecimals(camera.position.y));
+	debug.camera.positionZ.setHtml(Math.roundToTwoDecimals(camera.position.z));
+},500);
 
 var RENDERER =
 {
@@ -108,7 +119,7 @@ var RENDERER =
 		};
 		var onLoadFinished = function(gltf) 
 		{
-			console.error('[glTF loader] Scene finished loading');
+			console.log('[glTF loader] Scene finished loading');
 
 			scene.add(gltf.scene);
 
@@ -118,10 +129,7 @@ var RENDERER =
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
 			
-			// refresh camera (if not then color of the pixels is incorrect)
-			controls.update();
-
-			RENDERER.getScreenshot = true;				
+			//RENDERER.getScreenshot = true;				
 		};
 
 		loader.load(filepath, onLoadFinished, onLoadingProgress, onLoadingError);
@@ -211,8 +219,11 @@ var RENDERER =
 			RENDERER.getScreenshot = false;
 		}		
 
-		// update camera
-		controls.update();
+		if (controls)
+		{
+			// update camera
+			controls.update();
+		}
 	},
 
 	onGetLayout: function(data)

@@ -24,3 +24,46 @@ br
 {
 	border-color: red;
 }
+
+#debug-info 
+{
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	color: white;
+	font-size: 2em;
+	font-family: "Lucida Console", Monaco, monospace;
+	background-color: rgba(0,0,0,1);
+}
+
+#debug-info .two-part-item
+{
+	
+	color: rgba(255, 255, 255, 0.6);
+}
+
+#debug-info .two-part-item .value
+{
+	flex-grow: 1;
+	text-align: right;
+}
+
+#debug-info .two-part-item .key
+{
+	flex-grow: 1;
+	text-align: center;
+	flex-shrink: 1;
+	margin-right: 20px;
+	margin-left: 20px;
+}
+
+#debug-info .name
+{
+	text-align: center;
+	background-color: rgba(0,0,0,1);
+}
+
+#debug-info .camera table
+{
+	table-layout: fixed;
+}

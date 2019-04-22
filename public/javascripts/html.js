@@ -4,9 +4,8 @@ var HTML = (function(selector) {
 
 function HTML_ELEMENT(selector)
 {
+	this.selector = selector;
     this.elements = document.querySelectorAll(selector);
-
-    this.enabled = true;
 }
 
 HTML_ELEMENT.prototype.__parseElementFromString = function(htmlString)
@@ -56,6 +55,11 @@ HTML_ELEMENT.prototype.getHtml = function()
     return this.elements[0].innerHTML;
 };
 
+HTML_ELEMENT.prototype.find = function(selector)
+{
+	return new HTML_ELEMENT(this.selector + ' ' + selector);
+};
+
 HTML_ELEMENT.prototype.empty = function()
 {
     this.setHtml('');
@@ -76,21 +80,21 @@ HTML_ELEMENT.prototype.show = function()
 HTML_ELEMENT.prototype.enable = function()
 {
     this.removeClass('disabled');
-    this.enable = false;
 };
 
 HTML_ELEMENT.prototype.disable = function()
 {
     this.addClass('disabled');
-    this.enable = true;
 };
 
 HTML_ELEMENT.prototype.setHtml = function(value)
 {
-    if (typeof value !== 'string')
+    if (typeof value === 'undefined' || value == null)
     {
         return;
-    }
+	}
+	
+	value = value + '';
 
     var elements = this.elements;
 

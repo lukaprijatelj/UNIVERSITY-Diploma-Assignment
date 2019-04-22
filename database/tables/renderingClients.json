@@ -41,6 +41,30 @@
             "sessionId": "sHAkxm9FsZDHgVt9AAAF",
             "ipAddress": "::1",
             "active": false
+        },
+        {
+            "_id": "d20b0070-63a9-11e9-bd8d-b1660b3da1bc",
+            "sessionId": "JoDLMsssrcFCCTmUAAAi",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "7bed6460-63b0-11e9-87f7-099cb364c382",
+            "sessionId": "_wHTbfh2BC_wOorXAABD",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "ca0da120-6421-11e9-99c5-5fc81b4d177d",
+            "sessionId": "2bFofDMG2iMaO0lJAAA-",
+            "ipAddress": "::1",
+            "active": false
+        },
+        {
+            "_id": "343bf620-64d4-11e9-9c99-77802bc3e785",
+            "sessionId": "69u_vfBxvv_ClIhXAAAI",
+            "ipAddress": "::1",
+            "active": false
         }
     ]
 }
