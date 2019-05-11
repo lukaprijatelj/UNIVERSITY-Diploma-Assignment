@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+
+		<!-- styles -->
+		<link rel="stylesheet" href="stylesheets/common.css">
+		<link rel="stylesheet" href="stylesheets/client-renderer.css">
+
+		<!-- scripts -->
+		<script src="javascripts/socket.io/socket.io.js"></script>
+		<script src="javascripts/client-renderer/threejs/three.js"></script>
+		<script src="javascripts/client-renderer/threejs/pathTracingCommon.js"></script>
+		<script src="javascripts/client-renderer/threejs/OrbitControls.js"></script>
+		<script src="javascripts/client-renderer/threejs/GLTFLoader.js"></script>
+		<script src="javascripts/html.js"></script>
+		<script src="javascripts/helper.js"></script>
+	</head>
+	<body>
+		<canvas id="canvas-screenshot" width="384" height="216"></canvas>
+		
+		<div id="grid-layout" class="hidden"></div>
+
+		<div id="debug-info">
+			<div class="group camera">
+				<div class="name">Camera</div>
+				<table>
+					<tr class="field">
+						<td class="key">x</td>
+						<td class="value"></td>
+					</tr>
+					<tr class="field">
+						<td class="key">y</td>
+						<td class="value"></td>
+					</tr>
+					<tr class="field">
+						<td class="key">z</td>
+						<td class="value"></td>
+					</tr>
+				</table>
+			</div>
+			<div class="group mouse">
+				<div class="name">Mouse</div>
+				<table>
+					<tr class="field">
+						<td class="key">x</td>
+						<td class="value"></td>
+					</tr>
+					<tr class="field">
+						<td class="key">y</td>
+						<td class="value"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<script src="javascripts/client-renderer/mouse.js"></script>
+		<script src="javascripts/client-renderer/debug.js"></script>
+		<script src="javascripts/client-renderer/main.js"></script>
+	</body>
+</html>

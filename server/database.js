@@ -66,8 +66,10 @@ var DATABASE =
 	/**
 	 * Adds render client.
 	 */
-	addRenderClient: function(sessionId, ipAddress)
+	addRenderClient: function(sessionId, ipAddress, isAdmin)
 	{
+		isAdmin = typeof isAdmin !== 'undefined' ? isAdmin : false;
+		
 		var table = DATABASE.renderingClientsTable;
 
         var clientEntry =
@@ -75,7 +77,8 @@ var DATABASE =
 			_id: uuidv1(),
             sessionId: sessionId,
 			ipAddress: ipAddress,
-			active: false
+			active: false,
+			admin: isAdmin
         };
 
 		table.rows.push(clientEntry);
@@ -124,6 +127,14 @@ var DATABASE =
 		var table = DATABASE.renderingCellsTable;
 		
 		return table.rows;
+	},
+
+	clearGridLayout: function()
+	{
+		var table = DATABASE.renderingCellsTable;
+
+		table.rows = [];
+		table.save();
 	},
 
 	/**

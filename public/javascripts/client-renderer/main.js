@@ -1,16 +1,10 @@
-var mouseX, mouseY;
-function onDocumentMouseMove( event ) 
-{
-	mouseX = event.clientX;
-	mouseY = event.clientY;
-}
-
 var loader = new THREE.GLTFLoader();
 var scene = new THREE.Scene();
 
-var camera = new THREE.PerspectiveCamera(45, 1920 / 1080, 1, 20000 );
-camera.position.x = -5;
-camera.position.y = 1;
+var camera = new THREE.PerspectiveCamera(45, 1920/1080, 1, 20000);
+camera.position.x = -21;
+camera.position.y = 14;
+camera.position.z = 19;
 
 var renderer = new THREE.WebGLRenderer();
 renderer.domElement.id = "rendering-canvas";
@@ -18,26 +12,14 @@ renderer.setClearColor('#f4f4f4');
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement); 
 	
-var ambientLight = new THREE.AmbientLight( 0xcccccc );
-scene.add( ambientLight );
+var ambientLight = new THREE.AmbientLight(0xcccccc);
+scene.add(ambientLight);
 
 renderer.setSize(1920, 1080);
 document.body.appendChild(renderer.domElement);
 
-var debug = {};
 
-debug.camera = HTML('#debug-info .camera');
-debug.camera.positionX = debug.camera.find('.two-part-item:nth-child(1) .value');
-debug.camera.positionY = debug.camera.find('.two-part-item:nth-child(2) .value');
-debug.camera.positionZ = debug.camera.find('.two-part-item:nth-child(3) .value');
-
-window.setInterval(function(){
-	debug.camera.positionX.setHtml(Math.roundToTwoDecimals(camera.position.x));
-	debug.camera.positionY.setHtml(Math.roundToTwoDecimals(camera.position.y));
-	debug.camera.positionZ.setHtml(Math.roundToTwoDecimals(camera.position.z));
-},500);
-
-var RENDERER =
+var MAIN =
 {
 	/**
 	 * Base url API access.
@@ -72,20 +54,15 @@ var RENDERER =
 	
 	init: function()
 	{
-		
-
-
-		RENDERER.io = io(RENDERER.hostingUrl, { reconnect: true });
+		MAIN.io = io(MAIN.hostingUrl, { query: "clientType=renderer" });
 
 		// when exporting .obj scene from Cinema4D please use meters as a unit. 
 		// then use coverter command "obj2gltf -i input.obj -o output.gltf"
 		
-		RENDERER.io.on('connect', RENDERER.onServerConnected);
-
-		document.addEventListener('mousemove', onDocumentMouseMove, false);
+		MAIN.io.on('connect', MAIN.onServerConnected);
 
 		// start rendering
-		RENDERER.onRenderFrame();
+		MAIN.onRenderFrame();
 	},
 
 
@@ -94,19 +71,21 @@ var RENDERER =
 	 */
 	onServerConnected: function()
 	{
-		console.log('[SocketIO] Connected to server!');
+		console.log('[Main] Connected to server!');
 
-		RENDERER.io.on(RENDERER.apiUrl + 'response/renderingCells/layout', RENDERER.onGetLayout);
-		RENDERER.io.on(RENDERER.apiUrl + 'response/renderingCells/cell', RENDERER.onRequestCell);
+		MAIN.io.on(MAIN.apiUrl + 'response/renderingCells/layout', MAIN.onGetLayout);
+		MAIN.io.on(MAIN.apiUrl + 'response/renderingCells/cell', MAIN.onRequestCell);
 
-		RENDERER.getLayoutAsync();
-	},
+		MAIN.getLayoutAsync();
+	},	
 
 	/**
 	 * Starts loading 3D GTLF scene from server.
 	 */
 	startLoadingGltfModel: function(filepath)
 	{
+		console.log('[Main] Starting to load gltf model');
+
 		var onLoadingError = function(error) 
 		{
 			console.error('[glTF loader] Error while loading scene!');
@@ -115,7 +94,9 @@ var RENDERER =
 		var onLoadingProgress = function(xhr) 
 		{
 			// occurs when one of the files is done loading
-			console.log((xhr.loaded / xhr.total * 100) + '% loaded');				
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
 		};
 		var onLoadFinished = function(gltf) 
 		{
@@ -129,7 +110,7 @@ var RENDERER =
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
 			
-			//RENDERER.getScreenshot = true;				
+			//MAIN.getScreenshot = true;				
 		};
 
 		loader.load(filepath, onLoadFinished, onLoadingProgress, onLoadingError);
@@ -143,14 +124,14 @@ var RENDERER =
 		var canvas = HTML('#canvas-screenshot').elements[0];
 		var ctx = canvas.getContext("2d");
 
-		var renderCell = RENDERER.renderingCells.currentRenderCell;
+		var renderCell = MAIN.renderingCells.currentRenderCell;
 		var startX = renderCell.startX;
 		var startY = renderCell.startY;
 		var width = renderCell.width;
 		var height = renderCell.height;
 
-		var imgData = RENDERER.readCanvasPixels_Deprecated(renderer, ctx, startX, startY, width, height);
-		//RENDERER.updateProgressAsync(20, imgData);
+		var imgData = MAIN.readCanvasPixels_Deprecated(renderer, ctx, startX, startY, width, height);
+		//MAIN.updateProgressAsync(20, imgData);
 
 		ctx.putImageData(imgData, 0,0);
 	},
@@ -206,17 +187,17 @@ var RENDERER =
 	onRenderFrame: function()
 	{
 		// will start loop for this function
-		requestAnimationFrame(RENDERER.onRenderFrame);
+		requestAnimationFrame(MAIN.onRenderFrame);
 
 		// render current frame
 		renderer.render(scene, camera);
 
-		if (RENDERER.getScreenshot == true) 
+		if (MAIN.getScreenshot == true) 
 		{
 			// rendering must be captured before controls are updated
 
-			RENDERER.onScreenshot();
-			RENDERER.getScreenshot = false;
+			MAIN.onScreenshot();
+			MAIN.getScreenshot = false;
 		}		
 
 		if (controls)
@@ -226,9 +207,18 @@ var RENDERER =
 		}
 	},
 
+	/**
+	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
+	 * @async
+	 */
+	getLayoutAsync: function()
+	{
+		console.log('[Main] Layout requested');
+		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/layout', null);
+	},
 	onGetLayout: function(data)
 	{
-		RENDERER.renderingCells = data;
+		MAIN.renderingCells = data;
 
 		console.log('[Renderer] Grid layout drawn');
 
@@ -251,32 +241,23 @@ var RENDERER =
 		}				
 
 		// Load a glTF resource
-		RENDERER.startLoadingGltfModel('files/Scene.gltf');
+		MAIN.startLoadingGltfModel('Orientation-cube/Scene.gltf');
 
-		RENDERER.requestCellAsync();
-	},
-
-	/**
-	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @async
-	 */
-	getLayoutAsync: function()
-	{
-		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/layout', null);
+		MAIN.requestCellAsync();
 	},
 
 	requestCellAsync: function()
 	{
-		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/cell', null);
+		console.log('[Main] Cell requested');
+		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/cell', null);
 	},
-
 	onRequestCell: function(cell)
 	{
-		RENDERER.renderingCells.currentRenderCell = cell;
+		MAIN.renderingCells.currentRenderCell = cell;
 
 		HTML('#cell-' + cell._id).addClass('active');
 
-		console.log('[SocketIo] Cell waiting to render received');
+		console.log('[Main] Cell waiting to render received');
 	},
 
 	/**
@@ -287,13 +268,15 @@ var RENDERER =
 	{
 		var data = 
 		{
-			renderCellId: RENDERER.renderingCells.currentRenderCell._id,
+			renderCellId: MAIN.renderingCells.currentRenderCell._id,
 			progress: progress,
 			imageData: imageData
 		};
 
-		RENDERER.io.emit(RENDERER.apiUrl + 'request/renderingCells/updateProgress', data);
+		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/updateProgress', data);
 	}
 };
 
-RENDERER.init();
+
+
+MAIN.init();

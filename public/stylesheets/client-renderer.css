@@ -28,6 +28,7 @@ br
 #debug-info 
 {
 	position: fixed;
+	max-width: 300px;
 	bottom: 0;
 	right: 0;
 	color: white;
@@ -36,34 +37,37 @@ br
 	background-color: rgba(0,0,0,1);
 }
 
-#debug-info .two-part-item
+#debug-info .field
 {
-	
+	font-size: 0.8em;
 	color: rgba(255, 255, 255, 0.6);
 }
 
-#debug-info .two-part-item .value
+#debug-info .field .value
 {
 	flex-grow: 1;
-	text-align: right;
+	text-align: center;
+	padding: 10px;
 }
 
-#debug-info .two-part-item .key
+#debug-info .field .key
 {
 	flex-grow: 1;
 	text-align: center;
 	flex-shrink: 1;
-	margin-right: 20px;
-	margin-left: 20px;
+	padding: 10px;
 }
 
-#debug-info .name
+#debug-info .group>.name
 {
+	padding-left: 20px;
+	padding-right: 20px;
 	text-align: center;
 	background-color: rgba(0,0,0,1);
 }
 
-#debug-info .camera table
+#debug-info .group table
 {
 	table-layout: fixed;
+	width: 100%;
 }

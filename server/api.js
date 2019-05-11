@@ -27,16 +27,23 @@ var API =
 	 */
 	onConnect: function(socket)
 	{
-		console.log('[SocketIO] New client has connected!');
+		console.log('[Api] New client has connected!');
 
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
+		var isAdmin = false;
 
-		DATABASE.addRenderClient(sessionId, ipAddress);
+		if (socket.handshake.query.clientType == "admin")
+		{
+			isAdmin = true;
+		}
+		
+		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);		
 		
 		socket.on(API.baseUrl + 'request/renderingCells/layout', API.onRenderingCellsList);
 		socket.on(API.baseUrl + 'request/renderingCells/cell', API.onRequestCell);
-		socket.on(API.baseUrl + 'request/renderingCells/updateProgress', API.onUpdateProgress);		
+		socket.on(API.baseUrl + 'request/renderingCells/updateProgress', API.onUpdateProgress);	
+		socket.on(API.baseUrl + 'request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
 
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
@@ -52,7 +59,7 @@ var API =
 
 		DATABASE.removeRenderClient(sessionId);
 
-		console.log("[SocketIO] Client has disconnected!");
+		console.log("[Api] Client has disconnected!");
 	},
 
 	onRenderingCellsList: function()
@@ -108,7 +115,32 @@ var API =
 		response.send('Scene was uploaded!');
 
 		console.log("[Api] File was uploaded");
-	}
+	},
+
+	onRecalculateLayout: function()
+	{
+		var NUM_OF_CELLS_HORIZONTALLY = 5;
+		var NUM_OF_CELLS_VERTICALLY = 5;
+
+		var CELL_WIDTH = 384;
+		var CELL_HEIGHT = 216;
+
+		DATABASE.clearGridLayout();
+		
+		var startY = 0;
+		while(startY < CELL_HEIGHT * NUM_OF_CELLS_VERTICALLY)
+		{
+			var startX = 0;
+
+			while(startX < CELL_WIDTH * NUM_OF_CELLS_HORIZONTALLY)
+			{
+				DATABASE.addGridLayout(startX, startY, CELL_WIDTH, CELL_HEIGHT);
+				startX += CELL_WIDTH;
+			}
+
+			startY += CELL_HEIGHT;
+		}
+	},
 };
 
 module.exports = API;

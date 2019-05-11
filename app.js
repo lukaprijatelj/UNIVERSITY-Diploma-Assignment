@@ -15,7 +15,8 @@ require('./server/helper.js');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
-var clientRouter = require('./routes/client');
+var clientRendererRouter = require('./routes/client-renderer');
+var clientAdminRouter = require('./routes/client-admin');
 
 var app = express();
 
@@ -49,11 +50,13 @@ var EXPRESS_APP =
 		app.use(express.urlencoded({ extended: false }));
 		app.use(cookieParser());
 		app.use(express.static(path.join(__dirname, 'public')));
+		app.use(express.static(path.join(__dirname, 'database/files')));
 
 		// routes
 		app.use('/', indexRouter);
 		app.use('/upload', usersRouter);
-		app.use('/client', clientRouter);
+		app.use('/clientRenderer', clientRendererRouter);
+		app.use('/clientAdmin', clientAdminRouter);
 
 		API.init(app);
 
@@ -61,29 +64,7 @@ var EXPRESS_APP =
 		app.use(EXPRESS_APP.catch404);
 
 		// error handler
-		app.use(EXPRESS_APP.errorHandler);
-
-		
-		var NUM_OF_CELLS_HORIZONTALLY = 5;
-		var NUM_OF_CELLS_VERTICALLY = 5;
-
-		var CELL_WIDTH = 384;
-		var CELL_HEIGHT = 216;
-		
-		var startY = 0;
-		while(startY < CELL_HEIGHT * NUM_OF_CELLS_VERTICALLY)
-		{
-			var startX = 0;
-
-			while(startX < CELL_WIDTH * NUM_OF_CELLS_HORIZONTALLY)
-			{
-				DATABASE.addGridLayout(startX, startY, CELL_WIDTH, CELL_HEIGHT);
-				startX += CELL_WIDTH;
-			}
-
-			startY += CELL_HEIGHT;
-		}
-		
+		app.use(EXPRESS_APP.errorHandler);		
 	}
 };
 

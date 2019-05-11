@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+
+		<!-- styles -->
+		<link rel="stylesheet" href="stylesheets/common.css">
+		<link rel="stylesheet" href="stylesheets/client-admin.css">
+
+		<!-- scripts -->
+		<script src="javascripts/socket.io/socket.io.js"></script>
+		<script src="javascripts/html.js"></script>
+		<script src="javascripts/helper.js"></script>
+	</head>
+	<body>
+		<div id="grid-layout" class=""></div>
+
+		<div onclick="MAIN.requestRecalculateLayout()">Recalculate layout</div>
+
+		<script src="javascripts/client-admin/main.js"></script>
+	</body>
+</html>
