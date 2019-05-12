@@ -1,14 +1,12 @@
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
-// OPTIONS: default, raytracing, pathrendering
-var RENDERER_TYPE = 'raytracing';
-
 var loader = new THREE.GLTFLoader();
 var scene = new THREE.Scene();
 var camera = null;
 var renderer = null;
 var controls = null;
+
 
 /** ----- NOTES: ----- */ 
 
@@ -17,6 +15,7 @@ var controls = null;
 
 // if you use *.gltf model, then objects will not be rendered with rayTracing method because materials are MeshStandardMaterial type.
 // this type of material does not render with RayTracing method. Not sure why though!
+
 
 var MAIN =
 {
@@ -288,17 +287,18 @@ var MAIN =
 	},
 
 	/**
-	 * Starts loading 3D GTLF scene from server.
+	 * Initializes renderer.
+	 * @param {string} type - default, raytracing, pathrendering
 	 */
-	initRenderer: function()
+	initRenderer: function(type)
 	{
-		console.log('[Main] Initialize renderer');
+		console.log('[Main] Initialize renderer of type "' + type + '"');
 
-		if (RENDERER_TYPE == 'default')
+		if (type == 'default')
 		{
 			renderer = new THREE.WebGLRenderer();
 		}
-		else if (RENDERER_TYPE == 'raytracing')
+		else if (type == 'raytracing')
 		{
 			renderer = new THREE.RaytracingRenderer({
 				workers: 1,
@@ -318,9 +318,7 @@ var MAIN =
 
 		// start rendering
 		MAIN.onRenderFrame();
-	},
-
-	
+	},	
 
 	/**
 	 * Capture screenshot of canvas.
@@ -336,56 +334,10 @@ var MAIN =
 		var width = renderCell.width;
 		var height = renderCell.height;
 
-		var imgData = MAIN.readCanvasPixels_Deprecated(renderer, ctx, startX, startY, width, height);
-		//MAIN.updateProgressAsync(20, imgData);
-
+		throw 'missing imgData variable';
 		ctx.putImageData(imgData, 0,0);
 	},
 
-	/**
-	 * this function is deprecated, because is uses linear reading of the pixels instead of using graphics card API.
-	 * Linear pixels reading is very slow !
-	 */
-	readCanvasPixels_Deprecated: function(renderer, context2d, startX, startY, width, height)
-	{
-		var gl = renderer.getContext();
-
-		// red, green, blue, alpha
-		var NUM_OF_VERTICES = 4;
-
-		var verticesLength = width * height * NUM_OF_VERTICES;
-		var pixelValues = new Uint8Array(verticesLength);
-		gl.readPixels(startX, startY, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
-
-		/*
-		var pixelValues = new Float32Array(verticesLength);
-		renderer.readRenderTargetPixels(startX, startY, width, height, pixelValues);
-		*/
-
-		var imgData = context2d.createImageData(width, height);
-		var newCell = verticesLength;
-
-		// must invert pixels by X axis
-		newCell -= width*NUM_OF_VERTICES;
-		var cell = 0;
-
-		for (var j=0; j<height;j++)
-		{
-			for (var i=0; i<width; i++)
-			{
-				for (var k=0; k<NUM_OF_VERTICES; k++)
-				{					
-					imgData.data[newCell] = pixelValues[cell];
-
-					cell++;
-					newCell++;
-				}
-			}
-			newCell -= (width*NUM_OF_VERTICES*2);		
-		}
-
-		return imgData;
-	},
 
 	/**
 	 * Main rendering loop.
@@ -447,7 +399,7 @@ var MAIN =
 		}				
 
 		// Load a glTF resource
-		MAIN.initRenderer();
+		MAIN.initRenderer('raytracing');
 
 		MAIN.requestCellAsync();
 	},
