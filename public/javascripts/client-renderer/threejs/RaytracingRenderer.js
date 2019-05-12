@@ -30,7 +30,8 @@ THREE.RaytracingRenderer = function ( parameters ) {
 	this.autoClear = true;
 
 	var workers = parameters.workers;
-	var blockSize = parameters.blockSize || 64;
+	var blockWidth = parameters.blockWidth || 64;
+	var blockHeight = parameters.blockHeight || 64;
 	this.randomize = parameters.randomize;
 
 	var toRender = [], workerId = 0, sceneId = 0;
@@ -52,9 +53,9 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 				if ( ! data ) return;
 
-				if ( data.blockSize && sceneId == data.sceneId ) { // we match sceneId here to be sure
+				if ( data.blockWidth && data.blockHeight && sceneId == data.sceneId ) { // we match sceneId here to be sure
 
-					var imagedata = new ImageData( new Uint8ClampedArray( data.data ), data.blockSize, data.blockSize );
+					var imagedata = new ImageData( new Uint8ClampedArray( data.data ), data.blockWidth, data.blockHeight );
 					context.putImageData( imagedata, data.blockX, data.blockY );
 
 					// completed
@@ -147,7 +148,8 @@ THREE.RaytracingRenderer = function ( parameters ) {
 			init: [ canvasWidth, canvasHeight ],
 			worker: worker.id,
 			// workers: pool.length,
-			blockSize: blockSize
+			blockWidth: blockWidth,
+			blockHeight: blockHeight
 
 		} );
 
@@ -164,8 +166,8 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 		var current = toRender.pop();
 
-		var blockX = ( current % xblocks ) * blockSize;
-		var blockY = ( current / xblocks | 0 ) * blockSize;
+		var blockX = ( current % xblocks ) * blockWidth;
+		var blockY = ( current / xblocks | 0 ) * blockHeight;
 
 		worker.postMessage( {
 			render: true,
@@ -176,7 +178,7 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 		context.fillStyle = '#' + worker.color;
 
-		context.fillRect( blockX, blockY, blockSize, blockSize );
+		context.fillRect( blockX, blockY, blockWidth, blockHeight );
 
 	}
 
@@ -249,8 +251,8 @@ THREE.RaytracingRenderer = function ( parameters ) {
 		context.clearRect( 0, 0, canvasWidth, canvasHeight );
 		reallyThen = Date.now();
 
-		xblocks = Math.ceil( canvasWidth / blockSize );
-		yblocks = Math.ceil( canvasHeight / blockSize );
+		xblocks = Math.ceil( canvasWidth / blockWidth );
+		yblocks = Math.ceil( canvasHeight / blockHeight );
 		totalBlocks = xblocks * yblocks;
 
 		toRender = [];

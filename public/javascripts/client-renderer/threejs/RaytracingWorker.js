@@ -1,4 +1,5 @@
-var BLOCK = 128;
+var BLOCK_WIDTH = 128;
+var BLOCK_HEIGHT = 128;
 var startX, startY;
 
 var scene, camera, renderer, loader, sceneId;
@@ -6,18 +7,22 @@ var scene, camera, renderer, loader, sceneId;
 importScripts('./three.js');
 
 
-self.onmessage = function ( e ) {
-
+self.onmessage = function ( e ) 
+{
 	var data = e.data;
-	if ( ! data ) return;
 
-	if ( data.init ) {
+	if (!data) 
+	{
+		return;
+	}
 
-		var
-			width = data.init[ 0 ],
-			height = data.init[ 1 ];
+	if (data.init) 
+	{
+		var width = data.init[ 0 ];
+		var height = data.init[ 1 ];
 
-		BLOCK = data.blockSize;
+		BLOCK_WIDTH = data.blockWidth;
+		BLOCK_HEIGHT = data.blockHeight;
 
 		if ( ! renderer ) renderer = new THREE.RaytracingRendererWorker();
 		if ( ! loader ) loader = new THREE.ObjectLoader();
@@ -29,18 +34,17 @@ self.onmessage = function ( e ) {
 
 	}
 
-	if ( data.scene ) {
-
+	if (data.scene) 
+	{
 		scene = loader.parse( data.scene );
 		camera = loader.parse( data.camera );
 
 		var meta = data.annex;
 		scene.traverse( function ( o ) {
 
-			if ( o.isPointLight ) {
-
+			if ( o.isPointLight ) 
+			{
 				o.physicalAttenuation = true;
-
 			}
 
 			var mat = o.material;
@@ -49,26 +53,22 @@ self.onmessage = function ( e ) {
 
 			var material = meta[ mat.uuid ];
 
-			for ( var m in material ) {
-
+			for ( var m in material ) 
+			{
 				mat[ m ] = material[ m ];
-
 			}
 
 		} );
 
 		sceneId = data.sceneId;
-
 	}
 
-	if ( data.render && scene && camera ) {
-
+	if (data.render && scene && camera) 
+	{
 		startX = data.x;
 		startY = data.y;
 		renderer.render( scene, camera );
-
 	}
-
 };
 
 /**
@@ -77,9 +77,8 @@ self.onmessage = function ( e ) {
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-
-THREE.RaytracingRendererWorker = function () {
-
+THREE.RaytracingRendererWorker = function () 
+{
 	console.log( 'THREE.RaytracingRendererWorker', THREE.REVISION );
 
 	var maxRecursionDepth = 3;
@@ -104,20 +103,19 @@ THREE.RaytracingRendererWorker = function () {
 	var lights = [];
 	var cache = {};
 
-	this.setSize = function ( width, height ) {
-
+	this.setSize = function (width, height) 
+	{
 		canvasWidth = width;
 		canvasHeight = height;
 
 		canvasWidthHalf = Math.floor( canvasWidth / 2 );
 		canvasHeightHalf = Math.floor( canvasHeight / 2 );
-
 	};
 
 	//
 
-	var spawnRay = ( function () {
-
+	var spawnRay = ( function () 
+	{
 		var diffuseColor = new THREE.Color();
 		var specularColor = new THREE.Color();
 		var lightColor = new THREE.Color();
@@ -137,31 +135,31 @@ THREE.RaytracingRendererWorker = function () {
 
 		var tmpColor = [];
 
-		for ( var i = 0; i < maxRecursionDepth; i ++ ) {
-
-			tmpColor[ i ] = new THREE.Color();
-
+		for ( var i = 0; i < maxRecursionDepth; i ++ ) 
+		{
+			tmpColor[i] = new THREE.Color();
 		}
 
-		return function spawnRay( rayOrigin, rayDirection, outputColor, recursionDepth ) {
-
+		return function spawnRay(rayOrigin, rayDirection, outputColor, recursionDepth) 
+		{
+			// change colour for when no object is hit
 			outputColor.setRGB( 0, 0, 0 );
-
-			//
 
 			ray.origin = rayOrigin;
 			ray.direction = rayDirection;
 
-			var intersections = raycaster.intersectObjects( objects, true );
+			var intersections = raycaster.intersectObjects(objects, true);
 
-			// ray didn't find anything
-			// (here should come setting of background color?)
-
-			if ( intersections.length === 0 ) return;
+			if ( intersections.length === 0 ) 
+			{
+				// ray didn't find anything
+				// (here should come setting of background color?)
+				return;
+			}
 
 			// ray hit
 
-			var intersection = intersections[ 0 ];
+			var intersection = intersections[0];
 
 			var point = intersection.point;
 			var object = intersection.object;
@@ -170,40 +168,37 @@ THREE.RaytracingRendererWorker = function () {
 
 			var geometry = object.geometry;
 
-			//
+			var _object = cache[object.id];
 
-			var _object = cache[ object.id ];
-
-			eyeVector.subVectors( ray.origin, point ).normalize();
+			eyeVector.subVectors(ray.origin, point).normalize();
 
 			// resolve pixel diffuse color
 
 			if ( material.isMeshLambertMaterial ||
 				 material.isMeshPhongMaterial ||
-				 material.isMeshBasicMaterial ) {
+				 material.isMeshBasicMaterial) 
+			{
 
-				diffuseColor.copyGammaToLinear( material.color );
-
-			} else {
-
-				diffuseColor.setRGB( 1, 1, 1 );
-
+				diffuseColor.copyGammaToLinear(material.color);
+			} 
+			else 
+			{
+				diffuseColor.setRGB(1, 1, 1);
 			}
 
-			if ( material.vertexColors === THREE.FaceColors ) {
-
+			if ( material.vertexColors === THREE.FaceColors ) 
+			{
 				diffuseColor.multiply( face.color );
-
 			}
 
 			// compute light shading
 
 			rayLight.origin.copy( point );
 
-			if ( material.isMeshBasicMaterial ) {
-
-				for ( var i = 0, l = lights.length; i < l; i ++ ) {
-
+			if ( material.isMeshBasicMaterial) 
+			{
+				for ( var i = 0, l = lights.length; i < l; i ++ ) 
+				{
 					var light = lights[ i ];
 
 					lightVector.setFromMatrixPosition( light.matrixWorld );
@@ -222,13 +217,13 @@ THREE.RaytracingRendererWorker = function () {
 					outputColor.add( diffuseColor );
 
 				}
-
-			} else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) {
-
+			} 
+			else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) 
+			{
 				var normalComputed = false;
 
-				for ( var i = 0, l = lights.length; i < l; i ++ ) {
-
+				for ( var i = 0, l = lights.length; i < l; i ++ ) 
+				{
 					var light = lights[ i ];
 
 					lightVector.setFromMatrixPosition( light.matrixWorld );
@@ -237,15 +232,18 @@ THREE.RaytracingRendererWorker = function () {
 					rayLight.direction.copy( lightVector ).normalize();
 
 					var intersections = raycasterLight.intersectObjects( objects, true );
+					
+					if ( intersections.length > 0 ) 
+					{
+						// point in shadow
 
-					// point in shadow
-
-					if ( intersections.length > 0 ) continue;
+						continue;
+					}
 
 					// point lit
 
-					if ( normalComputed === false ) {
-
+					if ( normalComputed === false ) 
+					{
 						// the same normal can be reused for all lights
 						// (should be possible to cache even more)
 
@@ -254,7 +252,6 @@ THREE.RaytracingRendererWorker = function () {
 						normalVector.applyMatrix3( _object.normalMatrix ).normalize();
 
 						normalComputed = true;
-
 					}
 
 					lightColor.copyGammaToLinear( light.color );
@@ -263,11 +260,10 @@ THREE.RaytracingRendererWorker = function () {
 
 					var attenuation = 1.0;
 
-					if ( light.physicalAttenuation === true ) {
-
+					if ( light.physicalAttenuation === true ) 
+					{
 						attenuation = lightVector.length();
-						attenuation = 1.0 / ( attenuation * attenuation );
-
+						attenuation = 1.0 / (attenuation * attenuation);
 					}
 
 					lightVector.normalize();
@@ -285,8 +281,8 @@ THREE.RaytracingRendererWorker = function () {
 
 					// compute specular
 
-					if ( material.isMeshPhongMaterial ) {
-
+					if (material.isMeshPhongMaterial) 
+					{
 						halfVector.addVectors( lightVector, eyeVector ).normalize();
 
 						var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
@@ -307,25 +303,23 @@ THREE.RaytracingRendererWorker = function () {
 						lightContribution.multiplyScalar( specularNormalization * specularIntensity * attenuation );
 
 						outputColor.add( lightContribution );
-
 					}
-
 				}
-
 			}
 
 			// reflection / refraction
 
 			var reflectivity = material.reflectivity;
 
-			if ( ( material.mirror || material.glass ) && reflectivity > 0 && recursionDepth < maxRecursionDepth ) {
-
-				if ( material.mirror ) {
-
+			if ( ( material.mirror || material.glass ) && reflectivity > 0 && recursionDepth < maxRecursionDepth ) 
+			{
+				if ( material.mirror ) 
+				{
 					reflectionVector.copy( rayDirection );
 					reflectionVector.reflect( normalVector );
-
-				} else if ( material.glass ) {
+				}
+				else if ( material.glass ) 
+				{
 
 					var eta = material.refractionRatio;
 
@@ -360,21 +354,18 @@ THREE.RaytracingRendererWorker = function () {
 
 				spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 
-				if ( material.specular !== undefined ) {
-
+				if ( material.specular !== undefined ) 
+				{
 					zColor.multiply( material.specular );
-
 				}
 
 				zColor.multiplyScalar( weight );
 				outputColor.multiplyScalar( 1 - weight );
 				outputColor.add( zColor );
-
 			}
-
 		};
 
-	}() );
+	}());
 
 	var computePixelNormal = ( function () {
 
@@ -390,12 +381,12 @@ THREE.RaytracingRendererWorker = function () {
 
 			var faceNormal = face.normal;
 
-			if ( flatShading === true ) {
-
+			if ( flatShading === true ) 
+			{
 				outputVector.copy( faceNormal );
-
-			} else {
-
+			}
+			else 
+			{
 				var positions = geometry.attributes.position;
 				var normals = geometry.attributes.normal;
 
@@ -430,28 +421,27 @@ THREE.RaytracingRendererWorker = function () {
 
 				outputVector.addVectors( tmpVec1, tmpVec2 );
 				outputVector.add( tmpVec3 );
-
 			}
-
 		};
 
 	}() );
 
-	var renderBlock = ( function () {
+	var renderBlock = ( function () 
+	{
+		var blockWidth = BLOCK_WIDTH;
+		var blockHeight = BLOCK_HEIGHT;
 
-		var blockSize = BLOCK;
-
-		var data = new Uint8ClampedArray( blockSize * blockSize * 4 );
+		var data = new Uint8ClampedArray( blockWidth * blockHeight * 4 );
 
 		var pixelColor = new THREE.Color();
 
-		return function renderBlock( blockX, blockY ) {
-
+		return function renderBlock( blockX, blockY ) 
+		{
 			var index = 0;
 
-			for ( var y = 0; y < blockSize; y ++ ) {
+			for ( var y = 0; y < blockHeight; y ++ ) {
 
-				for ( var x = 0; x < blockSize; x ++, index += 4 ) {
+				for ( var x = 0; x < blockWidth; x ++, index += 4 ) {
 
 					// spawn primary ray at pixel position
 
@@ -468,9 +458,7 @@ THREE.RaytracingRendererWorker = function () {
 					data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
 					data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
 					data[ index + 3 ] = 255;
-
 				}
-
 			}
 
 			// Use transferable objects! :)
@@ -478,19 +466,18 @@ THREE.RaytracingRendererWorker = function () {
 				data: data.buffer,
 				blockX: blockX,
 				blockY: blockY,
-				blockSize: blockSize,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
 				sceneId: sceneId,
 				time: Date.now(), // time for this renderer
 			}, [ data.buffer ] );
 
-			data = new Uint8ClampedArray( blockSize * blockSize * 4 );
-
+			data = new Uint8ClampedArray( blockWidth * blockHeight * 4 );
 		};
+	}());
 
-	}() );
-
-	this.render = function ( scene, camera ) {
-
+	this.render = function ( scene, camera ) 
+	{
 		// update scene graph
 
 		if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
@@ -513,21 +500,19 @@ THREE.RaytracingRendererWorker = function () {
 
 		lights.length = 0;
 
-		scene.traverse( function ( object ) {
-
-			if ( object.isPointLight ) {
-
+		scene.traverse( function ( object ) 
+		{
+			if ( object.isPointLight ) 
+			{
 				lights.push( object );
-
 			}
 
-			if ( cache[ object.id ] === undefined ) {
-
+			if ( cache[ object.id ] === undefined ) 
+			{
 				cache[ object.id ] = {
 					normalMatrix: new THREE.Matrix3(),
 					inverseMatrix: new THREE.Matrix4()
 				};
-
 			}
 
 			var _object = cache[ object.id ];
@@ -538,9 +523,7 @@ THREE.RaytracingRendererWorker = function () {
 		} );
 
 		renderBlock( startX, startY );
-
 	};
-
 };
 
 Object.assign( THREE.RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype );

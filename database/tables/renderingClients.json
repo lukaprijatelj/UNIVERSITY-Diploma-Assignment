@@ -50,8 +50,22 @@
             "admin": true
         },
         {
-            "_id": "02f603c0-7425-11e9-94f2-15ea7c987ecb",
-            "sessionId": "r_9uxctNhGbx1SNTAAAB",
+            "_id": "84c7ded0-74b3-11e9-8e15-fdd73c242e71",
+            "sessionId": "mCkwtLzUFZm4rfkoAAAn",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "510ae0f0-74b9-11e9-b1e7-87ccfef890b8",
+            "sessionId": "absjnFBQ07JFVZIMAAAQ",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "7847bc50-74c4-11e9-a6b9-1359ea74d883",
+            "sessionId": "QXbYlOWhW4yKxijZAAAQ",
             "ipAddress": "::1",
             "active": false,
             "admin": false
