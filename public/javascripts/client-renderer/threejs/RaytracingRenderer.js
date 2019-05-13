@@ -6,22 +6,22 @@
  * @author zz85 / http://github.com/zz85
  */
 
-THREE.RaytracingRenderer = function ( parameters ) {
-
+THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shouldRandomize, alpha) 
+{
 	console.log( 'THREE.RaytracingRenderer', THREE.REVISION );
-
-	parameters = parameters || {};
 
 	var scope = this;
 	var pool = [];
 	var renderering = false;
 
 	var canvas = document.createElement( 'canvas' );
-	var context = canvas.getContext( '2d', {
-		alpha: parameters.alpha === true
-	} );
+	var context = canvas.getContext( '2d', 
+	{
+		alpha: alpha === true
+	});
 
-	var canvasWidth, canvasHeight;
+	var canvasWidth;
+	var canvasHeight;
 
 	var clearColor = new THREE.Color( 0x000000 );
 
@@ -29,96 +29,62 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 	this.autoClear = true;
 
-	var workers = parameters.workers;
-	var blockWidth = parameters.blockWidth || 64;
-	var blockHeight = parameters.blockHeight || 64;
-	this.randomize = parameters.randomize;
+	this.workers = numOfWorkers;
+	this.blockWidth = blockWidth || 64;
+	this.blockHeight = blockHeight || 64;
 
-	var toRender = [], workerId = 0, sceneId = 0;
+	this.randomize = shouldRandomize;
 
-	console.log( '%cSpinning off ' + workers + ' Workers ', 'font-size: 20px; background: black; color: white; font-family: monospace;' );
+	var toRender = [];
+	var workerId = 0;
+	var sceneId = 0;
 
-	this.setWorkers = function ( w ) {
+	console.log('%cSpinning off ' + this.workers + ' Workers ', 'font-size: 20px; background: black; color: white; font-family: monospace;');
 
-		workers = w || navigator.hardwareConcurrency || 4;
+	this.setWorkers = function(w) 
+	{
+		this.workers = w || navigator.hardwareConcurrency || 4;
 
-		while ( pool.length < workers ) {
-
-			var worker = new Worker( parameters.workerPath );
+		while (pool.length < this.workers) 
+		{
+			var worker = new THREE.RaytracingRendererWorker();
 			worker.id = workerId ++;
 
-			worker.onmessage = function ( e ) {
-
-				var data = e.data;
-
-				if ( ! data ) return;
-
-				if ( data.blockWidth && data.blockHeight && sceneId == data.sceneId ) { // we match sceneId here to be sure
-
-					var imagedata = new ImageData( new Uint8ClampedArray( data.data ), data.blockWidth, data.blockHeight );
-					context.putImageData( imagedata, data.blockX, data.blockY );
-
-					// completed
-
-					console.log( 'Worker ' + this.id, data.time / 1000, ( Date.now() - reallyThen ) / 1000 + ' s' );
-
-					if ( pool.length > workers ) {
-
-						pool.splice( pool.indexOf( this ), 1 );
-						return this.terminate();
-
-					}
-
-					renderNext( this );
-
-				}
-
-			};
-
 			worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
-			pool.push( worker );
+			pool.push(worker);
 
-			updateSettings( worker );
+			this.updateSettings(worker);
 
-			if ( renderering ) {
-
-				worker.postMessage( {
-					scene: sceneJSON,
-					camera: cameraJSON,
-					annex: materials,
-					sceneId: sceneId
-				} );
-
-				renderNext( worker );
-
+			if (renderering) 
+			{
+				worker.initScene( sceneJSON, cameraJSON, materials, sceneId);
+				this.renderNext(worker);
 			}
-
 		}
 
-		if ( ! renderering ) {
-
-			while ( pool.length > workers ) {
-
+		if (!renderering) 
+		{
+			while (pool.length > this.workers) 
+			{
 				pool.pop().terminate();
-
 			}
-
 		}
-
 	};
 
-	this.setWorkers( workers );
-
-	this.setClearColor = function ( color /*, alpha */ ) {
-
+	this.setClearColor = function ( color /*, alpha */ ) 
+	{
 		clearColor.set( color );
-
 	};
 
 	this.setPixelRatio = function () {};
 
-	this.setSize = function ( width, height ) {
+	this.updateSettings = function(worker) 
+	{
+		worker.init(worker, canvasWidth, canvasHeight, worker.id, this.blockWidth, this.blockHeight, context);
+	};
 
+	this.setSize = function (width, height) 
+	{
 		canvas.width = width;
 		canvas.height = height;
 
@@ -127,99 +93,73 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 		context.fillStyle = 'white';
 
-		pool.forEach( updateSettings );
+		for (var i=0; i<pool.length; i++)
+		{
+			var workerObj = pool[i];
 
+			this.updateSettings(workerObj);
+		}
 	};
 
-	this.setSize( canvas.width, canvas.height );
-
-	this.clear = function () {
-
-	};
+	this.clear = function() {};
 
 	//
 
-	var totalBlocks, xblocks, yblocks;
+	var totalBlocks;
+	var xblocks;
+	var yblocks;	
 
-	function updateSettings( worker ) {
-
-		worker.postMessage( {
-
-			init: [ canvasWidth, canvasHeight ],
-			worker: worker.id,
-			// workers: pool.length,
-			blockWidth: blockWidth,
-			blockHeight: blockHeight
-
-		} );
-
-	}
-
-	function renderNext( worker ) {
-
-		if ( ! toRender.length ) {
-
+	this.renderNext = function(worker) 
+	{
+		if (!toRender.length) 
+		{
 			renderering = false;
 			return scope.dispatchEvent( { type: "complete" } );
-
 		}
 
 		var current = toRender.pop();
-
-		var blockX = ( current % xblocks ) * blockWidth;
-		var blockY = ( current / xblocks | 0 ) * blockHeight;
-
-		worker.postMessage( {
-			render: true,
-			x: blockX,
-			y: blockY,
-			sceneId: sceneId
-		} );
+		var blockX = ( current % xblocks ) * this.blockWidth;
+		var blockY = ( current / xblocks | 0 ) * this.blockHeight;
 
 		context.fillStyle = '#' + worker.color;
+		context.fillRect(blockX, blockY, this.blockWidth, this.blockHeight);
 
-		context.fillRect( blockX, blockY, blockWidth, blockHeight );
-
-	}
+		worker.startRendering(blockX, blockY);		
+	};
 
 	var materials = {};
-
-	var sceneJSON, cameraJSON, reallyThen;
+	var sceneJSON;
+	var cameraJSON;
 
 	// additional properties that were not serialize automatically
 
 	var _annex = {
-
 		mirror: 1,
 		reflectivity: 1,
 		refractionRatio: 1,
 		glass: 1
-
 	};
 
-	function serializeObject( o ) {
-
+	this.serializeObject = function( o ) 
+	{
 		var mat = o.material;
 
 		if ( ! mat || mat.uuid in materials ) return;
 
 		var props = {};
-		for ( var m in _annex ) {
-
-			if ( mat[ m ] !== undefined ) {
-
+		for ( var m in _annex ) 
+		{
+			if ( mat[ m ] !== undefined ) 
+			{
 				props[ m ] = mat[ m ];
-
 			}
-
 		}
 
 		materials[ mat.uuid ] = props;
+	};
 
-	}
-
-	this.render = function ( scene, camera ) {
-
+	this.render = function ( scene, camera ) 
+	{
 		renderering = true;
 
 		// update scene graph
@@ -230,60 +170,57 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 		if ( camera.parent === null ) camera.updateMatrixWorld();
 
-
 		sceneJSON = scene.toJSON();
 		cameraJSON = camera.toJSON();
 		++ sceneId;
 
-		scene.traverse( serializeObject );
+		scene.traverse(this.serializeObject);
 
-		pool.forEach( function ( worker ) {
-
-			worker.postMessage( {
-				scene: sceneJSON,
-				camera: cameraJSON,
-				annex: materials,
-				sceneId: sceneId
-			} );
-
-		} );
+		pool.forEach(function( worker ) 
+		{
+			worker.initScene(sceneJSON, cameraJSON, materials, sceneId);
+		});
 
 		context.clearRect( 0, 0, canvasWidth, canvasHeight );
-		reallyThen = Date.now();
 
-		xblocks = Math.ceil( canvasWidth / blockWidth );
-		yblocks = Math.ceil( canvasHeight / blockHeight );
+		xblocks = Math.ceil( canvasWidth / this.blockWidth);
+		yblocks = Math.ceil( canvasHeight / this.blockHeight);
 		totalBlocks = xblocks * yblocks;
 
 		toRender = [];
 
-		for ( var i = 0; i < totalBlocks; i ++ ) {
-
+		for (var i = 0; i < totalBlocks; i++) 
+		{
 			toRender.push( i );
-
 		}
-
 
 		// Randomize painting :)
 
-		if ( scope.randomize ) {
-
-			for ( var i = 0; i < totalBlocks; i ++ ) {
-
+		if ( scope.randomize ) 
+		{
+			for ( var i = 0; i < totalBlocks; i ++ ) 
+			{
 				var swap = Math.random() * totalBlocks | 0;
 				var tmp = toRender[ swap ];
 				toRender[ swap ] = toRender[ i ];
 				toRender[ i ] = tmp;
-
 			}
-
 		}
 
+		for (var i=0; i<pool.length; i++)
+		{
+			var workerObj = pool[i];
 
-		pool.forEach( renderNext );
-
+			this.renderNext(workerObj);
+		}
 	};
 
+	this.init = function()
+	{
+		this.setWorkers(this.workers);
+		this.setSize(canvas.width, canvas.height);
+	};
+	this.init();
 };
 
 Object.assign( THREE.RaytracingRenderer.prototype, THREE.EventDispatcher.prototype );

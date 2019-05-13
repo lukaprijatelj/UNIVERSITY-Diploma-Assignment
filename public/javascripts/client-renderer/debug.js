@@ -22,9 +22,9 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		DEBUG.camera.positionX.setHtml(Math.roundToTwoDecimals(camera.position.x));
-		DEBUG.camera.positionY.setHtml(Math.roundToTwoDecimals(camera.position.y));
-		DEBUG.camera.positionZ.setHtml(Math.roundToTwoDecimals(camera.position.z));
+		DEBUG.camera.positionX.setHtml(Math.roundToTwoDecimals(MAIN.camera.position.x));
+		DEBUG.camera.positionY.setHtml(Math.roundToTwoDecimals(MAIN.camera.position.y));
+		DEBUG.camera.positionZ.setHtml(Math.roundToTwoDecimals(MAIN.camera.position.z));
 
 		DEBUG.mouse.positionX.setHtml(Math.roundToTwoDecimals(MOUSE.positionX));
 		DEBUG.mouse.positionY.setHtml(Math.roundToTwoDecimals(MOUSE.positionY));

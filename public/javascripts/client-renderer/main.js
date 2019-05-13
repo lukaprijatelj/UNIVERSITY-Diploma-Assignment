@@ -1,11 +1,6 @@
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
-var loader = new THREE.GLTFLoader();
-var scene = new THREE.Scene();
-var camera = null;
-var renderer = null;
-var controls = null;
 
 
 /** ----- NOTES: ----- */ 
@@ -19,6 +14,12 @@ var controls = null;
 
 var MAIN =
 {
+	scene: new THREE.Scene(),
+	renderer: null,
+	controls: null,
+	camera: null,
+
+
 	/**
 	 * Base url API access.
 	 */
@@ -76,15 +77,15 @@ var MAIN =
 
 	initCamera: function()
 	{
-		camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		camera.position.x = 0;
-		camera.position.y = 0;
-		camera.position.z = 600;
+		MAIN.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
+		MAIN.camera.position.x = 0;
+		MAIN.camera.position.y = 0;
+		MAIN.camera.position.z = 600;
 	},
 
 	initCameraControls: function()
 	{
-		controls = new THREE.OrbitControls(camera, renderer.domElement);
+		MAIN.controls = new THREE.OrbitControls(MAIN.camera, MAIN.renderer.domElement);
 	},
 
 	initLights: function()
@@ -96,17 +97,17 @@ var MAIN =
 		var light = new THREE.PointLight( 0xffaa55, intensity );
 		light.position.set( - 200, 100, 100 );
 		light.physicalAttenuation = true;
-		scene.add( light );
+		MAIN.scene.add( light );
 
 		var light = new THREE.PointLight( 0x55aaff, intensity );
 		light.position.set( 200, 100, 100 );
 		light.physicalAttenuation = true;
-		scene.add( light );
+		MAIN.scene.add( light );
 
 		var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
 		light.position.set( 0, 0, 300 );
 		light.physicalAttenuation = true;
-		scene.add( light );
+		MAIN.scene.add( light );
 	},
 
 	init3DObjects: function() 
@@ -207,7 +208,7 @@ var MAIN =
 		//
 
 		group = new THREE.Group();
-		scene.add( group );
+		MAIN.scene.add( group );
 
 		// geometries
 
@@ -240,34 +241,34 @@ var MAIN =
 		glass.scale.multiplyScalar( 0.5 );
 		glass.position.set( 75, - 250 + 5, - 75 );
 		glass.rotation.y = 0.5;
-		scene.add( glass );
+		MAIN.scene.add( glass );
 
 		// bottom
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxBottom );
 		plane.position.set( 0, - 300 + 2.5, - 300 );
 		plane.scale.multiplyScalar( 2 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 
 		// top
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
 		plane.position.set( 0, 300 - 2.5, - 300 );
 		plane.scale.multiplyScalar( 2 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 
 		// back
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
 		plane.rotation.x = 1.57;
 		plane.position.set( 0, 0, - 300 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 
 		var plane = new THREE.Mesh( planeGeometry, mirrorMaterialFlatDark );
 		plane.rotation.x = 1.57;
 		plane.position.set( 0, 0, - 300 + 10 );
 		plane.scale.multiplyScalar( 0.85 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 
 		// left
 
@@ -275,7 +276,7 @@ var MAIN =
 		plane.rotation.z = 1.57;
 		plane.scale.multiplyScalar( 2 );
 		plane.position.set( - 300, 0, - 300 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 
 		// right
 
@@ -283,7 +284,7 @@ var MAIN =
 		plane.rotation.z = 1.57;
 		plane.scale.multiplyScalar( 2 );
 		plane.position.set( 300, 0, - 300 );
-		scene.add( plane );
+		MAIN.scene.add( plane );
 	},
 
 	/**
@@ -296,23 +297,17 @@ var MAIN =
 
 		if (type == 'default')
 		{
-			renderer = new THREE.WebGLRenderer();
+			MAIN.renderer = new THREE.WebGLRenderer();
 		}
 		else if (type == 'raytracing')
 		{
-			renderer = new THREE.RaytracingRenderer({
-				workers: 1,
-				workerPath: 'javascripts/client-renderer/threejs/RaytracingWorker.js',
-				randomize: true,
-				blockWidth: 384,
-				blockHeight: 216
-			});
+			MAIN.renderer = new THREE.RaytracingRenderer(1, 384, 216, true);
 		}
 
-		renderer.domElement.id = "rendering-canvas";
-		renderer.setClearColor('#f4f4f4');				
-		renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(renderer.domElement);
+		MAIN.renderer.domElement.id = "rendering-canvas";
+		MAIN.renderer.setClearColor('#f4f4f4');				
+		MAIN.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+		document.body.appendChild(MAIN.renderer.domElement);
 
 		MAIN.initCameraControls();
 
@@ -338,7 +333,6 @@ var MAIN =
 		ctx.putImageData(imgData, 0,0);
 	},
 
-
 	/**
 	 * Main rendering loop.
 	 */
@@ -348,7 +342,7 @@ var MAIN =
 		//requestAnimationFrame(MAIN.onRenderFrame);
 
 		// render current frame
-		renderer.render(scene, camera);
+		MAIN.renderer.render(MAIN.scene, MAIN.camera);
 
 		/*if (MAIN.getScreenshot == true) 
 		{
@@ -358,10 +352,10 @@ var MAIN =
 			MAIN.getScreenshot = false;
 		}		
 
-		if (controls)
+		if (MAIN.controls)
 		{
 			// update camera
-			controls.update();
+			MAIN.controls.update();
 		}*/
 	},
 

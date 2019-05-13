@@ -1,75 +1,14 @@
 var BLOCK_WIDTH = 128;
 var BLOCK_HEIGHT = 128;
-var startX, startY;
+var startX;
+var startY;
 
-var scene, camera, renderer, loader, sceneId;
-
-importScripts('./three.js');
-
-
-self.onmessage = function ( e ) 
-{
-	var data = e.data;
-
-	if (!data) 
-	{
-		return;
-	}
-
-	if (data.init) 
-	{
-		var width = data.init[ 0 ];
-		var height = data.init[ 1 ];
-
-		BLOCK_WIDTH = data.blockWidth;
-		BLOCK_HEIGHT = data.blockHeight;
-
-		if ( ! renderer ) renderer = new THREE.RaytracingRendererWorker();
-		if ( ! loader ) loader = new THREE.ObjectLoader();
-
-		renderer.setSize( width, height );
-
-		// TODO fix passing maxRecursionDepth as parameter.
-		// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
-
-	}
-
-	if (data.scene) 
-	{
-		scene = loader.parse( data.scene );
-		camera = loader.parse( data.camera );
-
-		var meta = data.annex;
-		scene.traverse( function ( o ) {
-
-			if ( o.isPointLight ) 
-			{
-				o.physicalAttenuation = true;
-			}
-
-			var mat = o.material;
-
-			if ( ! mat ) return;
-
-			var material = meta[ mat.uuid ];
-
-			for ( var m in material ) 
-			{
-				mat[ m ] = material[ m ];
-			}
-
-		} );
-
-		sceneId = data.sceneId;
-	}
-
-	if (data.render && scene && camera) 
-	{
-		startX = data.x;
-		startY = data.y;
-		renderer.render( scene, camera );
-	}
-};
+var scene;
+var camera;
+var renderer;
+var loader;
+var sceneId;
+var context;
 
 /**
  * DOM-less version of Raytracing Renderer
@@ -90,7 +29,7 @@ THREE.RaytracingRendererWorker = function ()
 
 	var cameraPosition = new THREE.Vector3();
 
-	var raycaster = new THREE.Raycaster( origin, direction );
+	var raycaster = new THREE.Raycaster(origin, direction);
 	var ray = raycaster.ray;
 
 	var raycasterLight = new THREE.Raycaster();
@@ -102,6 +41,70 @@ THREE.RaytracingRendererWorker = function ()
 	var objects;
 	var lights = [];
 	var cache = {};
+
+	this.drawOnCanvas = function(buffer, blockX, blockY, blockWidth, blockHeight)
+	{
+		var imagedata = new ImageData( new Uint8ClampedArray(buffer), blockWidth, blockHeight );
+		context.putImageData( imagedata, blockX, blockY );
+
+		// completed
+
+		console.log( 'Worker ' + this.id);
+
+		//renderNext( this );
+	};
+
+	this.init = function(rendererObj, width, height, workerId, blockWidth, blockHeight, contextObj)
+	{
+		BLOCK_WIDTH = blockWidth;
+		BLOCK_HEIGHT = blockHeight;
+
+		if ( ! renderer ) renderer = rendererObj;
+		if ( ! loader ) loader = new THREE.ObjectLoader();
+
+		context = contextObj;
+
+		renderer.setSize(width, height);
+
+		// TODO fix passing maxRecursionDepth as parameter.
+		// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
+	};
+
+	this.initScene = function(sceneData, cameraData, annexData, sceneIdData)
+	{
+		scene = loader.parse(sceneData);
+		camera = loader.parse(cameraData);
+
+		var meta = annexData;
+		scene.traverse( function ( o ) {
+
+			if ( o.isPointLight ) 
+			{
+				o.physicalAttenuation = true;
+			}
+
+			var mat = o.material;
+
+			if (!mat) return;
+
+			var material = meta[ mat.uuid ];
+
+			for ( var m in material ) 
+			{
+				mat[ m ] = material[ m ];
+			}
+
+		} );
+
+		sceneId = sceneIdData;
+	};
+
+	this.startRendering = function(x, y)
+	{
+		startX = x;
+		startY = y;
+		renderer.render( scene, camera );
+	};
 
 	this.setSize = function (width, height) 
 	{
@@ -426,55 +429,38 @@ THREE.RaytracingRendererWorker = function ()
 
 	}() );
 
-	var renderBlock = ( function () 
+	this.renderBlock = function( blockX, blockY ) 
 	{
-		var blockWidth = BLOCK_WIDTH;
-		var blockHeight = BLOCK_HEIGHT;
-
-		var data = new Uint8ClampedArray( blockWidth * blockHeight * 4 );
-
+		var data = new Uint8ClampedArray( BLOCK_WIDTH * BLOCK_HEIGHT * 4 );
 		var pixelColor = new THREE.Color();
+		var index = 0;
 
-		return function renderBlock( blockX, blockY ) 
+		for ( var y = 0; y < BLOCK_HEIGHT; y ++ )
 		{
-			var index = 0;
+			for ( var x = 0; x < BLOCK_WIDTH; x ++, index += 4 ) 
+			{
+				// spawn primary ray at pixel position
 
-			for ( var y = 0; y < blockHeight; y ++ ) {
+				origin.copy( cameraPosition );
 
-				for ( var x = 0; x < blockWidth; x ++, index += 4 ) {
+				direction.set( x + blockX - canvasWidthHalf, - ( y + blockY - canvasHeightHalf ), - perspective );
+				direction.applyMatrix3( cameraNormalMatrix ).normalize();
 
-					// spawn primary ray at pixel position
+				spawnRay( origin, direction, pixelColor, 0 );
 
-					origin.copy( cameraPosition );
+				// convert from linear to gamma
 
-					direction.set( x + blockX - canvasWidthHalf, - ( y + blockY - canvasHeightHalf ), - perspective );
-					direction.applyMatrix3( cameraNormalMatrix ).normalize();
-
-					spawnRay( origin, direction, pixelColor, 0 );
-
-					// convert from linear to gamma
-
-					data[ index + 0 ] = Math.sqrt( pixelColor.r ) * 255;
-					data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
-					data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
-					data[ index + 3 ] = 255;
-				}
+				data[ index + 0 ] = Math.sqrt( pixelColor.r ) * 255;
+				data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
+				data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
+				data[ index + 3 ] = 255;
 			}
+		}
 
-			// Use transferable objects! :)
-			self.postMessage( {
-				data: data.buffer,
-				blockX: blockX,
-				blockY: blockY,
-				blockWidth: blockWidth,
-				blockHeight: blockHeight,
-				sceneId: sceneId,
-				time: Date.now(), // time for this renderer
-			}, [ data.buffer ] );
+		this.drawOnCanvas(data.buffer, blockX, blockY, BLOCK_WIDTH, BLOCK_HEIGHT);
 
-			data = new Uint8ClampedArray( blockWidth * blockHeight * 4 );
-		};
-	}());
+		data = new Uint8ClampedArray( BLOCK_WIDTH * BLOCK_HEIGHT * 4 );
+	};
 
 	this.render = function ( scene, camera ) 
 	{
@@ -522,7 +508,7 @@ THREE.RaytracingRendererWorker = function ()
 
 		} );
 
-		renderBlock( startX, startY );
+		this.renderBlock( startX, startY );
 	};
 };
 
