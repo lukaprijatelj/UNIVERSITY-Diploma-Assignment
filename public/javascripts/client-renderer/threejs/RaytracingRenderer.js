@@ -8,31 +8,25 @@
 
 THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shouldRandomize, alpha) 
 {
-	console.log( 'THREE.RaytracingRenderer', THREE.REVISION );
+	console.log('THREE.RaytracingRenderer', THREE.REVISION);
 
-	var scope = this;
-	var pool = [];
-	var renderering = false;
-
-	var canvas = document.createElement( 'canvas' );
-	var context = canvas.getContext( '2d', 
+	var canvas = document.createElement('canvas');
+	this.context = canvas.getContext('2d', 
 	{
 		alpha: alpha === true
 	});
 
 	var canvasWidth;
 	var canvasHeight;
+	var clearColor = new THREE.Color(0x000000);
 
-	var clearColor = new THREE.Color( 0x000000 );
-
+	this.renderering = false;
+	this.pool = [];
 	this.domElement = canvas;
-
 	this.autoClear = true;
-
 	this.workers = numOfWorkers;
 	this.blockWidth = blockWidth || 64;
 	this.blockHeight = blockHeight || 64;
-
 	this.randomize = shouldRandomize;
 
 	var toRender = [];
@@ -45,28 +39,28 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 	{
 		this.workers = w || navigator.hardwareConcurrency || 4;
 
-		while (pool.length < this.workers) 
+		while (this.pool.length < this.workers) 
 		{
-			var worker = new THREE.RaytracingRendererWorker();
+			var worker = new THREE.RaytracingRendererWorker(this.blockWidth, this.blockHeight, this.context);
 			worker.id = workerId ++;
 
 			worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
-			pool.push(worker);
+			this.pool.push(worker);
 
 			this.updateSettings(worker);
 
-			if (renderering) 
+			if (this.renderering) 
 			{
-				worker.initScene( sceneJSON, cameraJSON, materials, sceneId);
+				worker.initScene(sceneJSON, cameraJSON, materials, sceneId);
 				this.renderNext(worker);
 			}
 		}
 
-		if (!renderering) 
+		if (!this.renderering) 
 		{
-			while (pool.length > this.workers) 
+			while (this.pool.length > this.workers) 
 			{
-				pool.pop().terminate();
+				this.pool.pop().terminate();
 			}
 		}
 	};
@@ -76,11 +70,13 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 		clearColor.set( color );
 	};
 
+	// probably to override parent functions
+	this.clear = function () {};
 	this.setPixelRatio = function () {};
 
 	this.updateSettings = function(worker) 
 	{
-		worker.init(worker, canvasWidth, canvasHeight, worker.id, this.blockWidth, this.blockHeight, context);
+		worker.init(canvasWidth, canvasHeight, worker.id);
 	};
 
 	this.setSize = function (width, height) 
@@ -91,21 +87,18 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 		canvasWidth = canvas.width;
 		canvasHeight = canvas.height;
 
-		context.fillStyle = 'white';
+		this.context.fillStyle = 'white';
 
-		for (var i=0; i<pool.length; i++)
+		for (var i=0; i<this.pool.length; i++)
 		{
-			var workerObj = pool[i];
+			var workerObj = this.pool[i];
 
 			this.updateSettings(workerObj);
 		}
 	};
 
-	this.clear = function() {};
-
 	//
 
-	var totalBlocks;
 	var xblocks;
 	var yblocks;	
 
@@ -113,16 +106,16 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 	{
 		if (!toRender.length) 
 		{
-			renderering = false;
-			return scope.dispatchEvent( { type: "complete" } );
+			this.renderering = false;
+			return this.dispatchEvent( { type: "complete" } );
 		}
 
 		var current = toRender.pop();
 		var blockX = ( current % xblocks ) * this.blockWidth;
 		var blockY = ( current / xblocks | 0 ) * this.blockHeight;
 
-		context.fillStyle = '#' + worker.color;
-		context.fillRect(blockX, blockY, this.blockWidth, this.blockHeight);
+		this.context.fillStyle = '#' + worker.color;
+		this.context.fillRect(blockX, blockY, this.blockWidth, this.blockHeight);
 
 		worker.startRendering(blockX, blockY);		
 	};
@@ -140,11 +133,11 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 		glass: 1
 	};
 
-	this.serializeObject = function( o ) 
+	this.serializeObject = function(o) 
 	{
 		var mat = o.material;
 
-		if ( ! mat || mat.uuid in materials ) return;
+		if (!mat || mat.uuid in materials) return;
 
 		var props = {};
 		for ( var m in _annex ) 
@@ -155,12 +148,12 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 			}
 		}
 
-		materials[ mat.uuid ] = props;
+		materials[mat.uuid] = props;
 	};
 
-	this.render = function ( scene, camera ) 
+	this.render = function(scene, camera) 
 	{
-		renderering = true;
+		this.renderering = true;
 
 		// update scene graph
 
@@ -176,16 +169,17 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 
 		scene.traverse(this.serializeObject);
 
-		pool.forEach(function( worker ) 
+		for(var i=0; i<this.pool.length; i++)
 		{
-			worker.initScene(sceneJSON, cameraJSON, materials, sceneId);
-		});
+			var workerObj = this.pool[i];
+			workerObj.initScene(sceneJSON, cameraJSON, materials, sceneId);
+		}
 
-		context.clearRect( 0, 0, canvasWidth, canvasHeight );
+		this.context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-		xblocks = Math.ceil( canvasWidth / this.blockWidth);
-		yblocks = Math.ceil( canvasHeight / this.blockHeight);
-		totalBlocks = xblocks * yblocks;
+		xblocks = Math.ceil(canvasWidth / this.blockWidth);
+		yblocks = Math.ceil(canvasHeight / this.blockHeight);
+		var totalBlocks = xblocks * yblocks;
 
 		toRender = [];
 
@@ -196,9 +190,9 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 
 		// Randomize painting :)
 
-		if ( scope.randomize ) 
+		if (this.randomize) 
 		{
-			for ( var i = 0; i < totalBlocks; i ++ ) 
+			for (var i = 0; i < totalBlocks; i++) 
 			{
 				var swap = Math.random() * totalBlocks | 0;
 				var tmp = toRender[ swap ];
@@ -207,9 +201,9 @@ THREE.RaytracingRenderer = function (numOfWorkers, blockWidth, blockHeight, shou
 			}
 		}
 
-		for (var i=0; i<pool.length; i++)
+		for (var i=0; i<this.pool.length; i++)
 		{
-			var workerObj = pool[i];
+			var workerObj = this.pool[i];
 
 			this.renderNext(workerObj);
 		}

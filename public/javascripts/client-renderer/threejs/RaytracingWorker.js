@@ -1,14 +1,10 @@
-var BLOCK_WIDTH = 128;
-var BLOCK_HEIGHT = 128;
 var startX;
 var startY;
 
 var scene;
 var camera;
 var renderer;
-var loader;
 var sceneId;
-var context;
 
 /**
  * DOM-less version of Raytracing Renderer
@@ -16,55 +12,55 @@ var context;
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-THREE.RaytracingRendererWorker = function () 
+THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context) 
 {
 	console.log( 'THREE.RaytracingRendererWorker', THREE.REVISION );
 
-	var maxRecursionDepth = 3;
+	// basically how many tmes it spawns ray (how many times ray hits object)
+	this.maxRecursionDepth = 3;
 
-	var canvasWidth, canvasHeight;
-	var canvasWidthHalf, canvasHeightHalf;
-	var origin = new THREE.Vector3();
-	var direction = new THREE.Vector3();
+	this.canvasWidth;
+	this.canvasHeight;
+	this.canvasWidthHalf;
+	this.canvasHeightHalf;
 
-	var cameraPosition = new THREE.Vector3();
+	this.origin = new THREE.Vector3();
+	this.direction = new THREE.Vector3();
+	
+	this.cameraPosition = new THREE.Vector3();
+	this.cameraNormalMatrix = new THREE.Matrix3();
 
-	var raycaster = new THREE.Raycaster(origin, direction);
-	var ray = raycaster.ray;
+	this.raycaster = new THREE.Raycaster(this.origin, this.direction);
+	this.ray = this.raycaster.ray;
+	this.raycasterLight = new THREE.Raycaster();
+	this.rayLight = this.raycasterLight.ray;
 
-	var raycasterLight = new THREE.Raycaster();
-	var rayLight = raycasterLight.ray;
+	this.perspective;
+	
+	this.objects;
+	this.lights = [];
+	this.cache = {};
 
-	var perspective;
-	var cameraNormalMatrix = new THREE.Matrix3();
+	this.blockWidth = blockWidth;
+	this.blockHeight = blockHeight;
+	this.loader = new THREE.ObjectLoader();
+	this.context = context;
 
-	var objects;
-	var lights = [];
-	var cache = {};
-
-	this.drawOnCanvas = function(buffer, blockX, blockY, blockWidth, blockHeight)
+	this.drawOnCanvas = function(buffer, blockX, blockY)
 	{
-		var imagedata = new ImageData( new Uint8ClampedArray(buffer), blockWidth, blockHeight );
-		context.putImageData( imagedata, blockX, blockY );
+		var imagedata = new ImageData( new Uint8ClampedArray(buffer), this.blockWidth, this.blockHeight );
+		this.context.putImageData( imagedata, blockX, blockY );
 
 		// completed
 
-		console.log( 'Worker ' + this.id);
+		console.log('Worker ' + this.id);
 
 		//renderNext( this );
 	};
 
-	this.init = function(rendererObj, width, height, workerId, blockWidth, blockHeight, contextObj)
+	this.init = function(width, height, workerId)
 	{
-		BLOCK_WIDTH = blockWidth;
-		BLOCK_HEIGHT = blockHeight;
-
-		if ( ! renderer ) renderer = rendererObj;
-		if ( ! loader ) loader = new THREE.ObjectLoader();
-
-		context = contextObj;
-
-		renderer.setSize(width, height);
+		this.setSize(width, height);
 
 		// TODO fix passing maxRecursionDepth as parameter.
 		// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
@@ -72,12 +68,12 @@ THREE.RaytracingRendererWorker = function ()
 
 	this.initScene = function(sceneData, cameraData, annexData, sceneIdData)
 	{
-		scene = loader.parse(sceneData);
-		camera = loader.parse(cameraData);
+		scene = this.loader.parse(sceneData);
+		camera = this.loader.parse(cameraData);
 
 		var meta = annexData;
-		scene.traverse( function ( o ) {
-
+		scene.traverse(function(o) 
+		{
 			if ( o.isPointLight ) 
 			{
 				o.physicalAttenuation = true;
@@ -93,8 +89,7 @@ THREE.RaytracingRendererWorker = function ()
 			{
 				mat[ m ] = material[ m ];
 			}
-
-		} );
+		});
 
 		sceneId = sceneIdData;
 	};
@@ -103,21 +98,21 @@ THREE.RaytracingRendererWorker = function ()
 	{
 		startX = x;
 		startY = y;
-		renderer.render( scene, camera );
+		this.render( scene, camera );
 	};
 
 	this.setSize = function (width, height) 
 	{
-		canvasWidth = width;
-		canvasHeight = height;
+		this.canvasWidth = width;
+		this.canvasHeight = height;
 
-		canvasWidthHalf = Math.floor( canvasWidth / 2 );
-		canvasHeightHalf = Math.floor( canvasHeight / 2 );
+		this.canvasWidthHalf = Math.floor(this.canvasWidth / 2);
+		this.canvasHeightHalf = Math.floor(this.canvasHeight / 2);
 	};
 
 	//
 
-	var spawnRay = ( function () 
+	this.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
 	{
 		var diffuseColor = new THREE.Color();
 		var specularColor = new THREE.Color();
@@ -138,240 +133,226 @@ THREE.RaytracingRendererWorker = function ()
 
 		var tmpColor = [];
 
-		for ( var i = 0; i < maxRecursionDepth; i ++ ) 
+		for ( var i = 0; i < this.maxRecursionDepth; i ++ ) 
 		{
 			tmpColor[i] = new THREE.Color();
 		}
+		
+		// change colour for when no object is hit
+		outputColor.setRGB( 0, 0, 0 );
 
-		return function spawnRay(rayOrigin, rayDirection, outputColor, recursionDepth) 
+		this.ray.origin = rayOrigin;
+		this.ray.direction = rayDirection;
+
+		var intersections = this.raycaster.intersectObjects(this.objects, true);
+
+		if ( intersections.length === 0 ) 
 		{
-			// change colour for when no object is hit
-			outputColor.setRGB( 0, 0, 0 );
+			// ray didn't find anything
+			// (here should come setting of background color?)
+			return;
+		}
 
-			ray.origin = rayOrigin;
-			ray.direction = rayDirection;
+		// ray hit
 
-			var intersections = raycaster.intersectObjects(objects, true);
+		var intersection = intersections[0];
+		var point = intersection.point;
+		var object = intersection.object;
+		var material = object.material;
+		var face = intersection.face;
+		var geometry = object.geometry;
+		var _object = this.cache[object.id];
 
-			if ( intersections.length === 0 ) 
+		eyeVector.subVectors(this.ray.origin, point).normalize();
+
+		// resolve pixel diffuse color
+
+		if ( material.isMeshLambertMaterial ||
+				material.isMeshPhongMaterial ||
+				material.isMeshBasicMaterial) 
+		{
+			diffuseColor.copyGammaToLinear(material.color);
+		} 
+		else 
+		{
+			diffuseColor.setRGB(1, 1, 1);
+		}
+
+		if ( material.vertexColors === THREE.FaceColors ) 
+		{
+			diffuseColor.multiply( face.color );
+		}
+
+		// compute light shading
+
+		this.rayLight.origin.copy( point );
+
+		if ( material.isMeshBasicMaterial) 
+		{
+			for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
 			{
-				// ray didn't find anything
-				// (here should come setting of background color?)
-				return;
+				var light = this.lights[ i ];
+
+				lightVector.setFromMatrixPosition( light.matrixWorld );
+				lightVector.sub( point );
+
+				this.rayLight.direction.copy( lightVector ).normalize();
+
+				var intersections = this.raycasterLight.intersectObjects(this.objects, true);
+
+				// point in shadow
+
+				if ( intersections.length > 0 ) continue;
+
+				// point visible
+
+				outputColor.add( diffuseColor );
 			}
+		} 
+		else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) 
+		{
+			var normalComputed = false;
 
-			// ray hit
-
-			var intersection = intersections[0];
-
-			var point = intersection.point;
-			var object = intersection.object;
-			var material = object.material;
-			var face = intersection.face;
-
-			var geometry = object.geometry;
-
-			var _object = cache[object.id];
-
-			eyeVector.subVectors(ray.origin, point).normalize();
-
-			// resolve pixel diffuse color
-
-			if ( material.isMeshLambertMaterial ||
-				 material.isMeshPhongMaterial ||
-				 material.isMeshBasicMaterial) 
+			for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
 			{
+				var light = this.lights[ i ];
 
-				diffuseColor.copyGammaToLinear(material.color);
-			} 
-			else 
-			{
-				diffuseColor.setRGB(1, 1, 1);
-			}
+				lightVector.setFromMatrixPosition( light.matrixWorld );
+				lightVector.sub( point );
 
-			if ( material.vertexColors === THREE.FaceColors ) 
-			{
-				diffuseColor.multiply( face.color );
-			}
+				this.rayLight.direction.copy( lightVector ).normalize();
 
-			// compute light shading
-
-			rayLight.origin.copy( point );
-
-			if ( material.isMeshBasicMaterial) 
-			{
-				for ( var i = 0, l = lights.length; i < l; i ++ ) 
+				var intersections = this.raycasterLight.intersectObjects(this.objects, true);
+				
+				if ( intersections.length > 0 ) 
 				{
-					var light = lights[ i ];
-
-					lightVector.setFromMatrixPosition( light.matrixWorld );
-					lightVector.sub( point );
-
-					rayLight.direction.copy( lightVector ).normalize();
-
-					var intersections = raycasterLight.intersectObjects( objects, true );
-
 					// point in shadow
 
-					if ( intersections.length > 0 ) continue;
-
-					// point visible
-
-					outputColor.add( diffuseColor );
-
+					continue;
 				}
-			} 
-			else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) 
-			{
-				var normalComputed = false;
 
-				for ( var i = 0, l = lights.length; i < l; i ++ ) 
+				// point lit
+
+				if ( normalComputed === false ) 
 				{
-					var light = lights[ i ];
+					// the same normal can be reused for all lights
+					// (should be possible to cache even more)
 
-					lightVector.setFromMatrixPosition( light.matrixWorld );
-					lightVector.sub( point );
+					localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
+					this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
+					normalVector.applyMatrix3( _object.normalMatrix ).normalize();
 
-					rayLight.direction.copy( lightVector ).normalize();
+					normalComputed = true;
+				}
 
-					var intersections = raycasterLight.intersectObjects( objects, true );
-					
-					if ( intersections.length > 0 ) 
-					{
-						// point in shadow
+				lightColor.copyGammaToLinear( light.color );
 
-						continue;
-					}
+				// compute attenuation
 
-					// point lit
+				var attenuation = 1.0;
 
-					if ( normalComputed === false ) 
-					{
-						// the same normal can be reused for all lights
-						// (should be possible to cache even more)
+				if ( light.physicalAttenuation === true ) 
+				{
+					attenuation = lightVector.length();
+					attenuation = 1.0 / (attenuation * attenuation);
+				}
 
-						localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
-						computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
-						normalVector.applyMatrix3( _object.normalMatrix ).normalize();
+				lightVector.normalize();
 
-						normalComputed = true;
-					}
+				// compute diffuse
 
-					lightColor.copyGammaToLinear( light.color );
+				var dot = Math.max( normalVector.dot( lightVector ), 0 );
+				var diffuseIntensity = dot * light.intensity;
 
-					// compute attenuation
+				lightContribution.copy( diffuseColor );
+				lightContribution.multiply( lightColor );
+				lightContribution.multiplyScalar( diffuseIntensity * attenuation );
 
-					var attenuation = 1.0;
+				outputColor.add( lightContribution );
 
-					if ( light.physicalAttenuation === true ) 
-					{
-						attenuation = lightVector.length();
-						attenuation = 1.0 / (attenuation * attenuation);
-					}
+				// compute specular
 
-					lightVector.normalize();
+				if (material.isMeshPhongMaterial) 
+				{
+					halfVector.addVectors( lightVector, eyeVector ).normalize();
 
-					// compute diffuse
+					var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
+					var specularIntensity = Math.max( Math.pow( dotNormalHalf, material.shininess ), 0.0 ) * diffuseIntensity;
 
-					var dot = Math.max( normalVector.dot( lightVector ), 0 );
-					var diffuseIntensity = dot * light.intensity;
+					var specularNormalization = ( material.shininess + 2.0 ) / 8.0;
 
-					lightContribution.copy( diffuseColor );
+					specularColor.copyGammaToLinear( material.specular );
+
+					var alpha = Math.pow( Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0 );
+
+					schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
+					schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
+					schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
+
+					lightContribution.copy( schlick );
 					lightContribution.multiply( lightColor );
-					lightContribution.multiplyScalar( diffuseIntensity * attenuation );
+					lightContribution.multiplyScalar( specularNormalization * specularIntensity * attenuation );
 
 					outputColor.add( lightContribution );
-
-					// compute specular
-
-					if (material.isMeshPhongMaterial) 
-					{
-						halfVector.addVectors( lightVector, eyeVector ).normalize();
-
-						var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
-						var specularIntensity = Math.max( Math.pow( dotNormalHalf, material.shininess ), 0.0 ) * diffuseIntensity;
-
-						var specularNormalization = ( material.shininess + 2.0 ) / 8.0;
-
-						specularColor.copyGammaToLinear( material.specular );
-
-						var alpha = Math.pow( Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0 );
-
-						schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
-						schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
-						schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
-
-						lightContribution.copy( schlick );
-						lightContribution.multiply( lightColor );
-						lightContribution.multiplyScalar( specularNormalization * specularIntensity * attenuation );
-
-						outputColor.add( lightContribution );
-					}
 				}
 			}
+		}
 
-			// reflection / refraction
+		// reflection / refraction
 
-			var reflectivity = material.reflectivity;
+		var reflectivity = material.reflectivity;
 
-			if ( ( material.mirror || material.glass ) && reflectivity > 0 && recursionDepth < maxRecursionDepth ) 
+		if ( ( material.mirror || material.glass ) && reflectivity > 0 && recursionDepth < this.maxRecursionDepth ) 
+		{
+			if ( material.mirror ) 
 			{
-				if ( material.mirror ) 
+				reflectionVector.copy( rayDirection );
+				reflectionVector.reflect( normalVector );
+			}
+			else if ( material.glass ) 
+			{
+				var eta = material.refractionRatio;
+
+				var dotNI = rayDirection.dot( normalVector );
+				var k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
+
+				if ( k < 0.0 ) 
+				{
+					reflectionVector.set( 0, 0, 0 );
+				}
+				else 
 				{
 					reflectionVector.copy( rayDirection );
-					reflectionVector.reflect( normalVector );
+					reflectionVector.multiplyScalar( eta );
+
+					var alpha = eta * dotNI + Math.sqrt( k );
+					tmpVec.copy( normalVector );
+					tmpVec.multiplyScalar( alpha );
+					reflectionVector.sub( tmpVec );
 				}
-				else if ( material.glass ) 
-				{
-
-					var eta = material.refractionRatio;
-
-					var dotNI = rayDirection.dot( normalVector );
-					var k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
-
-					if ( k < 0.0 ) {
-
-						reflectionVector.set( 0, 0, 0 );
-
-					} else {
-
-						reflectionVector.copy( rayDirection );
-						reflectionVector.multiplyScalar( eta );
-
-						var alpha = eta * dotNI + Math.sqrt( k );
-						tmpVec.copy( normalVector );
-						tmpVec.multiplyScalar( alpha );
-						reflectionVector.sub( tmpVec );
-
-					}
-
-				}
-
-				var theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
-				var rf0 = reflectivity;
-				var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
-
-				var weight = fresnel;
-
-				var zColor = tmpColor[ recursionDepth ];
-
-				spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
-
-				if ( material.specular !== undefined ) 
-				{
-					zColor.multiply( material.specular );
-				}
-
-				zColor.multiplyScalar( weight );
-				outputColor.multiplyScalar( 1 - weight );
-				outputColor.add( zColor );
 			}
-		};
 
-	}());
+			var theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+			var rf0 = reflectivity;
+			var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+			var weight = fresnel;
+			var zColor = tmpColor[ recursionDepth ];
 
-	var computePixelNormal = ( function () {
+			this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 
+			if ( material.specular !== undefined ) 
+			{
+				zColor.multiply( material.specular );
+			}
+
+			zColor.multiplyScalar( weight );
+			outputColor.multiplyScalar( 1 - weight );
+			outputColor.add( zColor );
+		}
+	};
+
+	this.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
+	{
 		var vA = new THREE.Vector3();
 		var vB = new THREE.Vector3();
 		var vC = new THREE.Vector3();
@@ -379,74 +360,69 @@ THREE.RaytracingRendererWorker = function ()
 		var tmpVec1 = new THREE.Vector3();
 		var tmpVec2 = new THREE.Vector3();
 		var tmpVec3 = new THREE.Vector3();
+		var faceNormal = face.normal;
 
-		return function computePixelNormal( outputVector, point, flatShading, face, geometry ) {
+		if ( flatShading === true ) 
+		{
+			outputVector.copy( faceNormal );
+		}
+		else 
+		{
+			var positions = geometry.attributes.position;
+			var normals = geometry.attributes.normal;
 
-			var faceNormal = face.normal;
+			vA.fromBufferAttribute( positions, face.a );
+			vB.fromBufferAttribute( positions, face.b );
+			vC.fromBufferAttribute( positions, face.c );
 
-			if ( flatShading === true ) 
-			{
-				outputVector.copy( faceNormal );
-			}
-			else 
-			{
-				var positions = geometry.attributes.position;
-				var normals = geometry.attributes.normal;
+			// compute barycentric coordinates
 
-				vA.fromBufferAttribute( positions, face.a );
-				vB.fromBufferAttribute( positions, face.b );
-				vC.fromBufferAttribute( positions, face.c );
+			tmpVec3.crossVectors( tmpVec1.subVectors( vB, vA ), tmpVec2.subVectors( vC, vA ) );
+			var areaABC = faceNormal.dot( tmpVec3 );
 
-				// compute barycentric coordinates
+			tmpVec3.crossVectors( tmpVec1.subVectors( vB, point ), tmpVec2.subVectors( vC, point ) );
+			var areaPBC = faceNormal.dot( tmpVec3 );
+			var a = areaPBC / areaABC;
 
-				tmpVec3.crossVectors( tmpVec1.subVectors( vB, vA ), tmpVec2.subVectors( vC, vA ) );
-				var areaABC = faceNormal.dot( tmpVec3 );
+			tmpVec3.crossVectors( tmpVec1.subVectors( vC, point ), tmpVec2.subVectors( vA, point ) );
+			var areaPCA = faceNormal.dot( tmpVec3 );
+			var b = areaPCA / areaABC;
 
-				tmpVec3.crossVectors( tmpVec1.subVectors( vB, point ), tmpVec2.subVectors( vC, point ) );
-				var areaPBC = faceNormal.dot( tmpVec3 );
-				var a = areaPBC / areaABC;
+			var c = 1.0 - a - b;
 
-				tmpVec3.crossVectors( tmpVec1.subVectors( vC, point ), tmpVec2.subVectors( vA, point ) );
-				var areaPCA = faceNormal.dot( tmpVec3 );
-				var b = areaPCA / areaABC;
+			// compute interpolated vertex normal
 
-				var c = 1.0 - a - b;
+			tmpVec1.fromBufferAttribute( normals, face.a );
+			tmpVec2.fromBufferAttribute( normals, face.b );
+			tmpVec3.fromBufferAttribute( normals, face.c );
 
-				// compute interpolated vertex normal
+			tmpVec1.multiplyScalar( a );
+			tmpVec2.multiplyScalar( b );
+			tmpVec3.multiplyScalar( c );
 
-				tmpVec1.fromBufferAttribute( normals, face.a );
-				tmpVec2.fromBufferAttribute( normals, face.b );
-				tmpVec3.fromBufferAttribute( normals, face.c );
+			outputVector.addVectors( tmpVec1, tmpVec2 );
+			outputVector.add( tmpVec3 );
+		}
+	};
 
-				tmpVec1.multiplyScalar( a );
-				tmpVec2.multiplyScalar( b );
-				tmpVec3.multiplyScalar( c );
-
-				outputVector.addVectors( tmpVec1, tmpVec2 );
-				outputVector.add( tmpVec3 );
-			}
-		};
-
-	}() );
-
-	this.renderBlock = function( blockX, blockY ) 
+	this.renderBlock = function(blockX, blockY) 
 	{
-		var data = new Uint8ClampedArray( BLOCK_WIDTH * BLOCK_HEIGHT * 4 );
+		var data = new Uint8ClampedArray(this.blockWidth * this.blockHeight * 4);
 		var pixelColor = new THREE.Color();
 		var index = 0;
 
-		for ( var y = 0; y < BLOCK_HEIGHT; y ++ )
+		for ( var y = 0; y < this.blockHeight; y ++ )
 		{
-			for ( var x = 0; x < BLOCK_WIDTH; x ++, index += 4 ) 
+			for ( var x = 0; x < this.blockWidth; x ++, index += 4 ) 
 			{
 				// spawn primary ray at pixel position
 
-				origin.copy( cameraPosition );
+				this.origin.copy(this.cameraPosition);
 
-				direction.set( x + blockX - canvasWidthHalf, - ( y + blockY - canvasHeightHalf ), - perspective );
-				direction.applyMatrix3( cameraNormalMatrix ).normalize();
+				this.direction.set( x + blockX - this.canvasWidthHalf, - ( y + blockY - this.canvasHeightHalf ), - this.perspective );
+				this.direction.applyMatrix3(this.cameraNormalMatrix ).normalize();
 
-				spawnRay( origin, direction, pixelColor, 0 );
+				this.spawnRay(this.origin, this.direction, pixelColor, 0);
 
 				// convert from linear to gamma
 
@@ -457,56 +433,51 @@ THREE.RaytracingRendererWorker = function ()
 			}
 		}
 
-		this.drawOnCanvas(data.buffer, blockX, blockY, BLOCK_WIDTH, BLOCK_HEIGHT);
-
-		data = new Uint8ClampedArray( BLOCK_WIDTH * BLOCK_HEIGHT * 4 );
+		this.drawOnCanvas(data.buffer, blockX, blockY);
 	};
 
-	this.render = function ( scene, camera ) 
+	this.render = function(scene, camera) 
 	{
 		// update scene graph
 
-		if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
+		if (scene.autoUpdate === true) scene.updateMatrixWorld();
 
 		// update camera matrices
 
-		if ( camera.parent === null ) camera.updateMatrixWorld();
+		if (camera.parent === null) camera.updateMatrixWorld();
 
-		cameraPosition.setFromMatrixPosition( camera.matrixWorld );
+		this.cameraPosition.setFromMatrixPosition( camera.matrixWorld );
+		this.cameraNormalMatrix.getNormalMatrix( camera.matrixWorld );
 
-		//
+		this.perspective = 0.5 / Math.tan( THREE.Math.degToRad( camera.fov * 0.5 ) ) * this.canvasHeight;
 
-		cameraNormalMatrix.getNormalMatrix( camera.matrixWorld );
-
-		perspective = 0.5 / Math.tan( THREE.Math.degToRad( camera.fov * 0.5 ) ) * canvasHeight;
-
-		objects = scene.children;
+		this.objects = scene.children;
 
 		// collect lights and set up object matrices
 
-		lights.length = 0;
+		this.lights.length = 0;
 
-		scene.traverse( function ( object ) 
+		scene.traverse(function(object) 
 		{
-			if ( object.isPointLight ) 
+			if (object.isPointLight) 
 			{
-				lights.push( object );
+				this.lights.push(object);
 			}
 
-			if ( cache[ object.id ] === undefined ) 
+			if (this.cache[object.id] === undefined) 
 			{
-				cache[ object.id ] = {
+				this.cache[object.id] = {
 					normalMatrix: new THREE.Matrix3(),
 					inverseMatrix: new THREE.Matrix4()
 				};
 			}
 
-			var _object = cache[ object.id ];
+			var _object = this.cache[object.id];
 
 			_object.normalMatrix.getNormalMatrix( object.matrixWorld );
 			_object.inverseMatrix.getInverse( object.matrixWorld );
 
-		} );
+		}.bind(this));
 
 		this.renderBlock( startX, startY );
 	};

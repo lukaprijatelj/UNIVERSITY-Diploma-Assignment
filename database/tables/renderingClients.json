@@ -71,8 +71,15 @@
             "admin": false
         },
         {
-            "_id": "03ef0240-75b0-11e9-b48b-419ec3d4de55",
-            "sessionId": "WMdWv50WXvJUiPeLAABE",
+            "_id": "29147e10-75b5-11e9-b48b-419ec3d4de55",
+            "sessionId": "8eQX_OMLADJNq8lhAABV",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "283624a0-75b8-11e9-87ba-57212c94d8f2",
+            "sessionId": "6frXt8OSKl21muXZAAAG",
             "ipAddress": "::1",
             "active": false,
             "admin": false
