@@ -15,10 +15,12 @@ var CANVAS_HEIGHT = 1080;
 var MAIN =
 {
 	scene: new THREE.Scene(),
-	renderer: null,
-	controls: null,
-	camera: null,
 
+	renderer: null,
+
+	controls: null,
+
+	camera: null,
 
 	/**
 	 * Base url API access.
@@ -90,8 +92,6 @@ var MAIN =
 
 	initLights: function()
 	{
-		// light
-
 		var intensity = 70000;
 
 		var light = new THREE.PointLight( 0xffaa55, intensity );
@@ -112,8 +112,6 @@ var MAIN =
 
 	init3DObjects: function() 
 	{
-		// materials
-
 		var phongMaterial = new THREE.MeshPhongMaterial( {
 			color: 0xffffff,
 			specular: 0x222222,
@@ -295,13 +293,19 @@ var MAIN =
 	{
 		console.log('[Main] Initialize renderer of type "' + type + '"');
 
+		var cell = MAIN.renderingCells.currentRenderCell;
+		var blockWidth = cell.width;
+		var blockHeight = cell.height;
+		var startX = cell.startX;
+		var startY = cell.startY;
+
 		if (type == 'default')
 		{
 			MAIN.renderer = new THREE.WebGLRenderer();
 		}
 		else if (type == 'raytracing')
 		{
-			MAIN.renderer = new THREE.RaytracingRenderer(1, 384, 216, true);
+			MAIN.renderer = new THREE.RaytracingRenderer(blockWidth, blockHeight, startX, startY, true);
 		}
 
 		MAIN.renderer.domElement.id = "rendering-canvas";
@@ -392,9 +396,6 @@ var MAIN =
 			prevCell = current;
 		}				
 
-		// Load a glTF resource
-		MAIN.initRenderer('raytracing');
-
 		MAIN.requestCellAsync();
 	},
 
@@ -405,11 +406,15 @@ var MAIN =
 	},
 	onRequestCell: function(cell)
 	{
+		console.log('[Main] Rendering cell received');
+
 		MAIN.renderingCells.currentRenderCell = cell;
 
 		HTML('#cell-' + cell._id).addClass('active');
 
-		console.log('[Main] Cell waiting to render received');
+		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
+		// heavy duty operation
+		window.setTimeout(function(){ MAIN.initRenderer('raytracing') }, 0);
 	},
 
 	/**

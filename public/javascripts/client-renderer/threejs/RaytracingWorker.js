@@ -1,11 +1,3 @@
-var startX;
-var startY;
-
-var scene;
-var camera;
-var renderer;
-var sceneId;
-
 /**
  * DOM-less version of Raytracing Renderer
  * @author mrdoob / http://mrdoob.com/
@@ -14,7 +6,7 @@ var sceneId;
  */
 THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context) 
 {
-	console.log( 'THREE.RaytracingRendererWorker', THREE.REVISION );
+	console.log('[THREE.RaytracingRendererWorker] Initializing worker');
 
 	// basically how many tmes it spawns ray (how many times ray hits object)
 	this.maxRecursionDepth = 3;
@@ -23,6 +15,9 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 	this.canvasHeight;
 	this.canvasWidthHalf;
 	this.canvasHeightHalf;
+
+	this.startX;
+	this.startY;
 
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
@@ -36,6 +31,8 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 	this.rayLight = this.raycasterLight.ray;
 
 	this.perspective;
+	this.camera;
+	this.scene;
 	
 	this.objects;
 	this.lights = [];
@@ -66,13 +63,13 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 		// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
 	};
 
-	this.initScene = function(sceneData, cameraData, annexData, sceneIdData)
+	this.initScene = function(sceneData, cameraData, annexData)
 	{
-		scene = this.loader.parse(sceneData);
-		camera = this.loader.parse(cameraData);
+		this.scene = this.loader.parse(sceneData);
+		this.camera = this.loader.parse(cameraData);
 
 		var meta = annexData;
-		scene.traverse(function(o) 
+		this.scene.traverse(function(o) 
 		{
 			if ( o.isPointLight ) 
 			{
@@ -90,15 +87,13 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 				mat[ m ] = material[ m ];
 			}
 		});
-
-		sceneId = sceneIdData;
 	};
 
 	this.startRendering = function(x, y)
 	{
-		startX = x;
-		startY = y;
-		this.render( scene, camera );
+		this.startX = x;
+		this.startY = y;
+		this.render(this.scene, this.camera);
 	};
 
 	this.setSize = function (width, height) 
@@ -392,28 +387,30 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 
 			// compute interpolated vertex normal
 
-			tmpVec1.fromBufferAttribute( normals, face.a );
-			tmpVec2.fromBufferAttribute( normals, face.b );
-			tmpVec3.fromBufferAttribute( normals, face.c );
+			tmpVec1.fromBufferAttribute(normals, face.a);
+			tmpVec2.fromBufferAttribute(normals, face.b);
+			tmpVec3.fromBufferAttribute(normals, face.c);
 
-			tmpVec1.multiplyScalar( a );
-			tmpVec2.multiplyScalar( b );
-			tmpVec3.multiplyScalar( c );
+			tmpVec1.multiplyScalar(a);
+			tmpVec2.multiplyScalar(b);
+			tmpVec3.multiplyScalar(c);
 
-			outputVector.addVectors( tmpVec1, tmpVec2 );
-			outputVector.add( tmpVec3 );
+			outputVector.addVectors(tmpVec1, tmpVec2);
+			outputVector.add(tmpVec3);
 		}
 	};
 
 	this.renderBlock = function(blockX, blockY) 
 	{
+		console.log('[THREE.RaytracingRendererWorker] Rendering specified canvas block');
+
 		var data = new Uint8ClampedArray(this.blockWidth * this.blockHeight * 4);
 		var pixelColor = new THREE.Color();
 		var index = 0;
 
-		for ( var y = 0; y < this.blockHeight; y ++ )
+		for (var y = 0; y < this.blockHeight; y ++)
 		{
-			for ( var x = 0; x < this.blockWidth; x ++, index += 4 ) 
+			for (var x = 0; x < this.blockWidth; x ++, index += 4) 
 			{
 				// spawn primary ray at pixel position
 
@@ -446,11 +443,10 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 
 		if (camera.parent === null) camera.updateMatrixWorld();
 
-		this.cameraPosition.setFromMatrixPosition( camera.matrixWorld );
-		this.cameraNormalMatrix.getNormalMatrix( camera.matrixWorld );
+		this.cameraPosition.setFromMatrixPosition(camera.matrixWorld);
+		this.cameraNormalMatrix.getNormalMatrix(camera.matrixWorld);
 
-		this.perspective = 0.5 / Math.tan( THREE.Math.degToRad( camera.fov * 0.5 ) ) * this.canvasHeight;
-
+		this.perspective = 0.5 / Math.tan(THREE.Math.degToRad(camera.fov * 0.5)) * this.canvasHeight;
 		this.objects = scene.children;
 
 		// collect lights and set up object matrices
@@ -474,13 +470,13 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 
 			var _object = this.cache[object.id];
 
-			_object.normalMatrix.getNormalMatrix( object.matrixWorld );
-			_object.inverseMatrix.getInverse( object.matrixWorld );
+			_object.normalMatrix.getNormalMatrix(object.matrixWorld);
+			_object.inverseMatrix.getInverse(object.matrixWorld);
 
 		}.bind(this));
 
-		this.renderBlock( startX, startY );
+		this.renderBlock(this.startX, this.startY);
 	};
 };
 
-Object.assign( THREE.RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype );
+Object.assign(THREE.RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype);
