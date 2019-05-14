@@ -25,36 +25,62 @@ var MAIN =
 	{
 		MAIN.io = io(MAIN.hostingUrl, { query: "clientType=admin" });
 
-		MAIN.io.on('connect', MAIN.onServerConnected);
+		MAIN.io.on('connect', MAIN._onServerConnected);
 	},
 
 
 	/**
-	 * On server-client connection.
+	 * Ajax request to server.
+	 * @async
 	 */
-	onServerConnected: function()
+	request: function(url, data)
+	{
+		data = data ? data : null;
+		url = MAIN.apiUrl + '/request' + '/' + url;
+
+		console.log('[Main] Requesting "' + url + '"');
+
+		MAIN.io.emit(url, data);
+	},
+
+	/**
+	 * Ajax response from server.
+	 */
+	response: function(url, callback)
+	{
+		url = MAIN.apiUrl + '/response' + '/' + url;
+
+		MAIN.io.on(url, callback);
+	},
+
+	/**
+	 * On server-client connection.
+	 * @private
+	 */
+	_onServerConnected: function()
 	{
 		console.log('[Main] Connected to server!');
 
-		MAIN.io.on(MAIN.apiUrl + 'response/renderingCells/layout', MAIN.onGetLayout);
+		// wire response callbacks
+		MAIN.response('renderingCells/layout', MAIN._onGetLayout);
 
-		MAIN.getLayoutAsync();
+		MAIN.request('renderingCells/layout');
 	},
 
-	requestRecalculateLayout: function()
+	/**
+	 * Sends request to recalculate grid layout.
+	 * @private
+	 */
+	_requestLayoutRecalculation: function()
 	{
-		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/recalculateLayout', null);
+		MAIN.request('renderingCells/recalculateLayout');
 	},
 
 	/**
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @async
+	 * @private
 	 */
-	getLayoutAsync: function()
-	{
-		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/layout', null);
-	},
-	onGetLayout: function(data)
+	_onGetLayout: function(data)
 	{
 		MAIN.renderingCells = data;
 
@@ -65,6 +91,7 @@ var MAIN =
 		gridLayout.empty();
 
 		var prevCell = null;
+
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];

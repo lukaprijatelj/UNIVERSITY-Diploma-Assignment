@@ -5,6 +5,9 @@ var uuidv1 = require('uuid/v1');
 
 var DATABASE =
 {
+	/**
+	 * Root url of the database.
+	 */
 	root: 'database/',
 
 	/**
@@ -91,8 +94,25 @@ var DATABASE =
 	removeRenderClient: function(sessionId)
 	{
 		var table = DATABASE.renderingClientsTable;
+		table.rows = table.rows.filter(item => item.sessionId != sessionId);
 
-		table.rows = table.rows.filter(item => item.sessionId !== sessionId);
+		// remove client from active cells list
+		var cellsTable = DATABASE.renderingCellsTable;
+		cellsTable.rows.forEach(function(cell)
+		{
+			if (cell.sessionId != sessionId)
+			{
+				return;
+			}
+
+			if (cell.progress == 100)
+			{
+				return;
+			}
+
+			cell.sessionId = "";
+		});
+
 		table.save();
 	},
 
@@ -129,6 +149,29 @@ var DATABASE =
 		return table.rows;
 	},
 
+	/**
+	 * Gets free cell
+	 */
+	getFreeCell: function(sessionId)
+	{
+		var table = DATABASE.renderingCellsTable;
+		var freeCell = table.rows.find(element => element.sessionId == "");	
+
+		if (!freeCell)
+		{
+			return null;
+		}
+
+		freeCell.sessionId = sessionId;
+
+		table.save();
+
+		return freeCell;
+	},
+
+	/**
+	 * Clears all existing grid cells data.
+	 */
 	clearGridLayout: function()
 	{
 		var table = DATABASE.renderingCellsTable;

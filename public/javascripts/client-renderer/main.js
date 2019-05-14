@@ -2,7 +2,6 @@ var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
 
-
 /** ----- NOTES: ----- */ 
 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
@@ -14,12 +13,24 @@ var CANVAS_HEIGHT = 1080;
 
 var MAIN =
 {
+	/**
+	 * ThreeJS scene.
+	 */
 	scene: new THREE.Scene(),
 
+	/**
+	 * Canvas renderer.
+	 */
 	renderer: null,
 
+	/**
+	 * Camera controls affected by mouse movement.
+	 */
 	controls: null,
 
+	/**
+	 * ThreeJS camera in the scene.
+	 */
 	camera: null,
 
 	/**
@@ -65,18 +76,45 @@ var MAIN =
 
 
 	/**
+	 * Ajax request to server.
+	 * @async
+	 */
+	request: function(url, data)
+	{
+		data = data ? data : null;
+		url = MAIN.apiUrl + '/request' + '/' + url;
+
+		console.log('[Main] Requesting ' + url);
+
+		MAIN.io.emit(url, data);
+	},
+
+	/**
+	 * Ajax response from server.
+	 */
+	response: function(url, callback)
+	{
+		url = MAIN.apiUrl + '/response' + '/' + url;
+
+		MAIN.io.on(url, callback);
+	},
+
+	/**
 	 * On server-client connection.
 	 */
 	onServerConnected: function()
 	{
 		console.log('[Main] Connected to server!');
 
-		MAIN.io.on(MAIN.apiUrl + 'response/renderingCells/layout', MAIN.onGetLayout);
-		MAIN.io.on(MAIN.apiUrl + 'response/renderingCells/cell', MAIN.onRequestCell);
+		MAIN.response('renderingCells/layout', MAIN.onGetLayout);
+		MAIN.response('renderingCells/cell', MAIN.onRequestCell);
 
-		MAIN.getLayoutAsync();
+		MAIN.request('renderingCells/layout');
 	},	
 
+	/**
+	 * Intializes camera in the scene.
+	 */
 	initCamera: function()
 	{
 		MAIN.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
@@ -85,11 +123,17 @@ var MAIN =
 		MAIN.camera.position.z = 600;
 	},
 
+	/**
+	 * Initializes camera mouse controls, so that changing view is easier.
+	 */
 	initCameraControls: function()
 	{
 		MAIN.controls = new THREE.OrbitControls(MAIN.camera, MAIN.renderer.domElement);
 	},
 
+	/**
+	 * Initializes lights.
+	 */
 	initLights: function()
 	{
 		var intensity = 70000;
@@ -110,6 +154,9 @@ var MAIN =
 		MAIN.scene.add( light );
 	},
 
+	/**
+	 * Initializes 3D objects and materials in the scene.
+	 */
 	init3DObjects: function() 
 	{
 		var phongMaterial = new THREE.MeshPhongMaterial( {
@@ -298,14 +345,15 @@ var MAIN =
 		var blockHeight = cell.height;
 		var startX = cell.startX;
 		var startY = cell.startY;
-
+		
 		if (type == 'default')
 		{
 			MAIN.renderer = new THREE.WebGLRenderer();
 		}
 		else if (type == 'raytracing')
 		{
-			MAIN.renderer = new THREE.RaytracingRenderer(blockWidth, blockHeight, startX, startY, true);
+			var canvas = document.createElement('canvas');
+			MAIN.renderer = new THREE.RaytracingRenderer(canvas, blockWidth, blockHeight, startX, startY, true);
 		}
 
 		MAIN.renderer.domElement.id = "rendering-canvas";
@@ -367,11 +415,6 @@ var MAIN =
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
 	 * @async
 	 */
-	getLayoutAsync: function()
-	{
-		console.log('[Main] Layout requested');
-		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/layout', null);
-	},
 	onGetLayout: function(data)
 	{
 		MAIN.renderingCells = data;
@@ -396,14 +439,12 @@ var MAIN =
 			prevCell = current;
 		}				
 
-		MAIN.requestCellAsync();
+		MAIN.request('renderingCells/cell');
 	},
 
-	requestCellAsync: function()
-	{
-		console.log('[Main] Cell requested');
-		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/cell', null);
-	},
+	/**
+	 * Cell waiting to be rendered is received.
+	 */
 	onRequestCell: function(cell)
 	{
 		console.log('[Main] Rendering cell received');
@@ -430,7 +471,7 @@ var MAIN =
 			imageData: imageData
 		};
 
-		MAIN.io.emit(MAIN.apiUrl + 'request/renderingCells/updateProgress', data);
+		MAIN.request('renderingCells/updateProgress', data);
 	}
 };
 

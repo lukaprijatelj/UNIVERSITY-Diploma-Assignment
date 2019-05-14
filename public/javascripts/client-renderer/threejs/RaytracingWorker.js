@@ -4,7 +4,7 @@
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context) 
+THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, drawOnCanvas) 
 {
 	console.log('[THREE.RaytracingRendererWorker] Initializing worker');
 
@@ -18,6 +18,8 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 
 	this.startX;
 	this.startY;
+
+	this.renderingStartedDate;
 
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
@@ -41,21 +43,9 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 	this.blockWidth = blockWidth;
 	this.blockHeight = blockHeight;
 	this.loader = new THREE.ObjectLoader();
-	this.context = context;
+	this.drawOnCanvas = drawOnCanvas;	
 
-	this.drawOnCanvas = function(buffer, blockX, blockY)
-	{
-		var imagedata = new ImageData( new Uint8ClampedArray(buffer), this.blockWidth, this.blockHeight );
-		this.context.putImageData( imagedata, blockX, blockY );
-
-		// completed
-
-		console.log('Worker ' + this.id);
-
-		//renderNext( this );
-	};
-
-	this.init = function(width, height, workerId)
+	this.init = function(width, height)
 	{
 		this.setSize(width, height);
 
@@ -430,11 +420,13 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, context)
 			}
 		}
 
-		this.drawOnCanvas(data.buffer, blockX, blockY);
+		this.drawOnCanvas(data.buffer, blockX, blockY, new Date() - this.renderingStartedDate);
 	};
 
 	this.render = function(scene, camera) 
 	{
+		this.renderingStartedDate = new Date();
+
 		// update scene graph
 
 		if (scene.autoUpdate === true) scene.updateMatrixWorld();

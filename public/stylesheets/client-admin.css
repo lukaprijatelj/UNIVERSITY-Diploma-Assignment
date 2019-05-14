@@ -1,7 +1,11 @@
 #grid-layout
 {
-	position: absolute;
-    white-space: nowrap;
+	position: relative;
+	white-space: nowrap;
+	
+	transform: scale(0.3, 0.3);
+    width: 200px;
+    height: 50px;
 }
 
 .render-cell
@@ -12,4 +16,9 @@
 	border-width: 1px;
 	text-align: center;
 	vertical-align: top;
+}
+
+.divider
+{
+	height: 50px;
 }

@@ -6,12 +6,13 @@
  * @author zz85 / http://github.com/zz85
  */
 
-THREE.RaytracingRenderer = function (blockWidth, blockHeight, startX, startY,shouldRandomize, alpha) 
+THREE.RaytracingRenderer = function (canvas, blockWidth, blockHeight, startX, startY, shouldRandomize, alpha) 
 {
-	console.log('THREE.RaytracingRenderer', THREE.REVISION);
+	console.log('[THREE.RaytracingRenderer] Initializing renderer');
 
-	var canvas = document.createElement('canvas');
-	this.context = canvas.getContext('2d', 
+	this.canvas = canvas;
+	this.domElement = canvas; // do not delete, this is only for referencing
+	this.context = this.canvas.getContext('2d', 
 	{
 		alpha: alpha === true
 	});
@@ -22,7 +23,6 @@ THREE.RaytracingRenderer = function (blockWidth, blockHeight, startX, startY,sho
 
 	this.renderering = false;
 	this.worker = [];
-	this.domElement = canvas;
 	this.autoClear = true;
 	this.blockWidth = blockWidth || 64;
 	this.blockHeight = blockHeight || 64;
@@ -31,14 +31,21 @@ THREE.RaytracingRenderer = function (blockWidth, blockHeight, startX, startY,sho
 	this.startX = startX;
 	this.startY = startY;
 
-	var workerId = 0;
+	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
+	{
+		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
+		
+		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.blockWidth, this.blockHeight );
+		this.context.putImageData( imagedata, blockX, blockY );
 
-	console.log('[THREE.RaytracingRenderer] Initializing renderer');
+		// completed
+
+		//renderNext( this );
+	};
 
 	this.setWorkers = function() 
 	{
-		var worker = new THREE.RaytracingRendererWorker(this.blockWidth, this.blockHeight, this.context);
-		worker.id = workerId ++;
+		var worker = new THREE.RaytracingRendererWorker(this.blockWidth, this.blockHeight, this.drawOnCanvas.bind(this));
 
 		worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
 
@@ -57,16 +64,16 @@ THREE.RaytracingRenderer = function (blockWidth, blockHeight, startX, startY,sho
 
 	this.updateSettings = function(worker) 
 	{
-		worker.init(canvasWidth, canvasHeight, worker.id);
+		worker.init(canvasWidth, canvasHeight);
 	};
 
 	this.setSize = function (width, height) 
 	{
-		canvas.width = width;
-		canvas.height = height;
+		this.canvas.width = width;
+		this.canvas.height = height;
 
-		canvasWidth = canvas.width;
-		canvasHeight = canvas.height;
+		canvasWidth = this.canvas.width;
+		canvasHeight = this.canvas.height;
 
 		this.context.fillStyle = 'white';
 		this.updateSettings(this.worker);
@@ -138,7 +145,7 @@ THREE.RaytracingRenderer = function (blockWidth, blockHeight, startX, startY,sho
 	this.init = function()
 	{
 		this.setWorkers();
-		this.setSize(canvas.width, canvas.height);
+		this.setSize(this.canvas.width, this.canvas.height);
 	};
 	this.init();
 };

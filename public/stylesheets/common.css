@@ -24,7 +24,13 @@
 {
     text-align: center;
     padding: 5px;
-    border-radius: 5px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.button.disabled
+{
+	cursor: default !important;
 }
 
 .button.dark
@@ -35,7 +41,7 @@
     border-width: 2px;
     border-color: black;
 }
-.button.dark:hover
+.button.dark:not(.disabled):hover
 {
     background: transparent;
     color: black;

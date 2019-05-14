@@ -97,6 +97,83 @@
             "ipAddress": "::1",
             "active": false,
             "admin": false
+        },
+        {
+            "_id": "f970bc70-767f-11e9-82b5-ddcbe4915450",
+            "sessionId": "xu2OdNy4Pxd6lJyOAAAP",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "965e2890-7682-11e9-82b5-ddcbe4915450",
+            "sessionId": "e-oW_DQKFj7aNG2DAAAU",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "9f832970-7682-11e9-9a4a-532582a5126c",
+            "sessionId": "FsHWFRgpwrCTSHHFAAAB",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "a143c530-7682-11e9-9a4a-532582a5126c",
+            "sessionId": "t1qt1wOQrxynuJTJAAAC",
+            "ipAddress": "::ffff:127.0.0.1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "378865f0-7683-11e9-a951-0dce65918959",
+            "sessionId": "N0OX7kzWsV9PhLWUAAAD",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "38e1db70-7683-11e9-a951-0dce65918959",
+            "sessionId": "XH2RuC2qSzfYyougAAAE",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "89a02d00-7683-11e9-921d-b11001b61531",
+            "sessionId": "BQiCGJ8Y-q-aRfmVAAAC",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "734bdbb0-7685-11e9-921d-b11001b61531",
+            "sessionId": "gitpWVG7F1WM2AePAAAE",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "76737a20-7688-11e9-947e-e3c4dbf2e7ef",
+            "sessionId": "hrFADHGhCIjP-SyRAAAQ",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "89278850-7688-11e9-947e-e3c4dbf2e7ef",
+            "sessionId": "raaSAlxn0b-oMTcUAAAR",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "4d6829e0-7689-11e9-bf91-f783855d6f60",
+            "sessionId": "Cb888d-b9JFMMH6OAAAK",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
         }
     ]
 }

@@ -40,10 +40,10 @@ var API =
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);		
 		
-		socket.on(API.baseUrl + 'request/renderingCells/layout', API.onRenderingCellsList);
-		socket.on(API.baseUrl + 'request/renderingCells/cell', API.onRequestCell);
-		socket.on(API.baseUrl + 'request/renderingCells/updateProgress', API.onUpdateProgress);	
-		socket.on(API.baseUrl + 'request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
+		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
+		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
+		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
+		socket.on(API.baseUrl + '/request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
 
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
@@ -62,6 +62,9 @@ var API =
 		console.log("[Api] Client has disconnected!");
 	},
 
+	/**
+	 * Responds with list of rendering cells.
+	 */
 	onRenderingCellsList: function()
 	{
 		var socket = this;
@@ -69,16 +72,18 @@ var API =
 
 		var result = DATABASE.getRenderingCells();
 
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/layout', result);
+		socketIo.to(`${sessionId}`).emit(API.baseUrl + '/response/renderingCells/layout', result);
 	},
 
+	/**
+	 * Respond with any of the cells still waiting to be rendered.
+	 */
 	onRequestCell: function()
 	{
 		var socket = this;
 		var sessionId = socket.id;
 
-		var result = DATABASE.getRenderingCells();
-		var freeCell = result.find(element => element.sessionId == "");	
+		var freeCell = DATABASE.getFreeCell(sessionId);
 
 		if (!freeCell)
 		{
@@ -86,8 +91,7 @@ var API =
 			return;
 		}
 
-		freeCell.sessionId = sessionId;
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/cell', freeCell);
+		socketIo.to(`${sessionId}`).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
 	},
 
 	/**
