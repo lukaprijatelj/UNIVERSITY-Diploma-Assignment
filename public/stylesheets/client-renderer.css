@@ -10,6 +10,35 @@ body
 	font-family: 'Muli', sans-serif;
 }
 
+#loading-curtain
+{
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 5;
+	background-image: linear-gradient(var(--dark-background-color), var(--light-background-color));
+	color: #D0D0D0;
+	font-size: 2em;
+	text-align: center;
+}
+
+#loading-curtain .wrapper
+{
+	width: 100%;
+	height: 100%;
+}
+
+#loading-curtain .message
+{
+	position: absolute;
+    top: 50%;
+    left: 50%;
+	margin-left: -350px;
+    font-weight: 900;
+    font-size: 55px;
+    color: white;
+}
+
 br 
 {
 	height: 0px;
@@ -18,6 +47,7 @@ br
 
 #grid-layout
 {
+	background-color: #FFFFFF;
 	position: absolute;
     white-space: nowrap;
 }
@@ -26,15 +56,14 @@ br
 {
 	display:inline-block;
 	border-style: solid;
-	border-color: black;
+	border-color: #EBEBEB;
 	border-width: 1px;
 	text-align: center;
 	vertical-align: top;
 }
-
 .render-cell.active
 {
-	border-color: red;
+	background-color: #FF4F49;
 }
 
 #debug-info 

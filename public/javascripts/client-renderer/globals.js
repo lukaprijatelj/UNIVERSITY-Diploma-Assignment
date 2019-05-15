@@ -336,22 +336,18 @@ var GLOBALS =
 		console.log('[Main] Initialize renderer of type "' + type + '"');
 
 		var cell = GLOBALS.renderingCells.currentRenderCell;
-		var blockWidth = cell.width;
-		var blockHeight = cell.height;
-		var startX = cell.startX;
-		var startY = cell.startY;
+		var canvas = HTML('#rendering-canvas').elements[0];
 		
 		if (type == 'default')
 		{
-			GLOBALS.renderer = new THREE.WebGLRenderer();
+			GLOBALS.renderer = new THREE.WebGLRenderer({ canvas: canvas });
 		}
 		else if (type == 'raytracing')
-		{
-			var canvas = document.createElement('canvas');
-			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, blockWidth, blockHeight, startX, startY, true);
+		{			
+			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, cell, true);
 		}
 
-		GLOBALS.renderer.domElement.id = "rendering-canvas";
+	
 		GLOBALS.renderer.setClearColor('#f4f4f4');				
 		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		document.body.appendChild(GLOBALS.renderer.domElement);
@@ -406,7 +402,7 @@ var GLOBALS =
 				gridLayout.append('<br>');
 			}
 
-			gridLayout.append('<div id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>');
+			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></canvas>');
 			prevCell = current;
 		}				
 

@@ -6,14 +6,13 @@
  * @author zz85 / http://github.com/zz85
  */
 
-THREE.RaytracingRenderer = function (canvas, blockWidth, blockHeight, startX, startY, shouldRandomize, alpha) 
+THREE.RaytracingRenderer = function (canvas, cell, shouldRandomize, alpha) 
 {
 	console.log('[THREE.RaytracingRenderer] Initializing renderer');
 
 	this.canvas = canvas;
 	this.domElement = canvas; // do not delete, this is only for referencing
-	this.context = this.canvas.getContext('2d', 
-	{
+	this.context = canvas.getContext('2d', {
 		alpha: alpha === true
 	});
 
@@ -21,22 +20,25 @@ THREE.RaytracingRenderer = function (canvas, blockWidth, blockHeight, startX, st
 	var canvasHeight;
 	var clearColor = new THREE.Color(0x000000);
 
+	// data for blockWidth, blockHeight, startX, startY
+	this.cell = cell;
+
 	this.renderering = false;
 	this.worker = [];
 	this.autoClear = true;
-	this.blockWidth = blockWidth || 64;
-	this.blockHeight = blockHeight || 64;
 	this.randomize = shouldRandomize;
-
-	this.startX = startX;
-	this.startY = startY;
 
 	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
 	{
 		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 		
-		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.blockWidth, this.blockHeight );
-		this.context.putImageData( imagedata, blockX, blockY );
+		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
+
+		var cellCanvasV = HTML('#cell-' + this.cell._id);
+		var cellCanvasContext = cellCanvasV.elements[0].getContext('2d', { alpha: alpha === true });
+		cellCanvasContext.putImageData(imagedata, blockX, blockY);
+
+		cellCanvasV.removeClass('active');
 
 		// completed
 
@@ -45,7 +47,7 @@ THREE.RaytracingRenderer = function (canvas, blockWidth, blockHeight, startX, st
 
 	this.setWorkers = function() 
 	{
-		var worker = new THREE.RaytracingRendererWorker(this.blockWidth, this.blockHeight, this.drawOnCanvas.bind(this));
+		var worker = new THREE.RaytracingRendererWorker(this.cell.width, this.cell.height, this.drawOnCanvas.bind(this));
 
 		worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
 
@@ -133,10 +135,10 @@ THREE.RaytracingRenderer = function (canvas, blockWidth, blockHeight, startX, st
 		this.context.clearRect(0, 0, canvasWidth, canvasHeight);
 	
 		this.context.fillStyle = '#' + this.worker.color;
-		this.context.fillRect(this.startX, this.startY, this.blockWidth, this.blockHeight);
+		this.context.fillRect(this.cell.startX, this.cell.startY, this.cell.width, this.cell.height);
 		var bindedRender = function()
 		{ 
-			this.worker.startRendering(this.startX, this.startY)
+			this.worker.startRendering(this.cell.startX, this.cell.startY)
 		};
 
 		window.setTimeout(bindedRender.bind(this),0);
