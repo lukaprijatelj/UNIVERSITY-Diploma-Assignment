@@ -72,7 +72,7 @@ var API =
 
 		var result = DATABASE.getRenderingCells();
 
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + '/response/renderingCells/layout', result);
+		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/layout', result);
 	},
 
 	/**
@@ -91,7 +91,7 @@ var API =
 			return;
 		}
 
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
+		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
 	},
 
 	/**
@@ -99,11 +99,11 @@ var API =
 	 */
 	onUpdateProgress: function(data)
 	{
+		console.log("[Api] Progress was updated");
+
 		var socket = this;
 
-		DATABASE.updateProgress(data.renderCellId, data.progress, data.imageData);
-
-		console.log("[Api] Progress was updated");
+		DATABASE.updateProgress(data.renderCellId, data.progress, data.imageData);		
 	},
 
 	/**

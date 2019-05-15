@@ -23,8 +23,8 @@
 .button
 {
     text-align: center;
-    padding: 5px;
-	border-radius: 5px;
+    padding: 13px;
+	border-radius: 8px;
 	cursor: pointer;
 }
 
@@ -36,15 +36,15 @@
 .button.dark
 {
     color: white;
-    background: black;
+    background: #054AF0;
     border-style: solid;
-    border-width: 2px;
-    border-color: black;
+    border-width: 1px;
+    border-color: #054AF0;
 }
 .button.dark:not(.disabled):hover
 {
     background: transparent;
-    color: black;
+    color: #054AF0;
 }
 
 .center-align-block

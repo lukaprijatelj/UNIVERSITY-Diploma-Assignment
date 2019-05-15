@@ -1,4 +1,7 @@
-var MAIN =
+/**
+ * Globals for 
+ */
+var GLOBALS =
 {
 	/**
 	 * Base url API access.
@@ -23,9 +26,9 @@ var MAIN =
 
 	init: function()
 	{
-		MAIN.io = io(MAIN.hostingUrl, { query: "clientType=admin" });
+		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=admin" });
 
-		MAIN.io.on('connect', MAIN._onServerConnected);
+		GLOBALS.io.on('connect', GLOBALS._onServerConnected);
 	},
 
 
@@ -36,11 +39,11 @@ var MAIN =
 	request: function(url, data)
 	{
 		data = data ? data : null;
-		url = MAIN.apiUrl + '/request' + '/' + url;
+		url = GLOBALS.apiUrl + '/request' + '/' + url;
 
 		console.log('[Main] Requesting "' + url + '"');
 
-		MAIN.io.emit(url, data);
+		GLOBALS.io.emit(url, data);
 	},
 
 	/**
@@ -48,9 +51,9 @@ var MAIN =
 	 */
 	response: function(url, callback)
 	{
-		url = MAIN.apiUrl + '/response' + '/' + url;
+		url = GLOBALS.apiUrl + '/response' + '/' + url;
 
-		MAIN.io.on(url, callback);
+		GLOBALS.io.on(url, callback);
 	},
 
 	/**
@@ -62,18 +65,18 @@ var MAIN =
 		console.log('[Main] Connected to server!');
 
 		// wire response callbacks
-		MAIN.response('renderingCells/layout', MAIN._onGetLayout);
+		GLOBALS.response('renderingCells/layout', GLOBALS._onGetLayout);
 
-		MAIN.request('renderingCells/layout');
+		GLOBALS.request('renderingCells/layout');
 	},
 
 	/**
 	 * Sends request to recalculate grid layout.
 	 * @private
 	 */
-	_requestLayoutRecalculation: function()
+	_onRecalculateLayoutClick: function()
 	{
-		MAIN.request('renderingCells/recalculateLayout');
+		GLOBALS.request('renderingCells/recalculateLayout');
 	},
 
 	/**
@@ -82,12 +85,11 @@ var MAIN =
 	 */
 	_onGetLayout: function(data)
 	{
-		MAIN.renderingCells = data;
+		GLOBALS.renderingCells = data;
 
 		console.log('[Main] Grid layout drawn');
 
 		var gridLayout = HTML('#grid-layout');
-
 		gridLayout.empty();
 
 		var prevCell = null;
@@ -107,4 +109,4 @@ var MAIN =
 	}
 };
 
-MAIN.init();
+GLOBALS.init();

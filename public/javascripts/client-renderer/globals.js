@@ -11,7 +11,7 @@ var CANVAS_HEIGHT = 1080;
 // this type of material does not render with RayTracing method. Not sure why though!
 
 
-var MAIN =
+var GLOBALS =
 {
 	/**
 	 * ThreeJS scene.
@@ -58,20 +58,15 @@ var MAIN =
 	 */
 	currentGridId: -1,
 
-	/**
-	 * Flag indicating if screenshot should be captured on next frame render.
-	 */
-	getScreenshot: false,
-
 	
 	init: function()
 	{
-		MAIN.io = io(MAIN.hostingUrl, { query: "clientType=renderer" });
-		MAIN.io.on('connect', MAIN.onServerConnected);
+		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=renderer" });
+		GLOBALS.io.on('connect', GLOBALS.onServerConnected);
 
-		MAIN.initCamera();
-		MAIN.initLights();
-		MAIN.init3DObjects();
+		GLOBALS.initCamera();
+		GLOBALS.initLights();
+		GLOBALS.init3DObjects();
 	},
 
 
@@ -82,11 +77,11 @@ var MAIN =
 	request: function(url, data)
 	{
 		data = data ? data : null;
-		url = MAIN.apiUrl + '/request' + '/' + url;
+		url = GLOBALS.apiUrl + '/request' + '/' + url;
 
 		console.log('[Main] Requesting ' + url);
 
-		MAIN.io.emit(url, data);
+		GLOBALS.io.emit(url, data);
 	},
 
 	/**
@@ -94,9 +89,9 @@ var MAIN =
 	 */
 	response: function(url, callback)
 	{
-		url = MAIN.apiUrl + '/response' + '/' + url;
+		url = GLOBALS.apiUrl + '/response' + '/' + url;
 
-		MAIN.io.on(url, callback);
+		GLOBALS.io.on(url, callback);
 	},
 
 	/**
@@ -106,10 +101,10 @@ var MAIN =
 	{
 		console.log('[Main] Connected to server!');
 
-		MAIN.response('renderingCells/layout', MAIN.onGetLayout);
-		MAIN.response('renderingCells/cell', MAIN.onRequestCell);
+		GLOBALS.response('renderingCells/layout', GLOBALS.onGetLayout);
+		GLOBALS.response('renderingCells/cell', GLOBALS.onRequestCell);
 
-		MAIN.request('renderingCells/layout');
+		GLOBALS.request('renderingCells/layout');
 	},	
 
 	/**
@@ -117,10 +112,10 @@ var MAIN =
 	 */
 	initCamera: function()
 	{
-		MAIN.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		MAIN.camera.position.x = 0;
-		MAIN.camera.position.y = 0;
-		MAIN.camera.position.z = 600;
+		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
+		GLOBALS.camera.position.x = 0;
+		GLOBALS.camera.position.y = 0;
+		GLOBALS.camera.position.z = 600;
 	},
 
 	/**
@@ -128,7 +123,7 @@ var MAIN =
 	 */
 	initCameraControls: function()
 	{
-		MAIN.controls = new THREE.OrbitControls(MAIN.camera, MAIN.renderer.domElement);
+		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera, GLOBALS.renderer.domElement);
 	},
 
 	/**
@@ -141,17 +136,17 @@ var MAIN =
 		var light = new THREE.PointLight( 0xffaa55, intensity );
 		light.position.set( - 200, 100, 100 );
 		light.physicalAttenuation = true;
-		MAIN.scene.add( light );
+		GLOBALS.scene.add( light );
 
 		var light = new THREE.PointLight( 0x55aaff, intensity );
 		light.position.set( 200, 100, 100 );
 		light.physicalAttenuation = true;
-		MAIN.scene.add( light );
+		GLOBALS.scene.add( light );
 
 		var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
 		light.position.set( 0, 0, 300 );
 		light.physicalAttenuation = true;
-		MAIN.scene.add( light );
+		GLOBALS.scene.add( light );
 	},
 
 	/**
@@ -253,7 +248,7 @@ var MAIN =
 		//
 
 		group = new THREE.Group();
-		MAIN.scene.add( group );
+		GLOBALS.scene.add( group );
 
 		// geometries
 
@@ -286,34 +281,34 @@ var MAIN =
 		glass.scale.multiplyScalar( 0.5 );
 		glass.position.set( 75, - 250 + 5, - 75 );
 		glass.rotation.y = 0.5;
-		MAIN.scene.add( glass );
+		GLOBALS.scene.add( glass );
 
 		// bottom
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxBottom );
 		plane.position.set( 0, - 300 + 2.5, - 300 );
 		plane.scale.multiplyScalar( 2 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 
 		// top
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
 		plane.position.set( 0, 300 - 2.5, - 300 );
 		plane.scale.multiplyScalar( 2 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 
 		// back
 
 		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
 		plane.rotation.x = 1.57;
 		plane.position.set( 0, 0, - 300 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 
 		var plane = new THREE.Mesh( planeGeometry, mirrorMaterialFlatDark );
 		plane.rotation.x = 1.57;
 		plane.position.set( 0, 0, - 300 + 10 );
 		plane.scale.multiplyScalar( 0.85 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 
 		// left
 
@@ -321,7 +316,7 @@ var MAIN =
 		plane.rotation.z = 1.57;
 		plane.scale.multiplyScalar( 2 );
 		plane.position.set( - 300, 0, - 300 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 
 		// right
 
@@ -329,7 +324,7 @@ var MAIN =
 		plane.rotation.z = 1.57;
 		plane.scale.multiplyScalar( 2 );
 		plane.position.set( 300, 0, - 300 );
-		MAIN.scene.add( plane );
+		GLOBALS.scene.add( plane );
 	},
 
 	/**
@@ -340,7 +335,7 @@ var MAIN =
 	{
 		console.log('[Main] Initialize renderer of type "' + type + '"');
 
-		var cell = MAIN.renderingCells.currentRenderCell;
+		var cell = GLOBALS.renderingCells.currentRenderCell;
 		var blockWidth = cell.width;
 		var blockHeight = cell.height;
 		var startX = cell.startX;
@@ -348,42 +343,24 @@ var MAIN =
 		
 		if (type == 'default')
 		{
-			MAIN.renderer = new THREE.WebGLRenderer();
+			GLOBALS.renderer = new THREE.WebGLRenderer();
 		}
 		else if (type == 'raytracing')
 		{
 			var canvas = document.createElement('canvas');
-			MAIN.renderer = new THREE.RaytracingRenderer(canvas, blockWidth, blockHeight, startX, startY, true);
+			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, blockWidth, blockHeight, startX, startY, true);
 		}
 
-		MAIN.renderer.domElement.id = "rendering-canvas";
-		MAIN.renderer.setClearColor('#f4f4f4');				
-		MAIN.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(MAIN.renderer.domElement);
+		GLOBALS.renderer.domElement.id = "rendering-canvas";
+		GLOBALS.renderer.setClearColor('#f4f4f4');				
+		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+		document.body.appendChild(GLOBALS.renderer.domElement);
 
-		MAIN.initCameraControls();
+		GLOBALS.initCameraControls();
 
 		// start rendering
-		MAIN.onRenderFrame();
+		GLOBALS.onRenderFrame();
 	},	
-
-	/**
-	 * Capture screenshot of canvas.
-	 */
-	onScreenshot: function()
-	{
-		var canvas = HTML('#canvas-screenshot').elements[0];
-		var ctx = canvas.getContext("2d");
-
-		var renderCell = MAIN.renderingCells.currentRenderCell;
-		var startX = renderCell.startX;
-		var startY = renderCell.startY;
-		var width = renderCell.width;
-		var height = renderCell.height;
-
-		throw 'missing imgData variable';
-		ctx.putImageData(imgData, 0,0);
-	},
 
 	/**
 	 * Main rendering loop.
@@ -391,23 +368,17 @@ var MAIN =
 	onRenderFrame: function()
 	{
 		// will start loop for this function
-		//requestAnimationFrame(MAIN.onRenderFrame);
+		//requestAnimationFrame(GLOBALS.onRenderFrame);
 
 		// render current frame
-		MAIN.renderer.render(MAIN.scene, MAIN.camera);
+		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
 
-		/*if (MAIN.getScreenshot == true) 
-		{
-			// rendering must be captured before controls are updated
+		/*	
 
-			MAIN.onScreenshot();
-			MAIN.getScreenshot = false;
-		}		
-
-		if (MAIN.controls)
+		if (GLOBALS.controls)
 		{
 			// update camera
-			MAIN.controls.update();
+			GLOBALS.controls.update();
 		}*/
 	},
 
@@ -417,7 +388,7 @@ var MAIN =
 	 */
 	onGetLayout: function(data)
 	{
-		MAIN.renderingCells = data;
+		GLOBALS.renderingCells = data;
 
 		console.log('[Renderer] Grid layout drawn');
 
@@ -439,7 +410,7 @@ var MAIN =
 			prevCell = current;
 		}				
 
-		MAIN.request('renderingCells/cell');
+		GLOBALS.request('renderingCells/cell');
 	},
 
 	/**
@@ -449,13 +420,13 @@ var MAIN =
 	{
 		console.log('[Main] Rendering cell received');
 
-		MAIN.renderingCells.currentRenderCell = cell;
+		GLOBALS.renderingCells.currentRenderCell = cell;
 
 		HTML('#cell-' + cell._id).addClass('active');
 
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
-		window.setTimeout(function(){ MAIN.initRenderer('raytracing') }, 0);
+		window.setTimeout(function(){ GLOBALS.initRenderer('raytracing') }, 0);
 	},
 
 	/**
@@ -466,15 +437,15 @@ var MAIN =
 	{
 		var data = 
 		{
-			renderCellId: MAIN.renderingCells.currentRenderCell._id,
+			renderCellId: GLOBALS.renderingCells.currentRenderCell._id,
 			progress: progress,
 			imageData: imageData
 		};
 
-		MAIN.request('renderingCells/updateProgress', data);
+		GLOBALS.request('renderingCells/updateProgress', data);
 	}
 };
 
 
 
-MAIN.init();
+GLOBALS.init();

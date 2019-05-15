@@ -10,3 +10,6 @@ Run VS code debugger and go to browser and type "http://localhost:3000/"
 - MongoDB
 - ExpressJS
 - uuidv1 (for GUID key generation for database tables)
+
+# UI design inspiration
+https://www.behance.net/gallery/80267021/Xave-Expense-Tracker

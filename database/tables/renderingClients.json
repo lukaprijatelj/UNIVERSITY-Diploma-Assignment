@@ -169,8 +169,15 @@
             "admin": false
         },
         {
-            "_id": "4d6829e0-7689-11e9-bf91-f783855d6f60",
-            "sessionId": "Cb888d-b9JFMMH6OAAAK",
+            "_id": "e9882610-774a-11e9-bf91-f783855d6f60",
+            "sessionId": "dkh1Ob9EPxcNN-5xAAAf",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "8bd5d4d0-774b-11e9-bf91-f783855d6f60",
+            "sessionId": "3juZtwIOA7CldfDbAAAk",
             "ipAddress": "::1",
             "active": false,
             "admin": false

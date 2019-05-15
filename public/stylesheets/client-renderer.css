@@ -1,3 +1,15 @@
+body
+{
+	--dark-background-color: #1F52F2; 
+	--light-background-color: #0079FF; 
+
+	background-color: #F9F9F9;
+	color: #505050;
+	margin: 0;
+	padding: 0;
+	font-family: 'Muli', sans-serif;
+}
+
 br 
 {
 	height: 0px;
@@ -34,7 +46,7 @@ br
 	color: white;
 	font-size: 2em;
 	font-family: "Lucida Console", Monaco, monospace;
-	background-color: rgba(0,0,0,1);
+	background-color: var(--dark-background-color);
 }
 
 #debug-info .field
@@ -63,7 +75,7 @@ br
 	padding-left: 20px;
 	padding-right: 20px;
 	text-align: center;
-	background-color: rgba(0,0,0,1);
+	background-color: var(--dark-background-color);
 }
 
 #debug-info .group table
