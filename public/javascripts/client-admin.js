@@ -105,7 +105,10 @@ var GLOBALS =
 
 			gridLayout.append('<div id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>');
 			prevCell = current;
-		}				
+		}
+		
+		HTML('#loading-curtain').hide();
+		HTML('#interface').show();
 	}
 };
 

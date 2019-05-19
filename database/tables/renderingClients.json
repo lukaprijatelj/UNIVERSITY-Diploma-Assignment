@@ -169,15 +169,43 @@
             "admin": false
         },
         {
-            "_id": "e9882610-774a-11e9-bf91-f783855d6f60",
-            "sessionId": "dkh1Ob9EPxcNN-5xAAAf",
+            "_id": "a49bd350-7752-11e9-bf91-f783855d6f60",
+            "sessionId": "w8Bw2qD4SyhTsxwUAAA7",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "a49c6f90-7752-11e9-bf91-f783855d6f60",
+            "sessionId": "9EeRwtj1gTqe5hRrAAA8",
             "ipAddress": "::1",
             "active": false,
             "admin": true
         },
         {
-            "_id": "d8100100-774f-11e9-bf91-f783855d6f60",
-            "sessionId": "hzS7nwZv5pf80fbtAAA4",
+            "_id": "e284d3a0-7a32-11e9-acb7-b3f4cd64190e",
+            "sessionId": "-EAal-czYWB123tUAAAA",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": false
+        },
+        {
+            "_id": "069ecfb0-7a34-11e9-acb7-b3f4cd64190e",
+            "sessionId": "YH0djBw9hzUHIktQAAAG",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "b304b8f0-7a34-11e9-b2b1-fdf97e16bc9f",
+            "sessionId": "wbQ5fgo5tZpLLhz6AAAA",
+            "ipAddress": "::1",
+            "active": false,
+            "admin": true
+        },
+        {
+            "_id": "84934490-7a35-11e9-b2b1-fdf97e16bc9f",
+            "sessionId": "wXXOw0VCZH_zFKOtAAAG",
             "ipAddress": "::1",
             "active": false,
             "admin": false

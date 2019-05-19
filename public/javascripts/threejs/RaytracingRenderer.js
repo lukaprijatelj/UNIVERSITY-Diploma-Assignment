@@ -36,7 +36,7 @@ THREE.RaytracingRenderer = function (canvas, cell, shouldRandomize, alpha)
 
 		var cellCanvasV = HTML('#cell-' + this.cell._id);
 		var cellCanvasContext = cellCanvasV.elements[0].getContext('2d', { alpha: alpha === true });
-		cellCanvasContext.putImageData(imagedata, blockX, blockY);
+		cellCanvasContext.putImageData(imagedata, 0, 0);
 
 		cellCanvasV.removeClass('active');
 
