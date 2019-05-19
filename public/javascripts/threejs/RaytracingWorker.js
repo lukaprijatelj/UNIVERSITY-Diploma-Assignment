@@ -4,7 +4,7 @@
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, drawOnCanvas) 
+THREE.RaytracingRendererWorker = function (drawOnCanvas) 
 {
 	console.log('[THREE.RaytracingRendererWorker] Initializing worker');
 
@@ -40,8 +40,8 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, drawOnCanvas
 	this.lights = [];
 	this.cache = {};
 
-	this.blockWidth = blockWidth;
-	this.blockHeight = blockHeight;
+	this.blockWidth = 0;
+	this.blockHeight = 0;
 	this.loader = new THREE.ObjectLoader();
 	this.drawOnCanvas = drawOnCanvas;	
 
@@ -51,6 +51,12 @@ THREE.RaytracingRendererWorker = function (blockWidth, blockHeight, drawOnCanvas
 
 		// TODO fix passing maxRecursionDepth as parameter.
 		// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
+	};
+
+	this.setBlockSize = function(blockWidth, blockHeight)
+	{
+		this.blockWidth = blockWidth;
+		this.blockHeight = blockHeight;
 	};
 
 	this.initScene = function(sceneData, cameraData, annexData)

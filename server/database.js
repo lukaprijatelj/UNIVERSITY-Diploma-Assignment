@@ -31,6 +31,8 @@ var DATABASE =
 	
 	init: function()
 	{
+		console.log('[Database] Initializing');
+
 		var tablesRoot = DATABASE.root + "tables/";
 		
 		DATABASE.renderingClientsTable = new BasicTable(tablesRoot, 'renderingClients');
@@ -183,16 +185,20 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(renderCellId, progress, imageData)
+	updateProgress: function(cell, progress, imageData)
 	{
 		var table = DATABASE.renderingClientsTable;
 
 		// update rendering progress for specific client
 		table.rows.forEach((element) => { 
-			if(element._id == renderCellId)
+			if(element._id == cell)
 			{
 				element.progress = progress;
-				element.imageData = imageData;
+
+				if (typeof imageData !== 'undefined')
+				{
+					element.imageData = imageData;
+				}				
 			}
 		});
 

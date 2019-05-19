@@ -11,7 +11,7 @@ var GLOBALS =
 	/**
 	 * Url where socketIO will be hosted.
 	 */
-	hostingUrl: 'http://localhost:80/',
+	hostingUrl: 'http://localhost:30002/',
 
 	/**
 	 * Grid layout of cells that are rendered or are waiting for rendering.
@@ -66,8 +66,21 @@ var GLOBALS =
 
 		// wire response callbacks
 		GLOBALS.response('renderingCells/layout', GLOBALS._onGetLayout);
+		GLOBALS.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
 
 		GLOBALS.request('renderingCells/layout');
+	},
+
+	/**
+	 * One of the cells was updated
+	 */
+	_onUpdateProgress: function(data)
+	{
+		var cell = data.cell;
+		var imagedata = new ImageData(new Uint8ClampedArray(cell.imageData), cell.width, cell.height);
+
+		var canvas = HTML('#cell-' + cell._id).elements[0];
+		canvas.getContext('2d').putImageData(imagedata, 0, 0);
 	},
 
 	/**
@@ -77,6 +90,21 @@ var GLOBALS =
 	_onRecalculateLayoutClick: function()
 	{
 		GLOBALS.request('renderingCells/recalculateLayout');
+		GLOBALS.request('renderingCells/layout');
+	},
+
+	/**
+	 * Starts new client/tab for rendering.
+	 * @private
+	 */
+	_onStartNewClientClick: function()
+	{
+		var a = document.createElement("a");    
+		a.href = window.location.origin + '/clientRenderer';    
+		a.setAttribute('target', '_blank');
+		var evt = document.createEvent("MouseEvents");   
+		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
+		a.dispatchEvent(evt);
 	},
 
 	/**
@@ -103,7 +131,7 @@ var GLOBALS =
 				gridLayout.append('<br>');
 			}
 
-			gridLayout.append('<div id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></div>');
+			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" width="' + current.width + 'px" height="' + current.height + 'px"></canvas>');
 			prevCell = current;
 		}
 		

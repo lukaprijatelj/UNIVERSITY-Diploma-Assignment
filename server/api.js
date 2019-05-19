@@ -2,7 +2,7 @@ var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 
 var io = require('socket.io');
-var socketIo = io.listen(80);
+var socketIo = io.listen(30002);
 
 var API =
 {
@@ -11,9 +11,13 @@ var API =
 	 */
 	baseUrl: '/api',
 
+	adminSessionId: '',
+
 
     init: function(app)
     {
+		console.log('[Api] Initializing');
+
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
 		app.post(API.baseUrl + '/uploadScene', upload.single('Scene'), API.onUploadFile);
@@ -36,10 +40,11 @@ var API =
 		if (socket.handshake.query.clientType == "admin")
 		{
 			isAdmin = true;
+			API.adminSessionId = sessionId;
 		}
 		
-		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);		
-		
+		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
+				
 		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
 		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
 		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
@@ -103,7 +108,12 @@ var API =
 
 		var socket = this;
 
-		DATABASE.updateProgress(data.renderCellId, data.progress, data.imageData);		
+		DATABASE.updateProgress(data.cell, data.progress, data.imageData);		
+
+		if (data.progress == 100)
+		{
+			socket.broadcast.emit(API.baseUrl + '/response/renderingCells/updateProgress', data);
+		}
 	},
 
 	/**

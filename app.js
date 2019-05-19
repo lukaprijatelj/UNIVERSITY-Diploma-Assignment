@@ -58,6 +58,8 @@ var EXPRESS_APP =
 		app.use('/clientRenderer', clientRendererRouter);
 		app.use('/clientAdmin', clientAdminRouter);
 
+		console.log('[App] Initializing');
+
 		API.init(app);
 
 		// catch 404 and forward to error handler

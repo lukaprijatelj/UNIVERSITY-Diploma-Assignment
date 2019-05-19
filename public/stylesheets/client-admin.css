@@ -64,3 +64,17 @@ body
 {
 	height: 50px;
 }
+
+.divider-small
+{
+	height: 20px;
+}
+
+
+#rendering-canvas
+{
+	background-color: #FFFFFF;
+	border-style: solid;
+	border-color: #EBEBEB;
+	border-width: 1px;
+}

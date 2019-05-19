@@ -41,7 +41,7 @@ var GLOBALS =
 	/**
 	 * Url where socketIO will be hosted.
 	 */
-	hostingUrl: 'http://localhost:80/',
+	hostingUrl: 'http://localhost:30002/',
 
 	/**
 	 * Socket io instance.
@@ -67,6 +67,9 @@ var GLOBALS =
 		GLOBALS.initCamera();
 		GLOBALS.initLights();
 		GLOBALS.init3DObjects();
+		GLOBALS.initRenderer('raytracing');
+		GLOBALS.initCameraControls();
+
 	},
 
 
@@ -103,9 +106,19 @@ var GLOBALS =
 
 		GLOBALS.response('renderingCells/layout', GLOBALS.onGetLayout);
 		GLOBALS.response('renderingCells/cell', GLOBALS.onRequestCell);
+		GLOBALS.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
 
 		GLOBALS.request('renderingCells/layout');
 	},	
+
+	_onUpdateProgress: function(data)
+	{
+		var cell = data.cell;
+		var imagedata = new ImageData(new Uint8ClampedArray(cell.imageData), cell.width, cell.height);
+
+		var canvas = HTML('#cell-' + cell._id).elements[0];
+		canvas.getContext('2d').putImageData(imagedata, 0, 0);
+	},
 
 	/**
 	 * Intializes camera in the scene.
@@ -335,7 +348,6 @@ var GLOBALS =
 	{
 		console.log('[Main] Initialize renderer of type "' + type + '"');
 
-		var cell = GLOBALS.renderingCells.currentRenderCell;
 		var canvas = HTML('#rendering-canvas').elements[0];
 		
 		if (type == 'default')
@@ -344,18 +356,12 @@ var GLOBALS =
 		}
 		else if (type == 'raytracing')
 		{			
-			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, cell, true);
+			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, GLOBALS.updateProgressAsync, GLOBALS.onCellRendered);
 		}
-
 	
 		GLOBALS.renderer.setClearColor('#f4f4f4');				
 		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(GLOBALS.renderer.domElement);
-
-		GLOBALS.initCameraControls();
-
-		// start rendering
-		GLOBALS.onRenderFrame();
+		document.body.appendChild(GLOBALS.renderer.domElement);		
 	},	
 
 	/**
@@ -402,10 +408,15 @@ var GLOBALS =
 				gridLayout.append('<br>');
 			}
 
-			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" style="width: ' + current.width + 'px; height: ' + current.height + 'px;"></canvas>');
+			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" width="' + current.width + 'px" height="' + current.height + 'px"></canvas>');
 			prevCell = current;
 		}				
 
+		GLOBALS.request('renderingCells/cell');
+	},
+
+	onCellRendered: function()
+	{
 		GLOBALS.request('renderingCells/cell');
 	},
 
@@ -418,24 +429,26 @@ var GLOBALS =
 
 		GLOBALS.renderingCells.currentRenderCell = cell;
 
-		HTML('#cell-' + cell._id).addClass('active');
-
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
-		window.setTimeout(function(){ GLOBALS.initRenderer('raytracing') }, 0);
+		window.setTimeout(function()
+		{
+			GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+			// start rendering
+			GLOBALS.onRenderFrame();
+		 }, 0);
 	},
 
 	/**
 	 * Notifies server how much has client already rendered.
 	 * @async
 	 */
-	updateProgressAsync: function(progress, imageData)
+	updateProgressAsync: function(cell, progress)
 	{
 		var data = 
 		{
-			renderCellId: GLOBALS.renderingCells.currentRenderCell._id,
-			progress: progress,
-			imageData: imageData
+			cell: cell,
+			progress: progress
 		};
 
 		GLOBALS.request('renderingCells/updateProgress', data);
