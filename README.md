@@ -18,3 +18,17 @@ http://lukaprij.wwwnl1-ss11.a2hosted.com/clientAdmin
 https://www.behance.net/gallery/80267021/Xave-Expense-Tracker
 
 
+# Debugging
+"503 Service unavailable" on A2 hosting occurs when bin/www port is incorerct with the one in .htaccess file
+
+# Shell
+Username (cPanel/SSH/FTP):  lukaprij
+Password (cPanel/SSH/FTP):  dg[OC3tS.86tC4
+
+Open putty SSH and type
+screen
+cd University-Diploma
+nohup npm start --production &     // so that app starts in background
+
+then press CTRL+a+d so that you go back to normal shell
+close putty terminal

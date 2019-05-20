@@ -1,3 +1,5 @@
+var IS_DEBUG_MODE = false;
+
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
@@ -41,7 +43,7 @@ var GLOBALS =
 	/**
 	 * Url where socketIO will be hosted.
 	 */
-	hostingUrl: 'http://localhost:30002/',
+	hostingUrl: IS_DEBUG_MODE == true ? 'http://localhost:30003' : 'http://lukaprij.wwwnl1-ss11.a2hosted.com:30003',
 
 	/**
 	 * Socket io instance.
@@ -69,7 +71,6 @@ var GLOBALS =
 		GLOBALS.init3DObjects();
 		GLOBALS.initRenderer('raytracing');
 		GLOBALS.initCameraControls();
-
 	},
 
 
@@ -114,6 +115,16 @@ var GLOBALS =
 	_onUpdateProgress: function(data)
 	{
 		var cell = data.cell;
+		GLOBALS.drawOnCell(cell);
+	},
+
+	drawOnCell: function(cell)
+	{
+		if (!cell.imageData || cell.imageData.length == 0)
+		{
+			return;
+		}
+
 		var imagedata = new ImageData(new Uint8ClampedArray(cell.imageData), cell.width, cell.height);
 
 		var canvas = HTML('#cell-' + cell._id).elements[0];
@@ -411,6 +422,13 @@ var GLOBALS =
 			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" width="' + current.width + 'px" height="' + current.height + 'px"></canvas>');
 			prevCell = current;
 		}				
+
+		for (var i=0; i<data.length; i++)
+		{
+			var current = data[i];
+
+			GLOBALS.drawOnCell(current);
+		}
 
 		GLOBALS.request('renderingCells/cell');
 	},

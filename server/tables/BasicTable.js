@@ -73,7 +73,7 @@ BasicTable.prototype._checkIfSavingNeeded = function()
 		return;
 	}
 
-	this._save();
+	//this._save();
 };
 
 /**

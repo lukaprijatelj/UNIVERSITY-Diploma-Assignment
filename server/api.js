@@ -2,7 +2,7 @@ var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 
 var io = require('socket.io');
-var socketIo = io.listen(30002);
+var socketIo = io.listen(30003);
 
 var API =
 {

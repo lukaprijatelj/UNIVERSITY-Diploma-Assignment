@@ -42,11 +42,9 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 	{
 		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 		
-		var imageData = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
-
-		this.context.putImageData(imageData, 0, 0);
-
 		this.cell.imageData = buffer;
+
+		GLOBALS.drawOnCell(this.cell);
 		this.updateFunction(this.cell, 100);
 		
 		// completed

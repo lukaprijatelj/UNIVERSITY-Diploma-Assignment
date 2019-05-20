@@ -132,7 +132,7 @@ var DATABASE =
 			startX: startX,
             sessionId: '',
 			progress: 0,
-			imageData: []
+			imageData: null
         };
 
 		var table = DATABASE.renderingCellsTable;
@@ -185,19 +185,19 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(cell, progress, imageData)
+	updateProgress: function(cell, progress)
 	{
-		var table = DATABASE.renderingClientsTable;
+		var table = DATABASE.renderingCellsTable;
 
 		// update rendering progress for specific client
 		table.rows.forEach((element) => { 
-			if(element._id == cell)
+			if(element._id == cell._id)
 			{
 				element.progress = progress;
 
-				if (typeof imageData !== 'undefined')
+				if (typeof cell.imageData !== 'undefined')
 				{
-					element.imageData = imageData;
+					element.imageData = cell.imageData;
 				}				
 			}
 		});
