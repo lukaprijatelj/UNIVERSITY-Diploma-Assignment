@@ -157,7 +157,22 @@ BasicTable.prototype._readExistingTable = function()
 			return;
 		}
 
-		var obj = JSON.parse(contents);
+		var obj = {};
+
+		try
+		{
+			obj = JSON.parse(contents);
+		}
+		catch(error)
+		{
+			console.error("BasicTable - Error while parsing JSON. (clearing table contents)");
+
+			fs.unlink(fileUrl, (err) => 
+			{
+				if (err) throw err;
+			});
+		}
+
 		basicTable.rows = obj.rows;
 	});
 };

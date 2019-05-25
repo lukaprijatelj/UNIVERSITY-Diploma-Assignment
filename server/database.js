@@ -1,5 +1,5 @@
 
-var BasicTable = require('./tables/BasicTable.js');
+var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
 
 
