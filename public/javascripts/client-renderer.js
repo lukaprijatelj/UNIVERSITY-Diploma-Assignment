@@ -1,4 +1,4 @@
-var IS_DEBUG_MODE = false;
+var IS_DEBUG_MODE = true;
 
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;

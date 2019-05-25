@@ -1,4 +1,4 @@
-var IS_DEBUG_MODE = false;
+var IS_DEBUG_MODE = true;
 
 /**
  * Globals for 
