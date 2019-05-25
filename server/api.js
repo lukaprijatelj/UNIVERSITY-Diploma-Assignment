@@ -4,6 +4,12 @@ var DATABASE = require('./database.js');
 var io = require('socket.io');
 var socketIo = io.listen(30003);
 
+const CANVAS_WIDTH = 1920;
+const CANVAS_HEIGHT = 1080;
+
+const BLOCK_WIDTH = 50;
+const BLOCK_HEIGHT = 50;
+
 var API =
 {
 	/**
@@ -45,6 +51,8 @@ var API =
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
 				
+		socket.on(API.baseUrl + '/request/renderingClients/list', API.onRequestCell);
+
 		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
 		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
 		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
@@ -133,26 +141,27 @@ var API =
 
 	onRecalculateLayout: function()
 	{
-		var NUM_OF_CELLS_HORIZONTALLY = 5;
-		var NUM_OF_CELLS_VERTICALLY = 5;
-
-		var CELL_WIDTH = 384;
-		var CELL_HEIGHT = 216;
-
 		DATABASE.clearGridLayout();
 		
 		var startY = 0;
-		while(startY < CELL_HEIGHT * NUM_OF_CELLS_VERTICALLY)
+		while(startY < CANVAS_HEIGHT)
 		{
 			var startX = 0;
 
-			while(startX < CELL_WIDTH * NUM_OF_CELLS_HORIZONTALLY)
+			while(startX < CANVAS_WIDTH)
 			{
-				DATABASE.addGridLayout(startX, startY, CELL_WIDTH, CELL_HEIGHT);
-				startX += CELL_WIDTH;
+				var endX = startX + BLOCK_WIDTH;
+				var endY = startY + BLOCK_HEIGHT;
+
+				var MAX_X = endX < CANVAS_WIDTH ? endX : CANVAS_WIDTH;
+				var MAX_Y = endY < CANVAS_HEIGHT ? endY : CANVAS_HEIGHT;
+
+				DATABASE.addGridLayout(startX, startY, MAX_X - startX, MAX_Y - startY);
+
+				startX += BLOCK_WIDTH;
 			}
 
-			startY += CELL_HEIGHT;
+			startY += BLOCK_HEIGHT;
 		}
 	},
 };
