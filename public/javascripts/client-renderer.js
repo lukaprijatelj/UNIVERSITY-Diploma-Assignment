@@ -351,15 +351,14 @@ var GLOBALS =
 		if (type == 'default')
 		{
 			GLOBALS.renderer = new THREE.WebGLRenderer({ canvas: canvas });
+			GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+			GLOBALS.renderer.setClearColor('#f4f4f4');
+			document.body.appendChild(GLOBALS.renderer.domElement);		
 		}
 		else if (type == 'raytracing')
 		{			
-			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, GLOBALS.updateProgressAsync, GLOBALS.onCellRendered);
+			GLOBALS.renderer = new THREE.RaytracingRenderer(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}
-	
-		GLOBALS.renderer.setClearColor('#f4f4f4');				
-		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(GLOBALS.renderer.domElement);		
 	},	
 
 	/**
@@ -374,7 +373,6 @@ var GLOBALS =
 		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
 
 		/*	
-
 		if (GLOBALS.controls)
 		{
 			// update camera
@@ -431,7 +429,6 @@ var GLOBALS =
 
 		divHolderV.parentNode.replaceChild(imageV, divHolderV);
 	},
-
 
 	onCellRendered: function()
 	{

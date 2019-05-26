@@ -6,72 +6,38 @@
  * @author zz85 / http://github.com/zz85
  */
 
-THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered) 
+THREE.RaytracingRenderer = function (canvasWidth, canvasHeight) 
 {
 	console.log('[THREE.RaytracingRenderer] Initializing renderer');
-
-	this.canvas = canvas;
-	this.domElement = canvas; // do not delete, this is only for referencing
 
 	this.cellV = null;
 	this.context = null;
 
-	var canvasWidth;
-	var canvasHeight;
 	var clearColor = new THREE.Color(0x000000);
 
 	// data for blockWidth, blockHeight, startX, startY
 	this.cell = null;
 
 	this.renderering = false;
-	this.worker = [];
+	
+	this.webWorker = null;
 	this.autoClear = true;
-	this.updateFunction = updateFunction ? updateFunction : () => {};
-	this.onCellRendered = onCellRendered ? onCellRendered : () => {};
 
 	this.setCell = function(cell)
 	{
 		this.cell = cell;
-		this.worker.setBlockSize(cell.width, cell.height);
-
 		this.cellV = document.getElementById('cell-' + cell._id);
-		//this.context = this.cellV.elements[0].getContext('2d');
-	};
 
-	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
-	{
-		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
-		
-		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
-
-		var canvas = document.createElement('canvas');
-		canvas.width  = this.cell.width;
-		canvas.height = this.cell.height;
-		canvas.getContext('2d').putImageData(imagedata, 0, 0);
-
-		this.cell.imageData = canvas.toDataURL('image/png');
-
-		GLOBALS.drawOnCell(this.cell);
-		this.updateFunction(this.cell, 100);
-		
-		// completed
-		this.onCellRendered();
-	};
-
-	this.setWorkers = function() 
-	{
-		var worker = new THREE.RaytracingRendererWorker(this.drawOnCanvas.bind(this));
-
-		worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
-
-		this.worker = worker;
-		this.updateSettings(worker);
+		this.webWorker.postMessage({
+			type: 'setCell',
+			cell: cell
+		});
 	};
 
 	/**
 	 * Function is only for abstraction.
 	 */
-	this.setClearColor = function(color /*, alpha */ ) 
+	this.setClearColor = function(color /*, alpha */) 
 	{
 		clearColor.set( color );
 	};
@@ -79,22 +45,6 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 	// probably to override parent functions
 	this.clear = function () {};
 	this.setPixelRatio = function () {};
-
-	this.updateSettings = function(worker) 
-	{
-		worker.init(canvasWidth, canvasHeight);
-	};
-
-	this.setSize = function (width, height) 
-	{
-		this.canvas.width = width;
-		this.canvas.height = height;
-
-		canvasWidth = this.canvas.width;
-		canvasHeight = this.canvas.height;
-
-		this.updateSettings(this.worker);
-	};
 
 	//
 
@@ -146,25 +96,57 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 
 		scene.traverse(this.serializeObject);
 
-		this.worker.initScene(sceneJSON, cameraJSON, materials);		
-
-
+		// cell gets background color, so that we know which cell is currently rendering
 		this.cellV.style.background = '#FF4F49';
-		
-		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 
-		var bindedRender = function()
-		{ 
-			this.worker.startRendering(this.cell.startX, this.cell.startY)
-		};
-
-		window.setTimeout(bindedRender.bind(this), 1);
+		this.webWorker.postMessage(
+		{
+			type: 'initScene',
+			sceneJSON: sceneJSON,
+			cameraJSON: cameraJSON,
+			materials: materials
+		});		
+		this.webWorker.postMessage(
+		{
+			type: 'startRendering'
+		});
 	};
 
 	this.init = function()
 	{
-		this.setWorkers();
-		this.setSize(this.canvas.width, this.canvas.height);
+		this.webWorker = new Worker('./javascripts/threejs/RayTracingWebWorker.js');
+		this.webWorker.postMessage({
+			type: 'init',
+			canvasWidth: canvasWidth,
+			canvasHeight: canvasHeight
+		});
+		this.webWorker.onmessage = (e) =>
+		{
+			var data = e.data;
+
+			if (data.type != 'renderCell')
+			{
+				return;
+			}
+
+			var cell = this.cell;
+
+			console.log('[THREE.RaytracingRenderer] Block done rendering (' + data.timeMs + ' ms)!');
+	
+			var imagedata = new ImageData(new Uint8ClampedArray(data.buffer), cell.width, cell.height);
+
+			var canvas = document.createElement('canvas');
+			canvas.width  = cell.width;
+			canvas.height = cell.height;
+			canvas.getContext('2d').putImageData(imagedata, 0, 0);
+
+			cell.imageData = canvas.toDataURL('image/png');
+
+			GLOBALS.drawOnCell(cell);
+
+			GLOBALS.updateProgressAsync(cell, 100);
+			GLOBALS.onCellRendered();
+		};
 	};
 	this.init();
 };
