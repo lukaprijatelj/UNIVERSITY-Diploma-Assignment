@@ -34,15 +34,22 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 		this.cell = cell;
 		this.worker.setBlockSize(cell.width, cell.height);
 
-		this.cellV = HTML('#cell-' + cell._id);
-		this.context = this.cellV.elements[0].getContext('2d');
+		this.cellV = document.getElementById('cell-' + cell._id);
+		//this.context = this.cellV.elements[0].getContext('2d');
 	};
 
 	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
 	{
 		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 		
-		this.cell.imageData = buffer;
+		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
+
+		var canvas = document.createElement('canvas');
+		canvas.width  = this.cell.width;
+		canvas.height = this.cell.height;
+		canvas.getContext('2d').putImageData(imagedata, 0, 0);
+
+		this.cell.imageData = canvas.toDataURL('image/png');
 
 		GLOBALS.drawOnCell(this.cell);
 		this.updateFunction(this.cell, 100);
@@ -141,8 +148,10 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 
 		this.worker.initScene(sceneJSON, cameraJSON, materials);		
 
-		this.context.fillStyle = '#FF4F49';
-		this.context.fillRect(0, 0, this.cell.width, this.cell.height);
+
+		this.cellV.style.background = '#FF4F49';
+		
+		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 
 		var bindedRender = function()
 		{ 

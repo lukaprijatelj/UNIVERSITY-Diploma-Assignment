@@ -2,6 +2,56 @@
 var IS_CONSOLE_ENABLED = true;
 
 
+HTMLElement.createElement = function(htmlString)
+{
+	var div = document.createElement('div');
+	div.innerHTML = htmlString;
+	return div.firstChild;
+};
+
+HTMLElement.prototype.addClass = function(value)
+{
+    this.classList.add(value);
+
+    return this;
+};
+
+HTMLElement.prototype.removeClass = function(value)
+{
+    this.classList.remove(value);
+
+    return this;
+};
+
+HTMLElement.prototype.empty = function()
+{
+    this.innerHTML = '';
+};
+
+HTMLElement.prototype.hide = function()
+{
+    this.removeClass('visible');
+    this.addClass('hidden');
+};
+
+HTMLElement.prototype.show = function()
+{
+    this.removeClass('hidden');
+    this.addClass('visible');
+};
+
+HTMLElement.prototype.enable = function()
+{
+    this.removeClass('disabled');
+};
+
+HTMLElement.prototype.disable = function()
+{
+    this.addClass('disabled');
+};
+
+
+
 /**
  * Inherits src object values to dst object.
  * @extends {Object}

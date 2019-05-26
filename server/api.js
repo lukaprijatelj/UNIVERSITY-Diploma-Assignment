@@ -7,8 +7,8 @@ var socketIo = io.listen(30003);
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 
-const BLOCK_WIDTH = 50;
-const BLOCK_HEIGHT = 50;
+const BLOCK_WIDTH = 80;
+const BLOCK_HEIGHT = 80;
 
 var API =
 {

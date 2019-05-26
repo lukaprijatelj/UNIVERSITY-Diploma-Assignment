@@ -118,19 +118,6 @@ var GLOBALS =
 		GLOBALS.drawOnCell(cell);
 	},
 
-	drawOnCell: function(cell)
-	{
-		if (!cell.imageData || cell.imageData.length == 0)
-		{
-			return;
-		}
-
-		var imagedata = new ImageData(new Uint8ClampedArray(cell.imageData), cell.width, cell.height);
-
-		var canvas = HTML('#cell-' + cell._id).elements[0];
-		canvas.getContext('2d').putImageData(imagedata, 0, 0);
-	},
-
 	/**
 	 * Intializes camera in the scene.
 	 */
@@ -359,7 +346,7 @@ var GLOBALS =
 	{
 		console.log('[Main] Initialize renderer of type "' + type + '"');
 
-		var canvas = HTML('#rendering-canvas').elements[0];
+		var canvas = document.getElementById('rendering-canvas');
 		
 		if (type == 'default')
 		{
@@ -405,21 +392,20 @@ var GLOBALS =
 
 		console.log('[Renderer] Grid layout drawn');
 
-		var gridLayout = HTML('#grid-layout');
-
-		gridLayout.empty();
+		var gridLayout = document.getElementById('grid-layout');
+		gridLayout.innerHTML = '';
 
 		var prevCell = null;
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];
-	
+
 			if (prevCell && prevCell.startX > current.startX)
 			{
-				gridLayout.append('<br>');
+				gridLayout.appendChild(HTMLElement.createElement('<br>'));
 			}
 
-			gridLayout.append('<canvas id="cell-' + current._id + '" class="render-cell" width="' + current.width + 'px" height="' + current.height + 'px"></canvas>');
+			gridLayout.appendChild(HTMLElement.createElement('<div id="cell-' + current._id + '" class="render-cell" style="width:' + current.width + 'px; height:' + current.height + 'px;"></div>'));
 			prevCell = current;
 		}				
 
@@ -432,6 +418,20 @@ var GLOBALS =
 
 		GLOBALS.request('renderingCells/cell');
 	},
+
+	drawOnCell: function(cell)
+	{
+		if (!cell.imageData)
+		{
+			return;
+		}
+
+		var divHolderV = document.getElementById("cell-" + cell._id);
+		var imageV = HTMLElement.createElement('<img src="' + cell.imageData + '" id="cell-' + cell._id + '" class="render-cell" style="width:' + cell.width + 'px; height:' + cell.height + 'px;" />');
+
+		divHolderV.parentNode.replaceChild(imageV, divHolderV);
+	},
+
 
 	onCellRendered: function()
 	{
