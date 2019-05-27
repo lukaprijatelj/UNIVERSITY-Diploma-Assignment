@@ -12,6 +12,8 @@ var CANVAS_HEIGHT = 1080;
 // if you use *.gltf model, then objects will not be rendered with rayTracing method because materials are MeshStandardMaterial type.
 // this type of material does not render with RayTracing method. Not sure why though!
 
+    
+var loader = new THREE.GLTFLoader();
 
 var GLOBALS =
 {
@@ -60,6 +62,7 @@ var GLOBALS =
 	 */
 	currentGridId: -1,
 
+	rendererType: 'raytracing',
 	
 	init: function()
 	{
@@ -67,10 +70,45 @@ var GLOBALS =
 		GLOBALS.io.on('connect', GLOBALS.onServerConnected);
 
 		GLOBALS.initCamera();
-		GLOBALS.initLights();
-		GLOBALS.init3DObjects();
-		GLOBALS.initRenderer('raytracing');
+		//GLOBALS.initLights();
+		//GLOBALS.init3DObjects();
+
+		var ambientLight = new THREE.AmbientLight(0xcccccc);
+		GLOBALS.scene.add(ambientLight);
+
+		GLOBALS.initRenderer();
 		GLOBALS.initCameraControls();
+
+		var onLoadingError = function(error) 
+		{
+			console.error('[glTF loader] Error while loading scene!');
+			console.error(error);
+		};
+		var onLoadingProgress = function(xhr) 
+		{
+			// occurs when one of the files is done loading
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
+		};
+		var onLoadFinished = function(gltf) 
+		{
+			console.log('[glTF loader] Scene finished loading');
+
+			GLOBALS.scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+			
+			//MAIN.getScreenshot = true;		
+			
+			GLOBALS.request('renderingCells/cell');
+		};
+
+		loader.load('Red-box/Box.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 
@@ -124,9 +162,16 @@ var GLOBALS =
 	initCamera: function()
 	{
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		GLOBALS.camera.position.x = 0;
+
+		// for raytracing
+		/*GLOBALS.camera.position.x = 0;
 		GLOBALS.camera.position.y = 0;
-		GLOBALS.camera.position.z = 600;
+		GLOBALS.camera.position.z = 600;*/
+
+		// for castle
+		GLOBALS.camera.position.x = 6.52;
+		GLOBALS.camera.position.y = 2.21;
+		GLOBALS.camera.position.z = -0.65;
 	},
 
 	/**
@@ -340,20 +385,24 @@ var GLOBALS =
 
 	/**
 	 * Initializes renderer.
-	 * @param {string} type - default, raytracing, pathrendering
 	 */
-	initRenderer: function(type)
+	initRenderer: function()
 	{
-		console.log('[Main] Initialize renderer of type "' + type + '"');
+		console.log('[Main] Initialize renderer of type "' + GLOBALS.rendererType  + '"');
 
 		var canvas = document.getElementById('rendering-canvas');
+		var gridLayout = document.getElementById('grid-layout');
 		
-		if (type == 'default')
+		if (GLOBALS.rendererType  == 'default')
 		{
+			canvas.show();
+			gridLayout.hide();
 			GLOBALS.renderer = new THREE.WebGLRenderer({ canvas: canvas });
 		}
-		else if (type == 'raytracing')
-		{			
+		else if (GLOBALS.rendererType  == 'raytracing')
+		{	
+			canvas.hide();
+			gridLayout.show();		
 			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, GLOBALS.updateProgressAsync, GLOBALS.onCellRendered);
 		}
 	
@@ -367,19 +416,20 @@ var GLOBALS =
 	 */
 	onRenderFrame: function()
 	{
-		// will start loop for this function
-		//requestAnimationFrame(GLOBALS.onRenderFrame);
+		if (GLOBALS.rendererType == 'default')
+		{
+			// will start loop for this function
+			requestAnimationFrame(GLOBALS.onRenderFrame);
+		}		
 
 		// render current frame
 		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
 
-		/*	
-
-		if (GLOBALS.controls)
+		if (GLOBALS.rendererType == 'default')
 		{
 			// update camera
 			GLOBALS.controls.update();
-		}*/
+		}
 	},
 
 	/**
@@ -416,7 +466,7 @@ var GLOBALS =
 			GLOBALS.drawOnCell(current);
 		}
 
-		GLOBALS.request('renderingCells/cell');
+		
 	},
 
 	drawOnCell: function(cell)
@@ -451,7 +501,11 @@ var GLOBALS =
 		// heavy duty operation
 		window.setTimeout(function()
 		{
-			GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+			if (GLOBALS.rendererType == 'raytracing')
+			{
+				GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+			}
+			
 			// start rendering
 			GLOBALS.onRenderFrame();
 		 }, 0);
