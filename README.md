@@ -2,6 +2,10 @@
 
 Run VS code debugger and go to browser and type "http://localhost:30000/"
 
+## Obj to *.gltf export
+When exporting .obj scene from Cinema4D please use meters as a unit. 
+Then use coverter command "obj2gltf -i input.obj -o output.gltf"
+
 ## Demo verzija
 http://lukaprij.wwwnl1-ss11.a2hosted.com/clientAdmin
 
