@@ -3,6 +3,7 @@ var IS_DEBUG_MODE = true;
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
+var loader = new THREE.GLTFLoader();
 
 /** ----- NOTES: ----- */ 
 
@@ -68,9 +69,40 @@ var GLOBALS =
 
 		GLOBALS.initCamera();
 		GLOBALS.initLights();
-		GLOBALS.init3DObjects();
+		//GLOBALS.init3DObjects();
 		GLOBALS.initRenderer('raytracing');
 		GLOBALS.initCameraControls();
+
+		var onLoadingError = function(error) 
+		{
+			console.error('[glTF loader] Error while loading scene!');
+			console.error(error);
+		};
+		var onLoadingProgress = function(xhr) 
+		{
+			// occurs when one of the files is done loading
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
+		};
+		var onLoadFinished = function(gltf) 
+		{
+			console.log('[glTF loader] Scene finished loading');
+
+			GLOBALS.scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+			
+			//MAIN.getScreenshot = true;		
+			
+			GLOBALS.request('renderingCells/cell');
+		};
+
+		loader.load('Textured-box/BoxTextured.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 
@@ -124,9 +156,9 @@ var GLOBALS =
 	initCamera: function()
 	{
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		GLOBALS.camera.position.x = 0;
-		GLOBALS.camera.position.y = 0;
-		GLOBALS.camera.position.z = 600;
+		GLOBALS.camera.position.x = 6.52;
+		GLOBALS.camera.position.y = 2.21;
+		GLOBALS.camera.position.z = -0.65;
 	},
 
 	/**
@@ -413,8 +445,6 @@ var GLOBALS =
 
 			GLOBALS.drawOnCell(current);
 		}
-
-		GLOBALS.request('renderingCells/cell');
 	},
 
 	drawOnCell: function(cell)

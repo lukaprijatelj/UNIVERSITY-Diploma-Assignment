@@ -160,7 +160,8 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 		if ( material.isMeshLambertMaterial ||
 				material.isMeshPhongMaterial ||
-				material.isMeshBasicMaterial) 
+				material.isMeshBasicMaterial || 
+				material.isMeshStandardMaterial) 
 		{
 			diffuseColor.copyGammaToLinear(material.color);
 		} 
@@ -178,16 +179,25 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 		this.rayLight.origin.copy( point );
 
-		if ( material.isMeshBasicMaterial) 
+		if ( material.isMeshBasicMaterial || material.isMeshStandardMaterial) 
 		{
+			var textureImg = material.map.image;
+			var canvas = document.createElement('canvas');
+
+			canvas.width = textureImg.width;
+			canvas.height = textureImg.height;
+			
+			var context = canvas.getContext('2d');
+			context.drawImage(textureImg, 0, 0, textureImg.width, textureImg.height);
+
 			for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
 			{
-				var light = this.lights[ i ];
+				var light = this.lights[i];
 
-				lightVector.setFromMatrixPosition( light.matrixWorld );
-				lightVector.sub( point );
+				lightVector.setFromMatrixPosition(light.matrixWorld);
+				lightVector.sub(point);
 
-				this.rayLight.direction.copy( lightVector ).normalize();
+				this.rayLight.direction.copy(lightVector).normalize();
 
 				var intersections = this.raycasterLight.intersectObjects(this.objects, true);
 
@@ -197,7 +207,19 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 				// point visible
 
-				outputColor.add( diffuseColor );
+				outputColor.add(diffuseColor);
+
+				if (intersection.uv)
+				{	
+					// read texture pixels
+					var uv = intersection.uv;
+					material.map.transformUv(uv);
+
+					var pixelData = context.getImageData(textureImg.width * uv.x, textureImg.height * uv.y, 1, 1).data;
+					var pixelTextureColor = new THREE.Color("rgb(" + pixelData[0] + ", " + pixelData[1] + ", " + pixelData[2] + ")");
+
+					outputColor.multiply(pixelTextureColor); 
+				}
 			}
 		} 
 		else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) 
