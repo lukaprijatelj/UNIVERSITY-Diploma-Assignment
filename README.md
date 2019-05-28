@@ -2,6 +2,10 @@
 
 Run VS code debugger and go to browser and type "http://localhost:30000/"
 
+## Note
+StandardMeshMaterial can only work if you change RayTracingWorker and you must use PoinLight. This s the only light that works in RayTracing code.
+
+
 ## Demo verzija
 http://lukaprij.wwwnl1-ss11.a2hosted.com/clientAdmin
 

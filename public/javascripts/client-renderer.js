@@ -64,13 +64,14 @@ var GLOBALS =
 
 	rendererType: 'raytracing',
 	
+
 	init: function()
 	{
 		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=renderer" });
 		GLOBALS.io.on('connect', GLOBALS.onServerConnected);
 
 		GLOBALS.initCamera();
-		//GLOBALS.initLights();
+		GLOBALS.initLights();
 		//GLOBALS.init3DObjects();
 
 		var ambientLight = new THREE.AmbientLight(0xcccccc);
@@ -108,7 +109,7 @@ var GLOBALS =
 			GLOBALS.request('renderingCells/cell');
 		};
 
-		loader.load('Red-box/Box.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
+		loader.load('Textured-box/BoxTextured.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 
