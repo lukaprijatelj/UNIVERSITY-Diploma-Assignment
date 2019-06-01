@@ -153,12 +153,12 @@ THREE.RaytracingRenderer = function (canvas, updateFunction, onCellRendered)
 		
 		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 
-		var bindedRender = function()
-		{ 
-			this.worker.startRendering(this.cell.startX, this.cell.startY)
-		};
+		this.tryRendering(this.cell.startX, this.cell.startY);
+	};
 
-		window.setTimeout(bindedRender.bind(this), 1);
+	this.tryRendering = async function(startX, startY)
+	{
+		this.worker.startRendering(startX, startY);
 	};
 
 	this.init = function()

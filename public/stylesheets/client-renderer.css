@@ -51,6 +51,11 @@ br
 	position: absolute;
 	white-space: nowrap;
 	display: inline-block;
+
+	border-style: solid;
+	border-color: #EBEBEB;
+	border-width: 1px 0px 0px 1px;
+	
 }
 
 .render-cell
@@ -58,7 +63,7 @@ br
 	display:inline-block;
 	border-style: solid;
 	border-color: #EBEBEB;
-	border-width: 1px 1px 0 0px;
+	border-width: 0px 1px 1px 0px;
 	text-align: center;
 	vertical-align: top;
 }

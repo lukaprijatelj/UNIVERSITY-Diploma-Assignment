@@ -3,15 +3,12 @@ var IS_DEBUG_MODE = true;
 var CANVAS_WIDTH = 1920;
 var CANVAS_HEIGHT = 1080;
 
-var loader = new THREE.GLTFLoader();
 
 /** ----- NOTES: ----- */ 
 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
-// if you use *.gltf model, then objects will not be rendered with rayTracing method because materials are MeshStandardMaterial type.
-// this type of material does not render with RayTracing method. Not sure why though!
 
 
 var GLOBALS =
@@ -19,7 +16,12 @@ var GLOBALS =
 	/**
 	 * ThreeJS scene.
 	 */
-	scene: new THREE.Scene(),
+	scene: null,
+
+	/**
+	 * GLTF loader.
+	 */
+	loader: null,
 
 	/**
 	 * Canvas renderer.
@@ -67,42 +69,14 @@ var GLOBALS =
 		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=renderer" });
 		GLOBALS.io.on('connect', GLOBALS.onServerConnected);
 
+		GLOBALS.scene = new THREE.Scene();
+
 		GLOBALS.initCamera();
 		GLOBALS.initLights();
 		//GLOBALS.init3DObjects();
 		GLOBALS.initRenderer('raytracing');
 		GLOBALS.initCameraControls();
-
-		var onLoadingError = function(error) 
-		{
-			console.error('[glTF loader] Error while loading scene!');
-			console.error(error);
-		};
-		var onLoadingProgress = function(xhr) 
-		{
-			// occurs when one of the files is done loading
-			var percentage = xhr.loaded / xhr.total * 100;
-
-			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
-		};
-		var onLoadFinished = function(gltf) 
-		{
-			console.log('[glTF loader] Scene finished loading');
-
-			GLOBALS.scene.add(gltf.scene);
-
-			gltf.animations; // Array<THREE.AnimationClip>
-			gltf.scene; // THREE.Scene
-			gltf.scenes; // Array<THREE.Scene>
-			gltf.cameras; // Array<THREE.Camera>
-			gltf.asset; // Object
-			
-
-			
-			GLOBALS.request('renderingCells/cell');
-		};
-
-		loader.load('Textured-box/BoxTextured.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
+		GLOBALS.initGltfLoader();		
 	},
 
 
@@ -144,10 +118,49 @@ var GLOBALS =
 		GLOBALS.request('renderingCells/layout');
 	},	
 
+	/**
+	 * Progress was updated.
+	 */
 	_onUpdateProgress: function(data)
 	{
 		var cell = data.cell;
 		GLOBALS.drawOnCell(cell);
+	},
+
+	/**
+	 * Initializes GLTF loader.
+	 */
+	initGltfLoader: function()
+	{
+		var onLoadingError = function(error) 
+		{
+			console.error('[glTF loader] Error while loading scene!');
+			console.error(error);
+		};
+		var onLoadingProgress = function(xhr) 
+		{
+			// occurs when one of the files is done loading
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
+		};
+		var onLoadFinished = function(gltf) 
+		{
+			console.log('[glTF loader] Scene finished loading');
+
+			GLOBALS.scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+						
+			GLOBALS.request('renderingCells/cell');
+		};
+
+		GLOBALS.loader = new THREE.GLTFLoader();
+		GLOBALS.loader.load('Buggy/Buggy.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 	/**
@@ -156,6 +169,10 @@ var GLOBALS =
 	initCamera: function()
 	{
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
+		/*GLOBALS.camera.position.x = 0.20;
+		GLOBALS.camera.position.y = 0;
+		GLOBALS.camera.position.z = 0;*/
+
 		GLOBALS.camera.position.x = 6.52;
 		GLOBALS.camera.position.y = 2.21;
 		GLOBALS.camera.position.z = -0.65;
@@ -406,7 +423,6 @@ var GLOBALS =
 		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
 
 		/*	
-
 		if (GLOBALS.controls)
 		{
 			// update camera
@@ -479,12 +495,15 @@ var GLOBALS =
 
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
-		window.setTimeout(function()
-		{
-			GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
-			// start rendering
-			GLOBALS.onRenderFrame();
-		 }, 0);
+		GLOBALS.startRendering();
+	},
+
+	startRendering: async function()
+	{
+		GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+
+		// start rendering
+		GLOBALS.onRenderFrame();
 	},
 
 	/**
