@@ -102,7 +102,7 @@ var GLOBALS =
 			GLOBALS.request('renderingCells/cell');
 		};
 
-		loader.load('Textured-box/BoxTextured.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
+		loader.load('Sphere-box-cone/Scene.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
 	},
 
 
@@ -156,9 +156,13 @@ var GLOBALS =
 	initCamera: function()
 	{
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		GLOBALS.camera.position.x = 6.52;
+		/*GLOBALS.camera.position.x = 6.52;
 		GLOBALS.camera.position.y = 2.21;
-		GLOBALS.camera.position.z = -0.65;
+		GLOBALS.camera.position.z = -0.65;*/
+
+		GLOBALS.camera.position.x = 0.2;
+		GLOBALS.camera.position.y = 0;
+		GLOBALS.camera.position.z = 0;
 	},
 
 	/**

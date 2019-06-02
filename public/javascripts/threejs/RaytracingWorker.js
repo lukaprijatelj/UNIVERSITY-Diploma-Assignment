@@ -160,17 +160,20 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 		if ( material.isMeshLambertMaterial ||
 				material.isMeshPhongMaterial ||
-				material.isMeshBasicMaterial || 
 				material.isMeshStandardMaterial) 
 		{
 			diffuseColor.copyGammaToLinear(material.color);
 		} 
+		else if (material.isMeshBasicMaterial)
+		{
+			diffuseColor.copyGammaToLinear(material.color);
+		}
 		else 
 		{
 			diffuseColor.setRGB(1, 1, 1);
 		}
 
-		if ( material.vertexColors === THREE.FaceColors ) 
+		if ( material.vertexColors === THREE.FaceColors) 
 		{
 			diffuseColor.multiply( face.color );
 		}
@@ -179,17 +182,24 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 		this.rayLight.origin.copy( point );
 
-		if ( material.isMeshBasicMaterial || material.isMeshStandardMaterial) 
+		var textureImg;
+		var canvas;
+		var context;
+
+		if (material.map && material.map.image)
 		{
-			var textureImg = material.map.image;
-			var canvas = document.createElement('canvas');
+			textureImg = material.map.image;
+			canvas = document.createElement('canvas');
 
 			canvas.width = textureImg.width;
 			canvas.height = textureImg.height;
 			
-			var context = canvas.getContext('2d');
+			context = canvas.getContext('2d');
 			context.drawImage(textureImg, 0, 0, textureImg.width, textureImg.height);
+		}	
 
+		if (material.isMeshBasicMaterial) 
+		{
 			for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
 			{
 				var light = this.lights[i];
@@ -209,7 +219,9 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 
 				outputColor.add(diffuseColor);
 
-				if (intersection.uv)
+				// add texture colour
+
+				if (textureImg && context && intersection.uv)
 				{	
 					// read texture pixels
 					var uv = intersection.uv;
@@ -222,11 +234,11 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 				}
 			}
 		} 
-		else if ( material.isMeshLambertMaterial || material.isMeshPhongMaterial ) 
+		else if (material.isMeshLambertMaterial || material.isMeshPhongMaterial || material.isMeshStandardMaterial) 
 		{
 			var normalComputed = false;
 
-			for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
+			for (var i = 0, l = this.lights.length; i < l; i++) 
 			{
 				var light = this.lights[ i ];
 
@@ -282,6 +294,20 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 				lightContribution.multiplyScalar( diffuseIntensity * attenuation );
 
 				outputColor.add( lightContribution );
+
+				// add texture colour
+
+				if (textureImg && context && intersection.uv)
+				{	
+					// read texture pixels
+					var uv = intersection.uv;
+					material.map.transformUv(uv);
+
+					var pixelData = context.getImageData(textureImg.width * uv.x, textureImg.height * uv.y, 1, 1).data;
+					var pixelTextureColor = new THREE.Color("rgb(" + pixelData[0] + ", " + pixelData[1] + ", " + pixelData[2] + ")");
+
+					outputColor.multiply(pixelTextureColor); 
+				}
 
 				// compute specular
 
