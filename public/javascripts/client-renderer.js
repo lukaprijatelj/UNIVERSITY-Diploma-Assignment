@@ -74,8 +74,8 @@ var GLOBALS =
 		GLOBALS.initCamera();
 		GLOBALS.initLights();
 		//GLOBALS.init3DObjects();
-		GLOBALS.initRenderer('raytracing');
-		GLOBALS.initCameraControls();
+		GLOBALS.initRenderer('pathtracing');
+		//GLOBALS.initCameraControls();
 		GLOBALS.initGltfLoader();		
 	},
 
@@ -148,15 +148,17 @@ var GLOBALS =
 		{
 			console.log('[glTF loader] Scene finished loading');
 
-			GLOBALS.scene.add(gltf.scene);
+			//GLOBALS.scene.add(gltf.scene);
 
 			gltf.animations; // Array<THREE.AnimationClip>
 			gltf.scene; // THREE.Scene
 			gltf.scenes; // Array<THREE.Scene>
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
+
+			init();
 						
-			GLOBALS.request('renderingCells/cell');
+			//GLOBALS.request('renderingCells/cell');
 		};
 
 		GLOBALS.loader = new THREE.GLTFLoader();
@@ -405,10 +407,14 @@ var GLOBALS =
 		{			
 			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, GLOBALS.updateProgressAsync, GLOBALS.onCellRendered);
 		}
+		else if (type == 'pathtracing')
+		{
+			
+		}
 	
-		GLOBALS.renderer.setClearColor('#f4f4f4');				
+		/*GLOBALS.renderer.setClearColor('#f4f4f4');				
 		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(GLOBALS.renderer.domElement);		
+		document.body.appendChild(GLOBALS.renderer.domElement);	*/	
 	},	
 
 	/**
