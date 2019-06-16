@@ -1,5 +1,3 @@
-var IS_DEBUG_MODE = true;
-
 /**
  * Globals for 
  */
@@ -9,11 +7,6 @@ var GLOBALS =
 	 * Base url API access.
 	 */
 	apiUrl: '/api',
-
-	/**
-	 * Url where socketIO will be hosted.
-	 */
-	hostingUrl: IS_DEBUG_MODE == true ? 'http://localhost:30003' : 'http://lukaprij.wwwnl1-ss11.a2hosted.com:30003',
 
 	/**
 	 * Grid layout of cells that are rendered or are waiting for rendering.
@@ -28,7 +21,7 @@ var GLOBALS =
 
 	init: function()
 	{
-		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=admin" });
+		GLOBALS.io = io(HOSTING_URL, { query: "clientType=admin" });
 
 		GLOBALS.io.on('connect', GLOBALS._onServerConnected);
 	},

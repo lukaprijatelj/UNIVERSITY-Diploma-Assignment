@@ -30,5 +30,3 @@ var DEBUG =
 		DEBUG.mouse.positionY.innerHTML = Math.roundToTwoDecimals(MOUSE.positionY);
 	}	
 };
-
-DEBUG.init();

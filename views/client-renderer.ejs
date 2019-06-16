@@ -11,21 +11,28 @@
 		<link rel="stylesheet" href="stylesheets/client-renderer.css">
 
 		<!-- scripts -->
+		<script src="javascripts/constants.js"></script>
+		<script src="javascripts/enums.js"></script>
+		<script src="javascripts/helper.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
 		<script src="javascripts/threejs/three.js"></script>
-		<script src="javascripts/threejs/threex.keyboardstate.js"></script>
-		<script src="javascripts/threejs/commonFunctions.js"></script>
-		<script src="javascripts/threejs/pathTracingCommon.js"></script>
-		<script src="javascripts/threejs/Geometry_Showcase.js"></script>		
-		<script src="javascripts/threejs/FirstPersonCameraControls.js"></script>
-		<script src="javascripts/threejs/MobileJoystickControls.js"></script>
 		<script src="javascripts/threejs/OrbitControls.js"></script>
 		<script src="javascripts/threejs/GLTFLoader.js"></script>
-		<script src="javascripts/helper.js"></script>
+		
+		<!-- Path tracing scripts -->
+		<script src="javascripts/path-tracing/threex.keyboardstate.js"></script>
+		<script src="javascripts/path-tracing/commonFunctions.js"></script>
+		<script src="javascripts/path-tracing/pathTracingCommon.js"></script>
+		<script src="javascripts/path-tracing/Geometry_Showcase.js"></script>		
+		<script src="javascripts/path-tracing/FirstPersonCameraControls.js"></script>
+
+		<!-- Ray tracing scripts -->
+		<script src="javascripts/ray-tracing/RaytracingRenderer.js"></script>
+		<script src="javascripts/ray-tracing/RaytracingWorker.js"></script>
 	</head>
 	<body>
 		<div id="grid-layout" class=""></div>
-		<canvas id="rendering-canvas" class="hidden" width="1920" height="1080"></canvas>
+		<canvas id="rendering-canvas" class="" width="1920" height="1080"></canvas>
 
 		<div id="debug-info">
 			<div class="group camera">

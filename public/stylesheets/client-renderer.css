@@ -48,7 +48,7 @@ br
 #grid-layout
 {
 	background-color: #FFFFFF;
-	position: absolute;
+	/*position: absolute;*/
 	white-space: nowrap;
 	display: inline-block;
 
@@ -117,4 +117,11 @@ br
 {
 	table-layout: fixed;
 	width: 100%;
+}
+
+#rendering-canvas
+{
+	border-style: solid;
+	border-color: #EBEBEB;
+	border-width: 1px;
 }

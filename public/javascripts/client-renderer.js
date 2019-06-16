@@ -1,14 +1,7 @@
-var IS_DEBUG_MODE = true;
-
-var CANVAS_WIDTH = 1920;
-var CANVAS_HEIGHT = 1080;
-
-
 /** ----- NOTES: ----- */ 
 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
-
 
 
 var GLOBALS =
@@ -44,11 +37,6 @@ var GLOBALS =
 	apiUrl: '/api',
 
 	/**
-	 * Url where socketIO will be hosted.
-	 */
-	hostingUrl: IS_DEBUG_MODE == true ? 'http://localhost:30003' : 'http://lukaprij.wwwnl1-ss11.a2hosted.com:30003',
-
-	/**
 	 * Socket io instance.
 	 */
 	io: null,
@@ -59,24 +47,28 @@ var GLOBALS =
 	renderingCells: [],
 
 	/**
-	 * Current rendering grid.
+	 * Current renderer type.
 	 */
-	currentGridId: -1,
+	rendererType: enums.rendererType.WEB_GL_RENDERER,
 
 	
 	init: function()
 	{
-		GLOBALS.io = io(GLOBALS.hostingUrl, { query: "clientType=renderer" });
-		GLOBALS.io.on('connect', GLOBALS.onServerConnected);
+		GLOBALS.io = io(HOSTING_URL, { query: "clientType=renderer" });
+		GLOBALS.io.on('connect', GLOBALS._onServerConnected);	
 
-		GLOBALS.scene = new THREE.Scene();
+		
+		GLOBALS._initScene();
+		GLOBALS._initCamera();
+		GLOBALS._initLights();
+		//GLOBALS._init3DObjectsForTestScene();
+		GLOBALS._initRenderer();
+		GLOBALS._initCameraControls();
+		GLOBALS._initGltfLoader();
 
-		GLOBALS.initCamera();
-		GLOBALS.initLights();
-		//GLOBALS.init3DObjects();
-		GLOBALS.initRenderer('pathtracing');
-		//GLOBALS.initCameraControls();
-		GLOBALS.initGltfLoader();		
+		//DEBUG.init();
+
+		GLOBALS.startLoadingGltfModel('Buggy/Buggy.gltf');	
 	},
 
 
@@ -89,7 +81,7 @@ var GLOBALS =
 		data = data ? data : null;
 		url = GLOBALS.apiUrl + '/request' + '/' + url;
 
-		console.log('[Main] Requesting ' + url);
+		console.log('[Globals] Requesting ' + url);
 
 		GLOBALS.io.emit(url, data);
 	},
@@ -107,9 +99,9 @@ var GLOBALS =
 	/**
 	 * On server-client connection.
 	 */
-	onServerConnected: function()
+	_onServerConnected: function()
 	{
-		console.log('[Main] Connected to server!');
+		console.log('[Globals] Connected to server!');
 
 		GLOBALS.response('renderingCells/layout', GLOBALS.onGetLayout);
 		GLOBALS.response('renderingCells/cell', GLOBALS.onRequestCell);
@@ -130,8 +122,17 @@ var GLOBALS =
 	/**
 	 * Initializes GLTF loader.
 	 */
-	initGltfLoader: function()
+	_initGltfLoader: function()
 	{
+		console.log('[Globals] Initializing GLTF loader');
+
+		GLOBALS.loader = new THREE.GLTFLoader();
+	},
+
+	startLoadingGltfModel: function(path)
+	{
+		console.log('[Globals] Requesting GLTF model');
+
 		var onLoadingError = function(error) 
 		{
 			console.error('[glTF loader] Error while loading scene!');
@@ -148,28 +149,35 @@ var GLOBALS =
 		{
 			console.log('[glTF loader] Scene finished loading');
 
-			//GLOBALS.scene.add(gltf.scene);
+			GLOBALS.scene.add(gltf.scene);
 
 			gltf.animations; // Array<THREE.AnimationClip>
 			gltf.scene; // THREE.Scene
 			gltf.scenes; // Array<THREE.Scene>
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
-
-			init();
 						
-			//GLOBALS.request('renderingCells/cell');
+			GLOBALS.request('renderingCells/cell');
 		};
+		
+		GLOBALS.loader.load(path, onLoadFinished, onLoadingProgress, onLoadingError);
+	},
 
-		GLOBALS.loader = new THREE.GLTFLoader();
-		GLOBALS.loader.load('Buggy/Buggy.gltf', onLoadFinished, onLoadingProgress, onLoadingError);
+	/**
+	 * Initializes scene.
+	 */
+	_initScene: function()
+	{
+		GLOBALS.scene = new THREE.Scene();
 	},
 
 	/**
 	 * Intializes camera in the scene.
 	 */
-	initCamera: function()
+	_initCamera: function()
 	{
+		console.log('[Globals] Initializing camera');
+
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
 		/*GLOBALS.camera.position.x = 0.20;
 		GLOBALS.camera.position.y = 0;
@@ -183,24 +191,28 @@ var GLOBALS =
 	/**
 	 * Initializes camera mouse controls, so that changing view is easier.
 	 */
-	initCameraControls: function()
+	_initCameraControls: function()
 	{
+		console.log('[Globals] Initializing camera controls');
+
 		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera, GLOBALS.renderer.domElement);
 	},
 
 	/**
 	 * Initializes lights.
 	 */
-	initLights: function()
+	_initLights: function()
 	{
+		console.log('[Globals] Initializing lights');
+
 		var intensity = 70000;
 
-		var light = new THREE.PointLight( 0xffaa55, intensity );
+		/*var light = new THREE.PointLight( 0xffaa55, intensity );
 		light.position.set( - 200, 100, 100 );
 		light.physicalAttenuation = true;
 		GLOBALS.scene.add( light );
 
-		var light = new THREE.PointLight( 0x55aaff, intensity );
+		/*var light = new THREE.PointLight( 0x55aaff, intensity );
 		light.position.set( 200, 100, 100 );
 		light.physicalAttenuation = true;
 		GLOBALS.scene.add( light );
@@ -208,14 +220,19 @@ var GLOBALS =
 		var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
 		light.position.set( 0, 0, 300 );
 		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );*/
+
+		var light = new THREE.AmbientLight( 0x404040, 3 ); // soft white light
 		GLOBALS.scene.add( light );
 	},
 
 	/**
 	 * Initializes 3D objects and materials in the scene.
 	 */
-	init3DObjects: function() 
+	_init3DObjectsForTestScene: function() 
 	{
+		console.log('[Globals] Initializing 3D objects for test scene');
+
 		var phongMaterial = new THREE.MeshPhongMaterial( {
 			color: 0xffffff,
 			specular: 0x222222,
@@ -391,30 +408,46 @@ var GLOBALS =
 
 	/**
 	 * Initializes renderer.
-	 * @param {string} type - default, raytracing, pathrendering
 	 */
-	initRenderer: function(type)
+	_initRenderer: function()
 	{
-		console.log('[Main] Initialize renderer of type "' + type + '"');
+		console.log('[Globals] Initialize renderer of type "' + GLOBALS.rendererType + '"');
 
+		var renderer = null;
 		var canvas = document.getElementById('rendering-canvas');
-		
-		if (type == 'default')
+		var options = {};
+
+		switch(GLOBALS.rendererType)
 		{
-			GLOBALS.renderer = new THREE.WebGLRenderer({ canvas: canvas });
-		}
-		else if (type == 'raytracing')
-		{			
-			GLOBALS.renderer = new THREE.RaytracingRenderer(canvas, GLOBALS.updateProgressAsync, GLOBALS.onCellRendered);
-		}
-		else if (type == 'pathtracing')
-		{
-			
-		}
+			case enums.rendererType.WEB_GL_RENDERER:
+				options = 
+				{ 
+					canvas: canvas 
+				};
+				renderer = new THREE.WebGLRenderer(options);
 	
-		/*GLOBALS.renderer.setClearColor('#f4f4f4');				
-		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-		document.body.appendChild(GLOBALS.renderer.domElement);	*/	
+				renderer.setClearColor('#f4f4f4');				
+				renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+	
+				document.body.appendChild(renderer.domElement);	
+				break;
+
+			case enums.rendererType.RAY_TRACING:
+				options = 
+				{ 
+					canvas: canvas, 
+					updateFunction: GLOBALS.updateProgressAsync, 
+					onCellRendered: GLOBALS.onCellRendered 
+				};
+				renderer = new THREE.RaytracingRenderer(options);
+				break;
+
+			case enums.rendererType.PATH_TRACING:
+
+				break;
+		}
+
+		GLOBALS.renderer = renderer;
 	},	
 
 	/**
@@ -422,18 +455,23 @@ var GLOBALS =
 	 */
 	onRenderFrame: function()
 	{
-		// will start loop for this function
-		//requestAnimationFrame(GLOBALS.onRenderFrame);
+		if (GLOBALS.rendererType == enums.rendererType.WEB_GL_RENDERER)
+		{
+			// will start loop for this function
+			requestAnimationFrame(GLOBALS.onRenderFrame);
+		}		
 
 		// render current frame
 		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
-
-		/*	
-		if (GLOBALS.controls)
+			
+		if (GLOBALS.rendererType == enums.rendererType.WEB_GL_RENDERER)
 		{
-			// update camera
-			GLOBALS.controls.update();
-		}*/
+			if (GLOBALS.controls)
+			{
+				// update camera
+				GLOBALS.controls.update();
+			}
+		}
 	},
 
 	/**
@@ -444,7 +482,7 @@ var GLOBALS =
 	{
 		GLOBALS.renderingCells = data;
 
-		console.log('[Renderer] Grid layout drawn');
+		console.log('[Globals] Grid layout drawn');
 
 		var gridLayout = document.getElementById('grid-layout');
 		gridLayout.innerHTML = '';
@@ -495,7 +533,7 @@ var GLOBALS =
 	 */
 	onRequestCell: function(cell)
 	{
-		console.log('[Main] Rendering cell received');
+		console.log('[Globals] Rendering cell received');
 
 		GLOBALS.renderingCells.currentRenderCell = cell;
 
@@ -506,7 +544,10 @@ var GLOBALS =
 
 	startRendering: async function()
 	{
-		GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+		if (GLOBALS.rendererType != enums.rendererType.WEB_GL_RENDERER)
+		{
+			GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+		}
 
 		// start rendering
 		GLOBALS.onRenderFrame();
