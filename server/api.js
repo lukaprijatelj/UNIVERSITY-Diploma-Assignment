@@ -1,14 +1,10 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
+var constants = require('./constants.js');
 
 var io = require('socket.io');
 var socketIo = io.listen(30003);
 
-const CANVAS_WIDTH = 1920;
-const CANVAS_HEIGHT = 1080;
-
-const BLOCK_WIDTH = 80;
-const BLOCK_HEIGHT = 80;
 
 var API =
 {
@@ -17,6 +13,9 @@ var API =
 	 */
 	baseUrl: '/api',
 
+	/**
+	 * Admin client session ID.
+	 */
 	adminSessionId: '',
 
 
@@ -144,24 +143,24 @@ var API =
 		DATABASE.clearGridLayout();
 		
 		var startY = 0;
-		while(startY < CANVAS_HEIGHT)
+		while(startY < constants.CANVAS_HEIGHT)
 		{
 			var startX = 0;
 
-			while(startX < CANVAS_WIDTH)
+			while(startX < constants.CANVAS_WIDTH)
 			{
-				var endX = startX + BLOCK_WIDTH;
-				var endY = startY + BLOCK_HEIGHT;
+				var endX = startX + constants.BLOCK_WIDTH;
+				var endY = startY + constants.BLOCK_HEIGHT;
 
-				var MAX_X = endX < CANVAS_WIDTH ? endX : CANVAS_WIDTH;
-				var MAX_Y = endY < CANVAS_HEIGHT ? endY : CANVAS_HEIGHT;
+				var MAX_X = endX < constants.CANVAS_WIDTH ? endX : constants.CANVAS_WIDTH;
+				var MAX_Y = endY < constants.CANVAS_HEIGHT ? endY : constants.CANVAS_HEIGHT;
 
 				DATABASE.addGridLayout(startX, startY, MAX_X - startX, MAX_Y - startY);
 
-				startX += BLOCK_WIDTH;
+				startX += constants.BLOCK_WIDTH;
 			}
 
-			startY += BLOCK_HEIGHT;
+			startY += constants.BLOCK_HEIGHT;
 		}
 	},
 };

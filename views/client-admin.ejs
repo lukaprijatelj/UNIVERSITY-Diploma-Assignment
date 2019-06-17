@@ -10,8 +10,15 @@
 		<link rel="stylesheet" href="stylesheets/common.css">
 		<link rel="stylesheet" href="stylesheets/client-admin.css">
 
+		<!-- constants -->
+		<script>
+			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
+			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
+			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
+			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
+		</script>
+
 		<!-- scripts -->
-		<script src="javascripts/constants.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
 		<script src="javascripts/helper.js"></script>
 	</head>
