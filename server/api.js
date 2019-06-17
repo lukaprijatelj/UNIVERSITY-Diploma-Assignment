@@ -1,8 +1,10 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
+var constants = require('./constants.js');
 
 var io = require('socket.io');
-var socketIo = io.listen(80);
+var socketIo = io.listen(30003);
+
 
 var API =
 {
@@ -11,9 +13,16 @@ var API =
 	 */
 	baseUrl: '/api',
 
+	/**
+	 * Admin client session ID.
+	 */
+	adminSessionId: '',
+
 
     init: function(app)
     {
+		console.log('[Api] Initializing');
+
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
 		app.post(API.baseUrl + '/uploadScene', upload.single('Scene'), API.onUploadFile);
@@ -36,14 +45,17 @@ var API =
 		if (socket.handshake.query.clientType == "admin")
 		{
 			isAdmin = true;
+			API.adminSessionId = sessionId;
 		}
 		
-		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);		
-		
-		socket.on(API.baseUrl + 'request/renderingCells/layout', API.onRenderingCellsList);
-		socket.on(API.baseUrl + 'request/renderingCells/cell', API.onRequestCell);
-		socket.on(API.baseUrl + 'request/renderingCells/updateProgress', API.onUpdateProgress);	
-		socket.on(API.baseUrl + 'request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
+		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
+				
+		socket.on(API.baseUrl + '/request/renderingClients/list', API.onRequestCell);
+
+		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
+		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
+		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
+		socket.on(API.baseUrl + '/request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
 
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
@@ -62,6 +74,9 @@ var API =
 		console.log("[Api] Client has disconnected!");
 	},
 
+	/**
+	 * Responds with list of rendering cells.
+	 */
 	onRenderingCellsList: function()
 	{
 		var socket = this;
@@ -69,16 +84,18 @@ var API =
 
 		var result = DATABASE.getRenderingCells();
 
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/layout', result);
+		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/layout', result);
 	},
 
+	/**
+	 * Respond with any of the cells still waiting to be rendered.
+	 */
 	onRequestCell: function()
 	{
 		var socket = this;
 		var sessionId = socket.id;
 
-		var result = DATABASE.getRenderingCells();
-		var freeCell = result.find(element => element.sessionId == "");	
+		var freeCell = DATABASE.getFreeCell(sessionId);
 
 		if (!freeCell)
 		{
@@ -86,8 +103,7 @@ var API =
 			return;
 		}
 
-		freeCell.sessionId = sessionId;
-		socketIo.to(`${sessionId}`).emit(API.baseUrl + 'response/renderingCells/cell', freeCell);
+		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
 	},
 
 	/**
@@ -95,11 +111,16 @@ var API =
 	 */
 	onUpdateProgress: function(data)
 	{
+		console.log("[Api] Progress was updated");
+
 		var socket = this;
 
-		DATABASE.updateProgress(data.renderCellId, data.progress, data.imageData);
+		DATABASE.updateProgress(data.cell, data.progress, data.imageData);		
 
-		console.log("[Api] Progress was updated");
+		if (data.progress == 100)
+		{
+			socket.broadcast.emit(API.baseUrl + '/response/renderingCells/updateProgress', data);
+		}
 	},
 
 	/**
@@ -119,26 +140,27 @@ var API =
 
 	onRecalculateLayout: function()
 	{
-		var NUM_OF_CELLS_HORIZONTALLY = 5;
-		var NUM_OF_CELLS_VERTICALLY = 5;
-
-		var CELL_WIDTH = 384;
-		var CELL_HEIGHT = 216;
-
 		DATABASE.clearGridLayout();
 		
 		var startY = 0;
-		while(startY < CELL_HEIGHT * NUM_OF_CELLS_VERTICALLY)
+		while(startY < constants.CANVAS_HEIGHT)
 		{
 			var startX = 0;
 
-			while(startX < CELL_WIDTH * NUM_OF_CELLS_HORIZONTALLY)
+			while(startX < constants.CANVAS_WIDTH)
 			{
-				DATABASE.addGridLayout(startX, startY, CELL_WIDTH, CELL_HEIGHT);
-				startX += CELL_WIDTH;
+				var endX = startX + constants.BLOCK_WIDTH;
+				var endY = startY + constants.BLOCK_HEIGHT;
+
+				var MAX_X = endX < constants.CANVAS_WIDTH ? endX : constants.CANVAS_WIDTH;
+				var MAX_Y = endY < constants.CANVAS_HEIGHT ? endY : constants.CANVAS_HEIGHT;
+
+				DATABASE.addGridLayout(startX, startY, MAX_X - startX, MAX_Y - startY);
+
+				startX += constants.BLOCK_WIDTH;
 			}
 
-			startY += CELL_HEIGHT;
+			startY += constants.BLOCK_HEIGHT;
 		}
 	},
 };

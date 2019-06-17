@@ -1,10 +1,13 @@
 
-var BasicTable = require('./tables/BasicTable.js');
+var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
 
 
 var DATABASE =
 {
+	/**
+	 * Root url of the database.
+	 */
 	root: 'database/',
 
 	/**
@@ -28,6 +31,8 @@ var DATABASE =
 	
 	init: function()
 	{
+		console.log('[Database] Initializing');
+
 		var tablesRoot = DATABASE.root + "tables/";
 		
 		DATABASE.renderingClientsTable = new BasicTable(tablesRoot, 'renderingClients');
@@ -91,8 +96,25 @@ var DATABASE =
 	removeRenderClient: function(sessionId)
 	{
 		var table = DATABASE.renderingClientsTable;
+		table.rows = table.rows.filter(item => item.sessionId != sessionId);
 
-		table.rows = table.rows.filter(item => item.sessionId !== sessionId);
+		// remove client from active cells list
+		var cellsTable = DATABASE.renderingCellsTable;
+		cellsTable.rows.forEach(function(cell)
+		{
+			if (cell.sessionId != sessionId)
+			{
+				return;
+			}
+
+			if (cell.progress == 100)
+			{
+				return;
+			}
+
+			cell.sessionId = "";
+		});
+
 		table.save();
 	},
 
@@ -110,7 +132,7 @@ var DATABASE =
 			startX: startX,
             sessionId: '',
 			progress: 0,
-			imageData: []
+			imageData: null
         };
 
 		var table = DATABASE.renderingCellsTable;
@@ -129,6 +151,29 @@ var DATABASE =
 		return table.rows;
 	},
 
+	/**
+	 * Gets free cell
+	 */
+	getFreeCell: function(sessionId)
+	{
+		var table = DATABASE.renderingCellsTable;
+		var freeCell = table.rows.find(element => element.sessionId == "");	
+
+		if (!freeCell)
+		{
+			return null;
+		}
+
+		freeCell.sessionId = sessionId;
+
+		table.save();
+
+		return freeCell;
+	},
+
+	/**
+	 * Clears all existing grid cells data.
+	 */
 	clearGridLayout: function()
 	{
 		var table = DATABASE.renderingCellsTable;
@@ -140,16 +185,20 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(renderCellId, progress, imageData)
+	updateProgress: function(cell, progress)
 	{
-		var table = DATABASE.renderingClientsTable;
+		var table = DATABASE.renderingCellsTable;
 
 		// update rendering progress for specific client
 		table.rows.forEach((element) => { 
-			if(element._id == renderCellId)
+			if(element._id == cell._id)
 			{
 				element.progress = progress;
-				element.imageData = imageData;
+
+				if (typeof cell.imageData !== 'undefined')
+				{
+					element.imageData = cell.imageData;
+				}				
 			}
 		});
 

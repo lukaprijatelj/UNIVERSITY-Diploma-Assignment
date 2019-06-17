@@ -68,4 +68,6 @@ uploads/
 
 fileUploads/
 
-database/tables/
+database/
+
+ignored-files/
