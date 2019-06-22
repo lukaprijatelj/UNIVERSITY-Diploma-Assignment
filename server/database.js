@@ -100,20 +100,23 @@ var DATABASE =
 
 		// remove client from active cells list
 		var cellsTable = DATABASE.renderingCellsTable;
-		cellsTable.rows.forEach(function(cell)
+
+		for (var i=0; i<cellsTable.rows.length; i++)
 		{
+			var cell = cellsTable.rows[i];
+
 			if (cell.sessionId != sessionId)
 			{
-				return;
-			}
-
+				continue;
+			}	
+			
 			if (cell.progress == 100)
 			{
-				return;
+				continue;
 			}
 
 			cell.sessionId = "";
-		});
+		}
 
 		table.save();
 	},
@@ -190,7 +193,10 @@ var DATABASE =
 		var table = DATABASE.renderingCellsTable;
 
 		// update rendering progress for specific client
-		table.rows.forEach((element) => { 
+		for (var i=0; i<table.rows.length; i++)
+		{
+			var element = table.rows[i];
+
 			if(element._id == cell._id)
 			{
 				element.progress = progress;
@@ -200,7 +206,7 @@ var DATABASE =
 					element.imageData = cell.imageData;
 				}				
 			}
-		});
+		}
 
         table.save();
 	}

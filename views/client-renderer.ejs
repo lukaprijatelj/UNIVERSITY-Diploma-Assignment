@@ -23,6 +23,9 @@
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/helper.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
+		<script src="javascripts/GltfLoader.js"></script>
+
+		<!-- ThreeJS -->
 		<script src="javascripts/threejs/three.js"></script>
 		<script src="javascripts/threejs/OrbitControls.js"></script>
 		<script src="javascripts/threejs/GLTFLoader.js"></script>
@@ -39,39 +42,50 @@
 		<script src="javascripts/ray-tracing/RaytracingWorker.js"></script>
 	</head>
 	<body>
-		<div id="grid-layout" class=""></div>
-		<canvas id="rendering-canvas" class="" width="1920" height="1080"></canvas>
-
-		<div id="debug-info">
-			<div class="group camera">
-				<div class="name">Camera</div>
-				<table>
-					<tr class="field">
-						<td class="key">x</td>
-						<td class="value"></td>
-					</tr>
-					<tr class="field">
-						<td class="key">y</td>
-						<td class="value"></td>
-					</tr>
-					<tr class="field">
-						<td class="key">z</td>
-						<td class="value"></td>
-					</tr>
-				</table>
+		<div id="loading-curtain">
+			<div class="wrapper">
+				<div class="message">Loading rendering interface</div>
 			</div>
-			<div class="group mouse">
-				<div class="name">Mouse</div>
-				<table>
-					<tr class="field">
-						<td class="key">x</td>
-						<td class="value"></td>
-					</tr>
-					<tr class="field">
-						<td class="key">y</td>
-						<td class="value"></td>
-					</tr>
-				</table>
+		</div>
+
+		<div id="interface" class="hidden"></div>
+			<!-- Grid layout -->
+			<div id="grid-layout" class=""></div>
+
+			<!-- Canvas for rendering -->
+			<canvas id="rendering-canvas" class="" width="<%= constants.CANVAS_WIDTH %>" height="<%= constants.CANVAS_HEIGHT %>"></canvas>
+
+			<div id="debug-info">
+				<div class="group camera">
+					<div class="name">Camera</div>
+					<table>
+						<tr class="field">
+							<td class="key">x</td>
+							<td class="value"></td>
+						</tr>
+						<tr class="field">
+							<td class="key">y</td>
+							<td class="value"></td>
+						</tr>
+						<tr class="field">
+							<td class="key">z</td>
+							<td class="value"></td>
+						</tr>
+					</table>
+				</div>
+				<div class="group mouse">
+					<div class="name">Mouse</div>
+					<table>
+						<tr class="field">
+							<td class="key">x</td>
+							<td class="value"></td>
+						</tr>
+						<tr class="field">
+							<td class="key">y</td>
+							<td class="value"></td>
+						</tr>
+					</table>
+				</div>
 			</div>
 		</div>
 

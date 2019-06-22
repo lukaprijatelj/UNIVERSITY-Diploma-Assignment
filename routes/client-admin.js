@@ -7,7 +7,7 @@ router.get('/', function(req, res, next)
 {
 	res.render('client-admin', 
 	{ 
-		title: 'Express',
+		title: 'Client admin',
 		constants: constants
 	});
 });

@@ -6,7 +6,7 @@ var constants = require('../server/constants.js');
 router.get('/', function(req, res, next) {
 	res.render('client-renderer', 
 	{ 
-		title: 'Express',
+		title: 'Client renderer',
 		constants: constants
 	});
 });

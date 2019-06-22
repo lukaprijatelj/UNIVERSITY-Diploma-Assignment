@@ -23,19 +23,32 @@
 		<script src="javascripts/helper.js"></script>
 	</head>
 	<body>
-		<div id="loading-curtain">
+		<!-- Curtain that informs user that site is loading -->
+		<div-fixed id="loading-curtain">
 			<div class="wrapper">
 				<div class="message">Loading admin interface</div>
 			</div>
-		</div>
+		</div-fixed>
 
+		<!-- Interface -->
 		<div id="interface" class="hidden">
+			<div-fixed id="left-sidebar" class="">
+				<wrapper-relative>
+					<div class="minimized-section" class="">
+						<button id="expand-button" class="light">&gt;&gt;</button>
+					</div>
+					<div class="expanded-section hidden">
+						<button id="minimize-button" class="light">&lt;&lt;</button>
+						<button class="light" onclick="GLOBALS._onRecalculateLayoutClick()">Recalculate layout</button>
+						<button class="light" onclick="GLOBALS._onStartNewClientClick()">Start new client (tab)</button>
+					</div>
+				</wrapper-relative>				
+			</div-fixed>
+
 			<div id="grid-layout"></div>
-			<div class="divider"></div>
-			<div class="button dark" onclick="GLOBALS._onRecalculateLayoutClick()">Recalculate layout</div>
-			<div class="button dark" onclick="GLOBALS._onStartNewClientClick()">Start new client (tab)</div>
 		</div>		
 
+		<!-- Scripts that will be loaded synchronously -->
 		<script src="javascripts/client-admin.js"></script>
 	</body>
 </html>

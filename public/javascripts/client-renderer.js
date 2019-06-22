@@ -3,6 +3,7 @@
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
+var io = io(HOSTING_URL, { query: "clientType=renderer" });
 
 var GLOBALS =
 {
@@ -54,9 +55,7 @@ var GLOBALS =
 	
 	init: function()
 	{
-		GLOBALS.io = io(HOSTING_URL, { query: "clientType=renderer" });
-		GLOBALS.io.on('connect', GLOBALS._onServerConnected);	
-
+		io.on('connect', GLOBALS._onServerConnected);	
 		
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
@@ -68,7 +67,7 @@ var GLOBALS =
 
 		//DEBUG.init();
 
-		GLOBALS.startLoadingGltfModel('Buggy/Buggy.gltf');	
+		GLOBALS.startLoadingGltfModel();	
 	},
 
 
@@ -83,7 +82,7 @@ var GLOBALS =
 
 		console.log('[Globals] Requesting ' + url);
 
-		GLOBALS.io.emit(url, data);
+		io.emit(url, data);
 	},
 
 	/**
@@ -93,7 +92,7 @@ var GLOBALS =
 	{
 		url = GLOBALS.apiUrl + '/response' + '/' + url;
 
-		GLOBALS.io.on(url, callback);
+		io.on(url, callback);
 	},
 
 	/**
@@ -133,19 +132,10 @@ var GLOBALS =
 	{
 		console.log('[Globals] Requesting GLTF model');
 
-		var onLoadingError = function(error) 
-		{
-			console.error('[glTF loader] Error while loading scene!');
-			console.error(error);
-		};
-		var onLoadingProgress = function(xhr) 
-		{
-			// occurs when one of the files is done loading
-			var percentage = xhr.loaded / xhr.total * 100;
+		var loader = new GltfLoader();
 
-			console.log('[glTF loader] Scene is ' + percentage + '% loaded');				
-		};
-		var onLoadFinished = function(gltf) 
+		loader.path = 'Buggy/Buggy.gltf';
+		loader.onSuccess = function(gltf) 
 		{
 			console.log('[glTF loader] Scene finished loading');
 
@@ -159,8 +149,7 @@ var GLOBALS =
 						
 			GLOBALS.request('renderingCells/cell');
 		};
-		
-		GLOBALS.loader.load(path, onLoadFinished, onLoadingProgress, onLoadingError);
+		loader.start();	
 	},
 
 	/**
@@ -507,6 +496,9 @@ var GLOBALS =
 
 			GLOBALS.drawOnCell(current);
 		}
+
+		document.getElementById('loading-curtain').hide();
+		document.getElementById('interface').show();
 	},
 
 	drawOnCell: function(cell)

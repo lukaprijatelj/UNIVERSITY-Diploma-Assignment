@@ -2,6 +2,63 @@
 var IS_CONSOLE_ENABLED = true;
 
 
+/**
+ * List of all animationEnd names for different browsers.
+ * @constant
+ * @type {string}
+ * @default
+ */
+var ANIMATION_END_NAMES = 
+{
+	webkit: 'webkitAnimationEnd',
+	standard: 'animationend',
+	ms: ' msAnimationEnd'
+};
+
+/**
+ * List of all transitionEnd names for different browsers.
+ * @constant
+ * @type {string}
+ * @default
+ */
+var TRANSITION_END_NAMES = 
+{
+	webkit: 'webkitTransitionEnd',
+	standard: 'transitionend'
+};
+
+/**
+ * Adds callback for animation.
+ * @param {string} animationClass - animation class
+ * @param {Function=} callback - callback (optional)
+ */
+HTMLElement.prototype.cssAnimation = function(animationClass, callback)
+{
+	callback = callback ? callback : function() {};
+
+	var element = this;
+	var onAnimationEndRef = null;
+	var onAnimationEnded = () =>
+	{
+		element.removeEventListener(ANIMATION_END_NAMES.webkit, onAnimationEndRef);
+		element.removeEventListener(ANIMATION_END_NAMES.standard, onAnimationEndRef);
+		element.removeEventListener(ANIMATION_END_NAMES.ms, onAnimationEndRef);
+		element.removeClass(animationClass);             
+
+		callback();
+	};
+	onAnimationEndRef = onAnimationEnded;
+
+	element.addClass(animationClass);
+	element.removeEventListener(ANIMATION_END_NAMES.webkit, onAnimationEndRef);
+	element.removeEventListener(ANIMATION_END_NAMES.standard, onAnimationEndRef);
+	element.removeEventListener(ANIMATION_END_NAMES.ms, onAnimationEndRef);
+
+	element.addEventListener(ANIMATION_END_NAMES.webkit, onAnimationEndRef, { once: true });
+	element.addEventListener(ANIMATION_END_NAMES.standard, onAnimationEndRef, { once: true });
+	element.addEventListener(ANIMATION_END_NAMES.ms, onAnimationEndRef, { once: true });
+};
+
 HTMLElement.createElement = function(htmlString)
 {
 	var div = document.createElement('div');

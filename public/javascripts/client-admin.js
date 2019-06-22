@@ -1,5 +1,8 @@
+var io = io(HOSTING_URL, { query: "clientType=admin" });
+
+
 /**
- * Globals for 
+ * Globals. 
  */
 var GLOBALS =
 {
@@ -21,9 +24,28 @@ var GLOBALS =
 
 	init: function()
 	{
-		GLOBALS.io = io(HOSTING_URL, { query: "clientType=admin" });
+		io.on('connect', GLOBALS._onServerConnected);
 
-		GLOBALS.io.on('connect', GLOBALS._onServerConnected);
+		var leftSidebarV = document.getElementById("left-sidebar");
+		document.getElementById("expand-button").onclick = () =>
+		{
+			leftSidebarV.cssAnimation('expanding-from-left', () =>
+			{
+				leftSidebarV.addClass('expanded');
+				leftSidebarV.querySelector(".minimized-section").hide();
+				leftSidebarV.querySelector(".expanded-section").show();
+			});
+		};
+
+		document.getElementById("minimize-button").onclick = () =>
+		{
+			leftSidebarV.removeClass('expanded');
+			leftSidebarV.querySelector(".minimized-section").show();
+			leftSidebarV.querySelector(".expanded-section").hide();
+
+			leftSidebarV.cssAnimation('minimize-from-right');
+		};
+		
 	},
 
 
@@ -38,7 +60,7 @@ var GLOBALS =
 
 		console.log('[Main] Requesting "' + url + '"');
 
-		GLOBALS.io.emit(url, data);
+		io.emit(url, data);
 	},
 
 	/**
@@ -48,7 +70,7 @@ var GLOBALS =
 	{
 		url = GLOBALS.apiUrl + '/response' + '/' + url;
 
-		GLOBALS.io.on(url, callback);
+		io.on(url, callback);
 	},
 
 	/**

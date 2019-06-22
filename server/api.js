@@ -2,8 +2,8 @@ var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 var constants = require('./constants.js');
 
-var io = require('socket.io');
-var socketIo = io.listen(30003);
+var socketIO = require('socket.io');
+var io = socketIO.listen(30003);
 
 
 var API =
@@ -27,7 +27,7 @@ var API =
         // first upload.single parses file and saves it into request.file
 		app.post(API.baseUrl + '/uploadScene', upload.single('Scene'), API.onUploadFile);
 		
-		socketIo.on('connection', API.onConnect);
+		io.on('connection', API.onConnect);
 	},
 
 	
@@ -84,7 +84,7 @@ var API =
 
 		var result = DATABASE.getRenderingCells();
 
-		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/layout', result);
+		io.to(sessionId).emit(API.baseUrl + '/response/renderingCells/layout', result);
 	},
 
 	/**
@@ -103,7 +103,7 @@ var API =
 			return;
 		}
 
-		socketIo.to(sessionId).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
+		io.to(sessionId).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
 	},
 
 	/**
