@@ -36,14 +36,14 @@ var cameraRecentlyMoving = false;
 var isPaused = true;
 var oldYawRotation, oldPitchRotation;
 var mobileJoystickControls = null;
-var oldDeltaX = 0,
-        oldDeltaY = 0;
-var newDeltaX = 0,
-        newDeltaY = 0;
+var oldDeltaX = 0;
+var oldDeltaY = 0;
+var newDeltaX = 0;
+var newDeltaY = 0;
 var mobileControlsMoveX = 0;
 var mobileControlsMoveY = 0;
-var stillFlagX = true,
-        stillFlagY = true;
+var stillFlagX = true;
+var stillFlagY = true;
 var oldPinchWidthX = 0;
 var oldPinchWidthY = 0;
 var pinchDeltaX = 0;
@@ -77,21 +77,19 @@ var fileLoader = new THREE.FileLoader();
 
 
 
-function onMouseWheel(event) {
+function onMouseWheel(event) 
+{
+	//event.preventDefault();
+	event.stopPropagation();
 
-        //event.preventDefault();
-        event.stopPropagation();
-
-        if (event.deltaY > 0) {
-
-                increaseFOV = true;
-
-        } else if (event.deltaY < 0) {
-
-                decreaseFOV = true;
-
-        }
-
+	if (event.deltaY > 0) 
+	{
+		increaseFOV = true;
+	} 
+	else if (event.deltaY < 0) 
+	{
+		decreaseFOV = true;
+	}
 }
 
 
@@ -258,381 +256,388 @@ function init() {
 
 
 
-function initTHREEjs() {
+function initTHREEjs() 
+{
+	canvas = document.createElement('canvas');
+	context = canvas.getContext('webgl2');
 
-        canvas = document.createElement('canvas');
-        context = canvas.getContext('webgl2');
+	renderer = new THREE.WebGLRenderer({ canvas: canvas, context: context });
+	//suggestion: set to false for production
+	//renderer.debug.checkShaderErrors = true;
 
-        renderer = new THREE.WebGLRenderer({ canvas: canvas, context: context });
-        //suggestion: set to false for production
-        //renderer.debug.checkShaderErrors = true;
+	renderer.autoClear = false;
+	// 1 is full resolution, 0.5 is half, 0.25 is quarter, etc. (must be > than 0.0)
+	renderer.setPixelRatio(pixelRatio);
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	//required by WebGL 2.0 for rendering to FLOAT textures
+	renderer.context.getExtension('EXT_color_buffer_float');
 
-        renderer.autoClear = false;
-        // 1 is full resolution, 0.5 is half, 0.25 is quarter, etc. (must be > than 0.0)
-        renderer.setPixelRatio(pixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        //required by WebGL 2.0 for rendering to FLOAT textures
-        renderer.context.getExtension('EXT_color_buffer_float');
+	container = document.body;
+	container.appendChild(renderer.domElement);
 
-        container = document.body;
-        container.appendChild(renderer.domElement);
+	/*stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	stats.domElement.style.cursor = "default";
+	stats.domElement.style.webkitUserSelect = "none";
+	stats.domElement.style.MozUserSelect = "none";
+	container.appendChild(stats.domElement);*/
 
-        /*stats = new Stats();
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.top = '0px';
-        stats.domElement.style.cursor = "default";
-        stats.domElement.style.webkitUserSelect = "none";
-        stats.domElement.style.MozUserSelect = "none";
-        container.appendChild(stats.domElement);*/
+	clock = new THREE.Clock();
 
-        clock = new THREE.Clock();
+	pathTracingScene = new THREE.Scene();
+	screenTextureScene = new THREE.Scene();
+	screenOutputScene = new THREE.Scene();
 
-        pathTracingScene = new THREE.Scene();
-        screenTextureScene = new THREE.Scene();
-        screenOutputScene = new THREE.Scene();
+	// quadCamera is simply the camera to help render the full screen quad (2 triangles),
+	// hence the name.  It is an Orthographic camera that sits facing the view plane, which serves as
+	// the window into our 3d world. This camera will not move or rotate for the duration of the app.
+	quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+	screenTextureScene.add(quadCamera);
+	screenOutputScene.add(quadCamera);
 
-        // quadCamera is simply the camera to help render the full screen quad (2 triangles),
-        // hence the name.  It is an Orthographic camera that sits facing the view plane, which serves as
-        // the window into our 3d world. This camera will not move or rotate for the duration of the app.
-        quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        screenTextureScene.add(quadCamera);
-        screenOutputScene.add(quadCamera);
+	// worldCamera is the dynamic camera 3d object that will be positioned, oriented and 
+	// constantly updated inside the 3d scene.  Its view will ultimately get passed back to the 
+	// stationary quadCamera, which renders the scene to a fullscreen quad (made up of 2 large triangles).
+	worldCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	pathTracingScene.add(worldCamera);
 
-        // worldCamera is the dynamic camera 3d object that will be positioned, oriented and 
-        // constantly updated inside the 3d scene.  Its view will ultimately get passed back to the 
-        // stationary quadCamera, which renders the scene to a fullscreen quad (made up of 2 large triangles).
-        worldCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        pathTracingScene.add(worldCamera);
+	controls = new FirstPersonCameraControls(worldCamera);
 
-        controls = new FirstPersonCameraControls(worldCamera);
+	cameraControlsObject = controls.getObject();
+	cameraControlsYawObject = controls.getYawObject();
+	cameraControlsPitchObject = controls.getPitchObject();
 
-        cameraControlsObject = controls.getObject();
-        cameraControlsYawObject = controls.getYawObject();
-        cameraControlsPitchObject = controls.getPitchObject();
+	pathTracingScene.add(cameraControlsObject);
 
-        pathTracingScene.add(cameraControlsObject);
+	
+	// setup render targets...
+	pathTracingRenderTarget = new THREE.WebGLRenderTarget((window.innerWidth * pixelRatio), (window.innerHeight * pixelRatio), {
+			minFilter: THREE.NearestFilter,
+			magFilter: THREE.NearestFilter,
+			format: THREE.RGBAFormat,
+			type: THREE.FloatType,
+			depthBuffer: false,
+			stencilBuffer: false
+	});
+	pathTracingRenderTarget.texture.generateMipmaps = false;
 
-        
-        // setup render targets...
-        pathTracingRenderTarget = new THREE.WebGLRenderTarget((window.innerWidth * pixelRatio), (window.innerHeight * pixelRatio), {
-                minFilter: THREE.NearestFilter,
-                magFilter: THREE.NearestFilter,
-                format: THREE.RGBAFormat,
-                type: THREE.FloatType,
-                depthBuffer: false,
-                stencilBuffer: false
-        });
-        pathTracingRenderTarget.texture.generateMipmaps = false;
-
-        screenTextureRenderTarget = new THREE.WebGLRenderTarget((window.innerWidth * pixelRatio), (window.innerHeight * pixelRatio), {
-                minFilter: THREE.NearestFilter,
-                magFilter: THREE.NearestFilter,
-                format: THREE.RGBAFormat,
-                type: THREE.FloatType,
-                depthBuffer: false,
-                stencilBuffer: false
-        });
-        screenTextureRenderTarget.texture.generateMipmaps = false;
-
-
-        // setup scene/demo-specific objects, variables, and data
-        initSceneData();
+	screenTextureRenderTarget = new THREE.WebGLRenderTarget((window.innerWidth * pixelRatio), (window.innerHeight * pixelRatio), {
+			minFilter: THREE.NearestFilter,
+			magFilter: THREE.NearestFilter,
+			format: THREE.RGBAFormat,
+			type: THREE.FloatType,
+			depthBuffer: false,
+			stencilBuffer: false
+	});
+	screenTextureRenderTarget.texture.generateMipmaps = false;
 
 
-        // setup screen-size quad geometry and shaders....
-
-        // this full-screen quad mesh performs the path tracing operations and produces a screen-sized image
-        pathTracingGeometry = new THREE.PlaneBufferGeometry(2, 2);
-        initPathTracingShaders();
-
-        // this full-screen quad mesh copies the image output of the pathtracing shader and feeds it back in to that shader as a 'previousTexture'
-        screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
-
-        screenTextureMaterial = new THREE.ShaderMaterial({
-                uniforms: screenTextureShader.uniforms,
-                vertexShader: screenTextureShader.vertexShader,
-                fragmentShader: screenTextureShader.fragmentShader,
-                depthWrite: false,
-                depthTest: false
-        });
-
-        screenTextureMaterial.uniforms.tPathTracedImageTexture.value = pathTracingRenderTarget.texture;
-
-        screenTextureMesh = new THREE.Mesh(screenTextureGeometry, screenTextureMaterial);
-        screenTextureScene.add(screenTextureMesh);
+	// setup scene/demo-specific objects, variables, and data
+	initSceneData();
 
 
-        // this full-screen quad mesh takes the image output of the path tracing shader (which is a continuous blend of the previous frame and current frame),
-        // and applies gamma correction (which brightens the entire image), and then displays the final accumulated rendering to the screen
-        screenOutputGeometry = new THREE.PlaneBufferGeometry(2, 2);
+	// setup screen-size quad geometry and shaders....
 
-        screenOutputMaterial = new THREE.ShaderMaterial({
-                uniforms: screenOutputShader.uniforms,
-                vertexShader: screenOutputShader.vertexShader,
-                fragmentShader: screenOutputShader.fragmentShader,
-                depthWrite: false,
-                depthTest: false
-        });
+	// this full-screen quad mesh performs the path tracing operations and produces a screen-sized image
+	pathTracingGeometry = new THREE.PlaneBufferGeometry(2, 2);
+	initPathTracingShaders();
 
-        screenOutputMaterial.uniforms.tPathTracedImageTexture.value = pathTracingRenderTarget.texture;
+	// this full-screen quad mesh copies the image output of the pathtracing shader and feeds it back in to that shader as a 'previousTexture'
+	screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
 
-        screenOutputMesh = new THREE.Mesh(screenOutputGeometry, screenOutputMaterial);
-        screenOutputScene.add(screenOutputMesh);
+	screenTextureMaterial = new THREE.ShaderMaterial({
+			uniforms: screenTextureShader.uniforms,
+			vertexShader: screenTextureShader.vertexShader,
+			fragmentShader: screenTextureShader.fragmentShader,
+			depthWrite: false,
+			depthTest: false
+	});
 
-        // this 'jumpstarts' the initial dimensions and parameters for the window and renderer
-        onWindowResize();
+	screenTextureMaterial.uniforms.tPathTracedImageTexture.value = pathTracingRenderTarget.texture;
 
-        // everything is set up, now we can start animating
-        animate();
+	screenTextureMesh = new THREE.Mesh(screenTextureGeometry, screenTextureMaterial);
+	screenTextureScene.add(screenTextureMesh);
+
+
+	// this full-screen quad mesh takes the image output of the path tracing shader (which is a continuous blend of the previous frame and current frame),
+	// and applies gamma correction (which brightens the entire image), and then displays the final accumulated rendering to the screen
+	screenOutputGeometry = new THREE.PlaneBufferGeometry(2, 2);
+
+	screenOutputMaterial = new THREE.ShaderMaterial({
+			uniforms: screenOutputShader.uniforms,
+			vertexShader: screenOutputShader.vertexShader,
+			fragmentShader: screenOutputShader.fragmentShader,
+			depthWrite: false,
+			depthTest: false
+	});
+
+	screenOutputMaterial.uniforms.tPathTracedImageTexture.value = pathTracingRenderTarget.texture;
+
+	screenOutputMesh = new THREE.Mesh(screenOutputGeometry, screenOutputMaterial);
+	screenOutputScene.add(screenOutputMesh);
+
+	// this 'jumpstarts' the initial dimensions and parameters for the window and renderer
+	onWindowResize();
+
+	// everything is set up, now we can start animating
+	animate();
 
 } // end function initTHREEjs()
 
 
+function animate() 
+{
+	requestAnimationFrame(animate);
+
+	frameTime = clock.getDelta();
+
+	elapsedTime = clock.getElapsedTime() % 1000;
+
+	// reset flags
+	cameraIsMoving = false;
+	cameraJustStartedMoving = false;
+
+	if (windowIsBeingResized) 
+	{
+		cameraIsMoving = true;
+		windowIsBeingResized = false;
+	}
+
+	// check user controls
+	if (mouseControl) 
+	{
+		// movement detected
+		if (oldYawRotation != cameraControlsYawObject.rotation.y ||
+				oldPitchRotation != cameraControlsPitchObject.rotation.x) {
+
+				cameraIsMoving = true;
+		}
+
+		// save state for next frame
+		oldYawRotation = cameraControlsYawObject.rotation.y;
+		oldPitchRotation = cameraControlsPitchObject.rotation.x;
+	} // end if (mouseControl)
+
+	// if not playing on desktop, get input from the mobileJoystickControls
+	if (!mouseControl) 
+	{
+		newDeltaX = joystickDeltaX;
+
+		if (newDeltaX) {
+
+				mobileControlsMoveX = oldDeltaX - newDeltaX;
+				// smooth out jerkiness if camera was sitting still 
+				if (stillFlagX) {
+						mobileControlsMoveX *= 0.1;
+						stillFlagX = false;
+				}
+				// mobileJoystick X movement (left and right) affects camera rotation around the Y axis	
+				cameraControlsYawObject.rotation.y += (mobileControlsMoveX) * 0.01;
+		}
+
+		newDeltaY = joystickDeltaY;
+
+		if (newDeltaY) {
+
+				mobileControlsMoveY = oldDeltaY - newDeltaY;
+				// smooth out jerkiness if camera was sitting still
+				if (stillFlagY) {
+						mobileControlsMoveY *= 0.1;
+						stillFlagY = false;
+				}
+				// mobileJoystick Y movement (up and down) affects camera rotation around the X axis	
+				cameraControlsPitchObject.rotation.x += (mobileControlsMoveY) * 0.01;
+		}
+
+		// clamp the camera's vertical movement (around the x-axis) to the scene's 'ceiling' and 'floor',
+		// so you can't accidentally flip the camera upside down
+		cameraControlsPitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, cameraControlsPitchObject.rotation.x));
+
+		// save state for next frame
+		oldDeltaX = newDeltaX;
+		oldDeltaY = newDeltaY;
+
+		// movement detected
+		if (newDeltaX || newDeltaY) {
+
+				cameraIsMoving = true;
+		} else {
+				stillFlagX = true;
+				stillFlagY = true;
+		}
+
+		newPinchWidthX = pinchWidthX;
+		newPinchWidthY = pinchWidthY;
+		pinchDeltaX = newPinchWidthX - oldPinchWidthX;
+		pinchDeltaY = newPinchWidthY - oldPinchWidthY;
+
+		if (Math.abs(pinchDeltaX) > Math.abs(pinchDeltaY)) {
+				if (pinchDeltaX < -3) increaseFOV = true;
+				if (pinchDeltaX > 3) decreaseFOV = true;
+		}
+
+		if (Math.abs(pinchDeltaY) >= Math.abs(pinchDeltaX)) {
+				if (pinchDeltaY > 1) increaseAperture = true;
+				if (pinchDeltaY < -1) decreaseAperture = true;
+		}
+
+		// save state for next frame
+		oldPinchWidthX = newPinchWidthX;
+		oldPinchWidthY = newPinchWidthY;
+
+	} // end if ( !mouseControl )
+
+	// this gives us a vector in the direction that the camera is pointing,
+	// which will be useful for moving the camera 'forward' and shooting projectiles in that direction
+	controls.getDirection(cameraDirectionVector);
+	cameraDirectionVector.normalize();
+	controls.getUpVector(cameraUpVector);
+	controls.getRightVector(cameraRightVector);
+
+	// the following gives us a rotation quaternion (4D vector), which will be useful for 
+	// rotating scene objects to match the camera's rotation
+	worldCamera.getWorldQuaternion(cameraWorldQuaternion);
+
+	if (useGenericInput) 
+	{
+		// allow flying camera
+		if ((keyboard.pressed('W') || button3Pressed) && !(keyboard.pressed('S') || button4Pressed)) {
+
+				cameraControlsObject.position.add(cameraDirectionVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if ((keyboard.pressed('S') || button4Pressed) && !(keyboard.pressed('W') || button3Pressed)) {
+
+				cameraControlsObject.position.sub(cameraDirectionVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if ((keyboard.pressed('A') || button1Pressed) && !(keyboard.pressed('D') || button2Pressed)) {
+
+				cameraControlsObject.position.sub(cameraRightVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if ((keyboard.pressed('D') || button2Pressed) && !(keyboard.pressed('A') || button1Pressed)) {
+
+				cameraControlsObject.position.add(cameraRightVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if (keyboard.pressed('Q') && !keyboard.pressed('Z')) {
+
+				cameraControlsObject.position.add(cameraUpVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if (keyboard.pressed('Z') && !keyboard.pressed('Q')) {
+
+				cameraControlsObject.position.sub(cameraUpVector.multiplyScalar(camFlightSpeed * frameTime));
+				cameraIsMoving = true;
+		}
+		if ((keyboard.pressed('up') || button5Pressed) && !(keyboard.pressed('down') || button6Pressed)) {
+
+				increaseFocusDist = true;
+		}
+		if ((keyboard.pressed('down') || button6Pressed) && !(keyboard.pressed('up') || button5Pressed)) {
+
+				decreaseFocusDist = true;
+		}
+		if (keyboard.pressed('right') && !keyboard.pressed('left')) {
+
+				increaseAperture = true;
+		}
+		if (keyboard.pressed('left') && !keyboard.pressed('right')) {
+
+				decreaseAperture = true;
+		}
+
+		if (increaseFOV) 
+		{
+				worldCamera.fov++;
+				if (worldCamera.fov > 150)
+						worldCamera.fov = 150;
+				fovScale = worldCamera.fov * 0.5 * (Math.PI / 180.0);
+				pathTracingUniforms.uVLen.value = Math.tan(fovScale);
+				pathTracingUniforms.uULen.value = pathTracingUniforms.uVLen.value * worldCamera.aspect;
+
+				cameraIsMoving = true;
+				increaseFOV = false;
+		}
+
+		if (decreaseFOV) 
+		{
+				worldCamera.fov--;
+				if (worldCamera.fov < 1)
+						worldCamera.fov = 1;
+				fovScale = worldCamera.fov * 0.5 * (Math.PI / 180.0);
+				pathTracingUniforms.uVLen.value = Math.tan(fovScale);
+				pathTracingUniforms.uULen.value = pathTracingUniforms.uVLen.value * worldCamera.aspect;
+
+				cameraIsMoving = true;
+				decreaseFOV = false;
+		}
+
+		if (increaseFocusDist) 
+		{
+				focusDistance += 1;
+				pathTracingUniforms.uFocusDistance.value = focusDistance;
+				cameraIsMoving = true;
+				increaseFocusDist = false;
+		}
+
+		if (decreaseFocusDist) 
+		{
+				focusDistance -= 1;
+				if (focusDistance < 1)
+						focusDistance = 1;
+				pathTracingUniforms.uFocusDistance.value = focusDistance;
+				cameraIsMoving = true;
+				decreaseFocusDist = false;
+		}
+
+		if (increaseAperture) 
+		{
+				apertureSize += 0.1;
+				if (apertureSize > 100.0)
+						apertureSize = 100.0;
+				pathTracingUniforms.uApertureSize.value = apertureSize;
+				cameraIsMoving = true;
+				increaseAperture = false;
+		}
+
+		if (decreaseAperture) 
+		{
+				apertureSize -= 0.1;
+				if (apertureSize < 0.0)
+						apertureSize = 0.0;
+				pathTracingUniforms.uApertureSize.value = apertureSize;
+				cameraIsMoving = true;
+				decreaseAperture = false;
+		}
+	} // end if (useGenericInput)
 
 
-function animate() {
-
-        requestAnimationFrame(animate);
-
-        frameTime = clock.getDelta();
-
-        elapsedTime = clock.getElapsedTime() % 1000;
-
-        // reset flags
-        cameraIsMoving = false;
-        cameraJustStartedMoving = false;
-        if (windowIsBeingResized) {
-                cameraIsMoving = true;
-                windowIsBeingResized = false;
-        }
-
-        // check user controls
-        if (mouseControl) {
-                // movement detected
-                if (oldYawRotation != cameraControlsYawObject.rotation.y ||
-                        oldPitchRotation != cameraControlsPitchObject.rotation.x) {
-
-                        cameraIsMoving = true;
-                }
-
-                // save state for next frame
-                oldYawRotation = cameraControlsYawObject.rotation.y;
-                oldPitchRotation = cameraControlsPitchObject.rotation.x;
-
-        } // end if (mouseControl)
-
-        // if not playing on desktop, get input from the mobileJoystickControls
-        if (!mouseControl) {
-
-                newDeltaX = joystickDeltaX;
-
-                if (newDeltaX) {
-
-                        mobileControlsMoveX = oldDeltaX - newDeltaX;
-                        // smooth out jerkiness if camera was sitting still 
-                        if (stillFlagX) {
-                                mobileControlsMoveX *= 0.1;
-                                stillFlagX = false;
-                        }
-                        // mobileJoystick X movement (left and right) affects camera rotation around the Y axis	
-                        cameraControlsYawObject.rotation.y += (mobileControlsMoveX) * 0.01;
-                }
-
-                newDeltaY = joystickDeltaY;
-
-                if (newDeltaY) {
-
-                        mobileControlsMoveY = oldDeltaY - newDeltaY;
-                        // smooth out jerkiness if camera was sitting still
-                        if (stillFlagY) {
-                                mobileControlsMoveY *= 0.1;
-                                stillFlagY = false;
-                        }
-                        // mobileJoystick Y movement (up and down) affects camera rotation around the X axis	
-                        cameraControlsPitchObject.rotation.x += (mobileControlsMoveY) * 0.01;
-                }
-
-                // clamp the camera's vertical movement (around the x-axis) to the scene's 'ceiling' and 'floor',
-                // so you can't accidentally flip the camera upside down
-                cameraControlsPitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, cameraControlsPitchObject.rotation.x));
-
-                // save state for next frame
-                oldDeltaX = newDeltaX;
-                oldDeltaY = newDeltaY;
-
-                // movement detected
-                if (newDeltaX || newDeltaY) {
-
-                        cameraIsMoving = true;
-                } else {
-                        stillFlagX = true;
-                        stillFlagY = true;
-                }
-
-                newPinchWidthX = pinchWidthX;
-                newPinchWidthY = pinchWidthY;
-                pinchDeltaX = newPinchWidthX - oldPinchWidthX;
-                pinchDeltaY = newPinchWidthY - oldPinchWidthY;
-
-                if (Math.abs(pinchDeltaX) > Math.abs(pinchDeltaY)) {
-                        if (pinchDeltaX < -3) increaseFOV = true;
-                        if (pinchDeltaX > 3) decreaseFOV = true;
-                }
-
-                if (Math.abs(pinchDeltaY) >= Math.abs(pinchDeltaX)) {
-                        if (pinchDeltaY > 1) increaseAperture = true;
-                        if (pinchDeltaY < -1) decreaseAperture = true;
-                }
-
-                // save state for next frame
-                oldPinchWidthX = newPinchWidthX;
-                oldPinchWidthY = newPinchWidthY;
-
-        } // end if ( !mouseControl )
-
-        // this gives us a vector in the direction that the camera is pointing,
-        // which will be useful for moving the camera 'forward' and shooting projectiles in that direction
-        controls.getDirection(cameraDirectionVector);
-        cameraDirectionVector.normalize();
-        controls.getUpVector(cameraUpVector);
-        controls.getRightVector(cameraRightVector);
-
-        // the following gives us a rotation quaternion (4D vector), which will be useful for 
-        // rotating scene objects to match the camera's rotation
-        worldCamera.getWorldQuaternion(cameraWorldQuaternion);
-
-        if (useGenericInput) {
-
-                // allow flying camera
-                if ((keyboard.pressed('W') || button3Pressed) && !(keyboard.pressed('S') || button4Pressed)) {
-
-                        cameraControlsObject.position.add(cameraDirectionVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if ((keyboard.pressed('S') || button4Pressed) && !(keyboard.pressed('W') || button3Pressed)) {
-
-                        cameraControlsObject.position.sub(cameraDirectionVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if ((keyboard.pressed('A') || button1Pressed) && !(keyboard.pressed('D') || button2Pressed)) {
-
-                        cameraControlsObject.position.sub(cameraRightVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if ((keyboard.pressed('D') || button2Pressed) && !(keyboard.pressed('A') || button1Pressed)) {
-
-                        cameraControlsObject.position.add(cameraRightVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if (keyboard.pressed('Q') && !keyboard.pressed('Z')) {
-
-                        cameraControlsObject.position.add(cameraUpVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if (keyboard.pressed('Z') && !keyboard.pressed('Q')) {
-
-                        cameraControlsObject.position.sub(cameraUpVector.multiplyScalar(camFlightSpeed * frameTime));
-                        cameraIsMoving = true;
-                }
-                if ((keyboard.pressed('up') || button5Pressed) && !(keyboard.pressed('down') || button6Pressed)) {
-
-                        increaseFocusDist = true;
-                }
-                if ((keyboard.pressed('down') || button6Pressed) && !(keyboard.pressed('up') || button5Pressed)) {
-
-                        decreaseFocusDist = true;
-                }
-                if (keyboard.pressed('right') && !keyboard.pressed('left')) {
-
-                        increaseAperture = true;
-                }
-                if (keyboard.pressed('left') && !keyboard.pressed('right')) {
-
-                        decreaseAperture = true;
-                }
-
-                if (increaseFOV) {
-                        worldCamera.fov++;
-                        if (worldCamera.fov > 150)
-                                worldCamera.fov = 150;
-                        fovScale = worldCamera.fov * 0.5 * (Math.PI / 180.0);
-                        pathTracingUniforms.uVLen.value = Math.tan(fovScale);
-                        pathTracingUniforms.uULen.value = pathTracingUniforms.uVLen.value * worldCamera.aspect;
-
-                        cameraIsMoving = true;
-                        increaseFOV = false;
-                }
-                if (decreaseFOV) {
-                        worldCamera.fov--;
-                        if (worldCamera.fov < 1)
-                                worldCamera.fov = 1;
-                        fovScale = worldCamera.fov * 0.5 * (Math.PI / 180.0);
-                        pathTracingUniforms.uVLen.value = Math.tan(fovScale);
-                        pathTracingUniforms.uULen.value = pathTracingUniforms.uVLen.value * worldCamera.aspect;
-
-                        cameraIsMoving = true;
-                        decreaseFOV = false;
-                }
-
-                if (increaseFocusDist) {
-                        focusDistance += 1;
-                        pathTracingUniforms.uFocusDistance.value = focusDistance;
-                        cameraIsMoving = true;
-                        increaseFocusDist = false;
-                }
-                if (decreaseFocusDist) {
-                        focusDistance -= 1;
-                        if (focusDistance < 1)
-                                focusDistance = 1;
-                        pathTracingUniforms.uFocusDistance.value = focusDistance;
-                        cameraIsMoving = true;
-                        decreaseFocusDist = false;
-                }
-
-                if (increaseAperture) {
-                        apertureSize += 0.1;
-                        if (apertureSize > 100.0)
-                                apertureSize = 100.0;
-                        pathTracingUniforms.uApertureSize.value = apertureSize;
-                        cameraIsMoving = true;
-                        increaseAperture = false;
-                }
-                if (decreaseAperture) {
-                        apertureSize -= 0.1;
-                        if (apertureSize < 0.0)
-                                apertureSize = 0.0;
-                        pathTracingUniforms.uApertureSize.value = apertureSize;
-                        cameraIsMoving = true;
-                        decreaseAperture = false;
-                }
-
-        } // end if (useGenericInput)
+	// update scene/demo-specific input(if custom), variables and uniforms every animation frame
+	updateVariablesAndUniforms();
 
 
-        // update scene/demo-specific input(if custom), variables and uniforms every animation frame
-        updateVariablesAndUniforms();
+	// RENDERING in 3 steps
 
+	// STEP 1
+	// Perform PathTracing and Render(save) into pathTracingRenderTarget, a full-screen texture.
+	// Read previous screenTextureRenderTarget(via texelFetch inside fragment shader) to use as a new starting point to blend with
+	renderer.setRenderTarget(pathTracingRenderTarget);
+	renderer.render(pathTracingScene, worldCamera);
 
-        // RENDERING in 3 steps
+	// STEP 2
+	// Render(copy) the pathTracingScene output(pathTracingRenderTarget above) into screenTextureRenderTarget.
+	// This will be used as a new starting point for Step 1 above (essentially creating ping-pong buffers)
+	renderer.setRenderTarget(screenTextureRenderTarget);
+	renderer.render(screenTextureScene, quadCamera);
 
-        // STEP 1
-        // Perform PathTracing and Render(save) into pathTracingRenderTarget, a full-screen texture.
-        // Read previous screenTextureRenderTarget(via texelFetch inside fragment shader) to use as a new starting point to blend with
-        renderer.setRenderTarget(pathTracingRenderTarget);
-        renderer.render(pathTracingScene, worldCamera);
+	// STEP 3
+	// Render full screen quad with generated pathTracingRenderTarget in STEP 1 above.
+	// After the image is gamma-corrected, it will be shown on the screen as the final accumulated output
+	renderer.setRenderTarget(null);
+	renderer.render(screenOutputScene, quadCamera);
 
-        // STEP 2
-        // Render(copy) the pathTracingScene output(pathTracingRenderTarget above) into screenTextureRenderTarget.
-        // This will be used as a new starting point for Step 1 above (essentially creating ping-pong buffers)
-        renderer.setRenderTarget(screenTextureRenderTarget);
-        renderer.render(screenTextureScene, quadCamera);
-
-        // STEP 3
-        // Render full screen quad with generated pathTracingRenderTarget in STEP 1 above.
-        // After the image is gamma-corrected, it will be shown on the screen as the final accumulated output
-        renderer.setRenderTarget(null);
-        renderer.render(screenOutputScene, quadCamera);
-
-        //stats.update();
-
+	//stats.update();
 } // end function animate()
