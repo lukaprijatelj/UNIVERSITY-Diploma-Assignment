@@ -36,6 +36,8 @@ var API =
 	 */
 	onConnect: function(socket)
 	{
+		var time = new Date();
+		
 		console.log('[Api] New client has connected!');
 
 		var sessionId = socket.id;

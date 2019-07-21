@@ -1,91 +1,10 @@
-.divider
-{
-	height: 50px;
-}
-
-.divider-small
-{
-	height: 20px;
-}
-
+/* -------------------------------------------------------------------------------------------------------------------- */
+/* Styles (fires browsers repaint event - fast processing) */
+/* -------------------------------------------------------------------------------------------------------------------- */
 
 #rendering-canvas
 {
 	background-color: #FFFFFF;
 	border-style: solid;
 	border-color: #EBEBEB;
-	border-width: 1px;
-}
-
-#left-sidebar
-{
-	position: fixed;
-	height: 100%;
-	width: 60px;
-	background-color: var(--dark-blue-background-color);
-	color: white;
-}
-
-#left-sidebar.expanded
-{
-	width: 300px;
-}
-
-.expanding-from-left
-{
-    -webkit-animation-name: expand-from-left;
-    -moz-animation-name: expand-from-left;
-    -o-animation-name: expand-from-left;
-    animation-name: expand-from-left;    
-
-    -webkit-animation-duration: 0.15s;
-    -moz-animation-duration: 0.15s;
-    -o-animation-duration: 0.15s;
-    animation-duration: 0.15s;
-
-    -webkit-animation-fill-mode: forwards;
-    -moz-animation-fill-mode: forwards;
-    -o-animation-fill-mode: forwards;
-    animation-fill-mode: forwards;
-
-    -webkit-animation-timing-function:linear;
-    animation-timing-function:linear;
-}
-.minimize-from-right
-{
-    -webkit-animation-name: expand-from-left;
-    -moz-animation-name: expand-from-left;
-    -o-animation-name: expand-from-left;
-    animation-name: expand-from-left;    
-
-    -webkit-animation-duration: 0.15s;
-    -moz-animation-duration: 0.15s;
-    -o-animation-duration: 0.15s;
-    animation-duration: 0.15s;
-
-    -webkit-animation-fill-mode: forwards;
-    -moz-animation-fill-mode: forwards;
-    -o-animation-fill-mode: forwards;
-	animation-fill-mode: forwards;
-	
-	animation-direction: reverse;
-
-    -webkit-animation-timing-function:linear;
-    animation-timing-function:linear;
-}
-@-webkit-keyframes expand-from-left {
-    0% {width: 60px;}
-    100% {width: 300px;}
-}
-@-moz-keyframes expand-from-left {
-    0% {width: 60px;}
-    100% {width: 300px;}
-}
-@-o-keyframes expand-from-left {
-    0% {width: 60px;}
-    100% {width: 300px;}
-}
-@keyframes expand-from-left {
-    0% {width: 60px;}
-    100% {width: 300px;}
 }

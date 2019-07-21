@@ -24,28 +24,7 @@ var GLOBALS =
 
 	init: function()
 	{
-		io.on('connect', GLOBALS._onServerConnected);
-
-		var leftSidebarV = document.getElementById("left-sidebar");
-		document.getElementById("expand-button").onclick = () =>
-		{
-			leftSidebarV.cssAnimation('expanding-from-left', () =>
-			{
-				leftSidebarV.addClass('expanded');
-				leftSidebarV.querySelector(".minimized-section").hide();
-				leftSidebarV.querySelector(".expanded-section").show();
-			});
-		};
-
-		document.getElementById("minimize-button").onclick = () =>
-		{
-			leftSidebarV.removeClass('expanded');
-			leftSidebarV.querySelector(".minimized-section").show();
-			leftSidebarV.querySelector(".expanded-section").hide();
-
-			leftSidebarV.cssAnimation('minimize-from-right');
-		};
-		
+		io.on('connect', GLOBALS._onServerConnected);		
 	},
 
 
@@ -149,16 +128,39 @@ var GLOBALS =
 			gridLayout.appendChild(HTMLElement.createElement('<div id="cell-' + current._id + '" class="render-cell" style="width:' + current.width + 'px; height:' + current.height + 'px;"></div>'));
 			prevCell = current;
 		}
-		
-		for (var i=0; i<data.length; i++)
+
+		GLOBALS.onLoaded();
+	},
+
+	/**
+	 * Initial data is loaded.
+	 * Remove skeleton screens by removing 'loading' class from elements.
+	 */
+	onLoaded: function()
+	{
+		for (var i=0; i<GLOBALS.renderingCells.length; i++)
 		{
-			var current = data[i];
+			var current = GLOBALS.renderingCells[i];
 
 			GLOBALS.drawOnCell(current);
 		}
 
-		document.getElementById('loading-curtain').hide();
-		document.getElementById('interface').show();
+		var renderingCanvas = document.getElementById('rendering-canvas');
+		renderingCanvas.removeClass('loading');
+
+		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
+		recalculateLayoutButton.removeClass('loading');
+		recalculateLayoutButton.innerHTML = 'Recalculate layout';
+
+		var startNewClientButton = document.getElementById('start-new-client-button');
+		startNewClientButton.removeClass('loading');
+		startNewClientButton.innerHTML = 'Start new client (tab)';
+
+		var canvasWidthInput = document.getElementById('canvas-width-input');
+		canvasWidthInput.removeClass('loading');
+
+		var canvasHeightInput = document.getElementById('canvas-height-input');
+		canvasHeightInput.removeClass('loading');
 	},
 
 	/**

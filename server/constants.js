@@ -3,6 +3,7 @@ var isDebugMode = true;
 var constants = 
 {
 	IS_DEBUG_MODE: isDebugMode,
+	IS_CONSOLE_ENABLED: true,
 
 	CANVAS_WIDTH: 1600,
 	CANVAS_HEIGHT: 1800,

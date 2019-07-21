@@ -1,14 +1,19 @@
+/* -------------------------------------------------------------------------------------------------------------------- */
+/* Styles (fires browsers repaint event - fast processing) */
+/* -------------------------------------------------------------------------------------------------------------------- */
+
 body
 {
-    /** global constant variables that can be used in CSS */
-	--dark-blue-background-color: #1F52F2; 
-    --light-blue-background-color: #0079FF; 
+    /* ----------------------------- */
+	/* global constant variables that can be used in CSS */
+	/* ----------------------------- */
+	--DARK-BLUE-BACKGROUND-COLOR: #1F52F2; 
+	--LIGHT-BLUE-BACKGROUND-COLOR: #0079FF; 
+	--LOADING-SKELETON-BACKGROUND: rgb(226, 226, 226);
     
 
 	background-color: #F9F9F9;
 	color: #505050;
-	margin: 0;
-	padding: 0;
 	font-family: 'Muli', sans-serif;
 }
 
@@ -25,42 +30,25 @@ body
 
 .hidden
 {
-    display: none !important; 
     opacity: 0 !important;
 }
 
-.visible
+
+.loading
 {
-    display: block;
+	pointer-events:none;
 }
 
-.center-align-block
-{
-    margin-left: auto;
-    margin-right: auto;
-}
 
-div-fixed
-{
-    position: fixed;
-}
 
-wrapper-relative
-{
-    position: relative;
-}
-
-/** ========== Buttons ========== */
+/* ----------------------------- */
+/* Buttons */
+/* ----------------------------- */
 
 button
 {
-	display: inline-block;
-	max-width: 300px;
-    text-align: center;
-    padding: 10px 15px;
-    border-radius: 5px;
     cursor: pointer;
-    font-size: 13px;
+	font-family: 'Muli', sans-serif;
 
 	-webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -71,99 +59,121 @@ button
                                   supported by Chrome and Opera */
 }
 
-button.disabled
+	button.loading
+	{
+		background-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+		border-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+	}
+
+	button.disabled
+	{
+		cursor: default !important;
+	}
+
+	button.light
+	{
+		background: transparent;
+		color: white;    
+		border-style: solid;
+		border-color: white;
+	}
+		button.light:not(.disabled):hover
+		{
+			color: var(--DARK-BLUE-BACKGROUND-COLOR);
+			background: white;
+		}
+
+	button.dark
+	{
+		color: white;
+		background: var(--DARK-BLUE-BACKGROUND-COLOR);
+		border-style: solid;
+		border-color: var(--DARK-BLUE-BACKGROUND-COLOR);
+	}
+		button.dark:not(.disabled):hover
+		{
+			background: transparent;
+			color: var(--DARK-BLUE-BACKGROUND-COLOR);
+		}
+
+
+
+
+/* ----------------------------- */
+/* Inputs */
+/* ----------------------------- */
+
+input
 {
-	cursor: default !important;
+	font-family: 'Muli', sans-serif;
+	border-style: solid;
+	border-color: #EBEBEB;
+	border-width: 1px;
+	vertical-align: bottom;
+	color: var(--DARK-BLUE-BACKGROUND-COLOR);
+    padding-left: 10px;
+	padding-right: 10px;
+	outline: none; 
 }
 
-button.light
-{
-    background: transparent;
-    color: white;    
-    border-style: solid;
-    border-width: 1px;
-    border-color: white;
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button 
+{ 
+	/** WebKit desktop browsers add little up down arrows to number inputs called spinners. We need to turn them off! */
+	margin: 0; 
+	-webkit-appearance: none;
 }
 
-button.light:not(.disabled):hover
+input:focus
 {
-    color: var(--dark-blue-background-color);
-    background: white;
+	border-color: var(--DARK-BLUE-BACKGROUND-COLOR);
 }
 
-button.dark
-{
-    color: white;
-    background: var(--dark-blue-background-color);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--dark-blue-background-color);
-}
-button.dark:not(.disabled):hover
-{
-    background: transparent;
-    color: var(--dark-blue-background-color);
-}
+	input.loading
+	{
+		outline: none;
+		background-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+		border-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+	}
 
 
 
 
-/** ========== Loading curtain ========== */
+/* ----------------------------- */
+/* Loading curtain */
+/* ----------------------------- */
 
 #loading-curtain
 {
-	width: 100%;
-	height: 100%;
-	z-index: 5;
-	background-image: linear-gradient(var(--dark-blue-background-color), var(--light-blue-background-color));
+	background-image: linear-gradient(var(--DARK-BLUE-BACKGROUND-COLOR), var(--LIGHT-BLUE-BACKGROUND-COLOR));
 	color: #D0D0D0;
-	font-size: 2em;
-	text-align: center;
 }
 
-#loading-curtain .wrapper
-{
-	width: 100%;
-	height: 100%;
-}
-
-#loading-curtain .message
-{
-	position: absolute;
-    top: 50%;
-    left: 50%;
-	margin-left: -220px;
-    font-weight: 900;
-    font-size: 35px;
-    color: white;
-}
+	#loading-curtain .message
+	{
+		color: white;
+	}
 
 
 
-/** ========== Rendering grid ========== */
+
+/* ----------------------------- */
+/* Rendering grid */
+/* ----------------------------- */
 
 #grid-layout
 {
 	background-color: #FFFFFF;
-	/*position: absolute;*/
-	white-space: nowrap;
-	display: inline-block;
-
 	border-style: solid;
 	border-color: #EBEBEB;
-	border-width: 1px 0px 0px 1px;
 }
 
 .render-cell
 {
-	display:inline-block;
 	border-style: solid;
 	border-color: #EBEBEB;
-	border-width: 0px 1px 1px 0px;
-	text-align: center;
-	vertical-align: top;
 }
-.render-cell.active
-{
-	background-color: #FF4F49;
-}
+	.render-cell.active
+	{
+		background-color: #FF4F49;
+	}

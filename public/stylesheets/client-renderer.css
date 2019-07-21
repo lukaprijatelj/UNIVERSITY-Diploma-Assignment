@@ -1,53 +1,26 @@
+/* -------------------------------------------------------------------------------------------------------------------- */
+/* Styles (fires browsers repaint event - fast processing) */
+/* -------------------------------------------------------------------------------------------------------------------- */
+
 #debug-info 
 {
-	position: fixed;
-	max-width: 300px;
-	bottom: 0;
-	right: 0;
 	color: white;
-	font-size: 2em;
 	font-family: "Lucida Console", Monaco, monospace;
-	background-color: var(--dark-blue-background-color);
+	background-color: var(--DARK-BLUE-BACKGROUND-COLOR);
 }
 
 #debug-info .field
 {
-	font-size: 0.8em;
 	color: rgba(255, 255, 255, 0.6);
-}
-
-#debug-info .field .value
-{
-	flex-grow: 1;
-	text-align: center;
-	padding: 10px;
-}
-
-#debug-info .field .key
-{
-	flex-grow: 1;
-	text-align: center;
-	flex-shrink: 1;
-	padding: 10px;
 }
 
 #debug-info .group>.name
 {
-	padding-left: 20px;
-	padding-right: 20px;
-	text-align: center;
-	background-color: var(--dark-blue-background-color);
-}
-
-#debug-info .group table
-{
-	table-layout: fixed;
-	width: 100%;
+	background-color: var(--DARK-BLUE-BACKGROUND-COLOR);
 }
 
 #rendering-canvas
 {
 	border-style: solid;
 	border-color: #EBEBEB;
-	border-width: 1px;
 }

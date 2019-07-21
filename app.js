@@ -11,7 +11,7 @@ var fs = require('fs');
 var API = require('./server/api.js');
 var DATABASE = require('./server/database.js');
 
-require('./server/helper.js');
+require('./public/javascripts/extensions/function.js');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
