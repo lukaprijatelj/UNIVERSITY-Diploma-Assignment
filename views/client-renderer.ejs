@@ -2,6 +2,13 @@
 <html>
 	<head>
 		<title><%= title %></title>
+		
+		<meta name="description" content="Diploma assignment for Faculty of Computer and Information Science - University of Ljubljana">
+		<meta name="author" content="Luka Prijatelj">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- favicon -->
+		<link rel="icon" type="image/png" href="images/renderer-favicon.png" />
 
 		<!-- fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Muli:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -10,20 +17,34 @@
 		<link rel="stylesheet" href="stylesheets/common.css">
 		<link rel="stylesheet" href="stylesheets/client-renderer.css">
 
+		<!-- layouts -->
+		<link rel="stylesheet" href="layoutsheets/common.css">
+		<link rel="stylesheet" href="layoutsheets/client-renderer.css">
+
 		
 		<!-- constants -->
 		<script>
 			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
 			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
 			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
+			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
+			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
 			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
+			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
 		</script>
 
 		<!-- scripts -->
 		<script src="javascripts/enums.js"></script>
-		<script src="javascripts/helper.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
-		<script src="javascripts/GltfLoader.js"></script>
+		
+		<!-- Extension scripts -->
+		<script src="javascripts/extensions/array.js"></script>
+		<script src="javascripts/extensions/date.js"></script>
+		<script src="javascripts/extensions/function.js"></script>
+		<script src="javascripts/extensions/math.js"></script>
+		<script src="javascripts/extensions/object.js"></script>
+		<script src="javascripts/extensions/HTMLElement.js"></script>
+		<script src="javascripts/extensions/console.js"></script>
 
 		<!-- ThreeJS -->
 		<script src="javascripts/threejs/three.js"></script>
@@ -40,20 +61,18 @@
 		<!-- Ray tracing scripts -->
 		<script src="javascripts/ray-tracing/RaytracingRenderer.js"></script>
 		<script src="javascripts/ray-tracing/RaytracingWorker.js"></script>
+
+		<!-- Classes scrips -->
+		<script src="javascripts/classes/GridLayout.js"></script>
+		<script src="javascripts/classes/CanvasLayout.js"></script>
+		<script src="javascripts/classes/GltfLoader.js"></script>
 	</head>
 	<body>
-		<div id="loading-curtain">
-			<div class="wrapper">
-				<div class="message">Loading rendering interface</div>
-			</div>
-		</div>
+		<div id="interface">
+			<!-- All cells will be rendered in this wrapper -->
+			<div id="layout-wrapper" class="loading"></div>
 
-		<div id="interface" class="hidden"></div>
-			<!-- Grid layout -->
-			<div id="grid-layout" class=""></div>
-
-			<!-- Canvas for rendering -->
-			<canvas id="rendering-canvas" class="" width="<%= constants.CANVAS_WIDTH %>" height="<%= constants.CANVAS_HEIGHT %>"></canvas>
+			<divider-small></divider-small>
 
 			<div id="debug-info">
 				<div class="group camera">

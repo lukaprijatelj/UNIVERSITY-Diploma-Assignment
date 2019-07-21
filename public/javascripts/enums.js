@@ -8,3 +8,12 @@ enums.rendererType =
 
 	PATH_TRACING: 'path-tracing'
 };
+
+enums.layoutType =
+{
+	NONE: 'none',
+	
+	GRID: 'grid',
+
+	CANVAS: 'layout'
+};

@@ -21,31 +21,31 @@ var GLOBALS =
 	 */
 	io: null,
 
+	/**
+	 * Layout view instance.
+	 */
+	layout: null,
+
+	/**
+	 * Type of the layout view.
+	 */
+	layoutType: enums.layoutType.CANVAS,
+
 
 	init: function()
 	{
-		io.on('connect', GLOBALS._onServerConnected);
-
-		var leftSidebarV = document.getElementById("left-sidebar");
-		document.getElementById("expand-button").onclick = () =>
-		{
-			leftSidebarV.cssAnimation('expanding-from-left', () =>
-			{
-				leftSidebarV.addClass('expanded');
-				leftSidebarV.querySelector(".minimized-section").hide();
-				leftSidebarV.querySelector(".expanded-section").show();
-			});
-		};
-
-		document.getElementById("minimize-button").onclick = () =>
-		{
-			leftSidebarV.removeClass('expanded');
-			leftSidebarV.querySelector(".minimized-section").show();
-			leftSidebarV.querySelector(".expanded-section").hide();
-
-			leftSidebarV.cssAnimation('minimize-from-right');
-		};
+		io.on('connect', GLOBALS._onServerConnected);	
 		
+		var layoutWrapperV = document.getElementById('layout-wrapper');
+
+		if (GLOBALS.layoutType == enums.layoutType.GRID)
+		{
+			GLOBALS.layout = new GridLayout(layoutWrapperV);
+		}
+		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
+		{
+			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+		}
 	},
 
 
@@ -132,33 +132,52 @@ var GLOBALS =
 
 		console.log('[Main] Grid layout drawn');
 
-		var gridLayout = document.getElementById('grid-layout');
-		gridLayout.empty();
-
-		var prevCell = null;
-
-		for (var i=0; i<data.length; i++)
-		{
-			var current = data[i];
-
-			if (prevCell && prevCell.startX > current.startX)
-			{
-				gridLayout.appendChild(HTMLElement.createElement('<br>'));
-			}
-
-			gridLayout.appendChild(HTMLElement.createElement('<div id="cell-' + current._id + '" class="render-cell" style="width:' + current.width + 'px; height:' + current.height + 'px;"></div>'));
-			prevCell = current;
-		}
+		GLOBALS.layout.createLayout(data);
 		
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];
 
+			if (!current.imageData)
+			{
+				continue;
+			}
+
+			GLOBALS.layout.updateCell(current);
+		}
+
+		GLOBALS.onLoaded();
+	},
+
+	/**
+	 * Initial data is loaded.
+	 * Remove skeleton screens by removing 'loading' class from elements.
+	 */
+	onLoaded: function()
+	{
+		for (var i=0; i<GLOBALS.renderingCells.length; i++)
+		{
+			var current = GLOBALS.renderingCells[i];
+
 			GLOBALS.drawOnCell(current);
 		}
 
-		document.getElementById('loading-curtain').hide();
-		document.getElementById('interface').show();
+		var renderingCanvas = document.getElementById('layout-wrapper');
+		renderingCanvas.removeClass('loading');
+
+		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
+		recalculateLayoutButton.removeClass('loading');
+		recalculateLayoutButton.innerHTML = 'Recalculate layout';
+
+		var startNewClientButton = document.getElementById('start-new-client-button');
+		startNewClientButton.removeClass('loading');
+		startNewClientButton.innerHTML = 'Start new client (tab)';
+
+		var canvasWidthInput = document.getElementById('canvas-width-input');
+		canvasWidthInput.removeClass('loading');
+
+		var canvasHeightInput = document.getElementById('canvas-height-input');
+		canvasHeightInput.removeClass('loading');
 	},
 
 	/**
@@ -171,10 +190,7 @@ var GLOBALS =
 			return;
 		}
 
-		var divHolderV = document.getElementById("cell-" + cell._id);
-		var imageV = HTMLElement.createElement('<img src="' + cell.imageData + '" id="cell-' + cell._id + '" class="render-cell" style="width:' + cell.width + 'px; height:' + cell.height + 'px;" />');
-
-		divHolderV.parentNode.replaceChild(imageV, divHolderV);
+		GLOBALS.layout.updateCell(cell);
 	}
 };
 

@@ -1,0 +1,151 @@
+/* -------------------------------------------------------------------------------------------------------------------- */
+/* Layout (fires browsers reflow event - slow processing) */
+/* -------------------------------------------------------------------------------------------------------------------- */
+
+body
+{
+	margin: 0;
+	padding: 0;
+}
+
+.hidden
+{
+    display: none !important; 
+}
+
+.visible
+{
+    display: block;
+}
+
+.center-align-block
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div-fixed
+{
+    position: fixed;
+}
+
+wrapper-relative
+{
+    position: relative;
+}
+
+
+
+
+/* ----------------------------- */
+/* Dividers */
+/* ----------------------------- */
+
+divider
+{
+	display: block;
+	height: 30px;
+}
+
+divider-small
+{
+	display: block;
+	height: 10px;
+}
+
+
+
+
+/* ----------------------------- */
+/* Buttons */
+/* ----------------------------- */
+
+button
+{
+	display: inline-block;
+	max-width: 300px;
+	min-height: 38px;
+    text-align: center;
+    padding: 10px 15px;
+    /** border-radius: 5px; */
+	font-size: 13px;
+}
+
+	button.loading
+	{
+		width: 150px;
+	}
+
+	button.light
+	{
+		border-width: 1px;
+	}
+
+	button.dark
+	{
+		border-width: 1px;
+	}
+
+
+
+
+
+/* ----------------------------- */
+/* Inputs */
+/* ----------------------------- */
+
+input
+{
+	--DEFAULT-CONTROL-HEIGHT: 38px;
+	--INPUT-HIDDEN-PADDING: 4px;
+
+	max-width: 300px;
+	min-height: calc(var(--DEFAULT-CONTROL-HEIGHT) - var(--INPUT-HIDDEN-PADDING));
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button 
+{ 
+	/** WebKit desktop browsers add little up down arrows to number inputs called spinners. We need to turn them off! */
+	margin: 0; 
+}
+
+
+
+
+
+
+
+
+
+/* ----------------------------- */
+/* Rendering grid */
+/* ----------------------------- */
+
+#rendering-canvas
+{
+	border-width: 1px;
+}
+
+.render-cell
+{
+	display:inline-block;
+	border-width: 0px 1px 1px 0px;
+	text-align: center;
+	vertical-align: top;
+}
+
+
+#layout-wrapper[data-layout-type="grid"]
+{
+	white-space: nowrap;
+	display: inline-block;
+	border-width: 1px 0px 0px 1px;
+}
+
+	#layout-wrapper.loading
+	{
+		border-width: 1px;
+		height: 400px;
+		width: 100%;
+	}
