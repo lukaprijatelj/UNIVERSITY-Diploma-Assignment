@@ -2,22 +2,3 @@
 /* Layout (fires browsers reflow event - slow processing) */
 /* -------------------------------------------------------------------------------------------------------------------- */
 
-#interface
-{
-	margin-top: 20px;
-	margin-left: 10%;
-	margin-right: 10%;
-}
-
-
-
-
-
-/* ----------------------------- */
-/* Rendering canvas */
-/* ----------------------------- */
-
-#rendering-canvas
-{
-	width: 100%;
-}

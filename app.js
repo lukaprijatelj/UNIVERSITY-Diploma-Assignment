@@ -15,8 +15,8 @@ require('./public/javascripts/extensions/function.js');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
-var clientRendererRouter = require('./routes/client-renderer');
-var clientAdminRouter = require('./routes/client-admin');
+var clientRendererRouter = require('./routes/client');
+var clientAdminRouter = require('./routes/server-admin');
 
 var app = express();
 
@@ -55,8 +55,8 @@ var EXPRESS_APP =
 		// routes
 		app.use('/', indexRouter);
 		app.use('/upload', usersRouter);
-		app.use('/clientRenderer', clientRendererRouter);
-		app.use('/clientAdmin', clientAdminRouter);
+		app.use('/client', clientRendererRouter);
+		app.use('/serverAdmin', clientAdminRouter);
 
 		console.log('[App] Initializing');
 
