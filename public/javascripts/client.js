@@ -86,7 +86,7 @@ var GLOBALS =
 		
 		GLOBALS._initGltfLoader();
 
-		//DEBUG.init();	
+		DEBUG.init();	
 	},
 
 

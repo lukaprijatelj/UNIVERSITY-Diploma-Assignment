@@ -171,13 +171,27 @@ var GLOBALS =
 
 		var startNewClientButton = document.getElementById('start-new-client-button');
 		startNewClientButton.removeClass('loading');
-		startNewClientButton.innerHTML = 'Start new client (tab)';
+		startNewClientButton.innerHTML = ' + ';
 
 		var canvasWidthInput = document.getElementById('canvas-width-input');
 		canvasWidthInput.removeClass('loading');
+		canvasWidthInput.value = CANVAS_WIDTH;
 
 		var canvasHeightInput = document.getElementById('canvas-height-input');
 		canvasHeightInput.removeClass('loading');
+		canvasHeightInput.value = CANVAS_HEIGHT;
+
+		var blockWidthV = document.getElementById('block-width-input');
+		blockWidthV.removeClass('loading');
+		blockWidthV.value = BLOCK_WIDTH;
+
+		var blockHeightV = document.getElementById('block-height-input');
+		blockHeightV.removeClass('loading');
+		blockHeightV.value = BLOCK_HEIGHT;
+
+		var clientsConnectedV = document.getElementById('clients-connected-input');
+		clientsConnectedV.removeClass('loading');
+		clientsConnectedV.value = 0;
 	},
 
 	/**

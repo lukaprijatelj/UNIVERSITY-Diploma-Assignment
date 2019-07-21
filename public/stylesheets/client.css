@@ -6,7 +6,7 @@
 {
 	color: white;
 	font-family: "Lucida Console", Monaco, monospace;
-	background-color: var(--DARK-BLUE-BACKGROUND-COLOR);
+	background-color: var(--DARK-BLUE-COLOR);
 }
 
 #debug-info .field
@@ -16,7 +16,7 @@
 
 #debug-info .group>.name
 {
-	background-color: var(--DARK-BLUE-BACKGROUND-COLOR);
+	background-color: var(--DARK-BLUE-COLOR);
 }
 
 

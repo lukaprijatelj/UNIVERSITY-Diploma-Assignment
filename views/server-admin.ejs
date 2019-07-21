@@ -58,15 +58,49 @@
 		<div id="interface" class="">
 
 			<!-- All cells will be rendered in this wrapper -->
-			<div id="layout-wrapper" class="loading"></div>
+			<section>
+				<label>Rendered cells</label>
+				<div id="layout-wrapper" class="loading"></div>
+			</section>
+			<divider-x-small></divider-x-small>
 
-			<divider-small></divider-small>
 
-			<input type="number" id="canvas-width-input" class="loading">
-			<input type="number" id="canvas-height-input" class="loading">
+			<!-- Start new client button -->
+			<section-inline>
+				<label>Clients connected</label>
+				<input type="number" id="clients-connected-input" class="loading disabled">
+				<button id="start-new-client-button" class="dark loading" onclick="GLOBALS._onStartNewClientClick()"></button>
+			</section-inline>
+			<divider-x></divider-x>		
 
+			
+			<!-- Canvas width and height inputs -->
+			<section-inline>
+				<label>Canvas width (px)</label>
+				<input type="number" id="canvas-width-input" class="loading">
+			</section-inline>
+			<section-inline>
+				<label>Canvas height (px)</label>
+				<input type="number" id="canvas-height-input" class="loading">
+			</section-inline>
+			<divider-y-small></divider-y-small>
+
+			<!-- Block width and height inputs -->
+			<section-inline>
+				<label>Block width (px)</label>
+				<input type="number" id="block-width-input" class="loading">
+			</section-inline>
+			<section-inline>
+				<label>Block height (px)</label>
+				<input type="number" id="block-height-input" class="loading">
+			</section-inline>
+			<divider-x-small></divider-x-small>
+
+
+
+			<!-- Recalculate button -->
 			<button id="recalculate-layout-button" class="dark loading" onclick="GLOBALS._onRecalculateLayoutClick()"></button>
-			<button id="start-new-client-button" class="dark loading" onclick="GLOBALS._onStartNewClientClick()"></button>
+				
 		</div>		
 
 

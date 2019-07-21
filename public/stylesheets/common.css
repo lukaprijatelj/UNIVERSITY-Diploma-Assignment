@@ -7,13 +7,14 @@ body
     /* ----------------------------- */
 	/* global constant variables that can be used in CSS */
 	/* ----------------------------- */
-	--DARK-BLUE-BACKGROUND-COLOR: #1F52F2; 
-	--LIGHT-BLUE-BACKGROUND-COLOR: #0079FF; 
-	--LOADING-SKELETON-BACKGROUND: rgb(226, 226, 226);
-    
+	--DARK-BLUE-COLOR: #1F52F2; 
+	--LIGHT-BLUE-COLOR: #0079FF; 
+	--LIGHT-GRAY-COLOR: #EBEBEB;
+	--TEXT-COLOR: #505050;
+	
 
 	background-color: #F9F9F9;
-	color: #505050;
+	color: var(--TEXT-COLOR);
 	font-family: 'Muli', sans-serif;
 }
 
@@ -33,12 +34,16 @@ body
     opacity: 0 !important;
 }
 
-
 .loading
 {
 	pointer-events:none;
 }
 
+.disabled
+{
+	cursor: default !important;
+	pointer-events: none !important;
+}
 
 
 /* ----------------------------- */
@@ -61,8 +66,8 @@ button
 
 	button.loading
 	{
-		background-color: var(--LOADING-SKELETON-BACKGROUND) !important;
-		border-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+		background-color: var(--LIGHT-GRAY-COLOR) !important;
+		border-color: var(--LIGHT-GRAY-COLOR) !important;
 	}
 
 	button.disabled
@@ -79,21 +84,21 @@ button
 	}
 		button.light:not(.disabled):hover
 		{
-			color: var(--DARK-BLUE-BACKGROUND-COLOR);
+			color: var(--DARK-BLUE-COLOR);
 			background: white;
 		}
 
 	button.dark
 	{
 		color: white;
-		background: var(--DARK-BLUE-BACKGROUND-COLOR);
+		background: var(--DARK-BLUE-COLOR);
 		border-style: solid;
-		border-color: var(--DARK-BLUE-BACKGROUND-COLOR);
+		border-color: var(--DARK-BLUE-COLOR);
 	}
 		button.dark:not(.disabled):hover
 		{
 			background: transparent;
-			color: var(--DARK-BLUE-BACKGROUND-COLOR);
+			color: var(--DARK-BLUE-COLOR);
 		}
 
 
@@ -107,13 +112,20 @@ input
 {
 	font-family: 'Muli', sans-serif;
 	border-style: solid;
-	border-color: #EBEBEB;
+	border-color: var(--LIGHT-GRAY-COLOR);
 	border-width: 1px;
 	vertical-align: bottom;
-	color: var(--DARK-BLUE-BACKGROUND-COLOR);
     padding-left: 10px;
 	padding-right: 10px;
 	outline: none; 
+	color: var(--TEXT-COLOR);
+}
+
+input.disabled
+{
+	outline: none;
+	background-color: var(--LIGHT-GRAY-COLOR) !important;
+	border-color: var(--LIGHT-GRAY-COLOR) !important;
 }
 
 input[type=number]::-webkit-inner-spin-button, 
@@ -126,14 +138,15 @@ input[type=number]::-webkit-outer-spin-button
 
 input:focus
 {
-	border-color: var(--DARK-BLUE-BACKGROUND-COLOR);
+	border-color: var(--DARK-BLUE-COLOR);
+	color: var(--DARK-BLUE-COLOR);
 }
 
 	input.loading
 	{
 		outline: none;
-		background-color: var(--LOADING-SKELETON-BACKGROUND) !important;
-		border-color: var(--LOADING-SKELETON-BACKGROUND) !important;
+		background-color: var(--LIGHT-GRAY-COLOR) !important;
+		border-color: var(--LIGHT-GRAY-COLOR) !important;
 	}
 
 
@@ -145,7 +158,7 @@ input:focus
 
 #loading-curtain
 {
-	background-image: linear-gradient(var(--DARK-BLUE-BACKGROUND-COLOR), var(--LIGHT-BLUE-BACKGROUND-COLOR));
+	background-image: linear-gradient(var(--DARK-BLUE-COLOR), var(--LIGHT-BLUE-COLOR));
 	color: #D0D0D0;
 }
 
@@ -165,13 +178,13 @@ input:focus
 {
 	background-color: #FFFFFF;
 	border-style: solid;
-	border-color: #EBEBEB;
+	border-color: var(--LIGHT-GRAY-COLOR);
 }
 
 .render-cell
 {
 	border-style: solid;
-	border-color: #EBEBEB;
+	border-color: var(--LIGHT-GRAY-COLOR);
 }
 	.render-cell.active
 	{
@@ -180,5 +193,5 @@ input:focus
 
 	#layout-wrapper.loading
 	{
-		background-color: var(--LOADING-SKELETON-BACKGROUND);
+		background-color: var(--LIGHT-GRAY-COLOR);
 	}

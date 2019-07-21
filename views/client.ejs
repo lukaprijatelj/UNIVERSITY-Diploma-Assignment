@@ -69,43 +69,33 @@
 	</head>
 	<body>
 		<div id="interface">
+
+			<!-- Info about mouse position -->
+			<section-inline>
+				<label>Mouse positions (x, y)</label>
+				<input type="number" id="mouse-x-input" class="loading disabled">
+				<input type="number" id="mouse-y-input" class="loading disabled">
+			</section-inline>
+			<divider-x></divider-x>
+
+
 			<!-- All cells will be rendered in this wrapper -->
-			<div id="layout-wrapper" class="loading"></div>
+			<section>
+				<label>Rendered cells</label>				
+				<div id="layout-wrapper" class="loading"></div>
+			</section>
+			<divider-x></divider-x>	
 
-			<divider-small></divider-small>
 
-			<div id="debug-info">
-				<div class="group camera">
-					<div class="name">Camera</div>
-					<table>
-						<tr class="field">
-							<td class="key">x</td>
-							<td class="value"></td>
-						</tr>
-						<tr class="field">
-							<td class="key">y</td>
-							<td class="value"></td>
-						</tr>
-						<tr class="field">
-							<td class="key">z</td>
-							<td class="value"></td>
-						</tr>
-					</table>
-				</div>
-				<div class="group mouse">
-					<div class="name">Mouse</div>
-					<table>
-						<tr class="field">
-							<td class="key">x</td>
-							<td class="value"></td>
-						</tr>
-						<tr class="field">
-							<td class="key">y</td>
-							<td class="value"></td>
-						</tr>
-					</table>
-				</div>
-			</div>
+			<!-- Info about camera position -->
+			<section-inline>
+				<label>Camera positions (x, y, z)</label>
+				<input type="number" id="camera-x-input" class="loading disabled">
+				<input type="number" id="camera-y-input" class="loading disabled">
+				<input type="number" id="camera-z-input" class="loading disabled">
+			</section-inline>
+			
+			
 		</div>
 
 		<script src="javascripts/mouse.js"></script>
