@@ -26,6 +26,8 @@
 			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
 			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
 			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
+			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
+			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
 			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
 			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
 		</script>
@@ -34,6 +36,7 @@
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded asynchronously -->
 		<!-- ----------------------------- -->
+		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
 
 		<!-- Extension scripts -->
@@ -44,16 +47,20 @@
 		<script src="javascripts/extensions/object.js"></script>
 		<script src="javascripts/extensions/HTMLElement.js"></script>
 		<script src="javascripts/extensions/console.js"></script>
+
+		<!-- Classes scrips -->
+		<script src="javascripts/classes/GridLayout.js"></script>
+		<script src="javascripts/classes/CanvasLayout.js"></script>
 	</head>
 	<body>
 
 		<!-- Interface -->
 		<div id="interface" class="">
 
-			<div id="grid-layout" class="hidden"></div>
+			<!-- All cells will be rendered in this wrapper -->
+			<div id="layout-wrapper" class="loading"></div>
 
-			<!-- Actual rendering canvas where all results will be displayed -->
-			<canvas id="rendering-canvas" class="loading"></canvas>
+			<divider-small></divider-small>
 
 			<input type="number" id="canvas-width-input" class="loading">
 			<input type="number" id="canvas-height-input" class="loading">

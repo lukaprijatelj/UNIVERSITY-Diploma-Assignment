@@ -37,6 +37,24 @@ wrapper-relative
 
 
 
+/* ----------------------------- */
+/* Dividers */
+/* ----------------------------- */
+
+divider
+{
+	display: block;
+	height: 30px;
+}
+
+divider-small
+{
+	display: block;
+	height: 10px;
+}
+
+
+
 
 /* ----------------------------- */
 /* Buttons */
@@ -96,35 +114,6 @@ input[type=number]::-webkit-outer-spin-button
 
 
 
-/* ----------------------------- */
-/* Loading curtain */
-/* ----------------------------- */
-
-#loading-curtain
-{
-	width: 100%;
-	height: 100%;
-	z-index: 5;
-	font-size: 2em;
-	text-align: center;
-}
-
-#loading-curtain .wrapper
-{
-	width: 100%;
-	height: 100%;
-}
-
-#loading-curtain .message
-{
-	position: absolute;
-    top: 50%;
-    left: 50%;
-	margin-left: -220px;
-    font-weight: 900;
-    font-size: 35px;
-}
-
 
 
 
@@ -133,12 +122,9 @@ input[type=number]::-webkit-outer-spin-button
 /* Rendering grid */
 /* ----------------------------- */
 
-#grid-layout
+#rendering-canvas
 {
-	/*position: absolute;*/
-	white-space: nowrap;
-	display: inline-block;
-	border-width: 1px 0px 0px 1px;
+	border-width: 1px;
 }
 
 .render-cell
@@ -148,3 +134,18 @@ input[type=number]::-webkit-outer-spin-button
 	text-align: center;
 	vertical-align: top;
 }
+
+
+#layout-wrapper[data-layout-type="grid"]
+{
+	white-space: nowrap;
+	display: inline-block;
+	border-width: 1px 0px 0px 1px;
+}
+
+	#layout-wrapper.loading
+	{
+		border-width: 1px;
+		height: 400px;
+		width: 100%;
+	}

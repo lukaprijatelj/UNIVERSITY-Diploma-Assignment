@@ -19,8 +19,15 @@
 	background-color: var(--DARK-BLUE-BACKGROUND-COLOR);
 }
 
+
+
+
+
+/* ----------------------------- */
+/* Rendering canvas */
+/* ----------------------------- */
+
 #rendering-canvas
 {
-	border-style: solid;
-	border-color: #EBEBEB;
+	background-color: #FFFFFF;
 }
