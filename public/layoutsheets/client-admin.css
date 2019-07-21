@@ -9,20 +9,6 @@
 	margin-right: 10%;
 }
 
-#rendering-canvas
-{
-	width: 100%;
-}
-
-.divider
-{
-	height: 50px;
-}
-
-.divider-small
-{
-	height: 20px;
-}
 
 
 
@@ -33,10 +19,5 @@
 
 #rendering-canvas
 {
-	border-width: 1px;
+	width: 100%;
 }
-
-	#rendering-canvas.loading
-	{
-		background-color: var(--LOADING-SKELETON-BACKGROUND);
-	}

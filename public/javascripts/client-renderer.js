@@ -50,24 +50,43 @@ var GLOBALS =
 	/**
 	 * Current renderer type.
 	 */
-	rendererType: enums.rendererType.WEB_GL_RENDERER,
+	rendererType: enums.rendererType.RAY_TRACING,
+
+	/**
+	 * Layout view instance.
+	 */
+	layout: null,
+
+	/**
+	 * Type of the layout view.
+	 */
+	layoutType: enums.layoutType.CANVAS,
 
 	
 	init: function()
 	{
 		io.on('connect', GLOBALS._onServerConnected);	
+
+		var layoutWrapperV = document.getElementById('layout-wrapper');
+
+		if (GLOBALS.layoutType == enums.layoutType.GRID)
+		{
+			GLOBALS.layout = new GridLayout(layoutWrapperV);
+		}
+		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
+		{
+			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+		}
 		
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
 		GLOBALS._initLights();
-		//GLOBALS._init3DObjectsForTestScene();
-		GLOBALS._initRenderer();
-		GLOBALS._initCameraControls();
+		
+		GLOBALS._init3DObjectsForTestScene();
+		
 		GLOBALS._initGltfLoader();
 
-		//DEBUG.init();
-
-		GLOBALS.startLoadingGltfModel();	
+		//DEBUG.init();	
 	},
 
 
@@ -139,7 +158,7 @@ var GLOBALS =
 		{
 			console.log('[glTF loader] Scene finished loading');
 
-			GLOBALS.scene.add(gltf.scene);
+			//GLOBALS.scene.add(gltf.scene);
 
 			gltf.animations; // Array<THREE.AnimationClip>
 			gltf.scene; // THREE.Scene
@@ -147,6 +166,7 @@ var GLOBALS =
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
 						
+
 			GLOBALS.request('renderingCells/cell');
 		};
 		loader.start();	
@@ -168,13 +188,20 @@ var GLOBALS =
 		console.log('[Globals] Initializing camera');
 
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
-		/*GLOBALS.camera.position.x = 0.20;
-		GLOBALS.camera.position.y = 0;
-		GLOBALS.camera.position.z = 0;*/
 
-		GLOBALS.camera.position.x = 6.52;
-		GLOBALS.camera.position.y = 2.21;
-		GLOBALS.camera.position.z = -0.65;
+		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
+		{
+			GLOBALS.camera.position.x = 0.20;
+			GLOBALS.camera.position.y = 0;
+			GLOBALS.camera.position.z = 0;
+		}
+		else
+		{
+			GLOBALS.camera.position.x = 6.52;
+			GLOBALS.camera.position.y = 2.21;
+			GLOBALS.camera.position.z = -0.65;
+		}
+		
 	},
 
 	/**
@@ -196,23 +223,28 @@ var GLOBALS =
 
 		var intensity = 70000;
 
-		/*var light = new THREE.PointLight( 0xffaa55, intensity );
-		light.position.set( - 200, 100, 100 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );
-
-		/*var light = new THREE.PointLight( 0x55aaff, intensity );
-		light.position.set( 200, 100, 100 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );
-
-		var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
-		light.position.set( 0, 0, 300 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );*/
-
-		var light = new THREE.AmbientLight( 0x404040, 3 ); // soft white light
-		GLOBALS.scene.add( light );
+		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
+		{
+			var light = new THREE.PointLight( 0xffaa55, intensity );
+			light.position.set( - 200, 100, 100 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+	
+			var light = new THREE.PointLight( 0x55aaff, intensity );
+			light.position.set( 200, 100, 100 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+	
+			var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
+			light.position.set( 0, 0, 300 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+		}
+		else
+		{
+			var light = new THREE.AmbientLight( 0x404040, 3 ); // soft white light
+			GLOBALS.scene.add( light );
+		}
 	},
 
 	/**
@@ -473,32 +505,44 @@ var GLOBALS =
 
 		console.log('[Globals] Grid layout drawn');
 
-		var gridLayout = document.getElementById('grid-layout');
-		gridLayout.innerHTML = '';
-
-		var prevCell = null;
+		GLOBALS.layout.createLayout(data);
+		
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];
 
-			if (prevCell && prevCell.startX > current.startX)
+			if (!current.imageData)
 			{
-				gridLayout.appendChild(HTMLElement.createElement('<br>'));
+				continue;
 			}
 
-			gridLayout.appendChild(HTMLElement.createElement('<div id="cell-' + current._id + '" class="render-cell" style="width:' + current.width + 'px; height:' + current.height + 'px;"></div>'));
-			prevCell = current;
-		}				
+			GLOBALS.layout.updateCell(current);
+		}
 
-		for (var i=0; i<data.length; i++)
+		
+		GLOBALS.onLoaded();
+	},
+
+	/**
+	 * Initial data is loaded.
+	 * Remove skeleton screens by removing 'loading' class from elements.
+	 */
+	onLoaded: function()
+	{
+		for (var i=0; i<GLOBALS.renderingCells.length; i++)
 		{
-			var current = data[i];
+			var current = GLOBALS.renderingCells[i];
 
 			GLOBALS.drawOnCell(current);
 		}
 
-		document.getElementById('loading-curtain').hide();
-		document.getElementById('interface').show();
+		var renderingCanvas = document.getElementById('layout-wrapper');
+		renderingCanvas.removeClass('loading');
+
+		GLOBALS._initRenderer();
+		GLOBALS._initCameraControls();
+
+		GLOBALS.startLoadingGltfModel();
 	},
 
 	drawOnCell: function(cell)
@@ -508,12 +552,9 @@ var GLOBALS =
 			return;
 		}
 
-		var divHolderV = document.getElementById("cell-" + cell._id);
-		var imageV = HTMLElement.createElement('<img src="' + cell.imageData + '" id="cell-' + cell._id + '" class="render-cell" style="width:' + cell.width + 'px; height:' + cell.height + 'px;" />');
+		GLOBALS.layout.updateCell(cell);
 
-		divHolderV.parentNode.replaceChild(imageV, divHolderV);
 	},
-
 
 	onCellRendered: function()
 	{

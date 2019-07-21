@@ -161,7 +161,7 @@ input:focus
 /* Rendering grid */
 /* ----------------------------- */
 
-#grid-layout
+#rendering-canvas
 {
 	background-color: #FFFFFF;
 	border-style: solid;
@@ -176,4 +176,9 @@ input:focus
 	.render-cell.active
 	{
 		background-color: #FF4F49;
+	}
+
+	#layout-wrapper.loading
+	{
+		background-color: var(--LOADING-SKELETON-BACKGROUND);
 	}

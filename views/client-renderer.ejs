@@ -27,6 +27,8 @@
 			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
 			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
 			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
+			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
+			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
 			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
 			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
 		</script>
@@ -34,7 +36,6 @@
 		<!-- scripts -->
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
-		<script src="javascripts/GltfLoader.js"></script>
 		
 		<!-- Extension scripts -->
 		<script src="javascripts/extensions/array.js"></script>
@@ -60,20 +61,18 @@
 		<!-- Ray tracing scripts -->
 		<script src="javascripts/ray-tracing/RaytracingRenderer.js"></script>
 		<script src="javascripts/ray-tracing/RaytracingWorker.js"></script>
+
+		<!-- Classes scrips -->
+		<script src="javascripts/classes/GridLayout.js"></script>
+		<script src="javascripts/classes/CanvasLayout.js"></script>
+		<script src="javascripts/classes/GltfLoader.js"></script>
 	</head>
 	<body>
-		<div id="loading-curtain">
-			<div class="wrapper">
-				<div class="message">Loading rendering interface</div>
-			</div>
-		</div>
+		<div id="interface">
+			<!-- All cells will be rendered in this wrapper -->
+			<div id="layout-wrapper" class="loading"></div>
 
-		<div id="interface" class="hidden"></div>
-			<!-- Grid layout -->
-			<div id="grid-layout" class=""></div>
-
-			<!-- Canvas for rendering -->
-			<canvas id="rendering-canvas" class="" width="<%= constants.CANVAS_WIDTH %>" height="<%= constants.CANVAS_HEIGHT %>"></canvas>
+			<divider-small></divider-small>
 
 			<div id="debug-info">
 				<div class="group camera">

@@ -13,7 +13,6 @@ THREE.RaytracingRenderer = function (options)
 	this.canvas = options.canvas;
 	this.domElement = canvas; // do not delete, this is only for referencing
 
-	this.cellV = null;
 	this.context = null;
 
 	var canvasWidth;
@@ -33,9 +32,6 @@ THREE.RaytracingRenderer = function (options)
 	{
 		this.cell = cell;
 		this.worker.setBlockSize(cell.width, cell.height);
-
-		this.cellV = document.getElementById('cell-' + cell._id);
-		//this.context = this.cellV.elements[0].getContext('2d');
 	};
 
 	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
@@ -149,7 +145,7 @@ THREE.RaytracingRenderer = function (options)
 		this.worker.initScene(sceneJSON, cameraJSON, materials);		
 
 
-		this.cellV.style.background = '#FF4F49';
+		GLOBALS.layout.flagRenderCell(this.cell);
 		
 		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 

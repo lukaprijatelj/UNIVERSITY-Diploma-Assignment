@@ -21,10 +21,31 @@ var GLOBALS =
 	 */
 	io: null,
 
+	/**
+	 * Layout view instance.
+	 */
+	layout: null,
+
+	/**
+	 * Type of the layout view.
+	 */
+	layoutType: enums.layoutType.CANVAS,
+
 
 	init: function()
 	{
-		io.on('connect', GLOBALS._onServerConnected);		
+		io.on('connect', GLOBALS._onServerConnected);	
+		
+		var layoutWrapperV = document.getElementById('layout-wrapper');
+
+		if (GLOBALS.layoutType == enums.layoutType.GRID)
+		{
+			GLOBALS.layout = new GridLayout(layoutWrapperV);
+		}
+		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
+		{
+			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+		}
 	},
 
 
@@ -111,22 +132,18 @@ var GLOBALS =
 
 		console.log('[Main] Grid layout drawn');
 
-		var gridLayout = document.getElementById('grid-layout');
-		gridLayout.empty();
-
-		var prevCell = null;
-
+		GLOBALS.layout.createLayout(data);
+		
 		for (var i=0; i<data.length; i++)
 		{
 			var current = data[i];
 
-			if (prevCell && prevCell.startX > current.startX)
+			if (!current.imageData)
 			{
-				gridLayout.appendChild(HTMLElement.createElement('<br>'));
+				continue;
 			}
 
-			gridLayout.appendChild(HTMLElement.createElement('<div id="cell-' + current._id + '" class="render-cell" style="width:' + current.width + 'px; height:' + current.height + 'px;"></div>'));
-			prevCell = current;
+			GLOBALS.layout.updateCell(current);
 		}
 
 		GLOBALS.onLoaded();
@@ -145,7 +162,7 @@ var GLOBALS =
 			GLOBALS.drawOnCell(current);
 		}
 
-		var renderingCanvas = document.getElementById('rendering-canvas');
+		var renderingCanvas = document.getElementById('layout-wrapper');
 		renderingCanvas.removeClass('loading');
 
 		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
@@ -173,10 +190,7 @@ var GLOBALS =
 			return;
 		}
 
-		var divHolderV = document.getElementById("cell-" + cell._id);
-		var imageV = HTMLElement.createElement('<img src="' + cell.imageData + '" id="cell-' + cell._id + '" class="render-cell" style="width:' + cell.width + 'px; height:' + cell.height + 'px;" />');
-
-		divHolderV.parentNode.replaceChild(imageV, divHolderV);
+		GLOBALS.layout.updateCell(cell);
 	}
 };
 
