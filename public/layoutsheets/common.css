@@ -12,6 +12,19 @@ body
 	font-size: var(--FONT-SIZE);
 }
 
+	body.loading #layout-wrapper
+	{
+		border-width: 1px;
+		height: 400px;
+		width: 100%;
+	}
+
+	body.loading label
+	{
+		opacity: 0;
+	}
+
+
 .hidden
 {
     display: none !important; 
@@ -38,7 +51,10 @@ wrapper-relative
     position: relative;
 }
 
-
+flex
+{
+	display: flex;
+}
 
 
 /* ----------------------------- */
@@ -83,13 +99,14 @@ divider-y-small
 
 button
 {
-	display: inline-block;
+	display: block;
 	max-width: 300px;
 	min-height: 38px;
     text-align: center;
     padding: 10px 15px;
     /** border-radius: 5px; */
 	font-size: var(--FONT-SIZE);
+	border-width: 1px;
 }
 
 	button.loading
@@ -97,15 +114,6 @@ button
 		width: 150px;
 	}
 
-	button.light
-	{
-		border-width: 1px;
-	}
-
-	button.dark
-	{
-		border-width: 1px;
-	}
 
 
 
@@ -120,6 +128,7 @@ input
 	--DEFAULT-CONTROL-HEIGHT: 38px;
 	--INPUT-HIDDEN-PADDING: 4px;
 
+	display: block;
 	max-width: 300px;
 	min-height: calc(var(--DEFAULT-CONTROL-HEIGHT) - var(--INPUT-HIDDEN-PADDING));
 	font-size: var(--FONT-SIZE);
@@ -132,13 +141,7 @@ input[type=number]::-webkit-outer-spin-button
 	margin: 0; 
 }
 
-section-inline 
-{
-	display: inline-block;
-}
-
-section-inline label,
-section label
+label
 {
 	display: block;
 	font-size: var(--LABEL-FONT-SIZE);
@@ -185,10 +188,3 @@ section label
 	display: inline-block;
 	border-width: 1px 0px 0px 1px;
 }
-
-	#layout-wrapper.loading
-	{
-		border-width: 1px;
-		height: 400px;
-		width: 100%;
-	}

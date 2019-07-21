@@ -162,35 +162,37 @@ var GLOBALS =
 			GLOBALS.drawOnCell(current);
 		}
 
-		var renderingCanvas = document.getElementById('layout-wrapper');
-		renderingCanvas.removeClass('loading');
+
+		// -----------------------------
+		// remove .loading flag
+		// -----------------------------
+
+		document.body.removeClass('loading');
+		
+
+		// -----------------------------
+		// set default values
+		// -----------------------------
 
 		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
-		recalculateLayoutButton.removeClass('loading');
 		recalculateLayoutButton.innerHTML = 'Recalculate layout';
 
 		var startNewClientButton = document.getElementById('start-new-client-button');
-		startNewClientButton.removeClass('loading');
 		startNewClientButton.innerHTML = ' + ';
 
 		var canvasWidthInput = document.getElementById('canvas-width-input');
-		canvasWidthInput.removeClass('loading');
 		canvasWidthInput.value = CANVAS_WIDTH;
 
 		var canvasHeightInput = document.getElementById('canvas-height-input');
-		canvasHeightInput.removeClass('loading');
 		canvasHeightInput.value = CANVAS_HEIGHT;
 
 		var blockWidthV = document.getElementById('block-width-input');
-		blockWidthV.removeClass('loading');
 		blockWidthV.value = BLOCK_WIDTH;
 
 		var blockHeightV = document.getElementById('block-height-input');
-		blockHeightV.removeClass('loading');
 		blockHeightV.value = BLOCK_HEIGHT;
 
 		var clientsConnectedV = document.getElementById('clients-connected-input');
-		clientsConnectedV.removeClass('loading');
 		clientsConnectedV.value = 0;
 	},
 

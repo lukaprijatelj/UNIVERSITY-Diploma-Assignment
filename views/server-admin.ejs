@@ -52,7 +52,7 @@
 		<script src="javascripts/classes/GridLayout.js"></script>
 		<script src="javascripts/classes/CanvasLayout.js"></script>
 	</head>
-	<body>
+	<body class="loading">
 
 		<!-- Interface -->
 		<div id="interface" class="">
@@ -60,47 +60,72 @@
 			<!-- All cells will be rendered in this wrapper -->
 			<section>
 				<label>Rendered cells</label>
-				<div id="layout-wrapper" class="loading"></div>
+				<div id="layout-wrapper" class=""></div>
 			</section>
 			<divider-x-small></divider-x-small>
 
 
 			<!-- Start new client button -->
-			<section-inline>
+			<section>
 				<label>Clients connected</label>
-				<input type="number" id="clients-connected-input" class="loading disabled">
-				<button id="start-new-client-button" class="dark loading" onclick="GLOBALS._onStartNewClientClick()"></button>
-			</section-inline>
+				<flex>
+					<input type="number" id="clients-connected-input" class="disabled">
+					<button id="start-new-client-button" class="dark" onclick="GLOBALS._onStartNewClientClick()"></button>
+				</flex>				
+			</section>
 			<divider-x></divider-x>		
 
 			
-			<!-- Canvas width and height inputs -->
-			<section-inline>
-				<label>Canvas width (px)</label>
-				<input type="number" id="canvas-width-input" class="loading">
-			</section-inline>
-			<section-inline>
-				<label>Canvas height (px)</label>
-				<input type="number" id="canvas-height-input" class="loading">
-			</section-inline>
-			<divider-y-small></divider-y-small>
-
-			<!-- Block width and height inputs -->
-			<section-inline>
-				<label>Block width (px)</label>
-				<input type="number" id="block-width-input" class="loading">
-			</section-inline>
-			<section-inline>
-				<label>Block height (px)</label>
-				<input type="number" id="block-height-input" class="loading">
-			</section-inline>
+	
+			<flex>
+				<!-- Canvas width and height inputs -->
+				<section>
+					<label>Canvas width (px)</label>
+					<input type="number" id="canvas-width-input" class="">
+				</section>
+				<divider-y-small></divider-y-small>
+				<section>
+					<label>Canvas height (px)</label>
+					<input type="number" id="canvas-height-input" class="">
+				</section>
+				<divider-y></divider-y>
+				
+				<!-- Block width and height inputs -->
+				<section>
+					<label>Block width (px)</label>
+					<input type="number" id="block-width-input" class="">
+				</section>
+				<divider-y-small></divider-y-small>
+				<section>
+					<label>Block height (px)</label>
+					<input type="number" id="block-height-input" class="">
+				</section>
+			</flex>
 			<divider-x-small></divider-x-small>
 
 
 
 			<!-- Recalculate button -->
-			<button id="recalculate-layout-button" class="dark loading" onclick="GLOBALS._onRecalculateLayoutClick()"></button>
-				
+			<button id="recalculate-layout-button" class="dark" onclick="GLOBALS._onRecalculateLayoutClick()"></button>
+			<divider-x></divider-x>	
+
+
+			<!-- Statistics -->
+			<section>
+				<h3>Statistics</h3>
+				<flex>
+					<section>
+						<label>Average rendering time</label>
+						<input type="number" id="avg-render-time-input" class="disabled">
+					</section>					
+					<divider-y-small></divider-y-small>
+					<section>
+						<label>Best speed</label>
+						<input type="number" id="best-speed-input" class="disabled">
+					</section>
+				</flex>				
+			</section>
+			<divider-x></divider-x>	
 		</div>		
 
 

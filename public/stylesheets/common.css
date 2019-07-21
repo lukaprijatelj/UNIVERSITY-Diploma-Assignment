@@ -18,6 +18,29 @@ body
 	font-family: 'Muli', sans-serif;
 }
 
+body.loading
+{
+	pointer-events:none;
+}
+
+	body.loading #layout-wrapper
+	{
+		background-color: var(--LIGHT-GRAY-COLOR);
+	}
+
+	body.loading input
+	{
+		outline: none;
+		background-color: var(--LIGHT-GRAY-COLOR) !important;
+		border-color: var(--LIGHT-GRAY-COLOR) !important;
+	}
+
+	body.loading button
+	{
+		background-color: var(--LIGHT-GRAY-COLOR) !important;
+		border-color: var(--LIGHT-GRAY-COLOR) !important;
+	}
+
 .clickable
 {
     cursor: pointer;
@@ -32,11 +55,6 @@ body
 .hidden
 {
     opacity: 0 !important;
-}
-
-.loading
-{
-	pointer-events:none;
 }
 
 .disabled
@@ -54,6 +72,11 @@ button
 {
     cursor: pointer;
 	font-family: 'Muli', sans-serif;
+	background-color: var(--LIGHT-GRAY-COLOR);
+	border-style: solid;
+
+	/** Removes chrome's glow effect */
+	outline: none;
 
 	-webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -64,12 +87,6 @@ button
                                   supported by Chrome and Opera */
 }
 
-	button.loading
-	{
-		background-color: var(--LIGHT-GRAY-COLOR) !important;
-		border-color: var(--LIGHT-GRAY-COLOR) !important;
-	}
-
 	button.disabled
 	{
 		cursor: default !important;
@@ -79,7 +96,6 @@ button
 	{
 		background: transparent;
 		color: white;    
-		border-style: solid;
 		border-color: white;
 	}
 		button.light:not(.disabled):hover
@@ -92,7 +108,6 @@ button
 	{
 		color: white;
 		background: var(--DARK-BLUE-COLOR);
-		border-style: solid;
 		border-color: var(--DARK-BLUE-COLOR);
 	}
 		button.dark:not(.disabled):hover
@@ -142,31 +157,6 @@ input:focus
 	color: var(--DARK-BLUE-COLOR);
 }
 
-	input.loading
-	{
-		outline: none;
-		background-color: var(--LIGHT-GRAY-COLOR) !important;
-		border-color: var(--LIGHT-GRAY-COLOR) !important;
-	}
-
-
-
-
-/* ----------------------------- */
-/* Loading curtain */
-/* ----------------------------- */
-
-#loading-curtain
-{
-	background-image: linear-gradient(var(--DARK-BLUE-COLOR), var(--LIGHT-BLUE-COLOR));
-	color: #D0D0D0;
-}
-
-	#loading-curtain .message
-	{
-		color: white;
-	}
-
 
 
 
@@ -189,9 +179,4 @@ input:focus
 	.render-cell.active
 	{
 		background-color: #FF4F49;
-	}
-
-	#layout-wrapper.loading
-	{
-		background-color: var(--LIGHT-GRAY-COLOR);
 	}
