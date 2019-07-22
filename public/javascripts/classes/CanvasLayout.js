@@ -47,7 +47,7 @@ CanvasLayout.prototype.updateCell = function(cell)
 	var img = new Image;
 	img.onload = function()
 	{
-		ctx.drawImage(img, cell.startX, cell.startY); // Or at whatever offset you like
+		ctx.drawImage(img, cell.startX, cell.startY); 
 	};
 	img.src = cell.imageData;
 };

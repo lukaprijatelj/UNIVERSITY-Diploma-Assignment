@@ -23,14 +23,30 @@
 
 		<!-- constants -->
 		<script>
+			if (console)
+			{
+				console.type = 'client';
+			}
+
+			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
+
 			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
 			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
 			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
 			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
 			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
 			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
-			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
 		</script>
+
+
+		<!-- Extension scripts -->
+		<script src="javascripts/extensions/function.js"></script>
+		<script src="javascripts/extensions/array.js"></script>
+		<script src="javascripts/extensions/date.js"></script>
+		<script src="javascripts/extensions/math.js"></script>
+		<script src="javascripts/extensions/object.js"></script>
+		<script src="javascripts/extensions/HTMLElement.js"></script>
+		<script src="javascripts/extensions/console.js"></script>
 
 
 		<!-- ----------------------------- -->
@@ -39,16 +55,10 @@
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
 
-		<!-- Extension scripts -->
-		<script src="javascripts/extensions/array.js"></script>
-		<script src="javascripts/extensions/date.js"></script>
-		<script src="javascripts/extensions/function.js"></script>
-		<script src="javascripts/extensions/math.js"></script>
-		<script src="javascripts/extensions/object.js"></script>
-		<script src="javascripts/extensions/HTMLElement.js"></script>
-		<script src="javascripts/extensions/console.js"></script>
-
+		
 		<!-- Classes scrips -->
+		<script src="javascripts/classes/Thread.js"></script>
+		<script src="javascripts/classes/Timer.js"></script>
 		<script src="javascripts/classes/GridLayout.js"></script>
 		<script src="javascripts/classes/CanvasLayout.js"></script>
 	</head>
@@ -59,7 +69,7 @@
 
 			<!-- All cells will be rendered in this wrapper -->
 			<section>
-				<label>Rendered cells</label>
+				<h3>Rendered cells</h3>
 				<div id="layout-wrapper" class=""></div>
 			</section>
 			<divider-x-small></divider-x-small>
@@ -75,7 +85,6 @@
 			</section>
 			<divider-x></divider-x>		
 
-			
 	
 			<flex>
 				<!-- Canvas width and height inputs -->
@@ -102,7 +111,6 @@
 				</section>
 			</flex>
 			<divider-x-small></divider-x-small>
-
 
 
 			<!-- Recalculate button -->

@@ -122,7 +122,7 @@ BasicTable.prototype.getFullPath = function()
  */
 BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 {
-	callback = callback ? callback : function() {};
+	callback = callback ? callback : Function.empty;
 
 	var basicTable = this;
 	var fileUrl = basicTable.getFullPath();

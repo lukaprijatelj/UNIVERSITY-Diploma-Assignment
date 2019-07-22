@@ -6,9 +6,9 @@
  * @author zz85 / http://github.com/zz85
  */
 
-THREE.RaytracingRenderer = function (options) 
+RaytracingRenderer = function (options) 
 {
-	console.log('[THREE.RaytracingRenderer] Initializing renderer');
+	console.log('[RaytracingRenderer] Initializing renderer');
 
 	this.canvas = options.canvas;
 	this.domElement = canvas; // do not delete, this is only for referencing
@@ -36,7 +36,7 @@ THREE.RaytracingRenderer = function (options)
 
 	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
 	{
-		console.log('[THREE.RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
+		console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 		
 		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
 
@@ -47,7 +47,7 @@ THREE.RaytracingRenderer = function (options)
 
 		this.cell.imageData = canvas.toDataURL('image/png');
 
-		GLOBALS.drawOnCell(this.cell);
+		GLOBALS.tryUpdatingCell(this.cell);
 		this.updateFunction(this.cell, 100);
 		
 		// completed
@@ -58,7 +58,7 @@ THREE.RaytracingRenderer = function (options)
 	{
 		var worker = new THREE.RaytracingRendererWorker(this.drawOnCanvas.bind(this));
 
-		worker.color = new THREE.Color().setHSL( Math.random(), 0.8, 0.8 ).getHexString();
+		worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8 ).getHexString();
 
 		this.worker = worker;
 		this.updateSettings(worker);
@@ -165,4 +165,4 @@ THREE.RaytracingRenderer = function (options)
 	this.init();
 };
 
-Object.assign(THREE.RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
+Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);

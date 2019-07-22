@@ -1,9 +1,12 @@
-/** ----- NOTES: ----- */ 
+// -----------------------------
+// import SocketIO
+// -----------------------------
+var io = io(HOSTING_URL, { query: "clientType=renderer" });
 
+
+/** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
-
-var io = io(HOSTING_URL, { query: "clientType=renderer" });
 
 var GLOBALS =
 {
@@ -16,11 +19,6 @@ var GLOBALS =
 	 * GLTF loader.
 	 */
 	loader: null,
-
-	/**
-	 * Canvas renderer.
-	 */
-	renderer: null,
 
 	/**
 	 * Camera controls affected by mouse movement.
@@ -43,9 +41,14 @@ var GLOBALS =
 	io: null,
 
 	/**
+	 * Canvas renderer.
+	 */
+	renderer: null,
+
+	/**
 	 * Grid layout of cells that are rendered or are waiting for rendering.
 	 */
-	renderingCells: [],
+	cells: [],
 
 	/**
 	 * Current renderer type.
@@ -134,7 +137,7 @@ var GLOBALS =
 	_onUpdateProgress: function(data)
 	{
 		var cell = data.cell;
-		GLOBALS.drawOnCell(cell);
+		GLOBALS.tryUpdatingCell(cell);
 	},
 
 	/**
@@ -441,16 +444,8 @@ var GLOBALS =
 		switch(GLOBALS.rendererType)
 		{
 			case enums.rendererType.WEB_GL_RENDERER:
-				options = 
-				{ 
-					canvas: canvas 
-				};
-				renderer = new THREE.WebGLRenderer(options);
-	
-				renderer.setClearColor('#f4f4f4');				
-				renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-	
-				document.body.appendChild(renderer.domElement);	
+				renderer = new WebGlRenderer();
+				renderer.canvas = canvas;
 				break;
 
 			case enums.rendererType.RAY_TRACING:
@@ -460,7 +455,7 @@ var GLOBALS =
 					updateFunction: GLOBALS.updateProgressAsync, 
 					onCellRendered: GLOBALS.onCellRendered 
 				};
-				renderer = new THREE.RaytracingRenderer(options);
+				renderer = new RaytracingRenderer(options);
 				break;
 
 			case enums.rendererType.PATH_TRACING:
@@ -469,6 +464,8 @@ var GLOBALS =
 		}
 
 		GLOBALS.renderer = renderer;
+
+		renderer.init();
 	},	
 
 	/**
@@ -501,26 +498,31 @@ var GLOBALS =
 	 */
 	onGetLayout: function(data)
 	{
-		GLOBALS.renderingCells = data;
+		GLOBALS.cells = data;
 
 		console.log('[Globals] Grid layout drawn');
 
-		GLOBALS.layout.createLayout(data);
-		
-		for (var i=0; i<data.length; i++)
+
+		// -----------------------------
+		// draw layout
+		// -----------------------------
+
+		GLOBALS.layout.createLayout(GLOBALS.cells);
+
+
+		// -----------------------------
+		// draw all already rendered cells
+		// -----------------------------
+
+		for (var i=0; i<GLOBALS.cells.length; i++)
 		{
-			var current = data[i];
+			var current = GLOBALS.cells[i];
 
-			if (!current.imageData)
-			{
-				continue;
-			}
-
-			GLOBALS.layout.updateCell(current);
+			GLOBALS.tryUpdatingCell(current);
 		}
-
 		
-		GLOBALS.onLoaded();
+
+		new Thread(GLOBALS.onLoaded);
 	},
 
 	/**
@@ -529,15 +531,23 @@ var GLOBALS =
 	 */
 	onLoaded: function()
 	{
-		for (var i=0; i<GLOBALS.renderingCells.length; i++)
-		{
-			var current = GLOBALS.renderingCells[i];
+		// -----------------------------
+		// set default values
+		// -----------------------------
 
-			GLOBALS.drawOnCell(current);
-		}
+		var resultsViewButton = document.getElementById('result-button');
+		resultsViewButton.innerHTML = 'Results';
 
-		var renderingCanvas = document.getElementById('layout-wrapper');
-		renderingCanvas.removeClass('loading');
+		var previewViewButton = document.getElementById('preview-button');
+		previewViewButton.innerHTML = 'Preview';
+
+
+		// -----------------------------
+		// remove .loading flag
+		// -----------------------------
+
+		document.body.removeClass('loading');
+
 
 		GLOBALS._initRenderer();
 		GLOBALS._initCameraControls();
@@ -545,7 +555,7 @@ var GLOBALS =
 		GLOBALS.startLoadingGltfModel();
 	},
 
-	drawOnCell: function(cell)
+	tryUpdatingCell: function(cell)
 	{
 		if (!cell.imageData)
 		{
@@ -553,12 +563,22 @@ var GLOBALS =
 		}
 
 		GLOBALS.layout.updateCell(cell);
-
 	},
 
 	onCellRendered: function()
 	{
+		document.body.removeClass('busy');
 		GLOBALS.request('renderingCells/cell');
+	},
+
+	_onResultsViewClick: function()
+	{
+
+	},
+
+	_onPreviewViewClick: function()
+	{
+
 	},
 
 	/**
@@ -568,7 +588,9 @@ var GLOBALS =
 	{
 		console.log('[Globals] Rendering cell received');
 
-		GLOBALS.renderingCells.currentRenderCell = cell;
+		document.body.addClass('busy');
+
+		GLOBALS.cells.currentRenderCell = cell;
 
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
@@ -579,7 +601,7 @@ var GLOBALS =
 	{
 		if (GLOBALS.rendererType != enums.rendererType.WEB_GL_RENDERER)
 		{
-			GLOBALS.renderer.setCell(GLOBALS.renderingCells.currentRenderCell);
+			GLOBALS.renderer.setCell(GLOBALS.cells.currentRenderCell);
 		}
 
 		// start rendering
@@ -602,6 +624,4 @@ var GLOBALS =
 	}
 };
 
-
-
-GLOBALS.init();
+window.onload = GLOBALS.init();

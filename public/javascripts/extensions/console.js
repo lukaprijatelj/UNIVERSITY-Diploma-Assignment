@@ -2,16 +2,39 @@
 // Console
 // -----------------------------
 
-/**
- * Overrides default console.log function.
- */
-console._log = console.log;
-console.log = function()
+if (console.type == 'server')
 {
-	if (IS_CONSOLE_ENABLED == false)
+	// do nothing
+}
+else
+{
+	console._log = console.log;
+	console.log = function()
 	{
-		return;
-	}
-
-	console._log.apply(this, arguments);
-};
+		if (IS_CONSOLE_ENABLED == false)
+		{
+			return;
+		}
+	
+		console._log.apply(this, arguments);
+	};
+	
+	
+	console._error = console.error;
+	console.error = function()
+	{
+		console.error.apply(this, arguments);
+	};
+	
+	
+	console._warn = console.warn;
+	console.warn = function()
+	{
+		if (IS_CONSOLE_ENABLED == false)
+		{
+			return;
+		}
+	
+		console._warn.apply(this, arguments);
+	};
+}

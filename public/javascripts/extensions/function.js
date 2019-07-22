@@ -17,3 +17,11 @@ Function.inheritPrototype = function(child, parent)
 {
 	child.prototype = Object.create(parent.prototype);
 };
+
+/**
+ * Empty callback function.
+ */
+Function.empty = function()
+{
+	// do nothing
+};

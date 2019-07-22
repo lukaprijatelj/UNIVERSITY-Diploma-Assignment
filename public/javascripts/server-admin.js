@@ -1,3 +1,6 @@
+// -----------------------------
+// import SocketIO
+// -----------------------------
 var io = io(HOSTING_URL, { query: "clientType=admin" });
 
 
@@ -14,7 +17,7 @@ var GLOBALS =
 	/**
 	 * Grid layout of cells that are rendered or are waiting for rendering.
 	 */
-	renderingCells: [],
+	cells: [],
 	
 	/**
 	 * Socket io instance.
@@ -95,7 +98,7 @@ var GLOBALS =
 	{
 		var cell = data.cell;
 
-		GLOBALS.drawOnCell(cell);
+		GLOBALS.tryUpdatingCell(cell);
 	},
 
 	/**
@@ -128,25 +131,32 @@ var GLOBALS =
 	 */
 	_onGetLayout: function(data)
 	{
-		GLOBALS.renderingCells = data;
+		GLOBALS.cells = data;
 
-		console.log('[Main] Grid layout drawn');
+		console.log('[Main] Layout is received from server');
 
-		GLOBALS.layout.createLayout(data);
 		
-		for (var i=0; i<data.length; i++)
+		// -----------------------------
+		// draw layout
+		// -----------------------------
+
+		GLOBALS.layout.createLayout(GLOBALS.cells);
+
+
+
+		// -----------------------------
+		// draw all cells that are already rendered
+		// -----------------------------
+		
+		for (var i=0; i<GLOBALS.cells.length; i++)
 		{
-			var current = data[i];
+			var current = GLOBALS.cells[i];
 
-			if (!current.imageData)
-			{
-				continue;
-			}
-
-			GLOBALS.layout.updateCell(current);
+			GLOBALS.tryUpdatingCell(current);
 		}
 
-		GLOBALS.onLoaded();
+
+		new Thread(GLOBALS.onLoaded);
 	},
 
 	/**
@@ -155,21 +165,6 @@ var GLOBALS =
 	 */
 	onLoaded: function()
 	{
-		for (var i=0; i<GLOBALS.renderingCells.length; i++)
-		{
-			var current = GLOBALS.renderingCells[i];
-
-			GLOBALS.drawOnCell(current);
-		}
-
-
-		// -----------------------------
-		// remove .loading flag
-		// -----------------------------
-
-		document.body.removeClass('loading');
-		
-
 		// -----------------------------
 		// set default values
 		// -----------------------------
@@ -194,15 +189,24 @@ var GLOBALS =
 
 		var clientsConnectedV = document.getElementById('clients-connected-input');
 		clientsConnectedV.value = 0;
+
+
+
+		// -----------------------------
+		// remove .loading flag
+		// -----------------------------
+
+		document.body.removeClass('loading');
 	},
 
 	/**
 	 * Draws cell on the screen.
 	 */
-	drawOnCell: function(cell)
+	tryUpdatingCell: function(cell)
 	{
 		if (!cell.imageData)
 		{
+			// cells does not have any image data so we don't really need to draw it
 			return;
 		}
 
@@ -210,4 +214,4 @@ var GLOBALS =
 	}
 };
 
-GLOBALS.init();
+window.onload = GLOBALS.init();

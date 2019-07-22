@@ -15,5 +15,5 @@ enums.layoutType =
 	
 	GRID: 'grid',
 
-	CANVAS: 'layout'
+	CANVAS: 'canvas'
 };

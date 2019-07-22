@@ -35,11 +35,26 @@ body.loading
 		border-color: var(--LIGHT-GRAY-COLOR) !important;
 	}
 
-	body.loading button
+	body.loading button,
+	body.loading checkbox-button
 	{
 		background-color: var(--LIGHT-GRAY-COLOR) !important;
 		border-color: var(--LIGHT-GRAY-COLOR) !important;
 	}
+
+	body.loading label,
+	body.loading .h1,
+	body.loading .h2,
+	body.loading .h3
+	{
+		opacity: 0;
+	}
+
+
+body.busy
+{
+	cursor: wait;
+}
 
 .clickable
 {
@@ -68,7 +83,8 @@ body.loading
 /* Buttons */
 /* ----------------------------- */
 
-button
+button,
+checkbox-button
 {
     cursor: pointer;
 	font-family: 'Muli', sans-serif;
@@ -87,29 +103,34 @@ button
                                   supported by Chrome and Opera */
 }
 
-	button.disabled
+	button.disabled,
+	checkbox-button.disabled
 	{
 		cursor: default !important;
 	}
 
-	button.light
+	button.light,
+	checkbox-button.light
 	{
 		background: transparent;
 		color: white;    
 		border-color: white;
 	}
+		checkbox-button.selected,
 		button.light:not(.disabled):hover
 		{
 			color: var(--DARK-BLUE-COLOR);
 			background: white;
 		}
 
-	button.dark
+	button.dark,
+	checkbox-button.dark
 	{
 		color: white;
 		background: var(--DARK-BLUE-COLOR);
 		border-color: var(--DARK-BLUE-COLOR);
 	}
+		checkbox-button.selected,
 		button.dark:not(.disabled):hover
 		{
 			background: transparent;

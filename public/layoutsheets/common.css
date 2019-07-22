@@ -19,9 +19,10 @@ body
 		width: 100%;
 	}
 
-	body.loading label
+	body.loading button,
+	body.loading checkbox-button
 	{
-		opacity: 0;
+		width: 150px;
 	}
 
 
@@ -97,11 +98,11 @@ divider-y-small
 /* Buttons */
 /* ----------------------------- */
 
-button
+button,
+checkbox-button
 {
 	display: block;
 	max-width: 300px;
-	min-height: 38px;
     text-align: center;
     padding: 10px 15px;
     /** border-radius: 5px; */
@@ -109,12 +110,10 @@ button
 	border-width: 1px;
 }
 
-	button.loading
-	{
-		width: 150px;
-	}
-
-
+button
+{
+	min-height: 38px;
+}
 
 
 

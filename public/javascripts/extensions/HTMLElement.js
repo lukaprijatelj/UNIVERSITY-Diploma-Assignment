@@ -30,7 +30,7 @@ var TRANSITION_END_NAMES =
  */
 HTMLElement.prototype.cssAnimation = function(animationClass, callback)
 {
-	callback = callback ? callback : function() {};
+	callback = callback ? callback : Function.empty;
 
 	var element = this;
 	var onAnimationEndRef = null;

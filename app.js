@@ -1,4 +1,16 @@
-// npm packages
+// -----------------------------
+// import constants
+// -----------------------------
+if (console)
+{
+	console.type = 'server';
+}
+var constants = require('./server/constants.js');
+
+
+// -----------------------------
+// import npm packages
+// -----------------------------
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -7,27 +19,50 @@ var logger = require('morgan');
 var url = require('url');
 var fs = require('fs');
 
-// local packages
+
+// -----------------------------
+// import local packages
+// -----------------------------
 var API = require('./server/api.js');
 var DATABASE = require('./server/database.js');
 
-require('./public/javascripts/extensions/function.js');
 
+// -----------------------------
+// import javascript extensions
+// -----------------------------
+require('./public/javascripts/extensions/function.js');
+require('./public/javascripts/extensions/array.js');
+require('./public/javascripts/extensions/date.js');
+require('./public/javascripts/extensions/math.js');
+require('./public/javascripts/extensions/object.js');
+require('./public/javascripts/extensions/console.js');
+
+
+// -----------------------------
+// import routes
+// -----------------------------
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
 var clientRendererRouter = require('./routes/client');
 var clientAdminRouter = require('./routes/server-admin');
 
+
+
+
 var app = express();
-
-
 var EXPRESS_APP =
 {
+	/**
+	 * Catch any errors and return page not found.
+	 */
 	catch404: function(req, res, next) 
 	{
 		next(createError(404));
 	},
 
+	/**
+	 * Respond that error has occured.
+	 */
 	errorHandler: function(err, req, res, next) 
 	{
 		// set locals, only providing error in development
@@ -39,8 +74,14 @@ var EXPRESS_APP =
 		res.render('error');
 	},
 
+
+	/**
+	 * Start initializing.
+	 */
 	init: function()
 	{
+		console.log('[App] Initializing');
+
 		// view engine setup
 		app.set('views', path.join(__dirname, 'views'));
 		app.set('view engine', 'ejs');
@@ -52,13 +93,17 @@ var EXPRESS_APP =
 		app.use(express.static(path.join(__dirname, 'public')));
 		app.use(express.static(path.join(__dirname, 'database/files')));
 
-		// routes
+		
+		
+		// -----------------------------
+		// Build url routes scheme
+		// -----------------------------
 		app.use('/', indexRouter);
 		app.use('/upload', usersRouter);
 		app.use('/client', clientRendererRouter);
 		app.use('/serverAdmin', clientAdminRouter);
 
-		console.log('[App] Initializing');
+		
 
 		API.init(app);
 

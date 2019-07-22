@@ -13,7 +13,7 @@ function GltfLoader()
     /**
      * GLTF model successfuly loaded callback.
      */
-    this.onSuccess = function() {};
+    this.onSuccess = Function.empty;
 }
 
 /**

@@ -1,5 +1,7 @@
 var DEBUG =
 {
+	timer: new Timer(500),
+
 	mouse:
 	{
 		positionX: document.getElementById('mouse-x-input'),
@@ -16,7 +18,9 @@ var DEBUG =
 
 	init: function()
 	{
-		window.setInterval(DEBUG.onRefresh, 500);		
+		DEBUG.timer.callback = DEBUG.onRefresh;
+		DEBUG.timer.enableLooping();
+		DEBUG.timer.start();
 	},
 
 	
