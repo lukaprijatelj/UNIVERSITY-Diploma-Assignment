@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+		
+		<meta name="description" content="Diploma assignment for Faculty of Computer and Information Science - University of Ljubljana">
+		<meta name="author" content="Luka Prijatelj">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- favicon -->
+		<link rel="icon" type="image/png" href="images/renderer-favicon.png" />
+
+		<!-- fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Muli:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+		<!-- styles -->
+		<link rel="stylesheet" href="stylesheets/common.css">
+		<link rel="stylesheet" href="stylesheets/final-preview.css">
+
+		<!-- layouts -->
+		<link rel="stylesheet" href="layoutsheets/common.css">
+		<link rel="stylesheet" href="layoutsheets/final-preview.css">
+
+		
+		<!-- constants -->
+		<script>
+			if (console)
+			{
+				console.type = 'client';
+			}
+			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
+
+			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
+			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
+			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
+			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
+			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
+			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
+		</script>
+
+		<!-- Extension scripts -->
+		<script src="javascripts/extensions/array.js"></script>
+		<script src="javascripts/extensions/date.js"></script>
+		<script src="javascripts/extensions/function.js"></script>
+		<script src="javascripts/extensions/math.js"></script>
+		<script src="javascripts/extensions/object.js"></script>
+		<script src="javascripts/extensions/HTMLElement.js"></script>
+		<script src="javascripts/extensions/console.js"></script>
+
+		<!-- scripts -->
+		<script src="javascripts/enums.js"></script>
+		<script src="javascripts/socket.io/socket.io.js"></script>		
+
+		<!-- Classes scrips -->
+		<script src="javascripts/classes/Thread.js"></script>
+		<script src="javascripts/classes/Timer.js"></script>
+		<script src="javascripts/classes/GridLayout.js"></script>
+		<script src="javascripts/classes/CanvasLayout.js"></script>
+	</head>
+	<body class="loading">
+		<div id="layout-wrapper" class=""></div>
+		<script src="javascripts/final-preview.js"></script>
+	</body>
+</html>

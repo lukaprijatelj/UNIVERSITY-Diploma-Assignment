@@ -45,7 +45,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
 var clientRendererRouter = require('./routes/client');
 var clientAdminRouter = require('./routes/server-admin');
-
+var finalPreviewRouter = require('./routes/final-preview');
 
 
 
@@ -102,7 +102,8 @@ var EXPRESS_APP =
 		app.use('/upload', usersRouter);
 		app.use('/client', clientRendererRouter);
 		app.use('/serverAdmin', clientAdminRouter);
-
+		app.use('/finalPreview', finalPreviewRouter);
+		
 		
 
 		API.init(app);
