@@ -573,12 +573,12 @@ var GLOBALS =
 
 	_onResultsViewClick: function()
 	{
-
+		throw new NotImplementedException();
 	},
 
 	_onPreviewViewClick: function()
 	{
-
+		throw new NotImplementedException();
 	},
 
 	/**
