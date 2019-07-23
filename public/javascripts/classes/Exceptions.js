@@ -1,14 +1,17 @@
-function NotImplementedException()
+// namespace
+var Exception = {};
+
+Exception.NotImplemented = function()
 {
-    return 'Logic is not yet implemented';
+    throw 'Logic is not yet implemented';
 }
 
-function InputMissingException()
+Exception.InputMissing = function()
 {
-    return 'Input is missing';
+    throw 'Input is missing';
 }
 
-function RendererMissingException()
+Exception.RendererMissing = function()
 {
-    return 'Renderer is missing';
+    throw 'Renderer is missing';
 }

@@ -10,7 +10,7 @@ RaytracingRenderer = function (options)
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
-	this.canvas = options.canvas;
+	this.canvas = null;
 	this.domElement = canvas; // do not delete, this is only for referencing
 
 	this.context = null;
@@ -25,8 +25,8 @@ RaytracingRenderer = function (options)
 	this.renderering = false;
 	this.worker = [];
 	this.autoClear = true;
-	this.updateFunction = options.updateFunction ? options.updateFunction : () => {};
-	this.onCellRendered = options.onCellRendered ? options.onCellRendered : () => {};
+	this.updateFunction = Function.empty;
+	this.onCellRendered = Function.empty;
 
 	this.setCell = function(cell)
 	{
@@ -162,7 +162,6 @@ RaytracingRenderer = function (options)
 		this.setWorkers();
 		this.setSize(this.canvas.width, this.canvas.height);
 	};
-	this.init();
 };
 
 Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);

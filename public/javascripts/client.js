@@ -155,7 +155,6 @@ var GLOBALS =
 		console.log('[Globals] Requesting GLTF model');
 
 		var loader = new GltfLoader();
-
 		loader.path = 'Buggy/Buggy.gltf';
 		loader.onSuccess = function(gltf) 
 		{
@@ -190,7 +189,8 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing camera');
 
-		GLOBALS.camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH/CANVAS_HEIGHT, 1, 20000);
+		var ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
 
 		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
@@ -204,7 +204,6 @@ var GLOBALS =
 			GLOBALS.camera.position.y = 2.21;
 			GLOBALS.camera.position.z = -0.65;
 		}
-		
 	},
 
 	/**
@@ -439,7 +438,6 @@ var GLOBALS =
 
 		var renderer = null;
 		var canvas = document.getElementById('rendering-canvas');
-		var options = {};
 
 		switch(GLOBALS.rendererType)
 		{
@@ -449,17 +447,14 @@ var GLOBALS =
 				break;
 
 			case enums.rendererType.RAY_TRACING:
-				options = 
-				{ 
-					canvas: canvas, 
-					updateFunction: GLOBALS.updateProgressAsync, 
-					onCellRendered: GLOBALS.onCellRendered 
-				};
-				renderer = new RaytracingRenderer(options);
+				renderer = new RaytracingRenderer();
+				renderer.canvas = canvas;
+				renderer.updateFunction = GLOBALS.updateProgressAsync;
+				renderer.onCellRendered = GLOBALS.onCellRendered;
 				break;
 
 			case enums.rendererType.PATH_TRACING:
-
+				new Exception.NotImplemented();
 				break;
 		}
 
@@ -573,12 +568,12 @@ var GLOBALS =
 
 	_onResultsViewClick: function()
 	{
-		throw new NotImplementedException();
+		new Exception.NotImplemented();
 	},
 
 	_onPreviewViewClick: function()
 	{
-		throw new NotImplementedException();
+		new Exception.NotImplemented();
 	},
 
 	/**
