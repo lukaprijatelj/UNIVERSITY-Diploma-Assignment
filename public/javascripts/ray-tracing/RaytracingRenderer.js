@@ -5,8 +5,7 @@
  *
  * @author zz85 / http://github.com/zz85
  */
-
-RaytracingRenderer = function (options) 
+var RaytracingRenderer = function() 
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
@@ -25,8 +24,8 @@ RaytracingRenderer = function (options)
 	this.renderering = false;
 	this.worker = [];
 	this.autoClear = true;
-	this.updateFunction = Function.empty;
-	this.onCellRendered = Function.empty;
+	this.updateFunction = Function.Empty;
+	this.onCellRendered = Function.Empty;
 
 	this.setCell = function(cell)
 	{

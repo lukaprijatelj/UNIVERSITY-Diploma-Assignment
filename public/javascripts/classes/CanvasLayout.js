@@ -1,6 +1,6 @@
 function CanvasLayout(layoutWrapperV)
 {
-	this.layoutWrapperV = layoutWrapperV;
+	this.layoutWrapperV = null;
 	this.canvasV = null;
 
 
@@ -8,6 +8,12 @@ function CanvasLayout(layoutWrapperV)
 	{
 		var gridLayout = this;
 
+		if (!layoutWrapperV)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		gridLayout.layoutWrapperV = layoutWrapperV;
 		gridLayout.layoutWrapperV.setAttribute('data-layout-type', enums.layoutType.CANVAS);
 	};
 	this._init();
@@ -37,33 +43,46 @@ CanvasLayout.prototype.createLayout = function(cells)
 	layoutWrapperV.appendChild(canvasV);
 };
 
+
 CanvasLayout.prototype.updateCell = function(cell)
 {
 	var gridLayout = this;
 
-	var myCanvas = gridLayout.canvasV;
-	var ctx = myCanvas.getContext('2d');
+	if (!cell || !cell.imageData)
+	{
+		new Exception.ValueUndefined();
+	}
 
+	var posX = cell.startX;
+	var posY = cell.startY;
+	
 	var img = new Image;
 	img.onload = function()
 	{
-		ctx.drawImage(img, cell.startX, cell.startY); 
+		var myCanvas = gridLayout.canvasV;
+		var ctx = myCanvas.getContext('2d');
+
+		ctx.drawImage(img, posX, posY); 
 	};
 	img.src = cell.imageData;
 };
+
 
 CanvasLayout.prototype.flagRenderCell = function(cell)
 {
 	var gridLayout = this;
 	
+	var borderWidth = 1;
+	var posX = cell.startX + borderWidth;
+	var posY = cell.startY + borderWidth;
+	var width = cell.width - borderWidth;
+	var height = cell.height - borderWidth;
+
 	var myCanvas = gridLayout.canvasV;
 	var ctx = myCanvas.getContext('2d');
-
-	var borderWidth = 1;
-
 	ctx.beginPath();
 	ctx.lineWidth = String(borderWidth);
 	ctx.strokeStyle = "red";
-	ctx.rect(cell.startX + borderWidth, cell.startY + borderWidth, cell.width - borderWidth, cell.height - borderWidth);
+	ctx.rect(posX, posY, width, height);
 	ctx.stroke();
 };

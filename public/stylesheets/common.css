@@ -23,7 +23,7 @@ body.loading
 	pointer-events:none;
 }
 
-	body.loading #layout-wrapper
+	body.loading wrapper.layout
 	{
 		background-color: var(--LIGHT-GRAY-COLOR);
 	}

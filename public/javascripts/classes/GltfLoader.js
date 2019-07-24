@@ -32,8 +32,9 @@ GltfLoader.prototype._loadingProgressUpdate = function(xhr)
  */
 GltfLoader.prototype._errorOccured = function(error)
 {
-    console.error('[GltfLoader] Error while loading scene!');
     console.error(error);
+
+    new Exception.Other('Error while loading scene!');
 };
 
 /**
@@ -43,14 +44,12 @@ GltfLoader.prototype.start = function()
 {
     if (!this.path)
     {
-        console.error('[GltfLoader] Path is invalid. (aborting)');
-        return;
+        new Exception.ValueInvalid(this.path);
     }
 
     if (!this.onSuccess)
     {
-        console.error('[GltfLoader] Success callback is undefined. (aborting)');
-        return;
+        new Exception.ValueUndefined();
     }
 
     this.instance.load(this.path, this.onSuccess, this._loadingProgressUpdate, this._errorOccured);

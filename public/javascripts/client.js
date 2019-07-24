@@ -70,7 +70,7 @@ var GLOBALS =
 	{
 		io.on('connect', GLOBALS._onServerConnected);	
 
-		var layoutWrapperV = document.getElementById('layout-wrapper');
+		var layoutWrapperV = document.querySelector('wrapper.layout');
 
 		if (GLOBALS.layoutType == enums.layoutType.GRID)
 		{
@@ -79,6 +79,10 @@ var GLOBALS =
 		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
 		{
 			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+		}
+		else
+		{
+			new Exception.ValueInvalid(GLOBALS.layoutType);
 		}
 		
 		GLOBALS._initScene();
@@ -227,24 +231,24 @@ var GLOBALS =
 
 		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
-			var light = new THREE.PointLight( 0xffaa55, intensity );
+			var light = new THREE.PointLight(0xffaa55, intensity);
 			light.position.set( - 200, 100, 100 );
 			light.physicalAttenuation = true;
 			GLOBALS.scene.add( light );
 	
-			var light = new THREE.PointLight( 0x55aaff, intensity );
+			var light = new THREE.PointLight(0x55aaff, intensity);
 			light.position.set( 200, 100, 100 );
 			light.physicalAttenuation = true;
 			GLOBALS.scene.add( light );
 	
-			var light = new THREE.PointLight( 0xffffff, intensity * 1.5 );
+			var light = new THREE.PointLight(0xffffff, intensity * 1.5);
 			light.position.set( 0, 0, 300 );
 			light.physicalAttenuation = true;
 			GLOBALS.scene.add( light );
 		}
 		else
 		{
-			var light = new THREE.AmbientLight( 0x404040, 3 ); // soft white light
+			var light = new THREE.AmbientLight(0x404040, 3); // soft white light
 			GLOBALS.scene.add( light );
 		}
 	},

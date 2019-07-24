@@ -39,7 +39,7 @@ var GLOBALS =
 	{
 		io.on('connect', GLOBALS._onServerConnected);	
 		
-		var layoutWrapperV = document.getElementById('layout-wrapper');
+		var layoutWrapperV = document.querySelector('wrapper.layout');
 
 		if (GLOBALS.layoutType == enums.layoutType.GRID)
 		{
