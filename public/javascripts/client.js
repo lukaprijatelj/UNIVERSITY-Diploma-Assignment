@@ -1,9 +1,3 @@
-// -----------------------------
-// import SocketIO
-// -----------------------------
-var io = io(HOSTING_URL, { query: "clientType=renderer" });
-
-
 /** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
@@ -68,7 +62,9 @@ var GLOBALS =
 	
 	init: function()
 	{
-		io.on('connect', GLOBALS._onServerConnected);	
+		API.init('renderer');	
+
+	
 
 		var layoutWrapperV = document.querySelector('wrapper.layout');
 
@@ -96,30 +92,7 @@ var GLOBALS =
 		DEBUG.init();	
 	},
 
-
-	/**
-	 * Ajax request to server.
-	 * @async
-	 */
-	request: function(url, data)
-	{
-		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/request' + '/' + url;
-
-		console.log('[Globals] Requesting ' + url);
-
-		io.emit(url, data);
-	},
-
-	/**
-	 * Ajax response from server.
-	 */
-	response: function(url, callback)
-	{
-		url = GLOBALS.apiUrl + '/response' + '/' + url;
-
-		io.on(url, callback);
-	},
+	
 
 	/**
 	 * On server-client connection.
@@ -128,11 +101,11 @@ var GLOBALS =
 	{
 		console.log('[Globals] Connected to server!');
 
-		GLOBALS.response('renderingCells/layout', GLOBALS.onGetLayout);
-		GLOBALS.response('renderingCells/cell', GLOBALS.onRequestCell);
-		GLOBALS.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		/*API.response('renderingCells/layout', );
+		API.response('renderingCells/cell', );
+		API.response('renderingCells/updateProgress', );*/
 
-		GLOBALS.request('renderingCells/layout');
+		API.request('renderingCells/layout', undefined, GLOBALS.onGetLayout);
 	},	
 
 	/**
@@ -173,7 +146,7 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
-			GLOBALS.request('renderingCells/cell');
+			API.request('renderingCells/cell', undefined, GLOBALS.onRequestCell);
 		};
 		loader.start();	
 	},
@@ -567,7 +540,7 @@ var GLOBALS =
 	onCellRendered: function()
 	{
 		document.body.removeClass('busy');
-		GLOBALS.request('renderingCells/cell');
+		API.request('renderingCells/cell', undefined, GLOBALS.onRequestCell);
 	},
 
 	_onResultsViewClick: function()
@@ -619,7 +592,7 @@ var GLOBALS =
 			progress: progress
 		};
 
-		GLOBALS.request('renderingCells/updateProgress', data);
+		API.request('renderingCells/updateProgress', data, GLOBALS._onUpdateProgress);
 	}
 };
 

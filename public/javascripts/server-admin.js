@@ -85,10 +85,10 @@ var GLOBALS =
 		console.log('[Main] Connected to server!');
 
 		// wire response callbacks
-		GLOBALS.response('renderingCells/layout', GLOBALS._onGetLayout);
-		GLOBALS.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		API.response('renderingCells/layout', GLOBALS._onGetLayout);
+		API.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
 
-		GLOBALS.request('renderingCells/layout');
+		API.request('renderingCells/layout');
 	},
 
 	/**
@@ -107,8 +107,8 @@ var GLOBALS =
 	 */
 	_onRecalculateLayoutClick: function()
 	{
-		GLOBALS.request('renderingCells/recalculateLayout');
-		GLOBALS.request('renderingCells/layout');
+		API.request('renderingCells/recalculateLayout');
+		API.request('renderingCells/layout');
 	},
 
 	/**

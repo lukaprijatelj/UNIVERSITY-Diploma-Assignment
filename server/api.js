@@ -1,6 +1,7 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 var constants = require('./constants.js');
+var Exception = require('./public/javascripts/classes/Exception.js');
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(30003);
@@ -79,14 +80,20 @@ var API =
 	/**
 	 * Responds with list of rendering cells.
 	 */
-	onRenderingCellsList: function()
+	onRenderingCellsList: function(data, callback)
 	{
+		if (callback)
+		{
+			new 
+		}
+
 		var socket = this;
 		var sessionId = socket.id;
 
 		var result = DATABASE.getRenderingCells();
 
-		io.to(sessionId).emit(API.baseUrl + '/response/renderingCells/layout', result);
+		
+		callback(result);
 	},
 
 	/**

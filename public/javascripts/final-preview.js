@@ -73,9 +73,9 @@ var GLOBALS =
 		console.log('[Main] Connected to server!');
 
 		// wire response callbacks
-		GLOBALS.response('renderingCells/layout', GLOBALS._onGetLayout);
+		API.response('renderingCells/layout', GLOBALS._onGetLayout);
 
-		GLOBALS.request('renderingCells/layout');
+		API.request('renderingCells/layout');
 	},
 
 	/**
