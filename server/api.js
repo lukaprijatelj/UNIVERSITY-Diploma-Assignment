@@ -1,7 +1,8 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 var constants = require('./constants.js');
-var Exception = require('./public/javascripts/classes/Exception.js');
+var Exception = require('../public/javascripts/classes/Exception.js');
+var Warning = require('../public/javascripts/classes/Warning.js');
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(30003);
@@ -37,9 +38,9 @@ var API =
 	 */
 	onConnect: function(socket)
 	{
-		var time = new Date();
-		
 		console.log('[Api] New client has connected!');
+
+		var time = new Date();		
 
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
@@ -53,8 +54,6 @@ var API =
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
 				
-		socket.on(API.baseUrl + '/request/renderingClients/list', API.onRequestCell);
-
 		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
 		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
 		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
@@ -69,12 +68,12 @@ var API =
 	 */
 	onDisconnect: function()
 	{
+		console.log("[Api] Client has disconnected!");
+
 		var socket = this;
 		var sessionId = socket.id;
 
-		DATABASE.removeRenderClient(sessionId);
-
-		console.log("[Api] Client has disconnected!");
+		DATABASE.removeRenderClient(sessionId);		
 	},
 
 	/**
@@ -82,9 +81,9 @@ var API =
 	 */
 	onRenderingCellsList: function(data, callback)
 	{
-		if (callback)
+		if (!callback)
 		{
-			new 
+			new Exception.ValueUndefined();
 		}
 
 		var socket = this;
@@ -92,15 +91,19 @@ var API =
 
 		var result = DATABASE.getRenderingCells();
 
-		
 		callback(result);
 	},
 
 	/**
 	 * Respond with any of the cells still waiting to be rendered.
 	 */
-	onRequestCell: function()
+	onRequestCell: function(data, callback)
 	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
 		var socket = this;
 		var sessionId = socket.id;
 
@@ -112,7 +115,7 @@ var API =
 			return;
 		}
 
-		io.to(sessionId).emit(API.baseUrl + '/response/renderingCells/cell', freeCell);
+		callback(freeCell);
 	},
 
 	/**
@@ -128,6 +131,7 @@ var API =
 
 		if (data.progress == 100)
 		{
+			// notifies ALL clients that are currently connected
 			socket.broadcast.emit(API.baseUrl + '/response/renderingCells/updateProgress', data);
 		}
 	},
@@ -137,21 +141,30 @@ var API =
 	 */
     onUploadFile: function(request, response)
     {
+		console.log("[Api] File was uploaded");
+
 		var filename = request.file.filename;
 		var path = request.file.path;
 		
 		DATABASE.addUploadedFile(filename, path);
 
-		response.send('Scene was uploaded!');
-
-		console.log("[Api] File was uploaded");
+		response.send('Scene was uploaded!');		
 	},
 
-	onRecalculateLayout: function()
+	/**
+	 * Recalculates layout cells.
+	 */
+	onRecalculateLayout: function(data, callback)
 	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
 		DATABASE.clearGridLayout();
 		
 		var startY = 0;
+
 		while(startY < constants.CANVAS_HEIGHT)
 		{
 			var startX = 0;
@@ -171,6 +184,8 @@ var API =
 
 			startY += constants.BLOCK_HEIGHT;
 		}
+
+		callback();
 	},
 };
 

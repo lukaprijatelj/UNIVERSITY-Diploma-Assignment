@@ -1,55 +1,69 @@
 // -----------------------------
 // import SocketIO
 // -----------------------------
-var io;
+var socket;
 
 var API =
 {
-	onConnect: new BasicEvent(),
-	onGetLayout: new BasicEvent(),
-	onRequestCell: new BasicEvent(),
-	onUpdateProgress: new BasicEvent(),
-
-	_requestCallbacks: [],
+	isConnected: false,
+	clientType: '',
 
 	/**
 	 * Ajax request to server.
 	 * @async
 	 */
-	request: function(url, data, callback)
+	request: function(url, callback, data)
 	{
+		if(!socket)
+		{
+			new Exception.ValueUndefined();
+		}
+
 		data = data ? data : null;
 		url = GLOBALS.apiUrl + '/request' + '/' + url;
 
 		console.log('[Globals] Requesting ' + url);
 
-		io.emit(url, data, callback);
+		socket.emit(url, data, callback);
 	},
 
 	/**
 	 * Ajax response from server.
 	 */
-	response: function(url, callback)
+	listen: function(url, callback)
 	{
+		if(!socket)
+		{
+			new Exception.ValueUndefined();
+		}
+
 		url = GLOBALS.apiUrl + '/response' + '/' + url;
 
-		io.on(url, callback);
+		socket.on(url, callback);
 	},
 
+	/**
+	 * Connects client to server.
+	 */
+	connect: function(onConnect, onDisconnect)
+	{
+		socket = io.connect(HOSTING_URL, { query: "clientType=" + API.clientType });
+
+		socket.on('connect', onConnect);
+		socket.on('disconnect', onDisconnect);
+	},
+
+	/**
+	 * Disconnects client from server.
+	 */
+	disconnect: function()
+	{
+		socket.disconnect();
+	},
 	
 
 	init: function(clientType)
 	{
-		io = io(HOSTING_URL, { query: "clientType=" + clientType });
-
-		io.on('connect', GLOBALS._onServerConnected);
-
-		var url = GLOBALS.apiUrl + '/response' + '/';
-
-		/*io.on(url + 'renderingCells/layout', GLOBALS.);
-
-
-		API.response('renderingCells/cell', GLOBALS.);
-		API.response('renderingCells/updateProgress', GLOBALS.);*/
+		API.clientType = clientType;		
 	}
 };

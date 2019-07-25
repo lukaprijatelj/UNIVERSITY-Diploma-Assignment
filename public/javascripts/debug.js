@@ -26,10 +26,13 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		DEBUG.camera.positionX.value = Math.roundToTwoDecimals(GLOBALS.camera.position.x);
-		DEBUG.camera.positionY.value = Math.roundToTwoDecimals(GLOBALS.camera.position.y);
-		DEBUG.camera.positionZ.value = Math.roundToTwoDecimals(GLOBALS.camera.position.z);
-
+		if (GLOBALS.camera && GLOBALS.camera.position)
+		{
+			DEBUG.camera.positionX.value = Math.roundToTwoDecimals(GLOBALS.camera.position.x);
+			DEBUG.camera.positionY.value = Math.roundToTwoDecimals(GLOBALS.camera.position.y);
+			DEBUG.camera.positionZ.value = Math.roundToTwoDecimals(GLOBALS.camera.position.z);
+		}
+		
 		DEBUG.mouse.positionX.value = Math.roundToTwoDecimals(MOUSE.positionX);
 		DEBUG.mouse.positionY.value = Math.roundToTwoDecimals(MOUSE.positionY);
 	}	

@@ -2,6 +2,11 @@
 // namespace
 var Exception = {};
 
+if (typeof module !== 'undefined' && module.exports)
+{
+	// export for nodeJS use
+	module.exports = Exception;
+}
 
 Exception.NotImplemented = function()
 {
@@ -32,3 +37,5 @@ Exception.Other = function(message)
 {
     throw message;
 };
+
+

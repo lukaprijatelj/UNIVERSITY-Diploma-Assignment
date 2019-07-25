@@ -62,10 +62,6 @@ var GLOBALS =
 	
 	init: function()
 	{
-		API.init('renderer');	
-
-	
-
 		var layoutWrapperV = document.querySelector('wrapper.layout');
 
 		if (GLOBALS.layoutType == enums.layoutType.GRID)
@@ -80,16 +76,12 @@ var GLOBALS =
 		{
 			new Exception.ValueInvalid(GLOBALS.layoutType);
 		}
-		
-		GLOBALS._initScene();
-		GLOBALS._initCamera();
-		GLOBALS._initLights();
-		
-		GLOBALS._init3DObjectsForTestScene();
-		
-		GLOBALS._initGltfLoader();
 
 		DEBUG.init();	
+	
+		API.init('renderer');
+		
+		GLOBALS.onViewLoaded();
 	},
 
 	
@@ -101,30 +93,48 @@ var GLOBALS =
 	{
 		console.log('[Globals] Connected to server!');
 
-		/*API.response('renderingCells/layout', );
-		API.response('renderingCells/cell', );
-		API.response('renderingCells/updateProgress', );*/
+		API.isConnected = true;
 
-		API.request('renderingCells/layout', undefined, GLOBALS.onGetLayout);
+		GLOBALS.updateConnectButton();
+		
+		API.request('renderingCells/layout', GLOBALS.onGetLayout);
 	},	
+
+	/**
+	 * Client has disconnected from server.
+	 */
+	_onServerDisconnect: function()
+	{
+		console.log('[Globals] Disconnected from server!');
+
+		API.isConnected = false;
+		
+		GLOBALS.updateConnectButton();
+	},
+
+	updateConnectButton: function()
+	{
+		var connectButton = document.getElementById('connect-button');
+
+		if (API.isConnected)
+		{
+			connectButton.addClass('selected');
+			connectButton.innerHTML = 'Disconnect';
+		}
+		else
+		{
+			connectButton.removeClass('selected');
+			connectButton.innerHTML = 'Connect';
+		}
+	},
 
 	/**
 	 * Progress was updated.
 	 */
-	_onUpdateProgress: function(data)
+	_onUpdateProgress: async function(data)
 	{
 		var cell = data.cell;
 		GLOBALS.tryUpdatingCell(cell);
-	},
-
-	/**
-	 * Initializes GLTF loader.
-	 */
-	_initGltfLoader: function()
-	{
-		console.log('[Globals] Initializing GLTF loader');
-
-		GLOBALS.loader = new THREE.GLTFLoader();
 	},
 
 	startLoadingGltfModel: function(path)
@@ -132,10 +142,12 @@ var GLOBALS =
 		console.log('[Globals] Requesting GLTF model');
 
 		var loader = new GltfLoader();
-		loader.path = 'Buggy/Buggy.gltf';
+		loader.path = 'scenes/Buggy/Buggy.gltf';
 		loader.onSuccess = function(gltf) 
 		{
 			console.log('[glTF loader] Scene finished loading');
+
+			
 
 			//GLOBALS.scene.add(gltf.scene);
 
@@ -146,7 +158,7 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
-			API.request('renderingCells/cell', undefined, GLOBALS.onRequestCell);
+			API.request('renderingCells/cell', GLOBALS.onRequestCell);
 		};
 		loader.start();	
 	},
@@ -494,18 +506,20 @@ var GLOBALS =
 		}
 		
 
-		new Thread(GLOBALS.onLoaded);
+		new Thread(GLOBALS.onDataLoaded);
 	},
 
 	/**
-	 * Initial data is loaded.
+	 * View has done loading.
 	 * Remove skeleton screens by removing 'loading' class from elements.
 	 */
-	onLoaded: function()
+	onViewLoaded: function()
 	{
 		// -----------------------------
 		// set default values
 		// -----------------------------
+
+		GLOBALS.updateConnectButton();
 
 		var resultsViewButton = document.getElementById('result-button');
 		resultsViewButton.innerHTML = 'Results';
@@ -519,14 +533,46 @@ var GLOBALS =
 		// -----------------------------
 
 		document.body.removeClass('loading');
+	},
 
-
+	/**
+	 * Initial data is loaded.
+	 */
+	onDataLoaded: function()
+	{
+		GLOBALS._initScene();
+		GLOBALS._initCamera();
+		GLOBALS._initLights();
+		
 		GLOBALS._initRenderer();
 		GLOBALS._initCameraControls();
 
-		GLOBALS.startLoadingGltfModel();
+
+		GLOBALS._init3DObjectsForTestScene();
+		API.request('renderingCells/cell', GLOBALS.onRequestCell);
+
+		//GLOBALS.startLoadingGltfModel();
 	},
 
+	/**
+	 * Connect to server button was clicked.
+	 */
+	_onConnectClick: function()
+	{
+		if (!API.isConnected)
+		{
+			API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
+			API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		}
+		else
+		{
+			API.disconnect();
+		}
+	},
+
+	/**
+	 * Tries to update canvas with data from this cell.
+	 */
 	tryUpdatingCell: function(cell)
 	{
 		if (!cell.imageData)
@@ -537,17 +583,26 @@ var GLOBALS =
 		GLOBALS.layout.updateCell(cell);
 	},
 
+	/**
+	 * Cell finished rendering.
+	 */
 	onCellRendered: function()
 	{
 		document.body.removeClass('busy');
-		API.request('renderingCells/cell', undefined, GLOBALS.onRequestCell);
+		API.request('renderingCells/cell', GLOBALS.onRequestCell);
 	},
 
+	/**
+	 * Results button was clicked.
+	 */
 	_onResultsViewClick: function()
 	{
 		new Exception.NotImplemented();
 	},
 
+	/**
+	 * Preview button was clicked.
+	 */
 	_onPreviewViewClick: function()
 	{
 		new Exception.NotImplemented();
@@ -569,6 +624,9 @@ var GLOBALS =
 		GLOBALS.startRendering();
 	},
 
+	/**
+	 * Starts rendering.
+	 */
 	startRendering: async function()
 	{
 		if (GLOBALS.rendererType != enums.rendererType.WEB_GL_RENDERER)
@@ -592,7 +650,7 @@ var GLOBALS =
 			progress: progress
 		};
 
-		API.request('renderingCells/updateProgress', data, GLOBALS._onUpdateProgress);
+		API.request('renderingCells/updateProgress', undefined, data);
 	}
 };
 

@@ -1,9 +1,3 @@
-// -----------------------------
-// import SocketIO
-// -----------------------------
-var io = io(HOSTING_URL, { query: "clientType=admin" });
-
-
 /**
  * Globals. 
  */
@@ -36,9 +30,7 @@ var GLOBALS =
 
 
 	init: function()
-	{
-		io.on('connect', GLOBALS._onServerConnected);	
-		
+	{		
 		var layoutWrapperV = document.querySelector('wrapper.layout');
 
 		if (GLOBALS.layoutType == enums.layoutType.GRID)
@@ -49,31 +41,10 @@ var GLOBALS =
 		{
 			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
 		}
-	},
 
-
-	/**
-	 * Ajax request to server.
-	 * @async
-	 */
-	request: function(url, data)
-	{
-		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/request' + '/' + url;
-
-		console.log('[Main] Requesting "' + url + '"');
-
-		io.emit(url, data);
-	},
-
-	/**
-	 * Ajax response from server.
-	 */
-	response: function(url, callback)
-	{
-		url = GLOBALS.apiUrl + '/response' + '/' + url;
-
-		io.on(url, callback);
+		API.init('admin');	
+		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
+		API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
 	},
 
 	/**
@@ -84,11 +55,17 @@ var GLOBALS =
 	{
 		console.log('[Main] Connected to server!');
 
-		// wire response callbacks
-		API.response('renderingCells/layout', GLOBALS._onGetLayout);
-		API.response('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		API.isConnected = true;
 
-		API.request('renderingCells/layout');
+		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+	},
+
+	/**
+	 * Client has disconnected from server.
+	 */
+	_onServerDisconnect: function()
+	{
+		API.isConnected = false;
 	},
 
 	/**
@@ -107,8 +84,8 @@ var GLOBALS =
 	 */
 	_onRecalculateLayoutClick: function()
 	{
-		API.request('renderingCells/recalculateLayout');
-		API.request('renderingCells/layout');
+		API.request('renderingCells/recalculateLayout', Function.empty);
+		API.request('renderingCells/layout', GLOBALS._onGetLayout);
 	},
 
 	/**

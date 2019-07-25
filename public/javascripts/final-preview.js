@@ -1,9 +1,3 @@
-// -----------------------------
-// import SocketIO
-// -----------------------------
-var io = io(HOSTING_URL, { query: "clientType=admin" });
-
-
 /**
  * Globals. 
  */
@@ -31,38 +25,15 @@ var GLOBALS =
 
 
 	init: function()
-	{
-		io.on('connect', GLOBALS._onServerConnected);	
-		
+	{		
 		var layoutWrapperV = document.querySelector('wrapper.layout');
 
 		GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+
+		API.init('admin', GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
+		API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
 	},
 
-
-	/**
-	 * Ajax request to server.
-	 * @async
-	 */
-	request: function(url, data)
-	{
-		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/request' + '/' + url;
-
-		console.log('[Main] Requesting "' + url + '"');
-
-		io.emit(url, data);
-	},
-
-	/**
-	 * Ajax response from server.
-	 */
-	response: function(url, callback)
-	{
-		url = GLOBALS.apiUrl + '/response' + '/' + url;
-
-		io.on(url, callback);
-	},
 
 	/**
 	 * On server-client connection.
@@ -72,10 +43,15 @@ var GLOBALS =
 	{
 		console.log('[Main] Connected to server!');
 
-		// wire response callbacks
-		API.response('renderingCells/layout', GLOBALS._onGetLayout);
+		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+	},
 
-		API.request('renderingCells/layout');
+	/**
+	 * Client has disconnected from server.
+	 */
+	_onServerDisconnect: function()
+	{
+		API.isConnected = false;
 	},
 
 	/**
@@ -120,6 +96,15 @@ var GLOBALS =
 		// -----------------------------
 
 		document.body.removeClass('loading');
+	},
+
+	/**
+	 * Progress was updated.
+	 */
+	_onUpdateProgress: function(data)
+	{
+		var cell = data.cell;
+		GLOBALS.tryUpdatingCell(cell);
 	},
 
 	/**
