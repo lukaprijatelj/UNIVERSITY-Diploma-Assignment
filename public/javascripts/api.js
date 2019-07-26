@@ -20,7 +20,7 @@ var API =
 		}
 
 		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/request' + '/' + url;
+		url = GLOBALS.apiUrl + '/' + url;
 
 		console.log('[Globals] Requesting ' + url);
 
@@ -37,7 +37,7 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		url = GLOBALS.apiUrl + '/response' + '/' + url;
+		url = GLOBALS.apiUrl + '/' + url;
 
 		socket.on(url, callback);
 	},

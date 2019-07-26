@@ -41,3 +41,10 @@ nohup npm start --production &     // so that app starts in background
 
 then press CTRL+a+d so that you go back to normal shell
 close putty terminal
+
+
+## API url scheme
+	"/cells/getAll"
+	"/cells/getWaiting"
+	"/cells/update"
+	"/rendering/restart"

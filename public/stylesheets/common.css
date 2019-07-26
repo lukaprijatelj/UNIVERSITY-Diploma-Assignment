@@ -10,45 +10,17 @@ body
 	--DARK-BLUE-COLOR: #1F52F2; 
 	--LIGHT-BLUE-COLOR: #0079FF; 
 	--LIGHT-GRAY-COLOR: #EBEBEB;
-	--TEXT-COLOR: #505050;
+	--LIGHT-RED-COLOR: #C3272B;
+	--DARK-RED-COLOR: #8F1D21;
+	--TEXT-COLOR: rgba(255, 255, 255, 0.5);
+
+	--EDITOR-POPUP-BACKGROUND: rgba(255, 255, 255, 0.05);
 	
 
-	background-color: #F9F9F9;
+	background-color: white;
 	color: var(--TEXT-COLOR);
 	font-family: 'Muli', sans-serif;
 }
-
-body.loading
-{
-	pointer-events:none;
-}
-
-	body.loading wrapper.layout
-	{
-		background-color: var(--LIGHT-GRAY-COLOR);
-	}
-
-	body.loading input
-	{
-		outline: none;
-		background-color: var(--LIGHT-GRAY-COLOR) !important;
-		border-color: var(--LIGHT-GRAY-COLOR) !important;
-	}
-
-	body.loading button,
-	body.loading checkbox-button
-	{
-		background-color: var(--LIGHT-GRAY-COLOR) !important;
-		border-color: var(--LIGHT-GRAY-COLOR) !important;
-	}
-
-	body.loading label,
-	body.loading .h1,
-	body.loading .h2,
-	body.loading .h3
-	{
-		opacity: 0;
-	}
 
 
 body.busy
@@ -148,20 +120,16 @@ input
 {
 	font-family: 'Muli', sans-serif;
 	border-style: solid;
-	border-color: var(--LIGHT-GRAY-COLOR);
-	border-width: 1px;
+	border-color: rgba(255, 255, 255, 0.1);
 	vertical-align: bottom;
-    padding-left: 10px;
-	padding-right: 10px;
-	outline: none; 
 	color: var(--TEXT-COLOR);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 input.disabled
 {
 	outline: none;
-	background-color: var(--LIGHT-GRAY-COLOR) !important;
-	border-color: var(--LIGHT-GRAY-COLOR) !important;
+	border: none !important;
 }
 
 input[type=number]::-webkit-inner-spin-button, 
@@ -184,20 +152,28 @@ input:focus
 /* ----------------------------- */
 /* Rendering grid */
 /* ----------------------------- */
-
-#rendering-canvas
-{
-	background-color: #FFFFFF;
-	border-style: solid;
-	border-color: var(--LIGHT-GRAY-COLOR);
-}
-
-.render-cell
+	
+#interface
 {
 	border-style: solid;
-	border-color: var(--LIGHT-GRAY-COLOR);
+	border-color: var(--EDITOR-POPUP-BACKGROUND);
 }
-	.render-cell.active
+
+#interface.rendering
+{
+	border-color: var(--LIGHT-RED-COLOR);
+}
+
+editor-popup
+{
+	background-color: var(--EDITOR-POPUP-BACKGROUND);
+}
+
+#editor-canvas
+{
+	background-color: black;
+}
+	#interface.rendering #editor-canvas
 	{
-		background-color: #FF4F49;
+		opacity: 0.1;
 	}

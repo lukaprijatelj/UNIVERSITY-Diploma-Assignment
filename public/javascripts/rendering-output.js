@@ -28,10 +28,10 @@ var GLOBALS =
 	{		
 		var layoutWrapperV = document.querySelector('wrapper.layout');
 
-		GLOBALS.layout = new CanvasLayout(layoutWrapperV);
+		GLOBALS.rendererCanvas = new RendererCanvas(layoutWrapperV);
 
 		API.init('admin', GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		API.listen('cells/update', GLOBALS._onCellUpdate);
 	},
 
 
@@ -43,7 +43,7 @@ var GLOBALS =
 	{
 		console.log('[Main] Connected to server!');
 
-		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+		API.request('cells/getAll', GLOBALS._onGetLayout);
 	},
 
 	/**
@@ -67,7 +67,7 @@ var GLOBALS =
 		// draw layout
 		// -----------------------------
 
-		GLOBALS.layout.createLayout(data);
+		GLOBALS.rendererCanvas.createLayout(data);
 
 
 		// -----------------------------
@@ -101,7 +101,7 @@ var GLOBALS =
 	/**
 	 * Progress was updated.
 	 */
-	_onUpdateProgress: function(data)
+	_onCellUpdate: function(data)
 	{
 		var cell = data.cell;
 		GLOBALS.tryUpdatingCell(cell);
@@ -118,7 +118,7 @@ var GLOBALS =
 			return;
 		}
 
-		GLOBALS.layout.updateCell(cell);
+		GLOBALS.rendererCanvas.updateCell(cell);
 	}
 };
 

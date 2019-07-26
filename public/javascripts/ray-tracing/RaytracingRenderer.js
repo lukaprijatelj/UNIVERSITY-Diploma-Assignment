@@ -144,7 +144,7 @@ var RaytracingRenderer = function()
 		this.worker.initScene(sceneJSON, cameraJSON, materials);		
 
 
-		GLOBALS.layout.flagRenderCell(this.cell);
+		GLOBALS.rendererCanvas.flagRenderCell(this.cell);
 		
 		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 

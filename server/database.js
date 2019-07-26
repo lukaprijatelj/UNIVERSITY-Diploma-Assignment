@@ -122,6 +122,15 @@ var DATABASE =
 	},
 
 	/**
+	 * Removes render client.
+	 */
+	getClients: function()
+	{
+		var table = DATABASE.renderingClientsTable;
+		return table.rows;
+	},
+
+	/**
 	 * Adds grid layout.
 	 */
 	addGridLayout: function(startX, startY, width, height)

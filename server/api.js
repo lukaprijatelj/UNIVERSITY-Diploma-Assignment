@@ -45,8 +45,9 @@ var API =
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
 		var isAdmin = false;
+		var data = socket.handshake.query;
 
-		if (socket.handshake.query.clientType == "admin")
+		if (data.clientType == "admin")
 		{
 			isAdmin = true;
 			API.adminSessionId = sessionId;
@@ -54,13 +55,22 @@ var API =
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
 				
-		socket.on(API.baseUrl + '/request/renderingCells/layout', API.onRenderingCellsList);
-		socket.on(API.baseUrl + '/request/renderingCells/cell', API.onRequestCell);
-		socket.on(API.baseUrl + '/request/renderingCells/updateProgress', API.onUpdateProgress);	
-		socket.on(API.baseUrl + '/request/renderingCells/recalculateLayout', API.onRecalculateLayout);		
-
+		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
+		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
+		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);		
+		socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
+		socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);	
+		
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
+
+		
+		// -----------------------------
+		// notifies that clients list was updated
+		// -----------------------------
+
+		var result = DATABASE.getClients();
+		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
 	},
 
 	/**
@@ -79,7 +89,7 @@ var API =
 	/**
 	 * Responds with list of rendering cells.
 	 */
-	onRenderingCellsList: function(data, callback)
+	onGetAllCells: function(data, callback)
 	{
 		if (!callback)
 		{
@@ -97,7 +107,7 @@ var API =
 	/**
 	 * Respond with any of the cells still waiting to be rendered.
 	 */
-	onRequestCell: function(data, callback)
+	onGetWaitingCells: function(data, callback)
 	{
 		if (!callback)
 		{
@@ -121,7 +131,7 @@ var API =
 	/**
 	 * Updates render progress of certain client.
 	 */
-	onUpdateProgress: function(data)
+	onUpdateCell: function(data)
 	{
 		console.log("[Api] Progress was updated");
 
@@ -132,7 +142,7 @@ var API =
 		if (data.progress == 100)
 		{
 			// notifies ALL clients that are currently connected
-			socket.broadcast.emit(API.baseUrl + '/response/renderingCells/updateProgress', data);
+			socket.broadcast.emit(API.baseUrl + '/cells/update', data);
 		}
 	},
 
@@ -154,7 +164,7 @@ var API =
 	/**
 	 * Recalculates layout cells.
 	 */
-	onRecalculateLayout: function(data, callback)
+	onStartRendering: function(data, callback)
 	{
 		if (!callback)
 		{
@@ -187,6 +197,16 @@ var API =
 
 		callback();
 	},
+
+	onStopRendering: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		callback();
+	}
 };
 
 module.exports = API;

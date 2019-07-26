@@ -19,32 +19,60 @@ var GLOBALS =
 	io: null,
 
 	/**
-	 * Layout view instance.
+	 * ThreeJS scene.
 	 */
-	layout: null,
+	scene: null,
 
 	/**
-	 * Type of the layout view.
+	 * GLTF loader.
 	 */
-	layoutType: enums.layoutType.CANVAS,
+	loader: null,
+
+	/**
+	 * Camera controls affected by mouse movement.
+	 */
+	controls: null,
+
+	/**
+	 * ThreeJS camera in the scene.
+	 */
+	camera: null,
+
+	/**
+	 * Layout view instance.
+	 */
+	rendererCanvas: null,
+
+	/**
+	 * Canvas for editor aka preview.
+	 */
+	editorCanvas: null,
 
 
 	init: function()
-	{		
-		var layoutWrapperV = document.querySelector('wrapper.layout');
+	{	
+		GLOBALS.editorCanvas = new EditorCanvas();
+		GLOBALS.editorCanvas.init();
 
-		if (GLOBALS.layoutType == enums.layoutType.GRID)
-		{
-			GLOBALS.layout = new GridLayout(layoutWrapperV);
-		}
-		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
-		{
-			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
-		}
-
+		GLOBALS.rendererCanvas = new RendererCanvas();
+		GLOBALS.rendererCanvas.init();
+		
+		DEBUG.init();	
+		
 		API.init('admin');	
+
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		API.listen('cells/update', GLOBALS._onCellUpdate);
+		API.listen('clients/updated', GLOBALS._onClientsUpdated);
+
+		GLOBALS._initScene();
+		GLOBALS._initCamera();
+		GLOBALS._initLights();
+		
+		GLOBALS._initRenderer();
+		GLOBALS._initCameraControls();
+
+		GLOBALS.startLoadingGltfModel();
 	},
 
 	/**
@@ -57,7 +85,7 @@ var GLOBALS =
 
 		API.isConnected = true;
 
-		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+		API.request('cells/getAll', GLOBALS._onGetLayout);
 	},
 
 	/**
@@ -68,10 +96,154 @@ var GLOBALS =
 		API.isConnected = false;
 	},
 
+	startLoadingGltfModel: function(path)
+	{
+		console.log('[Globals] Requesting GLTF model');
+
+		var loader = new GltfLoader();
+		loader.path = 'scenes/Textured-box/BoxTextured.gltf';
+		loader.onSuccess = function(gltf) 
+		{
+			console.log('[glTF loader] Scene finished loading');
+
+			
+
+			GLOBALS.scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+						
+
+			GLOBALS.onRenderFrame();
+			//API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+		};
+		loader.start();	
+	},
+
+	/**
+	 * Initializes scene.
+	 */
+	_initScene: function()
+	{
+		GLOBALS.scene = new THREE.Scene();
+	},
+
+	/**
+	 * Intializes camera in the scene.
+	 */
+	_initCamera: function()
+	{
+		console.log('[Globals] Initializing camera');
+
+		var ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+
+		GLOBALS.camera.position.x = 0.35;
+		GLOBALS.camera.position.y = 0.03;
+		GLOBALS.camera.position.z = -2.58;
+	},
+
+	/**
+	 * Initializes camera mouse controls, so that changing view is easier.
+	 */
+	_initCameraControls: function()
+	{
+		console.log('[Globals] Initializing camera controls');
+
+		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera, GLOBALS.renderer.domElement);
+	},
+
+	/**
+	 * Initializes lights.
+	 */
+	_initLights: function()
+	{
+		console.log('[Globals] Initializing lights');
+
+		var intensity = 70000;
+
+		//if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
+		{
+			var light = new THREE.PointLight(0xffaa55, intensity);
+			light.position.set( - 200, 100, 100 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+	
+			var light = new THREE.PointLight(0x55aaff, intensity);
+			light.position.set( 200, 100, 100 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+	
+			var light = new THREE.PointLight(0xffffff, intensity * 1.5);
+			light.position.set( 0, 0, 300 );
+			light.physicalAttenuation = true;
+			GLOBALS.scene.add( light );
+		}
+		//else
+		{
+			var light = new THREE.AmbientLight(0x404040, 3); // soft white light
+			GLOBALS.scene.add( light );
+		}
+	},
+
+	/**
+	 * Initializes renderer.
+	 */
+	_initRenderer: function()
+	{
+		console.log('[Globals] Initialize renderer of type "' + GLOBALS.rendererType + '"');
+
+		var canvas = document.getElementById('editor-canvas');
+
+		var options = 
+		{ 
+			canvas: canvas 
+		};
+		GLOBALS.renderer = new THREE.WebGLRenderer(options);
+		
+		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+
+		//GLOBALS.renderer.init();
+	},	
+
+	/**
+	 * Main rendering loop.
+	 */
+	onRenderFrame: function()
+	{
+		// will start loop for this function
+		requestAnimationFrame(GLOBALS.onRenderFrame);	
+
+		// render current frame
+		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
+			
+		if (GLOBALS.controls)
+		{
+			// update camera
+			GLOBALS.controls.update();
+		}
+	},
+
+
+	/**
+	 * Server has notified us that clients were updated.
+	 */
+	_onClientsUpdated: function(data)
+	{
+		var clients = data;
+		var activeClientsCount = clients.filter(item => item.active == true).length;
+
+		var clientsConnectedInput = document.getElementById('clients-connected-input');
+		clientsConnectedInput.value = activeClientsCount;
+	},
+
 	/**
 	 * One of the cells was updated
 	 */
-	_onUpdateProgress: function(data)
+	_onCellUpdate: function(data)
 	{
 		var cell = data.cell;
 
@@ -82,10 +254,43 @@ var GLOBALS =
 	 * Sends request to recalculate grid layout.
 	 * @private
 	 */
-	_onRecalculateLayoutClick: function()
+	_onStartStopRenderingClick: function()
 	{
-		API.request('renderingCells/recalculateLayout', Function.empty);
-		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
+
+		if (startRenderingButtonV.hasClass('selected'))
+		{
+			API.request('rendering/stop', () =>
+			{
+				var interfaceV = document.getElementById('interface');
+				interfaceV.removeClass('rendering');
+
+				var renderingCanvasV = document.getElementById('rendering-canvas');
+				renderingCanvasV.hide();
+					
+				startRenderingButtonV.removeClass('selected');
+				startRenderingButtonV.innerHTML = 'Start rendering';
+			});
+		}
+		else
+		{
+			API.request('rendering/start', () =>
+			{
+				var interfaceV = document.getElementById('interface');
+				interfaceV.addClass('rendering');
+	
+				var renderingCanvasV = document.getElementById('rendering-canvas');
+				renderingCanvasV.show();
+				
+				startRenderingButtonV.addClass('selected');
+				startRenderingButtonV.innerHTML = 'Stop rendering';
+
+				// open rendering output window
+				var myWindow = window.open("/renderingOutput", "", "width=800,height=450");
+			});
+		}
+		
+		//API.request('cells/getAll', GLOBALS._onGetLayout);
 	},
 
 	/**
@@ -117,8 +322,7 @@ var GLOBALS =
 		// draw layout
 		// -----------------------------
 
-		GLOBALS.layout.createLayout(GLOBALS.cells);
-
+		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
 
 
 		// -----------------------------
@@ -146,12 +350,6 @@ var GLOBALS =
 		// set default values
 		// -----------------------------
 
-		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
-		recalculateLayoutButton.innerHTML = 'Recalculate layout';
-
-		var startNewClientButton = document.getElementById('start-new-client-button');
-		startNewClientButton.innerHTML = ' + ';
-
 		var canvasWidthInput = document.getElementById('canvas-width-input');
 		canvasWidthInput.value = CANVAS_WIDTH;
 
@@ -163,9 +361,6 @@ var GLOBALS =
 
 		var blockHeightV = document.getElementById('block-height-input');
 		blockHeightV.value = BLOCK_HEIGHT;
-
-		var clientsConnectedV = document.getElementById('clients-connected-input');
-		clientsConnectedV.value = 0;
 
 
 
@@ -187,7 +382,7 @@ var GLOBALS =
 			return;
 		}
 
-		GLOBALS.layout.updateCell(cell);
+		GLOBALS.rendererCanvas.updateCell(cell);
 	}
 };
 

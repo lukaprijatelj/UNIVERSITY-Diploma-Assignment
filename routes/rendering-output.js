@@ -4,9 +4,9 @@ var constants = require('../server/constants.js');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	res.render('final-preview', 
+	res.render('rendering-output', 
 	{ 
-		title: 'Final preview',
+		title: 'Rendering output',
 		constants: constants
 	});
 });

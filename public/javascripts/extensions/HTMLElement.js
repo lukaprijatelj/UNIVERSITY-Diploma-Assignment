@@ -69,6 +69,19 @@ HTMLElement.prototype.addClass = function(value)
     return this;
 };
 
+HTMLElement.prototype.hasClass = function(value)
+{
+	for (var i=0; i<this.classList.length; i++)
+	{
+		if (this.classList[i] == value)
+		{
+			return true;
+		}
+	}
+	
+    return false;
+};
+
 HTMLElement.prototype.removeClass = function(value)
 {
     this.classList.remove(value);

@@ -72,68 +72,15 @@
 		<script src="javascripts/classes/Warning.js"></script>
 		<script src="javascripts/classes/Thread.js"></script>
 		<script src="javascripts/classes/Timer.js"></script>
-		<script src="javascripts/classes/GridLayout.js"></script>
-		<script src="javascripts/classes/CanvasLayout.js"></script>
+		<script src="javascripts/classes/RendererCanvas.js"></script>
 		<script src="javascripts/classes/GltfLoader.js"></script>
 	</head>
 	<body class="loading">
+
 		<div id="interface">
-
-			<!-- Status section -->
-			<section>
-				<label>Status</label>
-				<checkbox-button id="connect-button" class="dark" onclick="GLOBALS._onConnectClick()"></checkbox-button>			
-			</section>
-			<divider-x-small></divider-x-small>
-
-			<!-- Info about mouse position -->
-			<section>
-				<label>Mouse positions (x, y)</label>
-				<flex>
-					<input type="number" id="mouse-x-input" class="disabled">
-					<divider-y-small></divider-y-small>
-					<input type="number" id="mouse-y-input" class="disabled">
-				</flex>				
-			</section>
-			<divider-x-small></divider-x-small>
-
-
-			<!-- Info about camera position -->
-			<section>
-				<label>Camera positions (x, y, z)</label>
-				<flex>
-					<input type="number" id="camera-x-input" class="disabled">
-					<divider-y-small></divider-y-small>
-					<input type="number" id="camera-y-input" class="disabled">
-					<divider-y-small></divider-y-small>
-					<input type="number" id="camera-z-input" class="disabled">
-				</flex>				
-			</section>
-			<divider-x-small></divider-x-small>
-
-			<!-- Switch between preview and results view -->
-			<section>
-				<label>Switch view</label>
-				<flex>
-					<checkbox-button id="result-button" class="dark selected" onclick="GLOBALS._onResultsViewClick()"></checkbox-button>
-					<checkbox-button id="preview-button" class="dark" onclick="GLOBALS._onPreviewViewClick()"></checkbox-button>
-				</flex>
-			</section>
-			
-
-			<divider-x></divider-x>	
-
-
-			<!-- All cells will be rendered in this wrapper -->
-			<section>
-				<h3>Rendered cells</h3>				
-				<wrapper class="layout"></wrapper>
-			</section>
-			<divider-x></divider-x>				
+			<canvas id="rendering-canvas" class="" width="<%= constants.CANVAS_WIDTH %>" height="<%= constants.CANVAS_HEIGHT %>"></canvas>			
 		</div>
 
-		<script src="javascripts/mouse.js"></script>
-		<script src="javascripts/debug.js"></script>
 		<script src="javascripts/api.js"></script>	
 		<script src="javascripts/client.js"></script>
 	</body>
