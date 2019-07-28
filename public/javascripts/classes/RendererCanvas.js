@@ -7,13 +7,6 @@ function RendererCanvas()
 RendererCanvas.prototype.init = function()
 {
 	var gridLayout = this;
-	
-	window.addEventListener('resize', () =>
-	{
-		gridLayout.resizeCanvas();
-	}, false);
-
-	gridLayout.resizeCanvas();
 };
 
 
@@ -30,11 +23,11 @@ RendererCanvas.prototype.resizeCanvas = function()
 
 	/*var interfaceV = document.getElementById('interface');
 	var width = interfaceV.clientWidth;  
-	var height = interfaceV.clientHeight; 
+	var height = interfaceV.clientHeight; */
 
 	var canvas = gridLayout.canvasV;
-	canvas.width = width;
-	canvas.height = height;*/
+	canvas.width = options.RESOLUTION_WIDTH;
+	canvas.height = options.RESOLUTION_HEIGHT;
 
 	//var ctx = canvas.getContext('2d');
 	//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.
@@ -78,8 +71,8 @@ RendererCanvas.prototype.flagRenderCell = function(cell)
 	var borderWidth = 1;
 	var posX = cell.startX + borderWidth;
 	var posY = cell.startY + borderWidth;
-	var width = cell.width - borderWidth;
-	var height = cell.height - borderWidth;
+	var width = cell.width - borderWidth * 2;
+	var height = cell.height - borderWidth * 2;
 
 	var canvas = gridLayout.canvasV;
 	var ctx = canvas.getContext('2d');

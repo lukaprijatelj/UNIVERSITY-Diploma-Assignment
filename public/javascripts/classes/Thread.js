@@ -1,4 +1,4 @@
 function Thread(callback)
 {
-	window.setTimeout(callback, 1);
+	window.setTimeout(callback, 0);
 }

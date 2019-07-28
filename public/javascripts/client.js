@@ -2,6 +2,8 @@
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
+var options = null;
+
 var GLOBALS =
 {
 	/**
@@ -45,14 +47,15 @@ var GLOBALS =
 	rendererType: enums.rendererType.RAY_TRACING,
 
 	/**
-	 * Layout view instance.
+	 * Camera controls affected by mouse movement.
 	 */
-	layout: null,
+	controls: null,
 
 	/**
-	 * Type of the layout view.
+	 * Last rendered time.
 	 */
-	layoutType: enums.layoutType.CANVAS,
+	lastRenderingTime: 0,
+
 
 	
 	init: function()
@@ -65,10 +68,8 @@ var GLOBALS =
 
 		API.init('renderer');		
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('cells/update', GLOBALS._onCellUpdate);
 	},
 
-	
 
 	/**
 	 * On server-client connection.
@@ -78,9 +79,29 @@ var GLOBALS =
 		console.log('[Globals] Connected to server!');
 
 		API.isConnected = true;
-		
+
+		API.listen('cells/update', GLOBALS._onCellUpdate);
+		API.listen('rendering/start', GLOBALS._onStartRendering);	
+		API.listen('rendering/stop', GLOBALS._onStopRendering);	
+
 		API.request('cells/getAll', GLOBALS.onGetLayout);
 	},	
+
+	/**
+	 * Server started rendering service.
+	 */
+	_onStartRendering: function(data)
+	{
+		API.request('cells/getAll', GLOBALS.onGetLayout);
+	},
+
+	/**
+	 * Server stopped rendering service.
+	 */
+	_onStopRendering: function(data)
+	{
+		options = null;
+	},
 
 	/**
 	 * Client has disconnected from server.
@@ -101,12 +122,15 @@ var GLOBALS =
 		GLOBALS.tryUpdatingCell(cell);
 	},
 
+	/**
+	 * Starts loading GLTF model.
+	 */
 	startLoadingGltfModel: function(path)
 	{
 		console.log('[Globals] Requesting GLTF model');
 
 		var loader = new GltfLoader();
-		loader.path = 'scenes/Textured-box/BoxTextured.gltf';
+		loader.path = options.SCENE_FILEPATH;
 		loader.onSuccess = function(gltf) 
 		{
 			console.log('[glTF loader] Scene finished loading');
@@ -140,14 +164,24 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing camera');
 
-		var ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+		var ratio = options.RESOLUTION_WIDTH / options.RESOLUTION_HEIGHT;
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
 
-		GLOBALS.camera.position.x = 0.35;
-		GLOBALS.camera.position.y = 0.03;
-		GLOBALS.camera.position.z = -2.58;
+		GLOBALS.camera.position.x = options.CAMERA_POSITION_X;
+		GLOBALS.camera.position.y = options.CAMERA_POSITION_Y;
+		GLOBALS.camera.position.z = options.CAMERA_POSITION_Z;		
 	},
 
+	/**
+	 * Initializes camera mouse controls, so that changing view is easier.
+	 */
+	_initCameraControls: function()
+	{
+		console.log('[Globals] Initializing camera controls');
+
+		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera);
+		GLOBALS.controls.enabled = false;
+	},
 
 	/**
 	 * Initializes lights.
@@ -158,28 +192,24 @@ var GLOBALS =
 
 		var intensity = 70000;
 
-		//if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
-		{
-			var light = new THREE.PointLight(0xffaa55, intensity);
-			light.position.set( - 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0x55aaff, intensity);
-			light.position.set( 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0xffffff, intensity * 1.5);
-			light.position.set( 0, 0, 300 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-		}
-		//else
-		{
-			var light = new THREE.AmbientLight(0x404040, 3); // soft white light
-			GLOBALS.scene.add( light );
-		}
+		// WARNING:
+		// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
+		// only Use PointLight
+
+		var light = new THREE.PointLight(0xffaa55, intensity);
+		light.position.set( - 200, 100, 100 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
+
+		var light = new THREE.PointLight(0x55aaff, intensity);
+		light.position.set( 200, 100, 100 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
+
+		var light = new THREE.PointLight(0xffffff, intensity * 1.5);
+		light.position.set( 0, 0, 300 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
 	},
 
 	/**
@@ -195,8 +225,7 @@ var GLOBALS =
 		switch(GLOBALS.rendererType)
 		{
 			case enums.rendererType.RAY_TRACING:
-				renderer = new RaytracingRenderer();
-				renderer.canvas = canvas;
+				renderer = new RaytracingRenderer(canvas);
 				renderer.updateFunction = GLOBALS.updateProgressAsync;
 				renderer.onCellRendered = GLOBALS.onCellRendered;
 				break;
@@ -226,15 +255,27 @@ var GLOBALS =
 	 */
 	onGetLayout: function(data)
 	{
-		GLOBALS.cells = data;
-
 		console.log('[Globals] Grid layout drawn');
+
+
+		// -----------------------------
+		// update options
+		// -----------------------------
+
+		if (!data.options)
+		{
+			return;
+		}
+
+		options = data.options;
+		GLOBALS.rendererCanvas.resizeCanvas();
 
 
 		// -----------------------------
 		// draw layout
 		// -----------------------------
 
+		GLOBALS.cells = data.cells;
 		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
 
 
@@ -250,7 +291,18 @@ var GLOBALS =
 		}
 		
 
-		new Thread(GLOBALS.onDataLoaded);
+		// -----------------------------
+		// check if rendering service is running on server
+		// -----------------------------
+		
+		if (!data.isRenderingServiceRunning)
+		{
+			// nothing to render
+			return;
+		}
+		API.isRenderingServiceRunning = data.isRenderingServiceRunning;
+
+		GLOBALS.onDataLoaded();
 	},
 
 	/**
@@ -259,11 +311,6 @@ var GLOBALS =
 	 */
 	onViewLoaded: function()
 	{
-
-		// -----------------------------
-		// remove .loading flag
-		// -----------------------------
-
 		document.body.removeClass('loading');
 	},
 
@@ -274,9 +321,11 @@ var GLOBALS =
 	{
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
+		
 		GLOBALS._initLights();
 		
 		GLOBALS._initRenderer();
+		GLOBALS._initCameraControls();
 
 		GLOBALS.startLoadingGltfModel();
 	},
@@ -299,7 +348,12 @@ var GLOBALS =
 	 */
 	onCellRendered: function()
 	{
-		document.body.removeClass('busy');
+		GLOBALS.lastRenderingTime = window.setTimeout(()=>
+		{
+			document.getElementById('interface').removeClass('rendering');
+			GLOBALS.lastRenderingTime = 0;
+		}, 1000);
+				
 		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 	},
 
@@ -310,7 +364,12 @@ var GLOBALS =
 	{
 		console.log('[Globals] Rendering cell received');
 
-		document.body.addClass('busy');
+		if (GLOBALS.lastRenderingTime > 0)
+		{
+			window.clearTimeout(GLOBALS.lastRenderingTime);
+		}
+		
+		document.getElementById('interface').addClass('rendering');
 
 		GLOBALS.cells.currentRenderCell = cell;
 

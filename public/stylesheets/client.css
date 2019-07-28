@@ -18,3 +18,43 @@
 {
 	background-color: var(--DARK-BLUE-COLOR);
 }
+
+
+/* ----------------------------- */
+/* status message */
+/* ----------------------------- */
+
+#status-message
+{
+	text-align: center;
+	color: white;
+	background-color: var(--DARK-GRAY-COLOR);
+	
+}
+	#status-message::after
+	{
+		content: "Waiting";
+	}
+
+#interface
+{
+	border-color: var(--DARK-GRAY-COLOR);
+}
+
+#interface.rendering #status-message
+{
+	background-color: var(--LIGHT-RED-COLOR);
+}
+	#interface.rendering #status-message::after
+	{
+		content: "Rendering";
+	}
+
+#interface.done #status-message
+{
+	background-color: var(--DARK-BLUE-COLOR);
+}
+	#interface.done #status-message::after
+	{
+		content: "Done";
+	}

@@ -147,6 +147,10 @@ label
 }
 
 
+canvas
+{
+	display: block;
+}
 
 /* ----------------------------- */
 /* interface */
@@ -157,9 +161,6 @@ label
 	--BORDER-WIDTH: 2px;
 
 	border-width: var(--BORDER-WIDTH);
-	width: calc(100% - var(--BORDER-WIDTH) * 2);
-    height: calc(100% - var(--BORDER-WIDTH) * 2);
-    position: fixed;
 }
 	#interface.rendering .hide-on-rendering
 	{
@@ -181,23 +182,15 @@ editor-popup
 	left: 0px;
 }
 
-
-/* ----------------------------- */
-/* Rendering grid */
-/* ----------------------------- */
-
-#rendering-canvas
+curtain
 {
+	display: none;
+	width: 100%;
+	height: 100%;
 	position: absolute;
 }
 
-
-
-/* ----------------------------- */
-/* Editor canvas */
-/* ----------------------------- */
-
-#editor-canvas
-{
-	position: absolute;
-}
+	#interface.rendering curtain
+	{
+		display: block;
+	}

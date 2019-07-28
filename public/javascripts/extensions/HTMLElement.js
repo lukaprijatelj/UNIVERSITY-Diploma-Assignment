@@ -108,10 +108,20 @@ HTMLElement.prototype.show = function()
 
 HTMLElement.prototype.enable = function()
 {
-    this.removeClass('disabled');
+	this.removeClass('disabled');
+};
+
+HTMLElement.prototype.isEnabled = function()
+{
+    return !this.hasClass('disabled');
 };
 
 HTMLElement.prototype.disable = function()
 {
     this.addClass('disabled');
+};
+
+HTMLElement.prototype.isDisable = function()
+{
+    return this.hasClass('disabled');
 };

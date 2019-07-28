@@ -7,6 +7,7 @@ var API =
 {
 	isConnected: false,
 	clientType: '',
+	isRenderingServiceRunning: false,
 
 	/**
 	 * Ajax request to server.
@@ -47,7 +48,7 @@ var API =
 	 */
 	connect: function(onConnect, onDisconnect)
 	{
-		socket = io.connect(HOSTING_URL, { query: "clientType=" + API.clientType });
+		socket = io.connect(constants.HOSTING_URL, { query: "clientType=" + API.clientType });
 
 		socket.on('connect', onConnect);
 		socket.on('disconnect', onDisconnect);

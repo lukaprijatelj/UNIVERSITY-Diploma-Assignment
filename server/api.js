@@ -1,8 +1,9 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
-var constants = require('./constants.js');
+var constants = require('../public/javascripts/constants.js');
 var Exception = require('../public/javascripts/classes/Exception.js');
 var Warning = require('../public/javascripts/classes/Warning.js');
+var options = null;
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(30003);
@@ -19,6 +20,8 @@ var API =
 	 * Admin client session ID.
 	 */
 	adminSessionId: '',
+
+	isRenderingServiceRunning: false,
 
 
     init: function(app)
@@ -50,16 +53,22 @@ var API =
 		if (data.clientType == "admin")
 		{
 			isAdmin = true;
-			API.adminSessionId = sessionId;
+			API.adminSessionId = sessionId;	
+			
+			socket.on(API.baseUrl + '/rendering/checkAdmin', API.onAdminCheckRendering); 
 		}
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
 				
+		// cells
 		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
 		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
 		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);		
+
+		// rendering
 		socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
-		socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);	
+		socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
+		
 		
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
@@ -84,6 +93,30 @@ var API =
 		var sessionId = socket.id;
 
 		DATABASE.removeRenderClient(sessionId);		
+
+
+		// -----------------------------
+		// notifies that clients list was updated
+		// -----------------------------
+
+		var result = DATABASE.getClients();
+		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
+	},
+
+	/**
+	 * Responds with list of rendering cells.
+	 */
+	onAdminCheckRendering: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+		var result = { isRenderingServiceRunning: API.isRenderingServiceRunning };
+
+		callback(result);
 	},
 
 	/**
@@ -97,9 +130,12 @@ var API =
 		}
 
 		var socket = this;
-		var sessionId = socket.id;
-
-		var result = DATABASE.getRenderingCells();
+		var result = 
+		{
+			cells: DATABASE.getRenderingCells(),
+			options: options,
+			isRenderingServiceRunning: API.isRenderingServiceRunning
+		}
 
 		callback(result);
 	},
@@ -109,6 +145,11 @@ var API =
 	 */
 	onGetWaitingCells: function(data, callback)
 	{
+		if (API.isRenderingServiceRunning == false)
+		{
+			return;
+		}
+
 		if (!callback)
 		{
 			new Exception.ValueUndefined();
@@ -133,6 +174,11 @@ var API =
 	 */
 	onUpdateCell: function(data)
 	{
+		if (API.isRenderingServiceRunning == false)
+		{
+			return;
+		}
+
 		console.log("[Api] Progress was updated");
 
 		var socket = this;
@@ -171,33 +217,60 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		DATABASE.clearGridLayout();
+		var socket = this;
+
+		// update rendering options
+		options = data.options;
 		
+
+		// -----------------------------
+		// recalculates cell layout
+		// -----------------------------
+
+		DATABASE.clearGridLayout();
+
 		var startY = 0;
 
-		while(startY < constants.CANVAS_HEIGHT)
+		while(startY < options.RESOLUTION_HEIGHT)
 		{
 			var startX = 0;
 
-			while(startX < constants.CANVAS_WIDTH)
+			while(startX < options.RESOLUTION_WIDTH)
 			{
-				var endX = startX + constants.BLOCK_WIDTH;
-				var endY = startY + constants.BLOCK_HEIGHT;
+				var endX = startX + options.BLOCK_WIDTH;
+				var endY = startY + options.BLOCK_HEIGHT;
 
-				var MAX_X = endX < constants.CANVAS_WIDTH ? endX : constants.CANVAS_WIDTH;
-				var MAX_Y = endY < constants.CANVAS_HEIGHT ? endY : constants.CANVAS_HEIGHT;
+				var MAX_X = endX < options.RESOLUTION_WIDTH ? endX : options.RESOLUTION_WIDTH;
+				var MAX_Y = endY < options.RESOLUTION_HEIGHT ? endY : options.RESOLUTION_HEIGHT;
 
 				DATABASE.addGridLayout(startX, startY, MAX_X - startX, MAX_Y - startY);
 
-				startX += constants.BLOCK_WIDTH;
+				startX += options.BLOCK_WIDTH;
 			}
 
-			startY += constants.BLOCK_HEIGHT;
+			startY += options.BLOCK_HEIGHT;
 		}
 
+		API.isRenderingServiceRunning = true;
+
+
 		callback();
+
+
+		// -----------------------------
+		// notifies that server started rendering service (clients can now start or continue rendering)
+		// -----------------------------
+
+		var startData = 
+		{
+			options: options
+		};
+		socket.broadcast.emit(API.baseUrl + '/rendering/start', startData);
 	},
 
+	/**
+	 * Stops rendering
+	 */
 	onStopRendering: function(data, callback)
 	{
 		if (!callback)
@@ -205,7 +278,19 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
+		var socket = this;
+
+		API.isRenderingServiceRunning = false;
+
 		callback();
+
+
+		// -----------------------------
+		// notifies that server stopped rendering service (clients must stop rendering)
+		// -----------------------------
+
+		var stopData = {};
+		socket.broadcast.emit(API.baseUrl + '/rendering/stop', stopData);
 	}
 };
 

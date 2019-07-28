@@ -39,11 +39,6 @@ var GLOBALS =
 	camera: null,
 
 	/**
-	 * Layout view instance.
-	 */
-	rendererCanvas: null,
-
-	/**
 	 * Canvas for editor aka preview.
 	 */
 	editorCanvas: null,
@@ -53,17 +48,13 @@ var GLOBALS =
 	{	
 		GLOBALS.editorCanvas = new EditorCanvas();
 		GLOBALS.editorCanvas.init();
-
-		GLOBALS.rendererCanvas = new RendererCanvas();
-		GLOBALS.rendererCanvas.init();
 		
 		DEBUG.init();	
 		
 		API.init('admin');	
 
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('cells/update', GLOBALS._onCellUpdate);
-		API.listen('clients/updated', GLOBALS._onClientsUpdated);
+		
 
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
@@ -79,13 +70,17 @@ var GLOBALS =
 	 * On server-client connection.
 	 * @private
 	 */
-	_onServerConnected: function()
+	_onServerConnected: function(socket, data)
 	{
 		console.log('[Main] Connected to server!');
 
 		API.isConnected = true;
 
-		API.request('cells/getAll', GLOBALS._onGetLayout);
+		API.listen('clients/updated', GLOBALS._onClientsUpdated);
+
+		API.request('rendering/checkAdmin', GLOBALS._onCheckRendering);	
+
+		new Thread(GLOBALS.onLoaded);
 	},
 
 	/**
@@ -96,17 +91,26 @@ var GLOBALS =
 		API.isConnected = false;
 	},
 
+	/**
+	 * Check is server rendering service is running.
+	 */
+	_onCheckRendering: function(data)
+	{
+		GLOBALS._updateRenderingState(data.isRenderingServiceRunning);
+	},
+
+	/**
+	 * Starts loading GLTF model.
+	 */
 	startLoadingGltfModel: function(path)
 	{
 		console.log('[Globals] Requesting GLTF model');
 
 		var loader = new GltfLoader();
-		loader.path = 'scenes/Textured-box/BoxTextured.gltf';
+		loader.path = options.SCENE_FILEPATH;
 		loader.onSuccess = function(gltf) 
 		{
 			console.log('[glTF loader] Scene finished loading');
-
-			
 
 			GLOBALS.scene.add(gltf.scene);
 
@@ -116,9 +120,7 @@ var GLOBALS =
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
 						
-
 			GLOBALS.onRenderFrame();
-			//API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 		};
 		loader.start();	
 	},
@@ -138,12 +140,12 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing camera');
 
-		var ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+		var ratio = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
 
-		GLOBALS.camera.position.x = 0.35;
-		GLOBALS.camera.position.y = 0.03;
-		GLOBALS.camera.position.z = -2.58;
+		GLOBALS.camera.position.x = 0.81;
+		GLOBALS.camera.position.y = -0.1;
+		GLOBALS.camera.position.z = -2.47;
 	},
 
 	/**
@@ -163,30 +165,8 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing lights');
 
-		var intensity = 70000;
-
-		//if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
-		{
-			var light = new THREE.PointLight(0xffaa55, intensity);
-			light.position.set( - 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0x55aaff, intensity);
-			light.position.set( 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0xffffff, intensity * 1.5);
-			light.position.set( 0, 0, 300 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-		}
-		//else
-		{
-			var light = new THREE.AmbientLight(0x404040, 3); // soft white light
-			GLOBALS.scene.add( light );
-		}
+		var light = new THREE.AmbientLight(0x404040, 3);
+		GLOBALS.scene.add(light);
 	},
 
 	/**
@@ -194,7 +174,7 @@ var GLOBALS =
 	 */
 	_initRenderer: function()
 	{
-		console.log('[Globals] Initialize renderer of type "' + GLOBALS.rendererType + '"');
+		console.log('[Globals] Initialize editor renderer');
 
 		var canvas = document.getElementById('editor-canvas');
 
@@ -203,10 +183,9 @@ var GLOBALS =
 			canvas: canvas 
 		};
 		GLOBALS.renderer = new THREE.WebGLRenderer(options);
-		
-		GLOBALS.renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+		GLOBALS.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
 
-		//GLOBALS.renderer.init();
+		GLOBALS.editorCanvas.resizeCanvas();
 	},	
 
 	/**
@@ -240,14 +219,36 @@ var GLOBALS =
 		clientsConnectedInput.value = activeClientsCount;
 	},
 
-	/**
-	 * One of the cells was updated
-	 */
-	_onCellUpdate: function(data)
+	_updateRenderingState: function(isRendering)
 	{
-		var cell = data.cell;
+		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
 
-		GLOBALS.tryUpdatingCell(cell);
+		if (isRendering == true)
+		{
+			var interfaceV = document.getElementById('interface');
+			interfaceV.addClass('rendering');
+
+			var canvasV = document.getElementById('editor-canvas');
+			canvasV.disable();
+				
+			startRenderingButtonV.addClass('selected');
+			startRenderingButtonV.innerHTML = 'Stop rendering';
+
+			startRenderingButtonV.enable();
+		}
+		else
+		{
+			var interfaceV = document.getElementById('interface');
+			interfaceV.removeClass('rendering');
+
+			var canvasV = document.getElementById('editor-canvas');
+			canvasV.enable();
+
+			startRenderingButtonV.removeClass('selected');
+			startRenderingButtonV.innerHTML = 'Start rendering';
+
+			startRenderingButtonV.enable();
+		}
 	},
 
 	/**
@@ -257,40 +258,52 @@ var GLOBALS =
 	_onStartStopRenderingClick: function()
 	{
 		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
+		startRenderingButtonV.disable();
+
+		var data = {};
 
 		if (startRenderingButtonV.hasClass('selected'))
 		{
 			API.request('rendering/stop', () =>
 			{
-				var interfaceV = document.getElementById('interface');
-				interfaceV.removeClass('rendering');
-
-				var renderingCanvasV = document.getElementById('rendering-canvas');
-				renderingCanvasV.hide();
-					
-				startRenderingButtonV.removeClass('selected');
-				startRenderingButtonV.innerHTML = 'Start rendering';
-			});
+				GLOBALS._updateRenderingState(false);
+			}, data);
 		}
 		else
 		{
+			data.options = options;
+
 			API.request('rendering/start', () =>
 			{
-				var interfaceV = document.getElementById('interface');
-				interfaceV.addClass('rendering');
-	
-				var renderingCanvasV = document.getElementById('rendering-canvas');
-				renderingCanvasV.show();
-				
-				startRenderingButtonV.addClass('selected');
-				startRenderingButtonV.innerHTML = 'Stop rendering';
-
-				// open rendering output window
-				var myWindow = window.open("/renderingOutput", "", "width=800,height=450");
-			});
+				GLOBALS._updateRenderingState(true);
+			}, data);
 		}
-		
-		//API.request('cells/getAll', GLOBALS._onGetLayout);
+	},
+
+	_onResolutionWidthChange: function(val)
+	{
+		options.RESOLUTION_WIDTH = val;
+	},
+
+	_onResolutionHeightChange: function(val)
+	{
+		options.RESOLUTION_HEIGHT = val;
+	},
+
+	_onBlockWidthChange: function(val)
+	{
+		options.BLOCK_WIDTH = val;
+	},
+
+	_onBlockHeightChange: function(val)
+	{
+		options.BLOCK_HEIGHT = val;
+	},
+
+	_onOpenOutputClick: function()
+	{
+		// open rendering output window
+		window.open("/renderingOutput", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	},
 
 	/**
@@ -299,45 +312,14 @@ var GLOBALS =
 	 */
 	_onStartNewClientClick: function()
 	{
-		var a = document.createElement("a");    
+		/*var a = document.createElement("a");    
 		a.href = window.location.origin + '/client';    
 		a.setAttribute('target', '_blank');
 		var evt = document.createEvent("MouseEvents");   
 		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
-		a.dispatchEvent(evt);
-	},
+		a.dispatchEvent(evt);*/
 
-	/**
-	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @private
-	 */
-	_onGetLayout: function(data)
-	{
-		GLOBALS.cells = data;
-
-		console.log('[Main] Layout is received from server');
-
-		
-		// -----------------------------
-		// draw layout
-		// -----------------------------
-
-		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
-
-
-		// -----------------------------
-		// draw all cells that are already rendered
-		// -----------------------------
-		
-		for (var i=0; i<GLOBALS.cells.length; i++)
-		{
-			var current = GLOBALS.cells[i];
-
-			GLOBALS.tryUpdatingCell(current);
-		}
-
-
-		new Thread(GLOBALS.onLoaded);
+		window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	},
 
 	/**
@@ -350,17 +332,17 @@ var GLOBALS =
 		// set default values
 		// -----------------------------
 
-		var canvasWidthInput = document.getElementById('canvas-width-input');
-		canvasWidthInput.value = CANVAS_WIDTH;
+		var resolutionWidthInput = document.getElementById('resolution-width-input');
+		resolutionWidthInput.value = options.RESOLUTION_WIDTH;
 
-		var canvasHeightInput = document.getElementById('canvas-height-input');
-		canvasHeightInput.value = CANVAS_HEIGHT;
+		var resolutionHeightInput = document.getElementById('resolution-height-input');
+		resolutionHeightInput.value = options.RESOLUTION_HEIGHT;
 
 		var blockWidthV = document.getElementById('block-width-input');
-		blockWidthV.value = BLOCK_WIDTH;
+		blockWidthV.value = options.BLOCK_WIDTH;
 
 		var blockHeightV = document.getElementById('block-height-input');
-		blockHeightV.value = BLOCK_HEIGHT;
+		blockHeightV.value = options.BLOCK_HEIGHT;
 
 
 
@@ -369,20 +351,6 @@ var GLOBALS =
 		// -----------------------------
 
 		document.body.removeClass('loading');
-	},
-
-	/**
-	 * Draws cell on the screen.
-	 */
-	tryUpdatingCell: function(cell)
-	{
-		if (!cell.imageData)
-		{
-			// cells does not have any image data so we don't really need to draw it
-			return;
-		}
-
-		GLOBALS.rendererCanvas.updateCell(cell);
 	}
 };
 

@@ -10,6 +10,7 @@ body
 	--DARK-BLUE-COLOR: #1F52F2; 
 	--LIGHT-BLUE-COLOR: #0079FF; 
 	--LIGHT-GRAY-COLOR: #EBEBEB;
+	--DARK-GRAY-COLOR: #6e6e6e;
 	--LIGHT-RED-COLOR: #C3272B;
 	--DARK-RED-COLOR: #8F1D21;
 	--TEXT-COLOR: rgba(255, 255, 255, 0.5);
@@ -120,7 +121,7 @@ input
 {
 	font-family: 'Muli', sans-serif;
 	border-style: solid;
-	border-color: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.2);
 	vertical-align: bottom;
 	color: var(--TEXT-COLOR);
 	background: rgba(255, 255, 255, 0.05);
@@ -169,11 +170,13 @@ editor-popup
 	background-color: var(--EDITOR-POPUP-BACKGROUND);
 }
 
+curtain
+{
+	background-color: black;
+	opacity: 0.5;
+}
+
 #editor-canvas
 {
 	background-color: black;
 }
-	#interface.rendering #editor-canvas
-	{
-		opacity: 0.1;
-	}

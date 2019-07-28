@@ -27,17 +27,9 @@
 			{
 				console.type = 'client';
 			}
-
-			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
-
-			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
-			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
-			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
-			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
-			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
-			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
 		</script>
-
+		<script src="javascripts/constants.js"></script>
+		<script src="javascripts/options.js"></script>
 
 		<!-- Extension scripts -->
 		<script src="javascripts/extensions/function.js"></script>
@@ -78,17 +70,12 @@
 
 			<!-- Canvas for displaying preview -->
 			<canvas id="editor-canvas" class=""></canvas>
-
-
-			<!-- Canvas for rendering output -->
-			<canvas id="rendering-canvas" class="hidden" width="<%= constants.CANVAS_WIDTH %>" height="<%= constants.CANVAS_HEIGHT %>"></canvas>
-
+			<curtain id="editor-curtain"></curtain>
 
 			<flex id="bottom-row">
-				
 				<editor-popup>
 					<!-- Info about mouse position -->
-					<section class="hide-on-rendering">
+					<section>
 						<label>Mouse positions (x, y)</label>
 						<flex>
 							<input type="number" id="mouse-x-input" class="disabled">
@@ -96,10 +83,10 @@
 							<input type="number" id="mouse-y-input" class="disabled">
 						</flex>				
 					</section>
-					<divider-x-small class="hide-on-rendering"></divider-x-small>
+					<divider-x-small></divider-x-small>
 		
 					<!-- Info about camera position -->
-					<section class="hide-on-rendering">
+					<section>
 						<label>Camera positions (x, y, z)</label>
 						<flex>
 							<input type="number" id="camera-x-input" class="disabled">
@@ -109,41 +96,59 @@
 							<input type="number" id="camera-z-input" class="disabled">
 						</flex>				
 					</section>
-					<divider-x-small class="hide-on-rendering"></divider-x-small>	
+					<divider-x-small></divider-x-small>	
 	
-					<flex class="hide-on-rendering">
-						<!-- Canvas width and height inputs -->
+					<!-- Canvas width and height inputs -->
+					<flex>
 						<section>
 							<label>Canvas width (px)</label>
-							<input type="number" id="canvas-width-input" class="">
+							<input type="number" id="canvas-width-input" class="disabled">
 						</section>
 						<divider-y-small></divider-y-small>
 						<section>
 							<label>Canvas height (px)</label>
-							<input type="number" id="canvas-height-input" class="">
+							<input type="number" id="canvas-height-input" class="disabled">
 						</section>				
 					</flex>
-					<divider-x-small class="hide-on-rendering"></divider-x-small>
+					<divider-x-small></divider-x-small>
+
+					<!-- Resolution width and height inputs -->
+					<flex>
+						<section>
+							<label>Resolution width (px)</label>
+							<input type="number" id="resolution-width-input" class="" onchange="GLOBALS._onResolutionWidthChange(this.value)">
+						</section>
+						<divider-y-small></divider-y-small>
+						<section>
+							<label>Resolution height (px)</label>
+							<input type="number" id="resolution-height-input" class="" onchange="GLOBALS._onResolutionHeightChange(this.value)">
+						</section>				
+					</flex>
+					<divider-x-small></divider-x-small>
 	
-					<flex class="hide-on-rendering">
-						<!-- Block width and height inputs -->
+					<!-- Block width and height inputs -->
+					<flex>
 						<section>
 							<label>Block width (px)</label>
-							<input type="number" id="block-width-input" class="">
+							<input type="number" id="block-width-input" class="" onchange="GLOBALS._onBlockWidthChange(this.value)">
 						</section>
 						<divider-y-small></divider-y-small>
 						<section>
 							<label>Block height (px)</label>
-							<input type="number" id="block-height-input" class="">
+							<input type="number" id="block-height-input" class=""  onchange="GLOBALS._onBlockHeightChange(this.value)">
 						</section>
 					</flex>
-					<divider-x-small class="hide-on-rendering"></divider-x-small>
+					<divider-x-small></divider-x-small>
 	
 					<!-- Recalculate button -->
 					<checkbox-button id="recalculate-layout-button" class="dark" onclick="GLOBALS._onStartStopRenderingClick()">Start rendering</checkbox-button>
+					<divider-x-small></divider-x-small>
+
+					<!-- Recalculate button -->
+					<checkbox-button id="open-output-button" class="dark" onclick="GLOBALS._onOpenOutputClick()">Open output</checkbox-button>
 				</editor-popup>
 
-				<editor-popup class="hide-on-rendering">
+				<editor-popup>
 					<!-- Statistics -->
 					<section>
 						<h3>Statistics</h3>
