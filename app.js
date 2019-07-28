@@ -5,7 +5,7 @@ if (console)
 {
 	console.type = 'server';
 }
-var constants = require('./server/constants.js');
+var constants = require('./public/javascripts/constants.js');
 
 
 // -----------------------------
@@ -45,7 +45,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
 var clientRendererRouter = require('./routes/client');
 var clientAdminRouter = require('./routes/server-admin');
-var finalPreviewRouter = require('./routes/final-preview');
+var renderingOutputRouter = require('./routes/rendering-output');
 
 
 
@@ -101,7 +101,7 @@ var EXPRESS_APP =
 		app.use('/upload', usersRouter);
 		app.use('/client', clientRendererRouter);
 		app.use('/serverAdmin', clientAdminRouter);
-		app.use('/finalPreview', finalPreviewRouter);
+		app.use('/renderingOutput', renderingOutputRouter);
 		
 		
 

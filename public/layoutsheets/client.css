@@ -2,6 +2,14 @@
 /* Layout (fires browsers reflow event - slow processing) */
 /* -------------------------------------------------------------------------------------------------------------------- */
 
+
+#interface
+{
+    position: absolute;
+}
+
+
+
 #debug-info 
 {
 	position: fixed;

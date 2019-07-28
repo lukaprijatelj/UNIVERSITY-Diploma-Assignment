@@ -5,17 +5,15 @@
  *
  * @author zz85 / http://github.com/zz85
  */
-var RaytracingRenderer = function() 
+var RaytracingRenderer = function(canvas) 
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
-	this.canvas = null;
+	this.canvas = canvas;
 	this.domElement = canvas; // do not delete, this is only for referencing
 
 	this.context = null;
 
-	var canvasWidth;
-	var canvasHeight;
 	var clearColor = new THREE.Color(0x000000);
 
 	// data for blockWidth, blockHeight, startX, startY
@@ -35,32 +33,39 @@ var RaytracingRenderer = function()
 
 	this.drawOnCanvas = function(buffer, blockX, blockY, timeMs)
 	{
+		var renderer = this;
+
 		console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 		
-		var imagedata = new ImageData(new Uint8ClampedArray(buffer), this.cell.width, this.cell.height);
+		var imagedata = new ImageData(new Uint8ClampedArray(buffer), renderer.cell.width, renderer.cell.height);
 
 		var canvas = document.createElement('canvas');
-		canvas.width  = this.cell.width;
-		canvas.height = this.cell.height;
+		canvas.width  = renderer.cell.width;
+		canvas.height = renderer.cell.height;
 		canvas.getContext('2d').putImageData(imagedata, 0, 0);
 
-		this.cell.imageData = canvas.toDataURL('image/png');
 
-		GLOBALS.tryUpdatingCell(this.cell);
-		this.updateFunction(this.cell, 100);
+		renderer.cell.imageData = canvas.toDataURL('image/png');
+
+		
+
+		GLOBALS.tryUpdatingCell(renderer.cell);
+		renderer.updateFunction(renderer.cell, 100);
 		
 		// completed
-		this.onCellRendered();
+		renderer.onCellRendered();
 	};
 
 	this.setWorkers = function() 
 	{
-		var worker = new THREE.RaytracingRendererWorker(this.drawOnCanvas.bind(this));
+		var renderer = this;
 
-		worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8 ).getHexString();
+		var worker = new THREE.RaytracingRendererWorker(renderer.drawOnCanvas.bind(renderer));
 
-		this.worker = worker;
-		this.updateSettings(worker);
+		worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
+
+		renderer.worker = worker;
+		renderer.updateSettings(worker);
 	};
 
 	/**
@@ -68,7 +73,7 @@ var RaytracingRenderer = function()
 	 */
 	this.setClearColor = function(color /*, alpha */ ) 
 	{
-		clearColor.set( color );
+		clearColor.set(color);
 	};
 
 	// probably to override parent functions
@@ -77,18 +82,16 @@ var RaytracingRenderer = function()
 
 	this.updateSettings = function(worker) 
 	{
-		worker.init(canvasWidth, canvasHeight);
+		var renderer = this;
+
+		worker.init(renderer.canvas.width, renderer.canvas.height);
 	};
 
-	this.setSize = function (width, height) 
+	this.setSize = function () 
 	{
-		this.canvas.width = width;
-		this.canvas.height = height;
+		var renderer = this;
 
-		canvasWidth = this.canvas.width;
-		canvasHeight = this.canvas.height;
-
-		this.updateSettings(this.worker);
+		renderer.updateSettings(this.worker);
 	};
 
 	//
@@ -126,7 +129,9 @@ var RaytracingRenderer = function()
 
 	this.render = function(scene, camera) 
 	{
-		this.renderering = true;
+		var renderer = this;
+
+		renderer.renderering = true;
 
 		// update scene graph
 
@@ -139,27 +144,31 @@ var RaytracingRenderer = function()
 		sceneJSON = scene.toJSON();
 		cameraJSON = camera.toJSON();
 
-		scene.traverse(this.serializeObject);
+		scene.traverse(renderer.serializeObject);
 
-		this.worker.initScene(sceneJSON, cameraJSON, materials);		
+		renderer.worker.initScene(sceneJSON, cameraJSON, materials);		
 
 
-		GLOBALS.layout.flagRenderCell(this.cell);
+		GLOBALS.rendererCanvas.flagRenderCell(renderer.cell);
 		
 		//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 
-		this.tryRendering(this.cell.startX, this.cell.startY);
+		renderer.tryRendering(renderer.cell.startX, renderer.cell.startY);
 	};
 
 	this.tryRendering = async function(startX, startY)
 	{
-		this.worker.startRendering(startX, startY);
+		var renderer = this;
+
+		renderer.worker.startRendering(startX, startY);
 	};
 
 	this.init = function()
 	{
-		this.setWorkers();
-		this.setSize(this.canvas.width, this.canvas.height);
+		var renderer = this;
+		
+		renderer.setWorkers();
+		renderer.setSize();
 	};
 };
 

@@ -27,17 +27,9 @@
 			{
 				console.type = 'client';
 			}
-
-			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
-
-			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
-			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
-			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
-			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
-			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
-			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
 		</script>
-
+		<script src="javascripts/constants.js"></script>
+		<script src="javascripts/options.js"></script>
 
 		<!-- Extension scripts -->
 		<script src="javascripts/extensions/function.js"></script>
@@ -54,6 +46,12 @@
 		<!-- ----------------------------- -->
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
+
+
+		<!-- ThreeJS -->
+		<script src="javascripts/threejs/three.js"></script>
+		<script src="javascripts/threejs/OrbitControls.js"></script>
+		<script src="javascripts/threejs/GLTFLoader.js"></script>
 		
 		
 		<!-- Classes scrips -->
@@ -61,87 +59,132 @@
 		<script src="javascripts/classes/Warning.js"></script>
 		<script src="javascripts/classes/Thread.js"></script>
 		<script src="javascripts/classes/Timer.js"></script>
-		<script src="javascripts/classes/GridLayout.js"></script>
-		<script src="javascripts/classes/CanvasLayout.js"></script>
+		<script src="javascripts/classes/RendererCanvas.js"></script>
+		<script src="javascripts/classes/EditorCanvas.js"></script>
+		<script src="javascripts/classes/GltfLoader.js"></script>
 	</head>
 	<body class="loading">
 
 		<!-- Interface -->
 		<div id="interface" class="">
 
-			<!-- All cells will be rendered in this wrapper -->
-			<section>
-				<h3>Rendered cells</h3>
-				<wrapper class="layout"></wrapper>
-			</section>
-			<divider-x-small></divider-x-small>
+			<!-- Canvas for displaying preview -->
+			<canvas id="editor-canvas" class=""></canvas>
+			<curtain id="editor-curtain"></curtain>
 
-
-			<!-- Start new client button -->
-			<section>
-				<label>Clients connected</label>
-				<flex>
-					<input type="number" id="clients-connected-input" class="disabled">
-					<button id="start-new-client-button" class="dark" onclick="GLOBALS._onStartNewClientClick()"></button>
-				</flex>				
-			</section>
-			<divider-x></divider-x>		
-
-	
-			<flex>
-				<!-- Canvas width and height inputs -->
-				<section>
-					<label>Canvas width (px)</label>
-					<input type="number" id="canvas-width-input" class="">
-				</section>
-				<divider-y-small></divider-y-small>
-				<section>
-					<label>Canvas height (px)</label>
-					<input type="number" id="canvas-height-input" class="">
-				</section>
-				<divider-y></divider-y>
-				
-				<!-- Block width and height inputs -->
-				<section>
-					<label>Block width (px)</label>
-					<input type="number" id="block-width-input" class="">
-				</section>
-				<divider-y-small></divider-y-small>
-				<section>
-					<label>Block height (px)</label>
-					<input type="number" id="block-height-input" class="">
-				</section>
-			</flex>
-			<divider-x-small></divider-x-small>
-
-
-			<!-- Recalculate button -->
-			<button id="recalculate-layout-button" class="dark" onclick="GLOBALS._onRecalculateLayoutClick()"></button>
-			<divider-x></divider-x>	
-
-
-			<!-- Statistics -->
-			<section>
-				<h3>Statistics</h3>
-				<flex>
+			<flex id="bottom-row">
+				<editor-popup>
+					<!-- Info about mouse position -->
 					<section>
-						<label>Average rendering time</label>
-						<input type="number" id="avg-render-time-input" class="disabled">
-					</section>					
-					<divider-y-small></divider-y-small>
-					<section>
-						<label>Best speed</label>
-						<input type="number" id="best-speed-input" class="disabled">
+						<label>Mouse positions (x, y)</label>
+						<flex>
+							<input type="number" id="mouse-x-input" class="disabled">
+							<divider-y-small></divider-y-small>
+							<input type="number" id="mouse-y-input" class="disabled">
+						</flex>				
 					</section>
-				</flex>				
-			</section>
-			<divider-x></divider-x>	
+					<divider-x-small></divider-x-small>
+		
+					<!-- Info about camera position -->
+					<section>
+						<label>Camera positions (x, y, z)</label>
+						<flex>
+							<input type="number" id="camera-x-input" class="disabled">
+							<divider-y-small></divider-y-small>
+							<input type="number" id="camera-y-input" class="disabled">
+							<divider-y-small></divider-y-small>
+							<input type="number" id="camera-z-input" class="disabled">
+						</flex>				
+					</section>
+					<divider-x-small></divider-x-small>	
+	
+					<!-- Canvas width and height inputs -->
+					<flex>
+						<section>
+							<label>Canvas width (px)</label>
+							<input type="number" id="canvas-width-input" class="disabled">
+						</section>
+						<divider-y-small></divider-y-small>
+						<section>
+							<label>Canvas height (px)</label>
+							<input type="number" id="canvas-height-input" class="disabled">
+						</section>				
+					</flex>
+					<divider-x-small></divider-x-small>
+
+					<!-- Resolution width and height inputs -->
+					<flex>
+						<section>
+							<label>Resolution width (px)</label>
+							<input type="number" id="resolution-width-input" class="" onchange="GLOBALS._onResolutionWidthChange(this.value)">
+						</section>
+						<divider-y-small></divider-y-small>
+						<section>
+							<label>Resolution height (px)</label>
+							<input type="number" id="resolution-height-input" class="" onchange="GLOBALS._onResolutionHeightChange(this.value)">
+						</section>				
+					</flex>
+					<divider-x-small></divider-x-small>
+	
+					<!-- Block width and height inputs -->
+					<flex>
+						<section>
+							<label>Block width (px)</label>
+							<input type="number" id="block-width-input" class="" onchange="GLOBALS._onBlockWidthChange(this.value)">
+						</section>
+						<divider-y-small></divider-y-small>
+						<section>
+							<label>Block height (px)</label>
+							<input type="number" id="block-height-input" class=""  onchange="GLOBALS._onBlockHeightChange(this.value)">
+						</section>
+					</flex>
+					<divider-x-small></divider-x-small>
+	
+					<!-- Recalculate button -->
+					<checkbox-button id="recalculate-layout-button" class="dark" onclick="GLOBALS._onStartStopRenderingClick()">Start rendering</checkbox-button>
+					<divider-x-small></divider-x-small>
+
+					<!-- Recalculate button -->
+					<checkbox-button id="open-output-button" class="dark" onclick="GLOBALS._onOpenOutputClick()">Open output</checkbox-button>
+				</editor-popup>
+
+				<editor-popup>
+					<!-- Statistics -->
+					<section>
+						<h3>Statistics</h3>
+						<flex>
+							<section>
+								<label>Average rendering time</label>
+								<input type="number" id="avg-render-time-input" class="disabled">
+							</section>					
+							<divider-y-small></divider-y-small>
+							<section>
+								<label>Best speed</label>
+								<input type="number" id="best-speed-input" class="disabled">
+							</section>
+						</flex>				
+					</section>
+					<divider-x></divider-x>	
+	
+					<!-- Start new client button -->
+					<section>
+						<label>Clients connected</label>
+						<flex>
+							<input type="number" id="clients-connected-input" value="0" class="disabled">
+							<button id="start-new-client-button" class="dark" onclick="GLOBALS._onStartNewClientClick()"> + </button>
+						</flex>				
+					</section>
+					<divider-x></divider-x>		
+				</editor-popup>
+			</flex>			
 		</div>		
 
 
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded synchronously -->
 		<!-- ----------------------------- -->
+		<script src="javascripts/mouse.js"></script>
+		<script src="javascripts/debug.js"></script>
 		<script src="javascripts/api.js"></script>	
 		<script src="javascripts/server-admin.js"></script>
 	</body>

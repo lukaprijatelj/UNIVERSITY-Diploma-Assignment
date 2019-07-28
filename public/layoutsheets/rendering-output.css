@@ -4,6 +4,6 @@
 
 #rendering-canvas
 {
-	/** rendering canvas is for the real view for the final-preview and must not be scaled */
+	/** rendering canvas is for the real view for the rendering-output and must not be scaled */
 	width: auto !important;
 }

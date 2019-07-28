@@ -7,6 +7,7 @@ var API =
 {
 	isConnected: false,
 	clientType: '',
+	isRenderingServiceRunning: false,
 
 	/**
 	 * Ajax request to server.
@@ -20,7 +21,7 @@ var API =
 		}
 
 		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/request' + '/' + url;
+		url = GLOBALS.apiUrl + '/' + url;
 
 		console.log('[Globals] Requesting ' + url);
 
@@ -37,7 +38,7 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		url = GLOBALS.apiUrl + '/response' + '/' + url;
+		url = GLOBALS.apiUrl + '/' + url;
 
 		socket.on(url, callback);
 	},
@@ -47,7 +48,7 @@ var API =
 	 */
 	connect: function(onConnect, onDisconnect)
 	{
-		socket = io.connect(HOSTING_URL, { query: "clientType=" + API.clientType });
+		socket = io.connect(constants.HOSTING_URL, { query: "clientType=" + API.clientType });
 
 		socket.on('connect', onConnect);
 		socket.on('disconnect', onDisconnect);

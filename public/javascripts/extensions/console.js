@@ -11,7 +11,7 @@ else
 	console._log = console.log;
 	console.log = function()
 	{
-		if (IS_CONSOLE_ENABLED == false)
+		if (constants.IS_CONSOLE_ENABLED == false)
 		{
 			return;
 		}
@@ -30,7 +30,7 @@ else
 	console._warn = console.warn;
 	console.warn = function()
 	{
-		if (IS_CONSOLE_ENABLED == false)
+		if (constants.IS_CONSOLE_ENABLED == false)
 		{
 			return;
 		}

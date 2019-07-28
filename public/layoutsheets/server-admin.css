@@ -2,3 +2,22 @@
 /* Layout (fires browsers reflow event - slow processing) */
 /* -------------------------------------------------------------------------------------------------------------------- */
 
+
+#interface
+{
+	position: fixed;
+	width: calc(100% - var(--BORDER-WIDTH) * 2);
+    height: calc(100% - var(--BORDER-WIDTH) * 2);
+}
+
+
+
+
+/* ----------------------------- */
+/* Editor canvas */
+/* ----------------------------- */
+
+#editor-canvas
+{
+	position: absolute;
+}

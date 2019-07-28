@@ -15,11 +15,11 @@
 
 		<!-- styles -->
 		<link rel="stylesheet" href="stylesheets/common.css">
-		<link rel="stylesheet" href="stylesheets/final-preview.css">
+		<link rel="stylesheet" href="stylesheets/rendering-output.css">
 
 		<!-- layouts -->
 		<link rel="stylesheet" href="layoutsheets/common.css">
-		<link rel="stylesheet" href="layoutsheets/final-preview.css">
+		<link rel="stylesheet" href="layoutsheets/rendering-output.css">
 
 		
 		<!-- constants -->
@@ -28,15 +28,8 @@
 			{
 				console.type = 'client';
 			}
-			var IS_CONSOLE_ENABLED = <%= constants.IS_CONSOLE_ENABLED %>;
-
-			var IS_DEBUG_MODE = <%= constants.IS_DEBUG_MODE %>;
-			var CANVAS_WIDTH = <%= constants.CANVAS_WIDTH %>;
-			var CANVAS_HEIGHT = <%= constants.CANVAS_HEIGHT %>;
-			var BLOCK_WIDTH = <%= constants.BLOCK_WIDTH %>;
-			var BLOCK_HEIGHT = <%= constants.BLOCK_HEIGHT %>;
-			var HOSTING_URL = '<%= constants.HOSTING_URL %>';
 		</script>
+		<script src="javascripts/constants.js"></script>
 
 		<!-- Extension scripts -->
 		<script src="javascripts/extensions/array.js"></script>
@@ -56,11 +49,10 @@
 		<script src="javascripts/classes/Warning.js"></script>
 		<script src="javascripts/classes/Thread.js"></script>
 		<script src="javascripts/classes/Timer.js"></script>
-		<script src="javascripts/classes/GridLayout.js"></script>
-		<script src="javascripts/classes/CanvasLayout.js"></script>
+		<script src="javascripts/classes/RendererCanvas.js"></script>
 	</head>
 	<body class="loading">
 		<wrapper class="layout"></div>
-		<script src="javascripts/final-preview.js"></script>
+		<script src="javascripts/rendering-output.js"></script>
 	</body>
 </html>

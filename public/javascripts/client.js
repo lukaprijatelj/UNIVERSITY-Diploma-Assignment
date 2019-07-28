@@ -2,6 +2,8 @@
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
+var options = null;
+
 var GLOBALS =
 {
 	/**
@@ -13,11 +15,6 @@ var GLOBALS =
 	 * GLTF loader.
 	 */
 	loader: null,
-
-	/**
-	 * Camera controls affected by mouse movement.
-	 */
-	controls: null,
 
 	/**
 	 * ThreeJS camera in the scene.
@@ -50,41 +47,29 @@ var GLOBALS =
 	rendererType: enums.rendererType.RAY_TRACING,
 
 	/**
-	 * Layout view instance.
+	 * Camera controls affected by mouse movement.
 	 */
-	layout: null,
+	controls: null,
 
 	/**
-	 * Type of the layout view.
+	 * Last rendered time.
 	 */
-	layoutType: enums.layoutType.CANVAS,
+	lastRenderingTime: 0,
+
 
 	
 	init: function()
 	{
 		var layoutWrapperV = document.querySelector('wrapper.layout');
-
-		if (GLOBALS.layoutType == enums.layoutType.GRID)
-		{
-			GLOBALS.layout = new GridLayout(layoutWrapperV);
-		}
-		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
-		{
-			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
-		}
-		else
-		{
-			new Exception.ValueInvalid(GLOBALS.layoutType);
-		}
-
-		DEBUG.init();	
-	
-		API.init('renderer');
+		GLOBALS.rendererCanvas = new RendererCanvas(layoutWrapperV);
+		GLOBALS.rendererCanvas.init();
 		
 		GLOBALS.onViewLoaded();
+
+		API.init('renderer');		
+		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 
-	
 
 	/**
 	 * On server-client connection.
@@ -95,10 +80,28 @@ var GLOBALS =
 
 		API.isConnected = true;
 
-		GLOBALS.updateConnectButton();
-		
-		API.request('renderingCells/layout', GLOBALS.onGetLayout);
+		API.listen('cells/update', GLOBALS._onCellUpdate);
+		API.listen('rendering/start', GLOBALS._onStartRendering);	
+		API.listen('rendering/stop', GLOBALS._onStopRendering);	
+
+		API.request('cells/getAll', GLOBALS.onGetLayout);
 	},	
+
+	/**
+	 * Server started rendering service.
+	 */
+	_onStartRendering: function(data)
+	{
+		API.request('cells/getAll', GLOBALS.onGetLayout);
+	},
+
+	/**
+	 * Server stopped rendering service.
+	 */
+	_onStopRendering: function(data)
+	{
+		options = null;
+	},
 
 	/**
 	 * Client has disconnected from server.
@@ -108,48 +111,31 @@ var GLOBALS =
 		console.log('[Globals] Disconnected from server!');
 
 		API.isConnected = false;
-		
-		GLOBALS.updateConnectButton();
-	},
-
-	updateConnectButton: function()
-	{
-		var connectButton = document.getElementById('connect-button');
-
-		if (API.isConnected)
-		{
-			connectButton.addClass('selected');
-			connectButton.innerHTML = 'Disconnect';
-		}
-		else
-		{
-			connectButton.removeClass('selected');
-			connectButton.innerHTML = 'Connect';
-		}
 	},
 
 	/**
 	 * Progress was updated.
 	 */
-	_onUpdateProgress: async function(data)
+	_onCellUpdate: async function(data)
 	{
 		var cell = data.cell;
 		GLOBALS.tryUpdatingCell(cell);
 	},
 
+	/**
+	 * Starts loading GLTF model.
+	 */
 	startLoadingGltfModel: function(path)
 	{
 		console.log('[Globals] Requesting GLTF model');
 
 		var loader = new GltfLoader();
-		loader.path = 'scenes/Buggy/Buggy.gltf';
+		loader.path = options.SCENE_FILEPATH;
 		loader.onSuccess = function(gltf) 
 		{
 			console.log('[glTF loader] Scene finished loading');
 
-			
-
-			//GLOBALS.scene.add(gltf.scene);
+			GLOBALS.scene.add(gltf.scene);
 
 			gltf.animations; // Array<THREE.AnimationClip>
 			gltf.scene; // THREE.Scene
@@ -158,7 +144,7 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
-			API.request('renderingCells/cell', GLOBALS.onRequestCell);
+			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 		};
 		loader.start();	
 	},
@@ -178,21 +164,12 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing camera');
 
-		var ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+		var ratio = options.RESOLUTION_WIDTH / options.RESOLUTION_HEIGHT;
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
 
-		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
-		{
-			GLOBALS.camera.position.x = 0.20;
-			GLOBALS.camera.position.y = 0;
-			GLOBALS.camera.position.z = 0;
-		}
-		else
-		{
-			GLOBALS.camera.position.x = 6.52;
-			GLOBALS.camera.position.y = 2.21;
-			GLOBALS.camera.position.z = -0.65;
-		}
+		GLOBALS.camera.position.x = options.CAMERA_POSITION_X;
+		GLOBALS.camera.position.y = options.CAMERA_POSITION_Y;
+		GLOBALS.camera.position.z = options.CAMERA_POSITION_Z;		
 	},
 
 	/**
@@ -202,7 +179,8 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing camera controls');
 
-		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera, GLOBALS.renderer.domElement);
+		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera);
+		GLOBALS.controls.enabled = false;
 	},
 
 	/**
@@ -214,208 +192,24 @@ var GLOBALS =
 
 		var intensity = 70000;
 
-		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
-		{
-			var light = new THREE.PointLight(0xffaa55, intensity);
-			light.position.set( - 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0x55aaff, intensity);
-			light.position.set( 200, 100, 100 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-	
-			var light = new THREE.PointLight(0xffffff, intensity * 1.5);
-			light.position.set( 0, 0, 300 );
-			light.physicalAttenuation = true;
-			GLOBALS.scene.add( light );
-		}
-		else
-		{
-			var light = new THREE.AmbientLight(0x404040, 3); // soft white light
-			GLOBALS.scene.add( light );
-		}
-	},
+		// WARNING:
+		// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
+		// only Use PointLight
 
-	/**
-	 * Initializes 3D objects and materials in the scene.
-	 */
-	_init3DObjectsForTestScene: function() 
-	{
-		console.log('[Globals] Initializing 3D objects for test scene');
+		var light = new THREE.PointLight(0xffaa55, intensity);
+		light.position.set( - 200, 100, 100 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
 
-		var phongMaterial = new THREE.MeshPhongMaterial( {
-			color: 0xffffff,
-			specular: 0x222222,
-			shininess: 150,
-			vertexColors: THREE.NoColors,
-			flatShading: false
-		} );
+		var light = new THREE.PointLight(0x55aaff, intensity);
+		light.position.set( 200, 100, 100 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
 
-		var phongMaterialBox = new THREE.MeshPhongMaterial( {
-			color: 0xffffff,
-			specular: 0x111111,
-			shininess: 100,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-
-		var phongMaterialBoxBottom = new THREE.MeshPhongMaterial( {
-			color: 0x666666,
-			specular: 0x111111,
-			shininess: 100,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-
-		var phongMaterialBoxLeft = new THREE.MeshPhongMaterial( {
-			color: 0x990000,
-			specular: 0x111111,
-			shininess: 100,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-
-		var phongMaterialBoxRight = new THREE.MeshPhongMaterial( {
-			color: 0x0066ff,
-			specular: 0x111111,
-			shininess: 100,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-
-		var mirrorMaterialFlat = new THREE.MeshPhongMaterial( {
-			color: 0x000000,
-			specular: 0xff8888,
-			shininess: 10000,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-		mirrorMaterialFlat.mirror = true;
-		mirrorMaterialFlat.reflectivity = 1;
-
-		var mirrorMaterialFlatDark = new THREE.MeshPhongMaterial( {
-			color: 0x000000,
-			specular: 0xaaaaaa,
-			shininess: 10000,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-		mirrorMaterialFlatDark.mirror = true;
-		mirrorMaterialFlatDark.reflectivity = 1;
-
-		var mirrorMaterialSmooth = new THREE.MeshPhongMaterial( {
-			color: 0xffaa00,
-			specular: 0x222222,
-			shininess: 10000,
-			vertexColors: THREE.NoColors,
-			flatShading: false
-		} );
-		mirrorMaterialSmooth.mirror = true;
-		mirrorMaterialSmooth.reflectivity = 0.3;
-
-		var glassMaterialFlat = new THREE.MeshPhongMaterial( {
-			color: 0x000000,
-			specular: 0x00ff00,
-			shininess: 10000,
-			vertexColors: THREE.NoColors,
-			flatShading: true
-		} );
-		glassMaterialFlat.glass = true;
-		glassMaterialFlat.reflectivity = 0.5;
-
-		var glassMaterialSmooth = new THREE.MeshPhongMaterial( {
-			color: 0x000000,
-			specular: 0xffaa55,
-			shininess: 10000,
-			vertexColors: THREE.NoColors,
-			flatShading: false
-		} );
-		glassMaterialSmooth.glass = true;
-		glassMaterialSmooth.reflectivity = 0.25;
-		glassMaterialSmooth.refractionRatio = 0.6;
-
-		//
-
-		group = new THREE.Group();
-		GLOBALS.scene.add( group );
-
-		// geometries
-
-		var sphereGeometry = new THREE.SphereBufferGeometry( 100, 16, 8 );
-		var planeGeometry = new THREE.BoxBufferGeometry( 600, 5, 600 );
-		var boxGeometry = new THREE.BoxBufferGeometry( 100, 100, 100 );
-
-		// Sphere
-
-		var sphere = new THREE.Mesh( sphereGeometry, phongMaterial );
-		sphere.scale.multiplyScalar( 0.5 );
-		sphere.position.set( - 50, - 250 + 5, - 50 );
-		group.add( sphere );
-
-		var sphere2 = new THREE.Mesh( sphereGeometry, mirrorMaterialSmooth );
-		sphere2.scale.multiplyScalar( 0.5 );
-		sphere2.position.set( 175, - 250 + 5, - 150 );
-		group.add( sphere2 );
-
-		// Box
-
-		var box = new THREE.Mesh( boxGeometry, mirrorMaterialFlat );
-		box.position.set( - 175, - 250 + 2.5, - 150 );
-		box.rotation.y = 0.5;
-		group.add( box );
-
-		// Glass
-
-		var glass = new THREE.Mesh( sphereGeometry, glassMaterialSmooth );
-		glass.scale.multiplyScalar( 0.5 );
-		glass.position.set( 75, - 250 + 5, - 75 );
-		glass.rotation.y = 0.5;
-		GLOBALS.scene.add( glass );
-
-		// bottom
-
-		var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxBottom );
-		plane.position.set( 0, - 300 + 2.5, - 300 );
-		plane.scale.multiplyScalar( 2 );
-		GLOBALS.scene.add( plane );
-
-		// top
-
-		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
-		plane.position.set( 0, 300 - 2.5, - 300 );
-		plane.scale.multiplyScalar( 2 );
-		GLOBALS.scene.add( plane );
-
-		// back
-
-		var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
-		plane.rotation.x = 1.57;
-		plane.position.set( 0, 0, - 300 );
-		GLOBALS.scene.add( plane );
-
-		var plane = new THREE.Mesh( planeGeometry, mirrorMaterialFlatDark );
-		plane.rotation.x = 1.57;
-		plane.position.set( 0, 0, - 300 + 10 );
-		plane.scale.multiplyScalar( 0.85 );
-		GLOBALS.scene.add( plane );
-
-		// left
-
-		var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxLeft );
-		plane.rotation.z = 1.57;
-		plane.scale.multiplyScalar( 2 );
-		plane.position.set( - 300, 0, - 300 );
-		GLOBALS.scene.add( plane );
-
-		// right
-
-		var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxRight );
-		plane.rotation.z = 1.57;
-		plane.scale.multiplyScalar( 2 );
-		plane.position.set( 300, 0, - 300 );
-		GLOBALS.scene.add( plane );
+		var light = new THREE.PointLight(0xffffff, intensity * 1.5);
+		light.position.set( 0, 0, 300 );
+		light.physicalAttenuation = true;
+		GLOBALS.scene.add( light );
 	},
 
 	/**
@@ -430,14 +224,8 @@ var GLOBALS =
 
 		switch(GLOBALS.rendererType)
 		{
-			case enums.rendererType.WEB_GL_RENDERER:
-				renderer = new WebGlRenderer();
-				renderer.canvas = canvas;
-				break;
-
 			case enums.rendererType.RAY_TRACING:
-				renderer = new RaytracingRenderer();
-				renderer.canvas = canvas;
+				renderer = new RaytracingRenderer(canvas);
 				renderer.updateFunction = GLOBALS.updateProgressAsync;
 				renderer.onCellRendered = GLOBALS.onCellRendered;
 				break;
@@ -457,23 +245,8 @@ var GLOBALS =
 	 */
 	onRenderFrame: function()
 	{
-		if (GLOBALS.rendererType == enums.rendererType.WEB_GL_RENDERER)
-		{
-			// will start loop for this function
-			requestAnimationFrame(GLOBALS.onRenderFrame);
-		}		
-
 		// render current frame
 		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
-			
-		if (GLOBALS.rendererType == enums.rendererType.WEB_GL_RENDERER)
-		{
-			if (GLOBALS.controls)
-			{
-				// update camera
-				GLOBALS.controls.update();
-			}
-		}
 	},
 
 	/**
@@ -482,16 +255,28 @@ var GLOBALS =
 	 */
 	onGetLayout: function(data)
 	{
-		GLOBALS.cells = data;
-
 		console.log('[Globals] Grid layout drawn');
+
+
+		// -----------------------------
+		// update options
+		// -----------------------------
+
+		if (!data.options)
+		{
+			return;
+		}
+
+		options = data.options;
+		GLOBALS.rendererCanvas.resizeCanvas();
 
 
 		// -----------------------------
 		// draw layout
 		// -----------------------------
 
-		GLOBALS.layout.createLayout(GLOBALS.cells);
+		GLOBALS.cells = data.cells;
+		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
 
 
 		// -----------------------------
@@ -506,7 +291,18 @@ var GLOBALS =
 		}
 		
 
-		new Thread(GLOBALS.onDataLoaded);
+		// -----------------------------
+		// check if rendering service is running on server
+		// -----------------------------
+		
+		if (!data.isRenderingServiceRunning)
+		{
+			// nothing to render
+			return;
+		}
+		API.isRenderingServiceRunning = data.isRenderingServiceRunning;
+
+		GLOBALS.onDataLoaded();
 	},
 
 	/**
@@ -515,23 +311,6 @@ var GLOBALS =
 	 */
 	onViewLoaded: function()
 	{
-		// -----------------------------
-		// set default values
-		// -----------------------------
-
-		GLOBALS.updateConnectButton();
-
-		var resultsViewButton = document.getElementById('result-button');
-		resultsViewButton.innerHTML = 'Results';
-
-		var previewViewButton = document.getElementById('preview-button');
-		previewViewButton.innerHTML = 'Preview';
-
-
-		// -----------------------------
-		// remove .loading flag
-		// -----------------------------
-
 		document.body.removeClass('loading');
 	},
 
@@ -542,32 +321,13 @@ var GLOBALS =
 	{
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
+		
 		GLOBALS._initLights();
 		
 		GLOBALS._initRenderer();
 		GLOBALS._initCameraControls();
 
-
-		GLOBALS._init3DObjectsForTestScene();
-		API.request('renderingCells/cell', GLOBALS.onRequestCell);
-
-		//GLOBALS.startLoadingGltfModel();
-	},
-
-	/**
-	 * Connect to server button was clicked.
-	 */
-	_onConnectClick: function()
-	{
-		if (!API.isConnected)
-		{
-			API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-			API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
-		}
-		else
-		{
-			API.disconnect();
-		}
+		GLOBALS.startLoadingGltfModel();
 	},
 
 	/**
@@ -580,7 +340,7 @@ var GLOBALS =
 			return;
 		}
 
-		GLOBALS.layout.updateCell(cell);
+		GLOBALS.rendererCanvas.updateCell(cell);
 	},
 
 	/**
@@ -588,34 +348,28 @@ var GLOBALS =
 	 */
 	onCellRendered: function()
 	{
-		document.body.removeClass('busy');
-		API.request('renderingCells/cell', GLOBALS.onRequestCell);
-	},
-
-	/**
-	 * Results button was clicked.
-	 */
-	_onResultsViewClick: function()
-	{
-		new Exception.NotImplemented();
-	},
-
-	/**
-	 * Preview button was clicked.
-	 */
-	_onPreviewViewClick: function()
-	{
-		new Exception.NotImplemented();
+		GLOBALS.lastRenderingTime = window.setTimeout(()=>
+		{
+			document.getElementById('interface').removeClass('rendering');
+			GLOBALS.lastRenderingTime = 0;
+		}, 1000);
+				
+		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 	},
 
 	/**
 	 * Cell waiting to be rendered is received.
 	 */
-	onRequestCell: function(cell)
+	onGetWaitingCells: function(cell)
 	{
 		console.log('[Globals] Rendering cell received');
 
-		document.body.addClass('busy');
+		if (GLOBALS.lastRenderingTime > 0)
+		{
+			window.clearTimeout(GLOBALS.lastRenderingTime);
+		}
+		
+		document.getElementById('interface').addClass('rendering');
 
 		GLOBALS.cells.currentRenderCell = cell;
 
@@ -650,7 +404,7 @@ var GLOBALS =
 			progress: progress
 		};
 
-		API.request('renderingCells/updateProgress', undefined, data);
+		API.request('cells/update', undefined, data);
 	}
 };
 

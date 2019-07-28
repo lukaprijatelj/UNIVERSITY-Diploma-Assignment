@@ -19,45 +19,68 @@ var GLOBALS =
 	io: null,
 
 	/**
-	 * Layout view instance.
+	 * ThreeJS scene.
 	 */
-	layout: null,
+	scene: null,
 
 	/**
-	 * Type of the layout view.
+	 * GLTF loader.
 	 */
-	layoutType: enums.layoutType.CANVAS,
+	loader: null,
+
+	/**
+	 * Camera controls affected by mouse movement.
+	 */
+	controls: null,
+
+	/**
+	 * ThreeJS camera in the scene.
+	 */
+	camera: null,
+
+	/**
+	 * Canvas for editor aka preview.
+	 */
+	editorCanvas: null,
 
 
 	init: function()
-	{		
-		var layoutWrapperV = document.querySelector('wrapper.layout');
-
-		if (GLOBALS.layoutType == enums.layoutType.GRID)
-		{
-			GLOBALS.layout = new GridLayout(layoutWrapperV);
-		}
-		else if (GLOBALS.layoutType == enums.layoutType.CANVAS)
-		{
-			GLOBALS.layout = new CanvasLayout(layoutWrapperV);
-		}
-
+	{	
+		GLOBALS.editorCanvas = new EditorCanvas();
+		GLOBALS.editorCanvas.init();
+		
+		DEBUG.init();	
+		
 		API.init('admin');	
+
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('renderingCells/updateProgress', GLOBALS._onUpdateProgress);
+		
+
+		GLOBALS._initScene();
+		GLOBALS._initCamera();
+		GLOBALS._initLights();
+		
+		GLOBALS._initRenderer();
+		GLOBALS._initCameraControls();
+
+		GLOBALS.startLoadingGltfModel();
 	},
 
 	/**
 	 * On server-client connection.
 	 * @private
 	 */
-	_onServerConnected: function()
+	_onServerConnected: function(socket, data)
 	{
 		console.log('[Main] Connected to server!');
 
 		API.isConnected = true;
 
-		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+		API.listen('clients/updated', GLOBALS._onClientsUpdated);
+
+		API.request('rendering/checkAdmin', GLOBALS._onCheckRendering);	
+
+		new Thread(GLOBALS.onLoaded);
 	},
 
 	/**
@@ -69,23 +92,218 @@ var GLOBALS =
 	},
 
 	/**
-	 * One of the cells was updated
+	 * Check is server rendering service is running.
 	 */
-	_onUpdateProgress: function(data)
+	_onCheckRendering: function(data)
 	{
-		var cell = data.cell;
+		GLOBALS._updateRenderingState(data.isRenderingServiceRunning);
+	},
 
-		GLOBALS.tryUpdatingCell(cell);
+	/**
+	 * Starts loading GLTF model.
+	 */
+	startLoadingGltfModel: function(path)
+	{
+		console.log('[Globals] Requesting GLTF model');
+
+		var loader = new GltfLoader();
+		loader.path = options.SCENE_FILEPATH;
+		loader.onSuccess = function(gltf) 
+		{
+			console.log('[glTF loader] Scene finished loading');
+
+			GLOBALS.scene.add(gltf.scene);
+
+			gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Scene
+			gltf.scenes; // Array<THREE.Scene>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object
+						
+			GLOBALS.onRenderFrame();
+		};
+		loader.start();	
+	},
+
+	/**
+	 * Initializes scene.
+	 */
+	_initScene: function()
+	{
+		GLOBALS.scene = new THREE.Scene();
+	},
+
+	/**
+	 * Intializes camera in the scene.
+	 */
+	_initCamera: function()
+	{
+		console.log('[Globals] Initializing camera');
+
+		var ratio = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
+		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+
+		GLOBALS.camera.position.x = 0.81;
+		GLOBALS.camera.position.y = -0.1;
+		GLOBALS.camera.position.z = -2.47;
+	},
+
+	/**
+	 * Initializes camera mouse controls, so that changing view is easier.
+	 */
+	_initCameraControls: function()
+	{
+		console.log('[Globals] Initializing camera controls');
+
+		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera, GLOBALS.renderer.domElement);
+	},
+
+	/**
+	 * Initializes lights.
+	 */
+	_initLights: function()
+	{
+		console.log('[Globals] Initializing lights');
+
+		var light = new THREE.AmbientLight(0x404040, 3);
+		GLOBALS.scene.add(light);
+	},
+
+	/**
+	 * Initializes renderer.
+	 */
+	_initRenderer: function()
+	{
+		console.log('[Globals] Initialize editor renderer');
+
+		var canvas = document.getElementById('editor-canvas');
+
+		var options = 
+		{ 
+			canvas: canvas 
+		};
+		GLOBALS.renderer = new THREE.WebGLRenderer(options);
+		GLOBALS.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+
+		GLOBALS.editorCanvas.resizeCanvas();
+	},	
+
+	/**
+	 * Main rendering loop.
+	 */
+	onRenderFrame: function()
+	{
+		// will start loop for this function
+		requestAnimationFrame(GLOBALS.onRenderFrame);	
+
+		// render current frame
+		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
+			
+		if (GLOBALS.controls)
+		{
+			// update camera
+			GLOBALS.controls.update();
+		}
+	},
+
+
+	/**
+	 * Server has notified us that clients were updated.
+	 */
+	_onClientsUpdated: function(data)
+	{
+		var clients = data;
+		var activeClientsCount = clients.filter(item => item.active == true).length;
+
+		var clientsConnectedInput = document.getElementById('clients-connected-input');
+		clientsConnectedInput.value = activeClientsCount;
+	},
+
+	_updateRenderingState: function(isRendering)
+	{
+		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
+
+		if (isRendering == true)
+		{
+			var interfaceV = document.getElementById('interface');
+			interfaceV.addClass('rendering');
+
+			var canvasV = document.getElementById('editor-canvas');
+			canvasV.disable();
+				
+			startRenderingButtonV.addClass('selected');
+			startRenderingButtonV.innerHTML = 'Stop rendering';
+
+			startRenderingButtonV.enable();
+		}
+		else
+		{
+			var interfaceV = document.getElementById('interface');
+			interfaceV.removeClass('rendering');
+
+			var canvasV = document.getElementById('editor-canvas');
+			canvasV.enable();
+
+			startRenderingButtonV.removeClass('selected');
+			startRenderingButtonV.innerHTML = 'Start rendering';
+
+			startRenderingButtonV.enable();
+		}
 	},
 
 	/**
 	 * Sends request to recalculate grid layout.
 	 * @private
 	 */
-	_onRecalculateLayoutClick: function()
+	_onStartStopRenderingClick: function()
 	{
-		API.request('renderingCells/recalculateLayout', Function.empty);
-		API.request('renderingCells/layout', GLOBALS._onGetLayout);
+		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
+		startRenderingButtonV.disable();
+
+		var data = {};
+
+		if (startRenderingButtonV.hasClass('selected'))
+		{
+			API.request('rendering/stop', () =>
+			{
+				GLOBALS._updateRenderingState(false);
+			}, data);
+		}
+		else
+		{
+			data.options = options;
+
+			API.request('rendering/start', () =>
+			{
+				GLOBALS._updateRenderingState(true);
+			}, data);
+		}
+	},
+
+	_onResolutionWidthChange: function(val)
+	{
+		options.RESOLUTION_WIDTH = val;
+	},
+
+	_onResolutionHeightChange: function(val)
+	{
+		options.RESOLUTION_HEIGHT = val;
+	},
+
+	_onBlockWidthChange: function(val)
+	{
+		options.BLOCK_WIDTH = val;
+	},
+
+	_onBlockHeightChange: function(val)
+	{
+		options.BLOCK_HEIGHT = val;
+	},
+
+	_onOpenOutputClick: function()
+	{
+		// open rendering output window
+		window.open("/renderingOutput", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	},
 
 	/**
@@ -94,46 +312,14 @@ var GLOBALS =
 	 */
 	_onStartNewClientClick: function()
 	{
-		var a = document.createElement("a");    
+		/*var a = document.createElement("a");    
 		a.href = window.location.origin + '/client';    
 		a.setAttribute('target', '_blank');
 		var evt = document.createEvent("MouseEvents");   
 		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
-		a.dispatchEvent(evt);
-	},
+		a.dispatchEvent(evt);*/
 
-	/**
-	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @private
-	 */
-	_onGetLayout: function(data)
-	{
-		GLOBALS.cells = data;
-
-		console.log('[Main] Layout is received from server');
-
-		
-		// -----------------------------
-		// draw layout
-		// -----------------------------
-
-		GLOBALS.layout.createLayout(GLOBALS.cells);
-
-
-
-		// -----------------------------
-		// draw all cells that are already rendered
-		// -----------------------------
-		
-		for (var i=0; i<GLOBALS.cells.length; i++)
-		{
-			var current = GLOBALS.cells[i];
-
-			GLOBALS.tryUpdatingCell(current);
-		}
-
-
-		new Thread(GLOBALS.onLoaded);
+		window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	},
 
 	/**
@@ -146,26 +332,17 @@ var GLOBALS =
 		// set default values
 		// -----------------------------
 
-		var recalculateLayoutButton = document.getElementById('recalculate-layout-button');
-		recalculateLayoutButton.innerHTML = 'Recalculate layout';
+		var resolutionWidthInput = document.getElementById('resolution-width-input');
+		resolutionWidthInput.value = options.RESOLUTION_WIDTH;
 
-		var startNewClientButton = document.getElementById('start-new-client-button');
-		startNewClientButton.innerHTML = ' + ';
-
-		var canvasWidthInput = document.getElementById('canvas-width-input');
-		canvasWidthInput.value = CANVAS_WIDTH;
-
-		var canvasHeightInput = document.getElementById('canvas-height-input');
-		canvasHeightInput.value = CANVAS_HEIGHT;
+		var resolutionHeightInput = document.getElementById('resolution-height-input');
+		resolutionHeightInput.value = options.RESOLUTION_HEIGHT;
 
 		var blockWidthV = document.getElementById('block-width-input');
-		blockWidthV.value = BLOCK_WIDTH;
+		blockWidthV.value = options.BLOCK_WIDTH;
 
 		var blockHeightV = document.getElementById('block-height-input');
-		blockHeightV.value = BLOCK_HEIGHT;
-
-		var clientsConnectedV = document.getElementById('clients-connected-input');
-		clientsConnectedV.value = 0;
+		blockHeightV.value = options.BLOCK_HEIGHT;
 
 
 
@@ -174,20 +351,6 @@ var GLOBALS =
 		// -----------------------------
 
 		document.body.removeClass('loading');
-	},
-
-	/**
-	 * Draws cell on the screen.
-	 */
-	tryUpdatingCell: function(cell)
-	{
-		if (!cell.imageData)
-		{
-			// cells does not have any image data so we don't really need to draw it
-			return;
-		}
-
-		GLOBALS.layout.updateCell(cell);
 	}
 };
 

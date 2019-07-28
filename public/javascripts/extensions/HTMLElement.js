@@ -69,6 +69,19 @@ HTMLElement.prototype.addClass = function(value)
     return this;
 };
 
+HTMLElement.prototype.hasClass = function(value)
+{
+	for (var i=0; i<this.classList.length; i++)
+	{
+		if (this.classList[i] == value)
+		{
+			return true;
+		}
+	}
+	
+    return false;
+};
+
 HTMLElement.prototype.removeClass = function(value)
 {
     this.classList.remove(value);
@@ -95,10 +108,20 @@ HTMLElement.prototype.show = function()
 
 HTMLElement.prototype.enable = function()
 {
-    this.removeClass('disabled');
+	this.removeClass('disabled');
+};
+
+HTMLElement.prototype.isEnabled = function()
+{
+    return !this.hasClass('disabled');
 };
 
 HTMLElement.prototype.disable = function()
 {
     this.addClass('disabled');
+};
+
+HTMLElement.prototype.isDisable = function()
+{
+    return this.hasClass('disabled');
 };
