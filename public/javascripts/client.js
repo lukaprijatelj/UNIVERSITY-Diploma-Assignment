@@ -355,13 +355,6 @@ var GLOBALS =
 			return;
 		}
 
-		for (var i=0; i<cells.length; i++)
-		{
-			var current = cells[i];
-
-			GLOBALS.tryUpdatingCell(current);
-		}
-
 		GLOBALS.updateProgressAsync(cells, 100);
 				
 		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);

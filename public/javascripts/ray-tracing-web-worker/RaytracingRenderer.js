@@ -27,6 +27,8 @@ var RaytracingRenderer = function(canvas)
 	this.cellsDone = [];
 
 	this.workers = [];
+	this.numOfWorkers = 3;
+
 	this.autoClear = true;
 	this.clearColor = new THREE.Color(0x000000);
 
@@ -70,13 +72,15 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, timeMs)
+RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
 	var renderer = this;
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
-	
 
+	var webWorker = renderer.workers[workerIndex];
+	webWorker.isRendering = false;
+	
 	// -----------------------------
 	// convert buffer data into png image data
 	// -----------------------------
@@ -108,7 +112,7 @@ RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, tim
 	}
 	else
 	{
-		renderer._runWorker(worker);
+		renderer._runWorker(webWorker);
 	}		
 };
 
@@ -120,11 +124,31 @@ RaytracingRenderer.prototype.setWorkers = function()
 {
 	var renderer = this;
 
-	var worker = new RaytracingRendererWorker(renderer.onCellRendered.bind(renderer));
-	worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
-	worker.init(renderer.canvas.width, renderer.canvas.height);
-
-	renderer.workers.push(worker);
+	for (let i=0; i<renderer.numOfWorkers; i++)
+	{
+		var worker = new Worker('./javascripts/ray-tracing-web-worker/WebWorker.js');
+		worker.isRendering = false;
+		worker.postMessage({
+			type: 'init',
+			workerIndex: i,
+			canvasWidth: renderer.canvas.width,
+			canvasHeight: renderer.canvas.height
+		});
+	
+		worker.onmessage = (e) =>
+		{
+			var data = e.data;
+	
+			if (data.type != 'renderCell')
+			{
+				return;
+			}
+	
+			renderer.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
+		};
+	
+		renderer.workers.push(worker);
+	}
 };
 
 
@@ -206,7 +230,13 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
 	{
 		var worker = renderer.workers[i];
 		
-		worker.initScene(renderer.sceneJSON, renderer.cameraJSON, renderer.materials);	
+		worker.postMessage(
+		{
+			type: 'initScene',
+			sceneJSON: renderer.sceneJSON,
+			cameraJSON: renderer.cameraJSON,
+			materials: renderer.materials
+		});		
 
 		renderer._runWorker(worker);
 	}	
@@ -224,8 +254,10 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 
 	GLOBALS.rendererCanvas.flagRenderCell(cellToRender);
 
-	worker.setCell(cellToRender);
-	worker.startRendering();
+	worker.postMessage({ type: 'setCell', cell: cellToRender });
+	
+	worker.isRendering = true;
+	worker.postMessage({ type: 'startRendering' });
 };
 
 

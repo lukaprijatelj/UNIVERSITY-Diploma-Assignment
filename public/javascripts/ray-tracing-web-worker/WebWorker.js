@@ -14,26 +14,25 @@ self.onmessage = function(e)
 	switch(data.type)
 	{
 		case 'init':
-			worker = new RaytracingRendererWorker((buffer, blockX, blockY, timeMs) =>
+			worker = new RaytracingRendererWorker((workerIndex, buffer, cell, timeMs) =>
 			{
-				self.postMessage({
+				let data = 
+				{
 					type: 'renderCell',
+					workerIndex: workerIndex,
 					buffer: buffer,
-					blockX: blockX,
-					blockY: blockY,
-					timeMs: timeMs,
-					cell: cell
-				});
-			});
-			canvasWidth = data.canvasWidth;
-			canvasHeight = data.canvasHeight;
+					cell: cell,
+					timeMs: timeMs
+				};
+				self.postMessage(data);
+			}, data.workerIndex);
 			worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
-			worker.init(canvasWidth, canvasHeight);
+			worker.init(data.canvasWidth, data.canvasHeight);
 			break;
 
 		case 'setCell':
 			cell = data.cell;
-			worker.setBlockSize(cell.width, cell.height);
+			worker.setCell(cell);
 			break;
 
 		case 'initScene':
@@ -41,7 +40,7 @@ self.onmessage = function(e)
 			break;
 
 		case 'startRendering':
-			worker.startRendering(cell.startX, cell.startY);
+			worker.startRendering();
 			break;
 	}
 };
