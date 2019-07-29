@@ -228,16 +228,14 @@ var GLOBALS =
 				renderer = new RaytracingRenderer(canvas);
 				renderer.updateFunction = GLOBALS.updateProgressAsync;
 				renderer.onCellRendered = GLOBALS.onCellRendered;
+				GLOBALS.renderer = renderer;
+				renderer.init();
 				break;
 
 			case enums.rendererType.PATH_TRACING:
-				new Exception.NotImplemented();
+				init();
 				break;
-		}
-
-		GLOBALS.renderer = renderer;
-
-		renderer.init();
+		}		
 	},	
 
 	/**
@@ -383,13 +381,15 @@ var GLOBALS =
 	 */
 	startRendering: async function()
 	{
-		if (GLOBALS.rendererType != enums.rendererType.WEB_GL_RENDERER)
+		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
 			GLOBALS.renderer.setCell(GLOBALS.cells.currentRenderCell);
+
+			// start rendering
+			GLOBALS.onRenderFrame();
 		}
 
-		// start rendering
-		GLOBALS.onRenderFrame();
+		
 	},
 
 	/**
