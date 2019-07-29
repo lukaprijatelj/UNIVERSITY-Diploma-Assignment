@@ -1,7 +1,7 @@
 var options = 
 {
 	//SCENE_FILEPATH: 'scenes/Castle/Sponza.gltf',
-	SCENE_FILEPATH: 'scenes/Textured-box/BoxTextured.gltf',
+	SCENE_FILEPATH: 'scenes/Sphere-box-cone/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/Buggy/Buggy.gltf',
 
 	RESOLUTION_WIDTH: 1280,

@@ -4,9 +4,9 @@
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-THREE.RaytracingRendererWorker = function (drawOnCanvas) 
+var RaytracingRendererWorker = function(onCellRendered) 
 {
-	console.log('[THREE.RaytracingRendererWorker] Initializing worker');
+	console.log('[RaytracingRendererWorker] Initializing worker');
 
 	// basically how many tmes it spawns ray (how many times ray hits object)
 	this.maxRecursionDepth = 3;
@@ -16,11 +16,14 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 	this.canvasWidthHalf;
 	this.canvasHeightHalf;
 
-	this.startX;
-	this.startY;
-	this.blockWidth = 0;
-	this.blockHeight = 0;
 	this.renderingStartedDate;	
+
+	/**
+	 * Cell that is currently rendering.
+	 */
+	this.cell = null;
+
+	this.isRendering = false;
 	
 	this.camera;
 	this.cameraPosition = new THREE.Vector3();
@@ -41,16 +44,25 @@ THREE.RaytracingRendererWorker = function (drawOnCanvas)
 	this.cache = {};
 
 	this.loader = new THREE.ObjectLoader();
-	this.drawOnCanvas = drawOnCanvas;		
+	this.onCellRendered = onCellRendered;		
 };
 
-Object.assign(THREE.RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype);
+Object.assign(RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype);
+
+
+/**
+ * Sets cell that needs to be rendered.
+ */
+RaytracingRendererWorker.prototype.setCell = function(cell)
+{
+	this.cell = cell;
+};
 
 
 /**
  * Initializes object.
  */
-THREE.RaytracingRendererWorker.prototype.init = function(width, height)
+RaytracingRendererWorker.prototype.init = function(width, height)
 {
 	this.setSize(width, height);
 
@@ -60,19 +72,9 @@ THREE.RaytracingRendererWorker.prototype.init = function(width, height)
 
 
 /**
- * Sets block size.
- */
-THREE.RaytracingRendererWorker.prototype.setBlockSize = function(blockWidth, blockHeight)
-{
-	this.blockWidth = blockWidth;
-	this.blockHeight = blockHeight;
-};
-
-
-/**
  * Initializes scene.
  */
-THREE.RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, annexData)
+RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, annexData)
 {
 	this.scene = this.loader.parse(sceneData);
 	this.camera = this.loader.parse(cameraData);
@@ -102,10 +104,8 @@ THREE.RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraD
 /**
  * Starts rendering.
  */
-THREE.RaytracingRendererWorker.prototype.startRendering = function(x, y)
+RaytracingRendererWorker.prototype.startRendering = function()
 {
-	this.startX = x;
-	this.startY = y;
 	this.render(this.scene, this.camera);
 };
 
@@ -113,7 +113,7 @@ THREE.RaytracingRendererWorker.prototype.startRendering = function(x, y)
 /**
  * Sets canvas size.
  */
-THREE.RaytracingRendererWorker.prototype.setSize = function (width, height) 
+RaytracingRendererWorker.prototype.setSize = function (width, height) 
 {
 	this.canvasWidth = width;
 	this.canvasHeight = height;
@@ -126,7 +126,7 @@ THREE.RaytracingRendererWorker.prototype.setSize = function (width, height)
 /**
  * Spawns ray for calculating colour.
  */
-THREE.RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
+RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
 {
 	var diffuseColor = new THREE.Color();
 	var specularColor = new THREE.Color();
@@ -417,7 +417,7 @@ THREE.RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirec
 /**
  * Computes normal.
  */
-THREE.RaytracingRendererWorker.prototype.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
+RaytracingRendererWorker.prototype.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
 {
 	var vA = new THREE.Vector3();
 	var vB = new THREE.Vector3();
@@ -475,23 +475,23 @@ THREE.RaytracingRendererWorker.prototype.computePixelNormal = function(outputVec
 /**
  * Renders block.
  */
-THREE.RaytracingRendererWorker.prototype.renderBlock = function(blockX, blockY) 
+RaytracingRendererWorker.prototype.renderBlock = function() 
 {
-	console.log('[THREE.RaytracingRendererWorker] Rendering specified canvas block');
+	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
 
-	var data = new Uint8ClampedArray(this.blockWidth * this.blockHeight * 4);
+	var data = new Uint8ClampedArray(this.cell.width * this.cell.height * 4);
 	var pixelColor = new THREE.Color();
 	var index = 0;
 
-	for (var y = 0; y < this.blockHeight; y ++)
+	for (var y = 0; y < this.cell.height; y ++)
 	{
-		for (var x = 0; x < this.blockWidth; x ++, index += 4) 
+		for (var x = 0; x < this.cell.width; x ++, index += 4) 
 		{
 			// spawn primary ray at pixel position
 
 			this.origin.copy(this.cameraPosition);
 
-			this.direction.set( x + blockX - this.canvasWidthHalf, - ( y + blockY - this.canvasHeightHalf ), - this.perspective );
+			this.direction.set( x + this.cell.startX - this.canvasWidthHalf, - ( y + this.cell.startY - this.canvasHeightHalf ), - this.perspective );
 			this.direction.applyMatrix3(this.cameraNormalMatrix ).normalize();
 
 			this.spawnRay(this.origin, this.direction, pixelColor, 0);
@@ -505,15 +505,17 @@ THREE.RaytracingRendererWorker.prototype.renderBlock = function(blockX, blockY)
 		}
 	}
 
-	this.drawOnCanvas(data.buffer, blockX, blockY, new Date() - this.renderingStartedDate);
+	this.isRendering = false;
+	this.onCellRendered(this, data.buffer, this.cell, new Date() - this.renderingStartedDate);
 };
 
 
 /**
  * Starts rendering.
  */
-THREE.RaytracingRendererWorker.prototype.render = function(scene, camera) 
+RaytracingRendererWorker.prototype.render = function(scene, camera) 
 {
+	this.isRendering = true;
 	this.renderingStartedDate = new Date();
 
 	// update scene graph
@@ -556,5 +558,5 @@ THREE.RaytracingRendererWorker.prototype.render = function(scene, camera)
 
 	}.bind(this));
 
-	this.renderBlock(this.startX, this.startY);
+	this.renderBlock();
 };
