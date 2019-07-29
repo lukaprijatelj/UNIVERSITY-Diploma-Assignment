@@ -1,6 +1,7 @@
 
 var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
+var database = require('../public/javascripts/classes/database.js');
 
 
 var DATABASE =
@@ -77,16 +78,10 @@ var DATABASE =
 		
 		var table = DATABASE.renderingClientsTable;
 
-        var clientEntry =
-        {
-			_id: uuidv1(),
-            sessionId: sessionId,
-			ipAddress: ipAddress,
-			active: false,
-			admin: isAdmin
-        };
-
+		var id = uuidv1();
+        var clientEntry = new database.Client(id, sessionId, ipAddress, false, isAdmin);
 		table.rows.push(clientEntry);
+
 		table.save();
 	},
 
@@ -101,9 +96,9 @@ var DATABASE =
 		// remove client from active cells list
 		var cellsTable = DATABASE.renderingCellsTable;
 
-		for (var i=0; i<cellsTable.rows.length; i++)
+		for (let i=0; i<cellsTable.rows.length; i++)
 		{
-			var cell = cellsTable.rows[i];
+			let cell = cellsTable.rows[i];
 
 			if (cell.sessionId != sessionId)
 			{
@@ -133,23 +128,16 @@ var DATABASE =
 	/**
 	 * Adds grid layout.
 	 */
-	addGridLayout: function(startX, startY, width, height)
+	addRenderingCell: function(startX, startY, width, height)
 	{
-        var clientEntry =
-        {
-			_id: uuidv1(),
-			width: width,
-			height: height,
-			startY: startY,
-			startX: startX,
-            sessionId: '',
-			progress: 0,
-			imageData: null
-        };
-
 		var table = DATABASE.renderingCellsTable;
 
+		//var id = uuidv1();
+		var id = 'cell-' + startX + '-' + startY;
+
+        var clientEntry = new database.RenderingCell(id, startX, startY, width, height);
 		table.rows.push(clientEntry);
+
 		table.save();
 	},
 
@@ -164,29 +152,50 @@ var DATABASE =
 	},
 
 	/**
-	 * Gets free cell
+	 * Gets free cells.
 	 */
-	getFreeCell: function(sessionId)
+	getFreeCells: function(sessionId, cellsLength)
 	{
 		var table = DATABASE.renderingCellsTable;
-		var freeCell = table.rows.find(element => element.sessionId == "");	
 
-		if (!freeCell)
+		var freeCells = [];	
+		var cellsFound = 0;
+
+		for (let i=0; i<table.rows.length; i++)
+		{
+			let current = table.rows[i];
+
+			if (current.sessionId != "")
+			{
+				continue;
+			}
+
+			if (cellsFound >= cellsLength)
+			{
+				break;
+			}
+
+			current.sessionId = sessionId;
+
+			var basicCurrent = Object.shrink(new database.BasicCell(), current);
+			freeCells.push(basicCurrent);
+			cellsFound++;
+		}
+
+		if (!freeCells.length)
 		{
 			return null;
 		}
-
-		freeCell.sessionId = sessionId;
-
+		
 		table.save();
 
-		return freeCell;
+		return freeCells;
 	},
 
 	/**
 	 * Clears all existing grid cells data.
 	 */
-	clearGridLayout: function()
+	removeAllCells: function()
 	{
 		var table = DATABASE.renderingCellsTable;
 
@@ -202,19 +211,21 @@ var DATABASE =
 		var table = DATABASE.renderingCellsTable;
 
 		// update rendering progress for specific client
-		for (var i=0; i<table.rows.length; i++)
+		for (let i=0; i<table.rows.length; i++)
 		{
-			var element = table.rows[i];
+			let element = table.rows[i];
 
-			if(element._id == cell._id)
+			if(element._id != cell._id)
 			{
-				element.progress = progress;
-
-				if (typeof cell.imageData !== 'undefined')
-				{
-					element.imageData = cell.imageData;
-				}				
+				continue;
 			}
+
+			element.progress = progress;
+
+			if (typeof cell.imageData !== 'undefined')
+			{
+				element.imageData = cell.imageData;
+			}		
 		}
 
         table.save();

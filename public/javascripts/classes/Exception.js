@@ -23,6 +23,16 @@ Exception.RendererMissing = function()
     throw 'Renderer is missing!';
 };
 
+Exception.ArrayEmpty = function()
+{
+    throw 'Array is empty!';
+};
+
+Exception.ArrayNotEmpty = function()
+{
+    throw 'Array must be empty!';
+};
+
 Exception.ValueUndefined = function()
 {
     throw 'Value is undefined!';

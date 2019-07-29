@@ -37,6 +37,16 @@ var GLOBALS =
 	cells: [],
 
 	/**
+	 * Current cells waiting to be rendered.
+	 */
+	waitingCells: [],
+
+	/**
+	 * Current rendering cell.
+	 */
+	currentRenderCell: null,
+
+	/**
 	 * Current renderer type.
 	 */
 	rendererType: enums.rendererType.RAY_TRACING,
@@ -114,6 +124,7 @@ var GLOBALS =
 	_onCellUpdate: async function(data)
 	{
 		var cell = data.cell;
+		
 		GLOBALS.tryUpdatingCell(cell);
 	},
 
@@ -346,16 +357,62 @@ var GLOBALS =
 			document.getElementById('interface').removeClass('rendering');
 			GLOBALS.lastRenderingTime = 0;
 		}, 1000);
+
+		if (!API.isRenderingServiceRunning)
+		{
+			return;
+		}
 				
-		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+		if (!GLOBALS.waitingCells.length)
+		{
+			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+		}
+		else
+		{
+			GLOBALS.startRendering();
+		}
 	},
 
 	/**
 	 * Cell waiting to be rendered is received.
 	 */
-	onGetWaitingCells: function(cell)
+	onGetWaitingCells: function(cells)
 	{
-		console.log('[Globals] Rendering cell received');
+		console.log('[Globals] Rendering cells received');
+
+		if (!cells)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		if (!cells.length)
+		{
+			new Exception.ArrayEmpty();
+		}
+
+		if (GLOBALS.waitingCells.length)
+		{
+			// if array is not empty this means that another 'cells/getWaiting' call was executed before previous waiting cells rendered
+
+			new Exception.ArrayNotEmpty();
+		}
+
+		for (let i=0; i<GLOBALS.cells.length; i++)
+		{
+			let current = GLOBALS.cells[i];
+
+			for (let j=0; j<cells.length; j++)
+			{
+				var waitingCurrent = cells[j];
+
+				if (current._id != waitingCurrent._id)
+				{
+					continue;
+				}
+
+				GLOBALS.waitingCells.push(current);
+			}
+		}
 
 		if (GLOBALS.lastRenderingTime > 0)
 		{
@@ -364,8 +421,7 @@ var GLOBALS =
 		
 		document.getElementById('interface').addClass('rendering');
 
-		GLOBALS.cells.currentRenderCell = cell;
-
+		
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
 		GLOBALS.startRendering();
@@ -376,15 +432,20 @@ var GLOBALS =
 	 */
 	startRendering: async function()
 	{
+		if (!GLOBALS.waitingCells.length)
+		{
+			new Exception.ArrayEmpty();
+		}
+
+		GLOBALS.currentRenderCell = GLOBALS.waitingCells.pop();
+
 		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
-			GLOBALS.renderer.setCell(GLOBALS.cells.currentRenderCell);
+			GLOBALS.renderer.setCell(GLOBALS.currentRenderCell);
 
 			// start rendering
 			GLOBALS.onRenderFrame();
 		}
-
-		
 	},
 
 	/**

@@ -21,6 +21,9 @@ var API =
 	 */
 	adminSessionId: '',
 
+	/**
+	 * Is rendering service currently running.
+	 */
 	isRenderingServiceRunning: false,
 
 
@@ -56,6 +59,8 @@ var API =
 			API.adminSessionId = sessionId;	
 			
 			socket.on(API.baseUrl + '/rendering/checkAdmin', API.onAdminCheckRendering); 
+			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
+			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
 		}
 		
 		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
@@ -63,11 +68,7 @@ var API =
 		// cells
 		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
 		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
-		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);		
-
-		// rendering
-		socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
-		socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
+		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);			
 		
 		
 		// when client closes tab
@@ -158,15 +159,15 @@ var API =
 		var socket = this;
 		var sessionId = socket.id;
 
-		var freeCell = DATABASE.getFreeCell(sessionId);
+		var freeCells = DATABASE.getFreeCells(sessionId, options.NUM_OF_BLOCKS_IN_CHUNK);
 
-		if (!freeCell)
+		if (!freeCells)
 		{
 			console.log("[Api] All cells are already rendered! (aborting)");
 			return;
 		}
 
-		callback(freeCell);
+		callback(freeCells);
 	},
 
 	/**
@@ -227,7 +228,7 @@ var API =
 		// recalculates cell layout
 		// -----------------------------
 
-		DATABASE.clearGridLayout();
+		DATABASE.removeAllCells();
 
 		var startY = 0;
 
@@ -243,7 +244,7 @@ var API =
 				var MAX_X = endX < options.RESOLUTION_WIDTH ? endX : options.RESOLUTION_WIDTH;
 				var MAX_Y = endY < options.RESOLUTION_HEIGHT ? endY : options.RESOLUTION_HEIGHT;
 
-				DATABASE.addGridLayout(startX, startY, MAX_X - startX, MAX_Y - startY);
+				DATABASE.addRenderingCell(startX, startY, MAX_X - startX, MAX_Y - startY);
 
 				startX += options.BLOCK_WIDTH;
 			}

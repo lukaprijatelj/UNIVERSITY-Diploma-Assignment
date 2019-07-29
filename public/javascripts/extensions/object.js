@@ -14,3 +14,22 @@ Object.cloneData = function(dst, src)
 	
     return dst;
 };
+
+/**
+ * Inherits src object values to dst object.
+ * @extends {Object}
+ */
+Object.shrink = function(template, src) 
+{
+	var dst = {};
+	
+	for (var key in template) 
+	{
+		if (src.hasOwnProperty(key))
+		{
+			dst[key] = src[key];
+		}
+	}
+	
+    return dst;
+};
