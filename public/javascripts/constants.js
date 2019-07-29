@@ -1,17 +1,28 @@
-var isDebugMode = false;
+var isDebugMode = true;
 
-var constants = 
-{
-	IS_DEBUG_MODE: isDebugMode,
-	IS_CONSOLE_ENABLED: true,
-	
-	//HOSTING_URL: isDebugMode == true ? 'http://localhost:30003' : 'http://lukaprij.wwwnl1-ss11.a2hosted.com:30003'
-	HOSTING_URL: isDebugMode == true ? 'http://localhost:30003' : 'minecraft.fri.uni-lj.si:30003'
-};
+// namespace
+var constants = { };
 
 
 if (typeof module !== 'undefined' && module.exports)
 {
 	// export for nodeJS use
 	module.exports = constants;
+}
+
+
+constants.IS_DEBUG_MODE = isDebugMode;
+constants.IS_CONSOLE_ENABLED = true;
+
+constants.NODEJS_PORT = 30003;
+constants.SOCKETIO_PORT = 30004;
+
+if (isDebugMode == true)
+{
+	constants.HOSTING_URL = 'http://localhost:' + constants.NODEJS_PORT;
+}
+else
+{
+	//constants.HOSTING_URL = 'http://lukaprij.wwwnl1-ss11.a2hosted.com:' + constants.NODEJS_PORT;
+	constants.HOSTING_URL = 'minecraft.fri.uni-lj.si:' + constants.NODEJS_PORT;
 }

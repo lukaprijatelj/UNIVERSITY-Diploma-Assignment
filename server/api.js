@@ -6,7 +6,7 @@ var Warning = require('../public/javascripts/classes/Warning.js');
 var options = null;
 
 var socketIO = require('socket.io');
-var io = socketIO.listen(30003);
+var io = socketIO.listen(constants.SOCKETIO_PORT);
 
 
 var API =
