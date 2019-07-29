@@ -27,11 +27,6 @@ var GLOBALS =
 	apiUrl: '/api',
 
 	/**
-	 * Socket io instance.
-	 */
-	io: null,
-
-	/**
 	 * Canvas renderer.
 	 */
 	renderer: null,
