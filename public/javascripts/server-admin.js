@@ -143,9 +143,9 @@ var GLOBALS =
 		var ratio = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
 		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
 
-		GLOBALS.camera.position.x = 0.81;
-		GLOBALS.camera.position.y = -0.1;
-		GLOBALS.camera.position.z = -2.47;
+		GLOBALS.camera.position.x = options.CAMERA_POSITION_X;
+		GLOBALS.camera.position.y = options.CAMERA_POSITION_Y;
+		GLOBALS.camera.position.z = options.CAMERA_POSITION_Z;
 	},
 
 	/**

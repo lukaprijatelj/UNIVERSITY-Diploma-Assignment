@@ -1,7 +1,7 @@
 var options = 
 {
 	//SCENE_FILEPATH: 'scenes/Castle/Sponza.gltf',
-	SCENE_FILEPATH: 'scenes/Textured-box/BoxTextured.gltf',
+	SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/Buggy/Buggy.gltf',
 
 	RESOLUTION_WIDTH: 1280,
@@ -14,9 +14,9 @@ var options =
 	BLOCK_HEIGHT: 50,
 	NUM_OF_BLOCKS_IN_CHUNK: 5,
 
-	CAMERA_POSITION_X: 0,
-	CAMERA_POSITION_Y: 0,
-	CAMERA_POSITION_Z: 0	
+	CAMERA_POSITION_X: 0.81,
+	CAMERA_POSITION_Y: -0.1,
+	CAMERA_POSITION_Z: -2.47	
 };
 
 

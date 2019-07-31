@@ -37,16 +37,6 @@ var GLOBALS =
 	cells: [],
 
 	/**
-	 * Current cells waiting to be rendered.
-	 */
-	waitingCells: [],
-
-	/**
-	 * Current rendering cell.
-	 */
-	currentRenderCell: null,
-
-	/**
 	 * Current renderer type.
 	 */
 	rendererType: enums.rendererType.RAY_TRACING,
@@ -86,8 +76,8 @@ var GLOBALS =
 		API.isConnected = true;
 
 		API.listen('cells/update', GLOBALS._onCellUpdate);
-		API.listen('rendering/start', GLOBALS._onStartRendering);	
-		API.listen('rendering/stop', GLOBALS._onStopRendering);	
+		API.listen('rendering/start', GLOBALS._onStartRenderingService);	
+		API.listen('rendering/stop', GLOBALS._onStopRenderingService);	
 
 		API.request('cells/getAll', GLOBALS.onGetLayout);
 	},	
@@ -95,7 +85,7 @@ var GLOBALS =
 	/**
 	 * Server started rendering service.
 	 */
-	_onStartRendering: function(data)
+	_onStartRenderingService: function(data)
 	{
 		API.request('cells/getAll', GLOBALS.onGetLayout);
 	},
@@ -103,7 +93,7 @@ var GLOBALS =
 	/**
 	 * Server stopped rendering service.
 	 */
-	_onStopRendering: function(data)
+	_onStopRenderingService: function(data)
 	{
 		options = null;
 	},
@@ -121,11 +111,16 @@ var GLOBALS =
 	/**
 	 * Progress was updated.
 	 */
-	_onCellUpdate: async function(data)
+	_onCellUpdate: function(data)
 	{
-		var cell = data.cell;
+		var cells = data.cells;
 		
-		GLOBALS.tryUpdatingCell(cell);
+		for (var i=0; i<cells.length; i++)
+		{
+			var current = cells[i];
+
+			GLOBALS.tryUpdatingCell(current);
+		}
 	},
 
 	/**
@@ -150,7 +145,12 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
-			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+			GLOBALS.renderer.prepareJsonData(() =>
+			{
+				API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+			});
+
+			
 		};
 		loader.start();	
 	},
@@ -232,26 +232,23 @@ var GLOBALS =
 		{
 			case enums.rendererType.RAY_TRACING:
 				renderer = new RaytracingRenderer(canvas);
-				renderer.updateFunction = GLOBALS.updateProgressAsync;
-				renderer.onCellRendered = GLOBALS.onCellRendered;
-				GLOBALS.renderer = renderer;
-				renderer.init();
 				break;
 
 			case enums.rendererType.PATH_TRACING:
 				init();
 				break;
-		}		
-	},	
+		}	
+		
+		GLOBALS.renderer = renderer;
 
-	/**
-	 * Main rendering loop.
-	 */
-	onRenderFrame: function()
-	{
-		// render current frame
-		GLOBALS.renderer.render(GLOBALS.scene, GLOBALS.camera);
-	},
+		// -----------------------------
+		// set properties
+		// -----------------------------
+		renderer.scene = GLOBALS.scene;
+		renderer.camera = GLOBALS.camera;
+		
+		renderer.init();
+	},	
 
 	/**
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
@@ -348,9 +345,9 @@ var GLOBALS =
 	},
 
 	/**
-	 * Cell finished rendering.
+	 * All waiting cells are done rendering.
 	 */
-	onCellRendered: function()
+	onRendererDone: function(cells)
 	{
 		GLOBALS.lastRenderingTime = window.setTimeout(()=>
 		{
@@ -362,15 +359,10 @@ var GLOBALS =
 		{
 			return;
 		}
+
+		GLOBALS.updateProgressAsync(cells, 100);
 				
-		if (!GLOBALS.waitingCells.length)
-		{
-			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
-		}
-		else
-		{
-			GLOBALS.startRendering();
-		}
+		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 	},
 
 	/**
@@ -390,12 +382,12 @@ var GLOBALS =
 			new Exception.ArrayEmpty();
 		}
 
-		if (GLOBALS.waitingCells.length)
+		if (GLOBALS.lastRenderingTime > 0)
 		{
-			// if array is not empty this means that another 'cells/getWaiting' call was executed before previous waiting cells rendered
-
-			new Exception.ArrayNotEmpty();
+			window.clearTimeout(GLOBALS.lastRenderingTime);
 		}
+
+		var cellsWaiting = [];
 
 		for (let i=0; i<GLOBALS.cells.length; i++)
 		{
@@ -403,48 +395,33 @@ var GLOBALS =
 
 			for (let j=0; j<cells.length; j++)
 			{
-				var waitingCurrent = cells[j];
+				let waitingCurrent = cells[j];
 
 				if (current._id != waitingCurrent._id)
 				{
 					continue;
 				}
 
-				GLOBALS.waitingCells.push(current);
+				cellsWaiting.push(current);
 			}
 		}
 
-		if (GLOBALS.lastRenderingTime > 0)
-		{
-			window.clearTimeout(GLOBALS.lastRenderingTime);
-		}
-		
-		document.getElementById('interface').addClass('rendering');
-
-		
 		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 		// heavy duty operation
-		GLOBALS.startRendering();
+		GLOBALS.startRendering(cellsWaiting);
 	},
 
 	/**
 	 * Starts rendering.
 	 */
-	startRendering: async function()
+	startRendering: function(cellsWaiting)
 	{
-		if (!GLOBALS.waitingCells.length)
-		{
-			new Exception.ArrayEmpty();
-		}
-
-		GLOBALS.currentRenderCell = GLOBALS.waitingCells.pop();
+		document.getElementById('interface').addClass('rendering');
 
 		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
-			GLOBALS.renderer.setCell(GLOBALS.currentRenderCell);
-
 			// start rendering
-			GLOBALS.onRenderFrame();
+			GLOBALS.renderer.render(cellsWaiting);
 		}
 	},
 
@@ -452,11 +429,11 @@ var GLOBALS =
 	 * Notifies server how much has client already rendered.
 	 * @async
 	 */
-	updateProgressAsync: function(cell, progress)
+	updateProgressAsync: function(cells, progress)
 	{
 		var data = 
 		{
-			cell: cell,
+			cells: cells,
 			progress: progress
 		};
 

@@ -206,7 +206,7 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(cell, progress)
+	updateProgress: function(cells, progress)
 	{
 		var table = DATABASE.renderingCellsTable;
 
@@ -215,17 +215,22 @@ var DATABASE =
 		{
 			let element = table.rows[i];
 
-			if(element._id != cell._id)
+			for (let j=0; j<cells.length; j++)
 			{
-				continue;
-			}
+				let cell = cells[j];
 
-			element.progress = progress;
-
-			if (typeof cell.imageData !== 'undefined')
-			{
-				element.imageData = cell.imageData;
-			}		
+				if(element._id != cell._id)
+				{
+					continue;
+				}
+	
+				element.progress = progress;
+	
+				if (typeof cell.imageData !== 'undefined')
+				{
+					element.imageData = cell.imageData;
+				}	
+			}				
 		}
 
         table.save();

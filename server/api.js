@@ -184,7 +184,7 @@ var API =
 
 		var socket = this;
 
-		DATABASE.updateProgress(data.cell, data.progress, data.imageData);		
+		DATABASE.updateProgress(data.cells, data.progress, data.imageData);		
 
 		if (data.progress == 100)
 		{

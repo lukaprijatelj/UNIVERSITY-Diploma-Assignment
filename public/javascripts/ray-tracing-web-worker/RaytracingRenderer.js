@@ -27,6 +27,8 @@ var RaytracingRenderer = function(canvas)
 	this.cellsDone = [];
 
 	this.workers = [];
+	this.numOfWorkers = 3;
+
 	this.autoClear = true;
 	this.clearColor = new THREE.Color(0x000000);
 
@@ -36,6 +38,7 @@ var RaytracingRenderer = function(canvas)
 	this.materials = {};
 	this.sceneJSON;
 	this.cameraJSON;
+	this.images = {};
 	this._annex = 
 	{
 		mirror: 1,
@@ -70,13 +73,15 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, timeMs)
+RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
 	var renderer = this;
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
-	
 
+	var webWorker = renderer.workers[workerIndex];
+	webWorker.isRendering = false;
+	
 	// -----------------------------
 	// convert buffer data into png image data
 	// -----------------------------
@@ -108,7 +113,7 @@ RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, tim
 	}
 	else
 	{
-		renderer._runWorker(worker);
+		renderer._runWorker(webWorker);
 	}		
 };
 
@@ -120,11 +125,31 @@ RaytracingRenderer.prototype.setWorkers = function()
 {
 	var renderer = this;
 
-	var worker = new RaytracingRendererWorker(renderer.onCellRendered.bind(renderer));
-	worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
-	worker.init(renderer.canvas.width, renderer.canvas.height);
-
-	renderer.workers.push(worker);
+	for (let i=0; i<renderer.numOfWorkers; i++)
+	{
+		var worker = new Worker('./javascripts/ray-tracing-web-worker/WebWorker.js');
+		worker.isRendering = false;
+		worker.postMessage({
+			type: 'init',
+			workerIndex: i,
+			canvasWidth: renderer.canvas.width,
+			canvasHeight: renderer.canvas.height
+		});
+	
+		worker.onmessage = (e) =>
+		{
+			var data = e.data;
+	
+			if (data.type != 'renderCell')
+			{
+				return;
+			}
+	
+			renderer.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
+		};
+	
+		renderer.workers.push(worker);
+	}
 };
 
 
@@ -175,40 +200,56 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 /**
  * Starts rendering.
  */
-RaytracingRenderer.prototype.render = function(cellsWaiting) 
+RaytracingRenderer.prototype.prepareJsonData = function(callback) 
 {
-	var renderer = this;
-
-	renderer.cellsWaiting = cellsWaiting;
+	var _this = this;
 
 	// update scene graph
 
-	if (renderer.scene.autoUpdate === true) 
+	if (_this.scene.autoUpdate === true) 
 	{
-		renderer.scene.updateMatrixWorld();
+		_this.scene.updateMatrixWorld();
 	}
 
 	// update camera matrices
 
-	if (renderer.camera.parent === null) 
+	if (_this.camera.parent === null) 
 	{
-		renderer.camera.updateMatrixWorld();
+		_this.camera.updateMatrixWorld();
 	}
 
-	renderer.sceneJSON = renderer.scene.toJSON();
-	renderer.cameraJSON = renderer.camera.toJSON();
+	_this.sceneJSON = _this.scene.toJSON();
+	_this.cameraJSON = _this.camera.toJSON();
 
-	renderer.scene.traverse(renderer.serializeObject.bind(renderer));
-	
-	//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
+	_this.scene.traverse(_this.serializeObject.bind(_this));
 
-	for (let i=0; i<renderer.workers.length; i++)
+	_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
+};
+
+
+/**
+ * Starts rendering.
+ */
+RaytracingRenderer.prototype.render = function(cellsWaiting) 
+{
+	var _this = this;
+
+	_this.cellsWaiting = cellsWaiting;	
+
+	for (let i=0; i<_this.workers.length; i++)
 	{
-		var worker = renderer.workers[i];
+		var worker = _this.workers[i];
 		
-		worker.initScene(renderer.sceneJSON, renderer.cameraJSON, renderer.materials);	
+		worker.postMessage(
+		{
+			type: 'initScene',
+			sceneJSON: _this.sceneJSON,
+			cameraJSON: _this.cameraJSON,
+			images: _this.images,
+			materials: _this.materials
+		});		
 
-		renderer._runWorker(worker);
+		_this._runWorker(worker);
 	}	
 };
 
@@ -224,8 +265,10 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 
 	GLOBALS.rendererCanvas.flagRenderCell(cellToRender);
 
-	worker.setCell(cellToRender);
-	worker.startRendering();
+	worker.postMessage({ type: 'setCell', cell: cellToRender });
+	
+	worker.isRendering = true;
+	worker.postMessage({ type: 'startRendering' });
 };
 
 

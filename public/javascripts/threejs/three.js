@@ -38238,16 +38238,17 @@
 
 		},
 
-		parse: function ( json, onLoad ) {
+		parse: function ( json, images, onLoad ) {
 
 			var shapes = this.parseShape( json.shapes );
 			var geometries = this.parseGeometries( json.geometries, shapes );
 
-			var images = this.parseImages( json.images, function () {
+			/*var images = this.parseImages( json.images, function () {
 
 				if ( onLoad !== undefined ) onLoad( object );
 
-			} );
+			} );*/
+
 
 			var textures = this.parseTextures( json.textures, images );
 			var materials = this.parseMaterials( json.materials, textures );
