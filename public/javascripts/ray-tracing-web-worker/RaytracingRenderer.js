@@ -199,30 +199,39 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 /**
  * Starts rendering.
  */
-RaytracingRenderer.prototype.render = function(cellsWaiting) 
+RaytracingRenderer.prototype.prepareJsonData = function() 
 {
-	var renderer = this;
-
-	renderer.cellsWaiting = cellsWaiting;
+	var _this = this;
 
 	// update scene graph
 
-	if (renderer.scene.autoUpdate === true) 
+	if (_this.scene.autoUpdate === true) 
 	{
-		renderer.scene.updateMatrixWorld();
+		_this.scene.updateMatrixWorld();
 	}
 
 	// update camera matrices
 
-	if (renderer.camera.parent === null) 
+	if (_this.camera.parent === null) 
 	{
-		renderer.camera.updateMatrixWorld();
+		_this.camera.updateMatrixWorld();
 	}
 
-	renderer.sceneJSON = renderer.scene.toJSON();
-	renderer.cameraJSON = renderer.camera.toJSON();
+	_this.sceneJSON = _this.scene.toJSON();
+	_this.cameraJSON = _this.camera.toJSON();
 
-	renderer.scene.traverse(renderer.serializeObject.bind(renderer));
+	_this.scene.traverse(_this.serializeObject.bind(_this));
+};
+
+
+/**
+ * Starts rendering.
+ */
+RaytracingRenderer.prototype.render = function(cellsWaiting) 
+{
+	var renderer = this;
+
+	renderer.cellsWaiting = cellsWaiting;	
 	
 	//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
 

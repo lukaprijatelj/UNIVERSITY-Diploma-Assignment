@@ -145,6 +145,8 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
+			GLOBALS.renderer.prepareJsonData();
+
 			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 		};
 		loader.start();	
