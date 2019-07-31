@@ -23,7 +23,7 @@ else
 	console._error = console.error;
 	console.error = function()
 	{
-		console.error.apply(this, arguments);
+		console._error.apply(this, arguments);
 	};
 	
 	

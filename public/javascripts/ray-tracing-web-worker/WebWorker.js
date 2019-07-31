@@ -1,6 +1,7 @@
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
 
+
 // only accesible in web worker thread
 var worker = null;
 var canvasWidth = -1;
@@ -26,7 +27,7 @@ self.onmessage = function(e)
 				};
 				self.postMessage(data);
 			}, data.workerIndex);
-			worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
+			//worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
 			worker.init(data.canvasWidth, data.canvasHeight);
 			break;
 
@@ -36,7 +37,7 @@ self.onmessage = function(e)
 			break;
 
 		case 'initScene':
-			worker.initScene(data.sceneJSON, data.cameraJSON, data.materials);
+			worker.initScene(data.sceneJSON, data.cameraJSON, data.images, data.materials);
 			break;
 
 		case 'startRendering':

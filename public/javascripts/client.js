@@ -145,9 +145,12 @@ var GLOBALS =
 			gltf.asset; // Object
 						
 
-			GLOBALS.renderer.prepareJsonData();
+			GLOBALS.renderer.prepareJsonData(() =>
+			{
+				API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+			});
 
-			API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
+			
 		};
 		loader.start();	
 	},
@@ -392,7 +395,7 @@ var GLOBALS =
 
 			for (let j=0; j<cells.length; j++)
 			{
-				var waitingCurrent = cells[j];
+				let waitingCurrent = cells[j];
 
 				if (current._id != waitingCurrent._id)
 				{

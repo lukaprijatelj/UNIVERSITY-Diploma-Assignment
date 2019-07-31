@@ -38,6 +38,7 @@ var RaytracingRenderer = function(canvas)
 	this.materials = {};
 	this.sceneJSON;
 	this.cameraJSON;
+	this.images = {};
 	this._annex = 
 	{
 		mirror: 1,
@@ -199,7 +200,7 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 /**
  * Starts rendering.
  */
-RaytracingRenderer.prototype.prepareJsonData = function() 
+RaytracingRenderer.prototype.prepareJsonData = function(callback) 
 {
 	var _this = this;
 
@@ -221,6 +222,8 @@ RaytracingRenderer.prototype.prepareJsonData = function()
 	_this.cameraJSON = _this.camera.toJSON();
 
 	_this.scene.traverse(_this.serializeObject.bind(_this));
+
+	_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
 };
 
 
@@ -229,25 +232,24 @@ RaytracingRenderer.prototype.prepareJsonData = function()
  */
 RaytracingRenderer.prototype.render = function(cellsWaiting) 
 {
-	var renderer = this;
+	var _this = this;
 
-	renderer.cellsWaiting = cellsWaiting;	
-	
-	//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
+	_this.cellsWaiting = cellsWaiting;	
 
-	for (let i=0; i<renderer.workers.length; i++)
+	for (let i=0; i<_this.workers.length; i++)
 	{
-		var worker = renderer.workers[i];
+		var worker = _this.workers[i];
 		
 		worker.postMessage(
 		{
 			type: 'initScene',
-			sceneJSON: renderer.sceneJSON,
-			cameraJSON: renderer.cameraJSON,
-			materials: renderer.materials
+			sceneJSON: _this.sceneJSON,
+			cameraJSON: _this.cameraJSON,
+			images: _this.images,
+			materials: _this.materials
 		});		
 
-		renderer._runWorker(worker);
+		_this._runWorker(worker);
 	}	
 };
 

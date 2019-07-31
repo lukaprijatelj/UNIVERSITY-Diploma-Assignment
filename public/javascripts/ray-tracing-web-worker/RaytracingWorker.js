@@ -41,6 +41,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.perspective;
 	
 	this.scene;
+	this.images;
 	this.objects;
 	this.lights = [];
 	this.cache = {};
@@ -76,10 +77,11 @@ RaytracingRendererWorker.prototype.init = function(width, height)
 /**
  * Initializes scene.
  */
-RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, annexData)
+RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, images, annexData)
 {
-	this.scene = this.loader.parse(sceneData);
-	this.camera = this.loader.parse(cameraData);
+	this.scene = this.loader.parse(sceneData, images);
+	this.camera = this.loader.parse(cameraData, images);
+	this.images = images;
 
 	var meta = annexData;
 	this.scene.traverse(function(o) 
@@ -122,6 +124,25 @@ RaytracingRendererWorker.prototype.setSize = function (width, height)
 
 	this.canvasWidthHalf = Math.floor(this.canvasWidth / 2);
 	this.canvasHeightHalf = Math.floor(this.canvasHeight / 2);
+};
+
+
+/**
+ * Sets canvas size.
+ */
+RaytracingRendererWorker.prototype.getTexturePixel = function (texture, posX, posY) 
+{
+	// r, g, b, a bits
+	var NUM_OF_COLOR_BITS = 4;
+
+	var above = posY * (texture.width * NUM_OF_COLOR_BITS);
+	var start = above + (posX * NUM_OF_COLOR_BITS);
+	
+	var red = texture.pixels[start++];
+	var green = texture.pixels[start++];
+	var blue = texture.pixels[start++];
+
+	return new THREE.Color("rgb(" + red + ", " + green + ", " + blue + ")");
 };
 
 
@@ -207,20 +228,11 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	this.rayLight.origin.copy( point );
 
-	var textureImg;
-	var canvas;
-	var context;
+	var texture;
 
 	if (material.map && material.map.image)
 	{
-		textureImg = material.map.image;
-		canvas = document.createElement('canvas');
-
-		canvas.width = textureImg.width;
-		canvas.height = textureImg.height;
-		
-		context = canvas.getContext('2d');
-		context.drawImage(textureImg, 0, 0, textureImg.width, textureImg.height);
+		texture = material.map.image;
 	}	
 
 	if (material.isMeshBasicMaterial) 
@@ -246,14 +258,16 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 			// add texture colour
 
-			if (textureImg && context && intersection.uv)
+			if (texture && intersection.uv)
 			{	
 				// read texture pixels
 				var uv = intersection.uv;
 				material.map.transformUv(uv);
 
-				var pixelData = context.getImageData(textureImg.width * uv.x, textureImg.height * uv.y, 1, 1).data;
-				var pixelTextureColor = new THREE.Color("rgb(" + pixelData[0] + ", " + pixelData[1] + ", " + pixelData[2] + ")");
+				var posX = Math.floor(texture.width * uv.x);
+				var posY = Math.floor(texture.height * uv.y);
+
+				let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
 
 				outputColor.multiply(pixelTextureColor); 
 			}
@@ -322,14 +336,16 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 			// add texture colour
 
-			if (textureImg && context && intersection.uv)
+			if (texture && intersection.uv)
 			{	
 				// read texture pixels
 				var uv = intersection.uv;
 				material.map.transformUv(uv);
 
-				var pixelData = context.getImageData(textureImg.width * uv.x, textureImg.height * uv.y, 1, 1).data;
-				var pixelTextureColor = new THREE.Color("rgb(" + pixelData[0] + ", " + pixelData[1] + ", " + pixelData[2] + ")");
+				var posX = Math.floor(texture.width * uv.x);
+				var posY = Math.floor(texture.height * uv.y);
+
+				let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
 
 				outputColor.multiply(pixelTextureColor); 
 			}
