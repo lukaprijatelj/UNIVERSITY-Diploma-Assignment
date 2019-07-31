@@ -1,23 +1,10 @@
+var options = null;
+
 /**
  * Globals. 
  */
 var GLOBALS =
 {
-	/**
-	 * Base url API access.
-	 */
-	apiUrl: '/api',
-	
-	/**
-	 * Socket io instance.
-	 */
-	io: null,
-
-	/**
-	 * Layout view instance.
-	 */
-	layout: null,
-
 	/**
 	 * Type of the layout view.
 	 */
@@ -27,11 +14,11 @@ var GLOBALS =
 	init: function()
 	{		
 		var layoutWrapperV = document.querySelector('wrapper.layout');
-
 		GLOBALS.rendererCanvas = new RendererCanvas(layoutWrapperV);
+		GLOBALS.rendererCanvas.init();
 
-		API.init('admin', GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		API.listen('cells/update', GLOBALS._onCellUpdate);
+		API.init('renderer');
+		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 
 
@@ -41,7 +28,11 @@ var GLOBALS =
 	 */
 	_onServerConnected: function()
 	{
-		console.log('[Main] Connected to server!');
+		console.log('[Globals] Connected to server!');
+
+		API.isConnected = true;
+
+		API.listen('cells/update', GLOBALS._onCellUpdate);
 
 		API.request('cells/getAll', GLOBALS._onGetLayout);
 	},
@@ -56,33 +47,47 @@ var GLOBALS =
 
 	/**
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @private
+	 * @async
 	 */
 	_onGetLayout: function(data)
 	{
-		console.log('[Main] Layout is received from server');
+		console.log('[Globals] Grid layout drawn');
 
-		
+
+		// -----------------------------
+		// update options
+		// -----------------------------
+
+		if (!data.options)
+		{
+			return;
+		}
+
+		options = data.options;
+		GLOBALS.rendererCanvas.resizeCanvas();
+
+
 		// -----------------------------
 		// draw layout
 		// -----------------------------
 
-		GLOBALS.rendererCanvas.createLayout(data);
+		GLOBALS.cells = data.cells;
+		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
 
 
 		// -----------------------------
-		// draw all cells that are already rendered
+		// draw all already rendered cells
 		// -----------------------------
-		
-		for (var i=0; i<data.length; i++)
+
+		for (var i=0; i<GLOBALS.cells.length; i++)
 		{
-			var current = data[i];
+			var current = GLOBALS.cells[i];
 
 			GLOBALS.tryUpdatingCell(current);
 		}
+		
 
-
-		new Thread(GLOBALS.onLoaded);
+		GLOBALS.onLoaded();
 	},
 
 	/**
@@ -103,8 +108,14 @@ var GLOBALS =
 	 */
 	_onCellUpdate: function(data)
 	{
-		var cell = data.cell;
-		GLOBALS.tryUpdatingCell(cell);
+		var cells = data.cells;
+		
+		for (var i=0; i<cells.length; i++)
+		{
+			var current = cells[i];
+
+			GLOBALS.tryUpdatingCell(current);
+		}
 	},
 
 	/**

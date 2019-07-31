@@ -5,8 +5,22 @@ var socket;
 
 var API =
 {
+	/**
+	 * Is SocketIO currently connected to server.
+	 * @type {boolean}
+	 */
 	isConnected: false,
+
+	/**
+	 * Type of the client.
+	 * @type {string}
+	 */
 	clientType: '',
+
+	/**
+	 * Is rendering service running on server.
+	 * @type {boolean}
+	 */
 	isRenderingServiceRunning: false,
 
 	/**
@@ -62,7 +76,9 @@ var API =
 		socket.disconnect();
 	},
 	
-
+	/**
+	 * Initializes api.
+	 */
 	init: function(clientType)
 	{
 		API.clientType = clientType;		

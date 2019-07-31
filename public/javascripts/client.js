@@ -4,6 +4,9 @@
 
 var options = null;
 
+/**
+ * Global properties.
+ */
 var GLOBALS =
 {
 	/**
@@ -20,11 +23,6 @@ var GLOBALS =
 	 * ThreeJS camera in the scene.
 	 */
 	camera: null,
-
-	/**
-	 * Base url API access.
-	 */
-	apiUrl: '/api',
 
 	/**
 	 * Canvas renderer.
