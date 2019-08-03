@@ -27,7 +27,7 @@ var RaytracingRenderer = function(canvas)
 	this.cellsDone = [];
 
 	this.workers = [];
-	this.numOfWorkers = 3;
+	this.numOfWorkers = 1;
 
 	this.autoClear = true;
 	this.clearColor = new THREE.Color(0x000000);
@@ -219,18 +219,31 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 	}
 
 	_this.sceneJSON = _this.scene.toJSON();
-	_this.cameraJSON = _this.camera.toJSON();
+	_this.cameraJSON = _this.camera.toJSON();	
 
 	_this.scene.traverse(_this.serializeObject.bind(_this));
 
-	if (_this.sceneJSON.images && _this.sceneJSON.images.length > 0)
+	_this.images = {};
+	GltfLoader.loadTextures(_this.sceneJSON.images, _this.images, () =>
 	{
-		_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
-	}
-	else
-	{
+		console.log('[GltfLoader] Textures loaded');
+		
+		for (let i=0; i<_this.workers.length; i++)
+		{
+			var worker = _this.workers[i];
+			
+			worker.postMessage(
+			{
+				type: 'initScene',
+				sceneJSON: _this.sceneJSON,
+				cameraJSON: _this.cameraJSON,
+				images: _this.images,
+				materials: _this.materials
+			});		
+		}	
+
 		callback();
-	}
+	});
 };
 
 
@@ -246,16 +259,7 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
 	for (let i=0; i<_this.workers.length; i++)
 	{
 		var worker = _this.workers[i];
-		
-		worker.postMessage(
-		{
-			type: 'initScene',
-			sceneJSON: _this.sceneJSON,
-			cameraJSON: _this.cameraJSON,
-			images: _this.images,
-			materials: _this.materials
-		});		
-
+	
 		_this._runWorker(worker);
 	}	
 };

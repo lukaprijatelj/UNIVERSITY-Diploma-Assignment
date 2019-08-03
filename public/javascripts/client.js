@@ -141,13 +141,10 @@ var GLOBALS =
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object
 						
-
 			GLOBALS.renderer.prepareJsonData(() =>
 			{
 				API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
 			});
-
-			
 		};
 		loader.start();	
 	},
@@ -209,7 +206,7 @@ var GLOBALS =
 		light.physicalAttenuation = true;
 		GLOBALS.scene.add( light );
 
-		var light = new THREE.PointLight(0xffffff, intensity * 1.5);
+		var light = new THREE.PointLight(0xffffff, intensity);
 		light.position.set( 0, 0, 300 );
 		light.physicalAttenuation = true;
 		GLOBALS.scene.add( light );

@@ -123,15 +123,15 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
  */
 RaytracingRenderer.prototype.setWorkers = function() 
 {
-	var renderer = this;
+	var _this = this;
 
-	for (let i=0; i<renderer.numOfWorkers; i++)
+	for (let i=0; i<_this.numOfWorkers; i++)
 	{
-		var worker = new RaytracingRendererWorker(renderer.onCellRendered.bind(renderer), i);
+		var worker = new RaytracingRendererWorker(_this.onCellRendered.bind(_this), i);
 		worker.isRendering = false;
-		worker.init(renderer.canvas.width, renderer.canvas.height);
+		worker.init(_this.canvas.width, _this.canvas.height);
 
-		renderer.workers.push(worker);
+		_this.workers.push(worker);
 	}
 };
 
@@ -222,17 +222,17 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
  */
 RaytracingRenderer.prototype.render = function(cellsWaiting) 
 {
-	var renderer = this;
+	var _this = this;
 
-	renderer.cellsWaiting = cellsWaiting;
+	_this.cellsWaiting = cellsWaiting;
 
-	for (let i=0; i<renderer.workers.length; i++)
+	for (let i=0; i<_this.workers.length; i++)
 	{
-		var worker = renderer.workers[i];
+		var worker = _this.workers[i];
 		
-		worker.initScene(renderer.sceneJSON, renderer.cameraJSON, renderer.images, renderer.materials);	
+		worker.initScene(_this.sceneJSON, _this.cameraJSON, _this.images, _this.materials);	
 
-		renderer._runWorker(worker);
+		_this._runWorker(worker);
 	}	
 };
 
@@ -242,9 +242,9 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
  */
 RaytracingRenderer.prototype._runWorker = function(worker)
 {
-	var renderer = this;
+	var _this = this;
 
-	var cellToRender = renderer.cellsWaiting.pop();
+	var cellToRender = _this.cellsWaiting.pop();
 
 	GLOBALS.rendererCanvas.flagRenderCell(cellToRender);
 
@@ -258,7 +258,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
  */
 RaytracingRenderer.prototype.init = function()
 {
-	var renderer = this;
+	var _this = this;
 
-	renderer.setWorkers();
+	_this.setWorkers();
 };

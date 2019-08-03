@@ -13,7 +13,6 @@ RendererCanvas.prototype.init = function()
 RendererCanvas.prototype.dispose = function()
 {
 	var gridLayout = this;
-	
 };
 
 
@@ -68,7 +67,7 @@ RendererCanvas.prototype.flagRenderCell = function(cell)
 {
 	var gridLayout = this;
 	
-	var borderWidth = 1;
+	var borderWidth = 0.3;
 	var posX = cell.startX + borderWidth;
 	var posY = cell.startY + borderWidth;
 	var width = cell.width - borderWidth * 2;

@@ -60,51 +60,49 @@ GltfLoader.prototype.start = function()
 /**
  * Starts preloading textures.
  */
-GltfLoader.loadTextures = function(imagesJSON, callback)
+GltfLoader.loadTextures = function(src, dst, callback)
 {
-	var images = {};
-
-	if (imagesJSON === undefined) 
+	if (src === undefined) 
 	{
-		return {};
+		callback();
+		return;
 	}
 
-	if (imagesJSON.length == 0)
+	if (src.length == 0)
 	{
-		return {};
+		callback();
+		return;
 	}
+
+	console.log('[GltfLoader] Start loading textures');
+
+	var onImageLoaded = () =>
+	{
+		loadingImagesCount--;			
+
+		if (loadingImagesCount == 0)
+		{
+			console.log('[GltfLoader] End loading textures');
+
+			callback();
+		}
+	};
 
 	var loadingImagesCount = 0;
 	var imageLoader = new RawImageLoader();
-	imageLoader.onLoad = function() 
-	{
-		loadingImagesCount--;			
+	imageLoader.onLoad = onImageLoaded;
+	imageLoader.onError = onImageLoaded;
 
-		if (loadingImagesCount == 0)
-		{
-			callback();
-		}
-	};
-	imageLoader.onError = function() 
+	for ( var i = 0, il = src.length; i < il; i ++ ) 
 	{
-		loadingImagesCount--;			
-
-		if (loadingImagesCount == 0)
-		{
-			callback();
-		}
-	};
-
-	for ( var i = 0, il = imagesJSON.length; i < il; i ++ ) 
-	{
-		var image = imagesJSON[i];
+		var image = src[i];
 		var url = image.url;
 
 		if (Array.isArray(url)) 
 		{
 			// load array of images e.g CubeTexture
 
-			images[ image.uuid ] = [];
+			dst[ image.uuid ] = [];
 
 			for ( var j = 0, jl = url.length; j < jl; j ++ ) 
 			{
@@ -115,7 +113,7 @@ GltfLoader.loadTextures = function(imagesJSON, callback)
 				loadingImagesCount++;
 				var rawImage = imageLoader.load(path);
 
-				images[ image.uuid ].push(rawImage);
+				dst[ image.uuid ].push(rawImage);
 			}
 		} 
 		else 
@@ -127,9 +125,7 @@ GltfLoader.loadTextures = function(imagesJSON, callback)
 			loadingImagesCount++;
 			var rawImage = imageLoader.load(path);
 
-			images[ image.uuid ] = rawImage;
+			dst[ image.uuid ] = rawImage;
 		}
 	}
-
-	return images;
 };

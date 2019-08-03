@@ -158,7 +158,7 @@ canvas
 
 #interface
 {
-	--BORDER-WIDTH: 2px;
+	--BORDER-WIDTH: 1px;
 
 	border-width: var(--BORDER-WIDTH);
 }

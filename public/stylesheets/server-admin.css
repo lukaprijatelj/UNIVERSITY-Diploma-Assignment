@@ -25,3 +25,15 @@ body
 		color: var(--DARK-RED-COLOR);
 		background: transparent;
 	}
+
+
+#interface
+{
+	border-style: solid;
+	border-color: var(--EDITOR-POPUP-BACKGROUND);
+}
+
+#interface.rendering
+{
+	border-color: var(--LIGHT-RED-COLOR);
+}

@@ -18,7 +18,7 @@ body
 	--EDITOR-POPUP-BACKGROUND: rgba(255, 255, 255, 0.05);
 	
 
-	background-color: white;
+	background-color: var(--LIGHT-GRAY-COLOR);
 	color: var(--TEXT-COLOR);
 	font-family: 'Muli', sans-serif;
 }
@@ -154,17 +154,6 @@ input:focus
 /* Rendering grid */
 /* ----------------------------- */
 	
-#interface
-{
-	border-style: solid;
-	border-color: var(--EDITOR-POPUP-BACKGROUND);
-}
-
-#interface.rendering
-{
-	border-color: var(--LIGHT-RED-COLOR);
-}
-
 editor-popup
 {
 	background-color: var(--EDITOR-POPUP-BACKGROUND);
@@ -179,4 +168,9 @@ curtain
 #editor-canvas
 {
 	background-color: black;
+}
+
+#rendering-canvas
+{
+	background-color: white;
 }

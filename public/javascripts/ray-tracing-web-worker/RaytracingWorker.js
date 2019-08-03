@@ -79,12 +79,14 @@ RaytracingRendererWorker.prototype.init = function(width, height)
  */
 RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, images, annexData)
 {
-	this.scene = this.loader.parse(sceneData, images);
-	this.camera = this.loader.parse(cameraData, images);
-	this.images = images;
+	var _this = this;
+
+	_this.scene = _this.loader.parse(sceneData, images);
+	_this.camera = _this.loader.parse(cameraData, images);
+	_this.images = images;
 
 	var meta = annexData;
-	this.scene.traverse(function(o) 
+	_this.scene.traverse(function(o) 
 	{
 		if ( o.isPointLight ) 
 		{
@@ -102,6 +104,52 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, i
 			mat[ m ] = material[ m ];
 		}
 	});
+
+	// update scene graph
+
+	if (_this.scene.autoUpdate === true)
+	{
+		_this.scene.updateMatrixWorld();
+	} 
+
+	// update camera matrices
+
+	if (_this.camera.parent === null)
+	{
+		_this.camera.updateMatrixWorld();
+	}
+
+	_this.cameraPosition.setFromMatrixPosition(_this.camera.matrixWorld);
+	_this.cameraNormalMatrix.getNormalMatrix(_this.camera.matrixWorld);
+
+	_this.perspective = 0.5 / Math.tan(THREE.Math.degToRad(_this.camera.fov * 0.5)) * _this.canvasHeight;
+	_this.objects = _this.scene.children;
+
+	// collect lights and set up object matrices
+
+	_this.lights.length = 0;
+
+	_this.scene.traverse(function(object) 
+	{
+		if (object.isPointLight) 
+		{
+			this.lights.push(object);
+		}
+
+		if (this.cache[object.id] === undefined) 
+		{
+			this.cache[object.id] = {
+				normalMatrix: new THREE.Matrix3(),
+				inverseMatrix: new THREE.Matrix4()
+			};
+		}
+
+		var _object = this.cache[object.id];
+
+		_object.normalMatrix.getNormalMatrix(object.matrixWorld);
+		_object.inverseMatrix.getInverse(object.matrixWorld);
+
+	}.bind(_this));
 };
 
 
@@ -110,7 +158,7 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, i
  */
 RaytracingRendererWorker.prototype.startRendering = function()
 {
-	this.render(this.scene, this.camera);
+	this.render();
 };
 
 
@@ -142,7 +190,7 @@ RaytracingRendererWorker.prototype.getTexturePixel = function (texture, posX, po
 	var green = texture.pixels[start++];
 	var blue = texture.pixels[start++];
 
-	return new THREE.Color("rgb(" + red + ", " + green + ", " + blue + ")");
+	return new THREE.Color(red/255, green/255, blue/255);
 };
 
 
@@ -202,183 +250,131 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	eyeVector.subVectors(this.ray.origin, point).normalize();
 
+	// add texture colour
 	// resolve pixel diffuse color
 
-	if ( material.isMeshLambertMaterial ||
-			material.isMeshPhongMaterial ||
-			material.isMeshStandardMaterial) 
+	if (material.map && material.map.image && intersection.uv)
+	{	
+		var texture = material.map.image;
+
+		// read texture pixels
+		var uv = intersection.uv;
+		material.map.transformUv(uv);
+
+		var posX = Math.floor(texture.width * uv.x);
+		var posY = Math.floor(texture.height * uv.y);
+
+		let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
+
+		diffuseColor.copyGammaToLinear(pixelTextureColor);
+	}
+	else
 	{
 		diffuseColor.copyGammaToLinear(material.color);
 	} 
-	else if (material.isMeshBasicMaterial)
-	{
-		diffuseColor.copyGammaToLinear(material.color);
-	}
-	else 
-	{
-		diffuseColor.setRGB(1, 1, 1);
-	}
 
 	if ( material.vertexColors === THREE.FaceColors) 
 	{
 		diffuseColor.multiply( face.color );
 	}
 
+	
+	// -----------------------------
 	// compute light shading
+	// -----------------------------
 
-	this.rayLight.origin.copy( point );
+	this.rayLight.origin.copy( point );	
 
-	var texture;
+	var normalComputed = false;
 
-	if (material.map && material.map.image)
+	for (var i = 0, l = this.lights.length; i < l; i++) 
 	{
-		texture = material.map.image;
-	}	
+		var light = this.lights[ i ];
 
-	if (material.isMeshBasicMaterial) 
-	{
-		for ( var i = 0, l = this.lights.length; i < l; i ++ ) 
+		lightVector.setFromMatrixPosition( light.matrixWorld );
+		lightVector.sub( point );
+
+		this.rayLight.direction.copy( lightVector ).normalize();
+
+		var intersections = this.raycasterLight.intersectObjects(this.objects, true);
+		
+		if ( intersections.length > 0 ) 
 		{
-			var light = this.lights[i];
-
-			lightVector.setFromMatrixPosition(light.matrixWorld);
-			lightVector.sub(point);
-
-			this.rayLight.direction.copy(lightVector).normalize();
-
-			var intersections = this.raycasterLight.intersectObjects(this.objects, true);
-
 			// point in shadow
 
-			if ( intersections.length > 0 ) continue;
-
-			// point visible
-
-			outputColor.add(diffuseColor);
-
-			// add texture colour
-
-			if (texture && intersection.uv)
-			{	
-				// read texture pixels
-				var uv = intersection.uv;
-				material.map.transformUv(uv);
-
-				var posX = Math.floor(texture.width * uv.x);
-				var posY = Math.floor(texture.height * uv.y);
-
-				let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
-
-				outputColor.multiply(pixelTextureColor); 
-			}
+			continue;
 		}
-	} 
-	else if (material.isMeshLambertMaterial || material.isMeshPhongMaterial || material.isMeshStandardMaterial) 
-	{
-		var normalComputed = false;
 
-		for (var i = 0, l = this.lights.length; i < l; i++) 
+		// point lit
+
+		if ( normalComputed === false ) 
 		{
-			var light = this.lights[ i ];
+			// the same normal can be reused for all lights
+			// (should be possible to cache even more)
 
-			lightVector.setFromMatrixPosition( light.matrixWorld );
-			lightVector.sub( point );
+			localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
+			this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
+			normalVector.applyMatrix3( _object.normalMatrix ).normalize();
 
-			this.rayLight.direction.copy( lightVector ).normalize();
+			normalComputed = true;
+		}
 
-			var intersections = this.raycasterLight.intersectObjects(this.objects, true);
-			
-			if ( intersections.length > 0 ) 
-			{
-				// point in shadow
+		lightColor.copyGammaToLinear( light.color );
 
-				continue;
-			}
+		// compute attenuation
 
-			// point lit
+		var attenuation = 1.0;
 
-			if ( normalComputed === false ) 
-			{
-				// the same normal can be reused for all lights
-				// (should be possible to cache even more)
+		if ( light.physicalAttenuation === true ) 
+		{
+			attenuation = lightVector.length();
+			attenuation = 1.0 / (attenuation * attenuation);
+		}
 
-				localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
-				this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
-				normalVector.applyMatrix3( _object.normalMatrix ).normalize();
+		lightVector.normalize();
 
-				normalComputed = true;
-			}
+		// compute diffuse
 
-			lightColor.copyGammaToLinear( light.color );
+		var dot = Math.max( normalVector.dot( lightVector ), 0 );
+		var diffuseIntensity = dot * light.intensity;
 
-			// compute attenuation
+		lightContribution.copy( diffuseColor );
+		lightContribution.multiply( lightColor );
+		lightContribution.multiplyScalar( diffuseIntensity * attenuation );
 
-			var attenuation = 1.0;
+		outputColor.add( lightContribution );
 
-			if ( light.physicalAttenuation === true ) 
-			{
-				attenuation = lightVector.length();
-				attenuation = 1.0 / (attenuation * attenuation);
-			}
+		// compute specular
 
-			lightVector.normalize();
+		if (material.isMeshPhongMaterial) 
+		{
+			halfVector.addVectors( lightVector, eyeVector ).normalize();
 
-			// compute diffuse
+			var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
+			var specularIntensity = Math.max( Math.pow( dotNormalHalf, material.shininess ), 0.0 ) * diffuseIntensity;
 
-			var dot = Math.max( normalVector.dot( lightVector ), 0 );
-			var diffuseIntensity = dot * light.intensity;
+			var specularNormalization = ( material.shininess + 2.0 ) / 8.0;
 
-			lightContribution.copy( diffuseColor );
+			specularColor.copyGammaToLinear( material.specular );
+
+			var alpha = Math.pow( Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0 );
+
+			schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
+			schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
+			schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
+
+			lightContribution.copy( schlick );
 			lightContribution.multiply( lightColor );
-			lightContribution.multiplyScalar( diffuseIntensity * attenuation );
+			lightContribution.multiplyScalar( specularNormalization * specularIntensity * attenuation );
 
 			outputColor.add( lightContribution );
-
-			// add texture colour
-
-			if (texture && intersection.uv)
-			{	
-				// read texture pixels
-				var uv = intersection.uv;
-				material.map.transformUv(uv);
-
-				var posX = Math.floor(texture.width * uv.x);
-				var posY = Math.floor(texture.height * uv.y);
-
-				let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
-
-				outputColor.multiply(pixelTextureColor); 
-			}
-
-			// compute specular
-
-			if (material.isMeshPhongMaterial) 
-			{
-				halfVector.addVectors( lightVector, eyeVector ).normalize();
-
-				var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
-				var specularIntensity = Math.max( Math.pow( dotNormalHalf, material.shininess ), 0.0 ) * diffuseIntensity;
-
-				var specularNormalization = ( material.shininess + 2.0 ) / 8.0;
-
-				specularColor.copyGammaToLinear( material.specular );
-
-				var alpha = Math.pow( Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0 );
-
-				schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
-				schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
-				schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
-
-				lightContribution.copy( schlick );
-				lightContribution.multiply( lightColor );
-				lightContribution.multiplyScalar( specularNormalization * specularIntensity * attenuation );
-
-				outputColor.add( lightContribution );
-			}
 		}
 	}
 
+
+	// -----------------------------
 	// reflection / refraction
+	// -----------------------------
 
 	var reflectivity = material.reflectivity;
 
@@ -418,6 +414,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		var weight = fresnel;
 		var zColor = tmpColor[ recursionDepth ];
 
+		// recursive call
 		this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 
 		if ( material.specular !== undefined ) 
@@ -531,50 +528,10 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 /**
  * Starts rendering.
  */
-RaytracingRendererWorker.prototype.render = function(scene, camera) 
+RaytracingRendererWorker.prototype.render = function() 
 {
 	this.isRendering = true;
 	this.renderingStartedDate = new Date();
-
-	// update scene graph
-
-	if (scene.autoUpdate === true) scene.updateMatrixWorld();
-
-	// update camera matrices
-
-	if (camera.parent === null) camera.updateMatrixWorld();
-
-	this.cameraPosition.setFromMatrixPosition(camera.matrixWorld);
-	this.cameraNormalMatrix.getNormalMatrix(camera.matrixWorld);
-
-	this.perspective = 0.5 / Math.tan(THREE.Math.degToRad(camera.fov * 0.5)) * this.canvasHeight;
-	this.objects = scene.children;
-
-	// collect lights and set up object matrices
-
-	this.lights.length = 0;
-
-	scene.traverse(function(object) 
-	{
-		if (object.isPointLight) 
-		{
-			this.lights.push(object);
-		}
-
-		if (this.cache[object.id] === undefined) 
-		{
-			this.cache[object.id] = {
-				normalMatrix: new THREE.Matrix3(),
-				inverseMatrix: new THREE.Matrix4()
-			};
-		}
-
-		var _object = this.cache[object.id];
-
-		_object.normalMatrix.getNormalMatrix(object.matrixWorld);
-		_object.inverseMatrix.getInverse(object.matrixWorld);
-
-	}.bind(this));
 
 	this.renderBlock();
 };
