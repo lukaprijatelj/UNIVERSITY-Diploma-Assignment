@@ -53,8 +53,7 @@ var GLOBALS =
 	
 	init: function()
 	{
-		var layoutWrapperV = document.querySelector('wrapper.layout');
-		GLOBALS.rendererCanvas = new RendererCanvas(layoutWrapperV);
+		GLOBALS.rendererCanvas = new RendererCanvas();
 		GLOBALS.rendererCanvas.init();
 		
 		GLOBALS.onViewLoaded();

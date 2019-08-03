@@ -5,19 +5,15 @@ var options = null;
  */
 var GLOBALS =
 {
-	/**
-	 * Type of the layout view.
-	 */
-	layoutType: enums.layoutType.CANVAS,
-
 
 	init: function()
 	{		
-		var layoutWrapperV = document.querySelector('wrapper.layout');
-		GLOBALS.rendererCanvas = new RendererCanvas(layoutWrapperV);
+		GLOBALS.rendererCanvas = new RendererCanvas();
 		GLOBALS.rendererCanvas.init();
+		
+		GLOBALS.onViewLoaded();
 
-		API.init('renderer');
+		API.init('renderer');		
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 
@@ -33,8 +29,10 @@ var GLOBALS =
 		API.isConnected = true;
 
 		API.listen('cells/update', GLOBALS._onCellUpdate);
+		API.listen('rendering/start', GLOBALS._onStartRenderingService);	
+		API.listen('rendering/stop', GLOBALS._onStopRenderingService);	
 
-		API.request('cells/getAll', GLOBALS._onGetLayout);
+		API.request('cells/getAll', GLOBALS.onGetLayout);
 	},
 
 	/**
@@ -42,14 +40,32 @@ var GLOBALS =
 	 */
 	_onServerDisconnect: function()
 	{
+		console.log('[Globals] Disconnected from server!');
+
 		API.isConnected = false;
+	},
+	
+	/**
+	 * Server started rendering service.
+	 */
+	_onStartRenderingService: function(data)
+	{
+		API.request('cells/getAll', GLOBALS.onGetLayout);
+	},
+
+	/**
+	 * Server stopped rendering service.
+	 */
+	_onStopRenderingService: function(data)
+	{
+		options = null;
 	},
 
 	/**
 	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
 	 * @async
 	 */
-	_onGetLayout: function(data)
+	onGetLayout: function(data)
 	{
 		console.log('[Globals] Grid layout drawn');
 
@@ -85,16 +101,13 @@ var GLOBALS =
 
 			GLOBALS.tryUpdatingCell(current);
 		}
-		
-
-		GLOBALS.onLoaded();
 	},
 
 	/**
 	 * Initial data is loaded.
 	 * Remove skeleton screens by removing 'loading' class from elements.
 	 */
-	onLoaded: function()
+	onViewLoaded: function()
 	{
 		// -----------------------------
 		// remove .loading flag
@@ -119,13 +132,12 @@ var GLOBALS =
 	},
 
 	/**
-	 * Draws cell on the screen.
+	 * Tries to update canvas with data from this cell.
 	 */
 	tryUpdatingCell: function(cell)
 	{
 		if (!cell.imageData)
 		{
-			// cells does not have any image data so we don't really need to draw it
 			return;
 		}
 

@@ -6,6 +6,11 @@ var socket;
 var API =
 {
 	/**
+	 * Base url API access.
+	 */
+	apiUrl: '/api',
+	
+	/**
 	 * Is SocketIO currently connected to server.
 	 * @type {boolean}
 	 */
@@ -35,7 +40,7 @@ var API =
 		}
 
 		data = data ? data : null;
-		url = GLOBALS.apiUrl + '/' + url;
+		url = API.apiUrl + '/' + url;
 
 		console.log('[Globals] Requesting ' + url);
 
@@ -52,7 +57,7 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		url = GLOBALS.apiUrl + '/' + url;
+		url = API.apiUrl + '/' + url;
 
 		socket.on(url, callback);
 	},

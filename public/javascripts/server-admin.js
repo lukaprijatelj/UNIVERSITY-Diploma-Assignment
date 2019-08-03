@@ -4,11 +4,6 @@
 var GLOBALS =
 {
 	/**
-	 * Base url API access.
-	 */
-	apiUrl: '/api',
-
-	/**
 	 * Grid layout of cells that are rendered or are waiting for rendering.
 	 */
 	cells: [],
