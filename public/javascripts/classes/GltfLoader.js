@@ -85,6 +85,15 @@ GltfLoader.loadTextures = function(imagesJSON, callback)
 			callback();
 		}
 	};
+	imageLoader.onError = function() 
+	{
+		loadingImagesCount--;			
+
+		if (loadingImagesCount == 0)
+		{
+			callback();
+		}
+	};
 
 	for ( var i = 0, il = imagesJSON.length; i < il; i ++ ) 
 	{

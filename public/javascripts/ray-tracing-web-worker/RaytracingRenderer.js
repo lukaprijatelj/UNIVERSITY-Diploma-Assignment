@@ -223,7 +223,14 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	_this.scene.traverse(_this.serializeObject.bind(_this));
 
-	_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
+	if (_this.sceneJSON.images && _this.sceneJSON.images.length > 0)
+	{
+		_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
+	}
+	else
+	{
+		callback();
+	}
 };
 
 
