@@ -27,6 +27,8 @@ var RaytracingRenderer = function(canvas)
 	this.cellsDone = [];
 
 	this.workers = [];
+	this.numOfWorkers = 1;
+
 	this.autoClear = true;
 	this.clearColor = new THREE.Color(0x000000);
 
@@ -36,6 +38,7 @@ var RaytracingRenderer = function(canvas)
 	this.materials = {};
 	this.sceneJSON;
 	this.cameraJSON;
+	this.images = {};
 	this._annex = 
 	{
 		mirror: 1,
@@ -70,13 +73,15 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, timeMs)
+RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
 	var renderer = this;
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
-	
 
+	var webWorker = renderer.workers[workerIndex];
+	webWorker.isRendering = false;
+	
 	// -----------------------------
 	// convert buffer data into png image data
 	// -----------------------------
@@ -108,7 +113,7 @@ RaytracingRenderer.prototype.onCellRendered = function(worker, buffer, cell, tim
 	}
 	else
 	{
-		renderer._runWorker(worker);
+		renderer._runWorker(webWorker);
 	}		
 };
 
@@ -120,11 +125,14 @@ RaytracingRenderer.prototype.setWorkers = function()
 {
 	var renderer = this;
 
-	var worker = new RaytracingRendererWorker(renderer.onCellRendered.bind(renderer));
-	worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
-	worker.init(renderer.canvas.width, renderer.canvas.height);
+	for (let i=0; i<renderer.numOfWorkers; i++)
+	{
+		var worker = new RaytracingRendererWorker(renderer.onCellRendered.bind(renderer), i);
+		worker.isRendering = false;
+		worker.init(renderer.canvas.width, renderer.canvas.height);
 
-	renderer.workers.push(worker);
+		renderer.workers.push(worker);
+	}
 };
 
 
@@ -175,38 +183,54 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 /**
  * Starts rendering.
  */
+RaytracingRenderer.prototype.prepareJsonData = function(callback) 
+{
+	var _this = this;
+
+	// update scene graph
+
+	if (_this.scene.autoUpdate === true) 
+	{
+		_this.scene.updateMatrixWorld();
+	}
+
+	// update camera matrices
+
+	if (_this.camera.parent === null) 
+	{
+		_this.camera.updateMatrixWorld();
+	}
+
+	_this.sceneJSON = _this.scene.toJSON();
+	_this.cameraJSON = _this.camera.toJSON();
+
+	_this.scene.traverse(_this.serializeObject.bind(_this));
+
+	if (_this.sceneJSON.images && _this.sceneJSON.images.length > 0)
+	{
+		_this.images = GltfLoader.loadTextures(_this.sceneJSON.images, callback);
+	}
+	else
+	{
+		callback();
+	}
+};
+
+
+/**
+ * Starts rendering.
+ */
 RaytracingRenderer.prototype.render = function(cellsWaiting) 
 {
 	var renderer = this;
 
 	renderer.cellsWaiting = cellsWaiting;
 
-	// update scene graph
-
-	if (renderer.scene.autoUpdate === true) 
-	{
-		renderer.scene.updateMatrixWorld();
-	}
-
-	// update camera matrices
-
-	if (renderer.camera.parent === null) 
-	{
-		renderer.camera.updateMatrixWorld();
-	}
-
-	renderer.sceneJSON = renderer.scene.toJSON();
-	renderer.cameraJSON = renderer.camera.toJSON();
-
-	renderer.scene.traverse(renderer.serializeObject.bind(renderer));
-	
-	//this.context.fillRect(0, 0, this.cell.width, this.cell.height);
-
 	for (let i=0; i<renderer.workers.length; i++)
 	{
 		var worker = renderer.workers[i];
 		
-		worker.initScene(renderer.sceneJSON, renderer.cameraJSON, renderer.materials);	
+		worker.initScene(renderer.sceneJSON, renderer.cameraJSON, renderer.images, renderer.materials);	
 
 		renderer._runWorker(worker);
 	}	
