@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html>
+
+<!-- Namespace required for importer to work correctly -->
+<html xmlns:core-javascript-extensions='https://github.com/lukaprijatelj/core-javascript-extensions'>
 	<head>
 		<title><%= title %></title>
 		
@@ -68,6 +70,14 @@
 		<script src="javascripts/classes/RawImageLoader.js"></script>
 		<script src="javascripts/classes/RendererCanvas.js"></script>
 		<script src="javascripts/classes/GltfLoader.js"></script>
+
+		<core-javascript-extensions:css-loader>
+			<!-- Placeholder for loading CSS files -->
+		</core-javascript-extensions:css-loader>
+
+		<core-javascript-extensions:js-async-loader>
+			<!-- Placeholder for async loading JS files -->
+		</core-javascript-extensions:js-async-loader>
 	</head>
 	<body class="loading">
 
@@ -78,5 +88,9 @@
 
 		<script src="javascripts/api.js"></script>	
 		<script src="javascripts/client.js"></script>
+
+		<core-javascript-extensions:js-sync-loader>
+			<!-- Placeholder for sync loading JS files -->
+		</core-javascript-extensions:js-sync-loader>
 	</body>
 </html>

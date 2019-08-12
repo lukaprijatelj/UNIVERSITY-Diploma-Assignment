@@ -2,6 +2,11 @@
 
 Run VS code debugger and go to browser and type "http://localhost:30000/"
 
+
+# TODO:
+	- implement AsyncImport and SyncImport classes into JS file
+
+
 ## Demo verzija
 http://lukaprij.wwwnl1-ss11.a2hosted.com/serverAdmin
 

@@ -12,7 +12,10 @@ RendererCanvas.prototype.init = function()
 
 RendererCanvas.prototype.dispose = function()
 {
-	var gridLayout = this;
+	var _this = this;
+
+	// always call at the end of the function
+    GarbageCollector.dispose(_this);
 };
 
 
