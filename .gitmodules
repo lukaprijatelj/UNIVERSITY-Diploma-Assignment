@@ -1,0 +1,2 @@
+[submodule "public/javascripts/core-javascript-extensions"]
+	url = https://github.com/lukaprijatelj/core-javascript-extensions.git

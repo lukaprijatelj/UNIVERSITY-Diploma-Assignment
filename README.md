@@ -3,8 +3,13 @@
 Run VS code debugger and go to browser and type "http://localhost:30000/"
 
 
+
 # TODO:
 	- implement AsyncImport and SyncImport classes into JS file
+	- Uporabim await in async ter Promise v diplomski nalogi
+
+
+
 
 
 ## Demo verzija

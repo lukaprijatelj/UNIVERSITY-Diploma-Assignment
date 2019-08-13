@@ -15,7 +15,7 @@ function RawImageLoader()
 RawImageLoader.prototype.load = function(url)
 {
 	var _this = this;
-	var image = document.createElementNS('http://www.w3.org/1999/xhtml', 'img');
+	var image = new Image();
 	var rawImage = new RawImage(url);
 
 	function onImageLoad() 
@@ -25,7 +25,7 @@ RawImageLoader.prototype.load = function(url)
 
 		var loadedImage = this;
 
-		var canvas = document.createElement('canvas');
+		/*var canvas = document.createElement('canvas');
 		canvas.width = loadedImage.width;
 		canvas.height = loadedImage.height;
 		
@@ -34,7 +34,7 @@ RawImageLoader.prototype.load = function(url)
 
 		rawImage.pixels = context.getImageData(0, 0, loadedImage.width, loadedImage.height).data;
 		rawImage.width = loadedImage.width;
-		rawImage.height = loadedImage.height;
+		rawImage.height = loadedImage.height;*/
 
 		_this.onLoad(this);
 	}

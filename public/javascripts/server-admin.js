@@ -1,3 +1,6 @@
+
+new AsyncImporter('javascripts/enums.js', () => { GLOBALS.init() });
+
 /**
  * Globals. 
  */
@@ -349,4 +352,4 @@ var GLOBALS =
 	}
 };
 
-window.onload = GLOBALS.init();
+//window.onload = GLOBALS.init();

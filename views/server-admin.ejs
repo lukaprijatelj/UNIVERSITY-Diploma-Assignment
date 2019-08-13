@@ -32,19 +32,25 @@
 		<script src="javascripts/options.js"></script>
 
 		<!-- Extension scripts -->
-		<script src="javascripts/extensions/function.js"></script>
-		<script src="javascripts/extensions/array.js"></script>
-		<script src="javascripts/extensions/date.js"></script>
-		<script src="javascripts/extensions/math.js"></script>
-		<script src="javascripts/extensions/object.js"></script>
-		<script src="javascripts/extensions/HTMLElement.js"></script>
-		<script src="javascripts/extensions/console.js"></script>
+		<script src="javascripts/core-javascript-extensions/Path.js"></script>
+		<script src="javascripts/core-javascript-extensions/Importer.js"></script>
+		<script src="javascripts/core-javascript-extensions/Function.js"></script>
+		<script src="javascripts/core-javascript-extensions/Array.js"></script>
+		<script src="javascripts/core-javascript-extensions/Date.js"></script>
+		<script src="javascripts/core-javascript-extensions/Enum.js"></script>
+		<script src="javascripts/core-javascript-extensions/Math.js"></script>
+		<script src="javascripts/core-javascript-extensions/Object.js"></script>
+		<script src="javascripts/core-javascript-extensions/HTMLElement.js"></script>
+		<script src="javascripts/core-javascript-extensions/console.js"></script>
+		<script src="javascripts/core-javascript-extensions/Exception.js"></script>
+		<script src="javascripts/core-javascript-extensions/Warning.js"></script>
+		<script src="javascripts/core-javascript-extensions/Thread.js"></script>
+		<script src="javascripts/core-javascript-extensions/Timer.js"></script>
 
 
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded asynchronously -->
 		<!-- ----------------------------- -->
-		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>
 
 
@@ -54,14 +60,18 @@
 		<script src="javascripts/threejs/GLTFLoader.js"></script>
 		
 		
-		<!-- Classes scrips -->
-		<script src="javascripts/classes/Exception.js"></script>
-		<script src="javascripts/classes/Warning.js"></script>
-		<script src="javascripts/classes/Thread.js"></script>
-		<script src="javascripts/classes/Timer.js"></script>
+		<!-- Classes scrips -->		
 		<script src="javascripts/classes/RendererCanvas.js"></script>
 		<script src="javascripts/classes/EditorCanvas.js"></script>
 		<script src="javascripts/classes/GltfLoader.js"></script>
+
+		<core-javascript-extensions:css-loader>
+			<!-- Placeholder for loading CSS files -->
+		</core-javascript-extensions:css-loader>
+
+		<core-javascript-extensions:js-async-loader>
+			<!-- Placeholder for async loading JS files -->
+		</core-javascript-extensions:js-async-loader>
 	</head>
 	<body class="loading">
 
@@ -180,9 +190,14 @@
 		</div>		
 
 
+		<core-javascript-extensions:js-sync-loader>
+			<!-- Placeholder for sync loading JS files -->
+		</core-javascript-extensions:js-sync-loader>
+
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded synchronously -->
 		<!-- ----------------------------- -->
+		<!-- <script src="javascripts/enums.js"></script> -->
 		<script src="javascripts/mouse.js"></script>
 		<script src="javascripts/debug.js"></script>
 		<script src="javascripts/api.js"></script>	

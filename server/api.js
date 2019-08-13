@@ -1,8 +1,8 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
 var constants = require('../public/javascripts/constants.js');
-var Exception = require('../public/javascripts/classes/Exception.js');
-var Warning = require('../public/javascripts/classes/Warning.js');
+var Exception = require('../public/javascripts/core-javascript-extensions/Exception.js');
+var Warning = require('../public/javascripts/core-javascript-extensions/Warning.js');
 var options = null;
 
 var socketIO = require('socket.io');
