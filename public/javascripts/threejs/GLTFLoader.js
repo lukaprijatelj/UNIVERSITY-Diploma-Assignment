@@ -2125,7 +2125,6 @@ THREE.GLTFLoader = ( function () {
 				case 'roughnessMap':
 					texture.format = THREE.RGBFormat;
 					break;
-
 			}
 
 			if ( parser.extensions[ EXTENSIONS.KHR_TEXTURE_TRANSFORM ] ) {
@@ -2139,6 +2138,21 @@ THREE.GLTFLoader = ( function () {
 				}
 
 			}
+
+			var loadedImage = texture.image;
+			var rawImage = new RawImage('');
+
+			var canvas = document.createElement('canvas');
+			canvas.width = loadedImage.width;
+			canvas.height = loadedImage.height;
+			
+			var context = canvas.getContext('2d');
+			context.drawImage(loadedImage, 0, 0, loadedImage.width, loadedImage.height);
+
+			rawImage.pixels = context.getImageData(0, 0, loadedImage.width, loadedImage.height).data;
+			rawImage.width = loadedImage.width;
+			rawImage.height = loadedImage.height;
+			texture.rawImage = rawImage;
 
 			materialParams[ mapName ] = texture;
 

@@ -224,6 +224,23 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 	_this.scene.traverse(_this.serializeObject.bind(_this));
 
 	_this.images = {};
+
+	for (let i=0; i<_this.workers.length; i++)
+	{
+		var worker = _this.workers[i];
+		
+		worker.postMessage(
+		{
+			type: 'initScene',
+			sceneJSON: _this.sceneJSON,
+			cameraJSON: _this.cameraJSON,
+			images: _this.images,
+			materials: _this.materials
+		});		
+	}	
+
+	callback();
+
 	/*GltfLoader.loadTextures(_this.sceneJSON.images, _this.images, () =>
 	{
 		console.log('[GltfLoader] Textures loaded');
@@ -244,119 +261,6 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 		callback();
 	});*/
-
-	var worker = new Worker('./javascripts/ray-tracing-web-worker/WebWorkerLoader.js');
-	worker.onmessage = (e) =>
-	{
-		var data = e.data;
-
-		if (data.type != 'onLoad')
-		{
-			return;
-		}
-
-		console.log('[GltfLoader] Textures loaded');
-
-		_this.images = data.dst;
-
-		for (let i=0; i<_this.workers.length; i++)
-		{
-			var worker = _this.workers[i];
-			
-			worker.postMessage(
-			{
-				type: 'initScene',
-				sceneJSON: _this.sceneJSON,
-				cameraJSON: _this.cameraJSON,
-				images: _this.images,
-				materials: _this.materials
-			});		
-		}	
-
-		callback();
-	};
-	worker.onmessage = function(e) 
-{
-	var data = e.data;
-
-	if(data.type != 'startLoading')
-	{
-		return;
-	}
-
-	let src = data.src;
-
-	if (src === undefined) 
-	{
-		callback();
-		return;
-	}
-
-	if (src.length == 0)
-	{
-		callback();
-		return;
-	}
-
-	console.log('[GltfLoader] Start loading textures');
-
-	var onImageLoaded = () =>
-	{
-		loadingImagesCount--;			
-
-		if (loadingImagesCount == 0)
-		{
-			console.log('[GltfLoader] End loading textures');
-
-			callback();
-		}
-	};
-
-	var loadingImagesCount = 0;
-	var imageLoader = new RawImageLoader();
-	imageLoader.onLoad = onImageLoaded;
-	imageLoader.onError = onImageLoaded;
-
-	for ( var i = 0, il = src.length; i < il; i ++ ) 
-	{
-		var image = src[i];
-		var url = image.url;
-
-		if (Array.isArray(url)) 
-		{
-			// load array of images e.g CubeTexture
-
-			dst[ image.uuid ] = [];
-
-			for ( var j = 0, jl = url.length; j < jl; j ++ ) 
-			{
-				var currentUrl = url[ j ];
-
-				var path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( currentUrl ) ? currentUrl : scope.resourcePath + currentUrl;
-
-				loadingImagesCount++;
-				var rawImage = imageLoader.load(path);
-
-				dst[ image.uuid ].push(rawImage);
-			}
-		} 
-		else 
-		{
-			// load single image
-
-			var path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( image.url ) ? image.url : scope.resourcePath + image.url;
-
-			loadingImagesCount++;
-			var rawImage = imageLoader.load(path);
-
-			dst[ image.uuid ] = rawImage;
-		}
-	}
-};
-	worker.postMessage({
-		type: 'startLoading',
-		src: _this.sceneJSON.images
-	});
 };
 
 

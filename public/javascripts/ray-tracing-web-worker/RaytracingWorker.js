@@ -278,7 +278,16 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		diffuseColor.multiply( face.color );
 	}
 
+
 	
+
+	// remove
+	outputColor.copy( diffuseColor );
+	return;
+	
+
+
+
 	// -----------------------------
 	// compute light shading
 	// -----------------------------

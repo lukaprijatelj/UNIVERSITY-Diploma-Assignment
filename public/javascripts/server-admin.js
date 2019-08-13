@@ -1,6 +1,3 @@
-
-new AsyncImporter('javascripts/enums.js', () => { GLOBALS.init() });
-
 /**
  * Globals. 
  */
@@ -204,7 +201,6 @@ var GLOBALS =
 		}
 	},
 
-
 	/**
 	 * Server has notified us that clients were updated.
 	 */
@@ -343,7 +339,6 @@ var GLOBALS =
 		blockHeightV.value = options.BLOCK_HEIGHT;
 
 
-
 		// -----------------------------
 		// remove .loading flag
 		// -----------------------------
@@ -352,4 +347,4 @@ var GLOBALS =
 	}
 };
 
-//window.onload = GLOBALS.init();
+window.onload = GLOBALS.init();
