@@ -86,12 +86,14 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	// convert buffer data into png image data
 	// -----------------------------
 
-	var imagedata = new ImageData(new Uint8ClampedArray(buffer), cell.width, cell.height);
+	/*var imagedata = new ImageData(new Uint8ClampedArray(buffer), cell.width, cell.height);
 	var canvas = document.createElement('canvas');
 	canvas.width  = cell.width;
 	canvas.height = cell.height;
 	canvas.getContext('2d').putImageData(imagedata, 0, 0);
-	cell.imageData = canvas.toDataURL('image/png');
+	cell.imageData = canvas.toDataURL('image/png');*/
+
+	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
 
 	GLOBALS.tryUpdatingCell(cell);
 

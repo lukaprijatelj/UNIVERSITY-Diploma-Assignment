@@ -2144,7 +2144,7 @@ THREE.GLTFLoader = ( function () {
 			// convert image to pixels data
 			// -----------------------------
 
-			var loadedImage = texture.image;
+			/*var loadedImage = texture.image;
 			var canvas = document.createElement('canvas');
 			canvas.width = loadedImage.width;
 			canvas.height = loadedImage.height;
@@ -2155,9 +2155,10 @@ THREE.GLTFLoader = ( function () {
 			var rawImage = new RawImage('');
 			rawImage.pixels = context.getImageData(0, 0, loadedImage.width, loadedImage.height).data;
 			rawImage.width = loadedImage.width;
-			rawImage.height = loadedImage.height;
-			texture.rawImage = rawImage;
+			rawImage.height = loadedImage.height;*/
 
+
+			texture.rawImage = texture.image.toRawImage();
 			
 			materialParams[ mapName ] = texture;
 		} );
