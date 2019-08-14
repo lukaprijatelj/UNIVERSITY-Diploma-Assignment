@@ -27,7 +27,6 @@ self.onmessage = function(e)
 				};
 				self.postMessage(data);
 			}, data.workerIndex);
-			//worker.color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8).getHexString();
 			worker.init(data.canvasWidth, data.canvasHeight);
 			break;
 

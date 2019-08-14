@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <!-- Namespace required for importer to work correctly -->
-<html xmlns:core-javascript-extensions='https://github.com/lukaprijatelj/core-javascript-extensions'>
+<html>
 	<head>
 		<title><%= title %></title>
 		
@@ -23,6 +23,8 @@
 		<link rel="stylesheet" href="layoutsheets/common.css">
 		<link rel="stylesheet" href="layoutsheets/client.css">
 
+		<!-- Placeholder for dynamically loading CSS files -->
+		<script type="namespace-core:css-loader"></script>
 		
 		<!-- constants -->
 		<script>
@@ -71,13 +73,8 @@
 		<script src="javascripts/classes/RendererCanvas.js"></script>
 		<script src="javascripts/classes/GltfLoader.js"></script>
 
-		<core-javascript-extensions:css-loader>
-			<!-- Placeholder for loading CSS files -->
-		</core-javascript-extensions:css-loader>
-
-		<core-javascript-extensions:js-async-loader>
-			<!-- Placeholder for async loading JS files -->
-		</core-javascript-extensions:js-async-loader>
+		<!-- Placeholder for dynamically loading JS files -->
+		<script type="namespace-core:js-loader"></script>
 	</head>
 	<body class="loading">
 
@@ -88,10 +85,6 @@
 
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/api.js"></script>	
-		<script src="javascripts/client.js"></script>
-
-		<core-javascript-extensions:js-sync-loader>
-			<!-- Placeholder for sync loading JS files -->
-		</core-javascript-extensions:js-sync-loader>
+		<script src="javascripts/client.js"></script>		
 	</body>
 </html>

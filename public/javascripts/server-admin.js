@@ -75,7 +75,7 @@ var GLOBALS =
 
 		API.request('rendering/checkAdmin', GLOBALS._onCheckRendering);	
 
-		new Thread(GLOBALS.onLoaded);
+		new namespace.core.Thread(GLOBALS.onLoaded);
 	},
 
 	/**

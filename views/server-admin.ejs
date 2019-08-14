@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 	<head>
 		<title><%= title %></title>
@@ -20,6 +21,9 @@
 		<!-- layouts -->
 		<link rel="stylesheet" href="layoutsheets/common.css">
 		<link rel="stylesheet" href="layoutsheets/server-admin.css">
+
+		<!-- Placeholder for dynamically loading CSS files -->
+		<script type="namespace-core:css-loader"></script>
 
 		<!-- constants -->
 		<script>
@@ -46,6 +50,8 @@
 		<script src="javascripts/core-javascript-extensions/Warning.js"></script>
 		<script src="javascripts/core-javascript-extensions/Thread.js"></script>
 		<script src="javascripts/core-javascript-extensions/Timer.js"></script>
+		<script src="javascripts/core-javascript-extensions/Mouse.js"></script>
+		<script src="javascripts/core-javascript-extensions/Event.js"></script>
 
 
 		<!-- ----------------------------- -->
@@ -66,13 +72,8 @@
 		<script src="javascripts/classes/GltfLoader.js"></script>
 		<script src="javascripts/classes/RawImageLoader.js"></script>
 
-		<core-javascript-extensions:css-loader>
-			<!-- Placeholder for loading CSS files -->
-		</core-javascript-extensions:css-loader>
-
-		<core-javascript-extensions:js-async-loader>
-			<!-- Placeholder for async loading JS files -->
-		</core-javascript-extensions:js-async-loader>
+		<!-- Placeholder for dynamically loading JS files -->
+		<script type="namespace-core:js-loader"></script>		
 	</head>
 	<body class="loading">
 
@@ -190,16 +191,10 @@
 			</flex>			
 		</div>		
 
-
-		<core-javascript-extensions:js-sync-loader>
-			<!-- Placeholder for sync loading JS files -->
-		</core-javascript-extensions:js-sync-loader>
-
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded synchronously -->
 		<!-- ----------------------------- -->
 		<script src="javascripts/enums.js"></script>
-		<script src="javascripts/mouse.js"></script>
 		<script src="javascripts/debug.js"></script>
 		<script src="javascripts/api.js"></script>	
 		<script src="javascripts/server-admin.js"></script>

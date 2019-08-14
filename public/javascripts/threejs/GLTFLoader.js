@@ -2139,9 +2139,12 @@ THREE.GLTFLoader = ( function () {
 
 			}
 
-			var loadedImage = texture.image;
-			var rawImage = new RawImage('');
 
+			// -----------------------------
+			// convert image to pixels data
+			// -----------------------------
+
+			var loadedImage = texture.image;
 			var canvas = document.createElement('canvas');
 			canvas.width = loadedImage.width;
 			canvas.height = loadedImage.height;
@@ -2149,13 +2152,14 @@ THREE.GLTFLoader = ( function () {
 			var context = canvas.getContext('2d');
 			context.drawImage(loadedImage, 0, 0, loadedImage.width, loadedImage.height);
 
+			var rawImage = new RawImage('');
 			rawImage.pixels = context.getImageData(0, 0, loadedImage.width, loadedImage.height).data;
 			rawImage.width = loadedImage.width;
 			rawImage.height = loadedImage.height;
 			texture.rawImage = rawImage;
 
+			
 			materialParams[ mapName ] = texture;
-
 		} );
 
 	};

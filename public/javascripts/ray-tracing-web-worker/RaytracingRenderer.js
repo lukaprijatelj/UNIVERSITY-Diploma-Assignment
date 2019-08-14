@@ -29,9 +29,6 @@ var RaytracingRenderer = function(canvas)
 	this.workers = [];
 	this.numOfWorkers = 1;
 
-	this.autoClear = true;
-	this.clearColor = new THREE.Color(0x000000);
-
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
@@ -151,16 +148,6 @@ RaytracingRenderer.prototype.setWorkers = function()
 		renderer.workers.push(worker);
 	}
 };
-
-
-/**
- * Function is only for abstraction.
- */
-RaytracingRenderer.prototype.setClearColor = function(color /*, alpha */ ) 
-{
-	this.clearColor.set(color);
-};
-
 
 /**
  * probably to override parent functions

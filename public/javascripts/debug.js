@@ -1,6 +1,6 @@
 var DEBUG =
 {
-	timer: new Timer(1000),
+	timer: new namespace.core.Timer(1000),
 
 	interface: document.getElementById('interface'),
 
@@ -49,8 +49,10 @@ var DEBUG =
 			DEBUG.camera.positionZ.value = options.CAMERA_POSITION_Z;
 		}
 		
-		DEBUG.mouse.positionX.value = Math.roundToTwoDecimals(MOUSE.positionX);
-		DEBUG.mouse.positionY.value = Math.roundToTwoDecimals(MOUSE.positionY);
+		let mouse = new namespace.core.Mouse();
+
+		DEBUG.mouse.positionX.value = Math.roundToTwoDecimals(mouse.getPositionX);
+		DEBUG.mouse.positionY.value = Math.roundToTwoDecimals(mouse.getPositionY);
 
 		DEBUG.canvas.width.value = DEBUG.interface.clientWidth;
 		DEBUG.canvas.height.value =  DEBUG.interface.clientHeight;
