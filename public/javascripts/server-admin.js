@@ -1,3 +1,11 @@
+(async () =>
+{
+    await new namespace.core.AsyncImporter('javascripts/enums.js');
+    await new namespace.core.AsyncImporter('javascripts/debug.js');
+    await new namespace.core.AsyncImporter('javascripts/api.js');
+})();
+
+
 /**
  * Globals. 
  */
