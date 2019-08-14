@@ -1,7 +1,8 @@
 (async () =>
 {
     await new namespace.core.AsyncImporter('javascripts/enums.js');
-    await new namespace.core.AsyncImporter('javascripts/api.js');
+	await new namespace.core.AsyncImporter('javascripts/api.js');	
+	GLOBALS.init();
 })();
 
 /** ----- NOTES: ----- */ 
@@ -440,5 +441,3 @@ var GLOBALS =
 		API.request('cells/update', undefined, data);
 	}
 };
-
-window.onload = GLOBALS.init();

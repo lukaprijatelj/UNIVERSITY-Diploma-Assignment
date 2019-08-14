@@ -2,7 +2,8 @@
 {
     await new namespace.core.AsyncImporter('javascripts/enums.js');
     await new namespace.core.AsyncImporter('javascripts/debug.js');
-    await new namespace.core.AsyncImporter('javascripts/api.js');
+	await new namespace.core.AsyncImporter('javascripts/api.js');
+	GLOBALS.init();
 })();
 
 
@@ -355,4 +356,4 @@ var GLOBALS =
 	}
 };
 
-window.onload = GLOBALS.init();
+//window.onload = GLOBALS.init();

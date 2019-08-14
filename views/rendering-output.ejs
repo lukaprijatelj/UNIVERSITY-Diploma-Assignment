@@ -2,10 +2,12 @@
 <html>
 	<head>
 		<title><%= title %></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		
+		<meta name="title" content="Distributed online rendering">
 		<meta name="description" content="Diploma assignment for Faculty of Computer and Information Science - University of Ljubljana">
 		<meta name="author" content="Luka Prijatelj">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="year" content="2019">		
 
 		<!-- favicon -->
 		<link rel="icon" type="image/png" href="images/renderer-favicon.png" />
@@ -21,6 +23,8 @@
 		<link rel="stylesheet" href="layoutsheets/common.css">
 		<link rel="stylesheet" href="layoutsheets/rendering-output.css">
 
+		<!-- Placeholder for dynamically loading CSS files -->
+		<script type="namespace-core:css-loader"></script>
 		
 		<!-- constants -->
 		<script>
@@ -32,33 +36,41 @@
 		<script src="javascripts/constants.js"></script>
 
 		<!-- Extension scripts -->
-		<script src="javascripts/extensions/array.js"></script>
-		<script src="javascripts/extensions/date.js"></script>
-		<script src="javascripts/extensions/function.js"></script>
-		<script src="javascripts/extensions/math.js"></script>
-		<script src="javascripts/extensions/object.js"></script>
-		<script src="javascripts/extensions/HTMLElement.js"></script>
-		<script src="javascripts/extensions/console.js"></script>
+		<script src="javascripts/core-javascript-extensions/Path.js"></script>
+		<script src="javascripts/core-javascript-extensions/Importer.js"></script>
+		<script src="javascripts/core-javascript-extensions/Function.js"></script>
+		<script src="javascripts/core-javascript-extensions/Array.js"></script>
+		<script src="javascripts/core-javascript-extensions/Date.js"></script>
+		<script src="javascripts/core-javascript-extensions/Enum.js"></script>
+		<script src="javascripts/core-javascript-extensions/Math.js"></script>
+		<script src="javascripts/core-javascript-extensions/Object.js"></script>
+		<script src="javascripts/core-javascript-extensions/HTMLElement.js"></script>
+		<script src="javascripts/core-javascript-extensions/console.js"></script>
+		<script src="javascripts/core-javascript-extensions/Exception.js"></script>
+		<script src="javascripts/core-javascript-extensions/Warning.js"></script>
+		<script src="javascripts/core-javascript-extensions/Thread.js"></script>
+		<script src="javascripts/core-javascript-extensions/Timer.js"></script>
+		<script src="javascripts/core-javascript-extensions/Mouse.js"></script>
+		<script src="javascripts/core-javascript-extensions/Event.js"></script>
+		<script src="javascripts/core-javascript-extensions/Image.js"></script>
+		<script src="javascripts/core-javascript-extensions/RawImage.js"></script>
 
 		<!-- scripts -->
 		<script src="javascripts/enums.js"></script>
 		<script src="javascripts/socket.io/socket.io.js"></script>	
 
 		<!-- Classes scrips -->
-		<script src="javascripts/classes/Exception.js"></script>
-		<script src="javascripts/classes/Warning.js"></script>
-		<script src="javascripts/classes/Thread.js"></script>
-		<script src="javascripts/classes/Timer.js"></script>
-		<script src="javascripts/classes/RawImageLoader.js"></script>
 		<script src="javascripts/classes/RendererCanvas.js"></script>
 		<script src="javascripts/classes/GltfLoader.js"></script>
+
+		<!-- Placeholder for dynamically loading JS files -->
+		<script type="namespace-core:js-loader"></script>
 	</head>
 	<body class="loading">
 
 		<!-- rendered cells -->
 		<canvas id="rendering-canvas" class=""></canvas>
-			
-		<script src="javascripts/api.js"></script>
+		
 		<script src="javascripts/rendering-output.js"></script>
 	</body>
 </html>

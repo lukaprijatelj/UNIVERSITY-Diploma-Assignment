@@ -1,3 +1,9 @@
+(async () =>
+{
+	await new namespace.core.AsyncImporter('javascripts/api.js');
+	GLOBALS.init();
+})();
+
 var options = null;
 
 /**
@@ -144,5 +150,3 @@ var GLOBALS =
 		GLOBALS.rendererCanvas.updateCell(cell);
 	}
 };
-
-window.onload = GLOBALS.init();
