@@ -4,9 +4,9 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res, next) 
 {
-	res.render('server-admin', 
+	res.render('admin', 
 	{ 
-		title: 'Server admin'
+		title: 'Admin'
 	});
 });
 

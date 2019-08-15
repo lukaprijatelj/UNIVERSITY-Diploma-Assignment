@@ -144,22 +144,22 @@ var EVENTS =
 
 	_onResolutionWidthChange: function(val)
 	{
-		options.RESOLUTION_WIDTH = val;
+		options.RESOLUTION_WIDTH = Number(val);
 	},
 
 	_onResolutionHeightChange: function(val)
 	{
-		options.RESOLUTION_HEIGHT = val;
+		options.RESOLUTION_HEIGHT = Number(val);
 	},
 
 	_onBlockWidthChange: function(val)
 	{
-		options.BLOCK_WIDTH = val;
+		options.BLOCK_WIDTH = Number(val);
 	},
 
 	_onBlockHeightChange: function(val)
 	{
-		options.BLOCK_HEIGHT = val;
+		options.BLOCK_HEIGHT = Number(val);
 	},
 
 	_onOpenOutputClick: function()

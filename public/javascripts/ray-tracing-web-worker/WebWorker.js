@@ -1,5 +1,9 @@
+importScripts('../constants.js');
+importScripts('../core-javascript-extensions/console.js');
+
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
+
 
 
 // only accesible in web worker thread

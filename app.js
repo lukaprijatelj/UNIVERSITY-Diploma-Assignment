@@ -44,7 +44,7 @@ require('./public/javascripts/core-javascript-extensions/console.js');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/upload');
 var clientRendererRouter = require('./routes/client');
-var clientAdminRouter = require('./routes/server-admin');
+var clientAdminRouter = require('./routes/admin');
 var renderingOutputRouter = require('./routes/rendering-output');
 
 
@@ -100,7 +100,7 @@ var EXPRESS_APP =
 		app.use('/', indexRouter);
 		app.use('/upload', usersRouter);
 		app.use('/client', clientRendererRouter);
-		app.use('/serverAdmin', clientAdminRouter);
+		app.use('/admin', clientAdminRouter);
 		app.use('/renderingOutput', renderingOutputRouter);
 		
 		

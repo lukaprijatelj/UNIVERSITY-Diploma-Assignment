@@ -10,6 +10,7 @@
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
 var options = null;
+var previousOptions = null;
 
 /**
  * Global properties.
@@ -101,6 +102,7 @@ var GLOBALS =
 	 */
 	_onStopRenderingService: function(data)
 	{
+		previousOptions = options;
 		options = null;
 	},
 
@@ -272,6 +274,11 @@ var GLOBALS =
 		}
 
 		options = data.options;
+		previousOptions = options;
+
+		let browser = new namespace.core.Browser();
+		browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+
 		GLOBALS.rendererCanvas.resizeCanvas();
 
 
@@ -356,6 +363,9 @@ var GLOBALS =
 		{
 			document.getElementById('interface').removeClass('rendering');
 			GLOBALS.lastRenderingTime = 0;
+
+			let browser = new namespace.core.Browser();
+			browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
 		}, 1000);
 
 		if (!API.isRenderingServiceRunning)
@@ -420,6 +430,9 @@ var GLOBALS =
 	startRendering: function(cellsWaiting)
 	{
 		document.getElementById('interface').addClass('rendering');
+
+		let browser = new namespace.core.Browser();
+		browser.setTitle('Rendering (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
 
 		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
 		{
