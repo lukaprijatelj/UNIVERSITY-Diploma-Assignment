@@ -4,27 +4,24 @@
 
 body
 {
-	background-color: black;
+	background-color: var(--DARK-BLACK-COLOR);
 }
 
 
-#recalculate-layout-button
+#render-button
 {
-	background-color: var(--DARK-RED-COLOR);
-	border-color: var(--DARK-RED-COLOR);
+	background-color: var(--LIGHT-RED-COLOR);
 }
-	#recalculate-layout-button:hover
-	{
-		color: var(--DARK-RED-COLOR);
-		background-color: transparent;
-		border-color: var(--DARK-RED-COLOR);
-	}
 
-	#recalculate-layout-button.selected
-	{
-		color: var(--DARK-RED-COLOR);
-		background: transparent;
-	}
+#output-button
+{
+	background-color: var(--DARK-BLUE-COLOR);
+}
+
+#upload-button
+{
+	color: var(--LIGHT-BLUE-COLOR);
+}
 
 
 #interface

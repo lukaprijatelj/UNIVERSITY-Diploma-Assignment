@@ -44,7 +44,7 @@ var GLOBALS =
 	/**
 	 * Current renderer type.
 	 */
-	rendererType: enums.rendererType.RAY_TRACING,
+	rendererType: null,
 
 	/**
 	 * Camera controls affected by mouse movement.
@@ -60,12 +60,14 @@ var GLOBALS =
 	
 	init: function()
 	{
+		GLOBALS.rendererType = enums.rendererType.RAY_TRACING;
+
 		GLOBALS.rendererCanvas = new RendererCanvas();
 		GLOBALS.rendererCanvas.init();
 		
 		GLOBALS.onViewLoaded();
 
-		API.init('renderer');		
+		API.init(enums.apiClientType.RENDERER);		
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 
@@ -130,7 +132,7 @@ var GLOBALS =
 	/**
 	 * Starts loading GLTF model.
 	 */
-	startLoadingGltfModel: function(path)
+	startLoadingGltfModel: function()
 	{
 		console.log('[Globals] Requesting GLTF model');
 

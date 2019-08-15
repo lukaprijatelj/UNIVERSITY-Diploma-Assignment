@@ -8,7 +8,7 @@ var STORAGE = multer.diskStorage(
 	destination: function (req, file, cb) 
 	{
 		// saves files to uploads folder
-		cb(null, 'fileUploads/');
+		cb(null, 'public/scenes');
 	},
 
 	/**

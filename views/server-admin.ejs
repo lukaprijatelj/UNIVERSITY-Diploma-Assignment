@@ -45,6 +45,7 @@
 		<script src="javascripts/core-javascript-extensions/Date.js"></script>
 		<script src="javascripts/core-javascript-extensions/Enum.js"></script>
 		<script src="javascripts/core-javascript-extensions/Math.js"></script>
+		<script src="javascripts/core-javascript-extensions/String.js"></script>
 		<script src="javascripts/core-javascript-extensions/Object.js"></script>
 		<script src="javascripts/core-javascript-extensions/HTMLElement.js"></script>
 		<script src="javascripts/core-javascript-extensions/console.js"></script>
@@ -56,6 +57,9 @@
 		<script src="javascripts/core-javascript-extensions/Event.js"></script>
 		<script src="javascripts/core-javascript-extensions/Image.js"></script>
 		<script src="javascripts/core-javascript-extensions/RawImage.js"></script>
+		<script src="javascripts/core-javascript-extensions/Ajax.js"></script>
+		<script src="javascripts/core-javascript-extensions/Unit.js"></script>
+		<script src="javascripts/core-javascript-extensions/Char.js"></script>
 
 
 		<!-- ----------------------------- -->
@@ -77,93 +81,40 @@
 		
 
 		<!-- Placeholder for dynamically loading JS files -->
+		<script src="javascripts/events/server-admin.events.js"></script>
 		<script type="namespace-core:js-loader"></script>		
 	</head>
-	<body class="loading">
+	<body>
+
+		<!-- dummy input tag, so that file upload dialog is presented to user -->
+		<form id="scene-upload-form" enctype="multipart/form-data" action="/api/uploadScene" method="post" class="hidden">
+			<input id="upload-file-input" name="reserved_word-scene" type="file" accept="image/jpg,image/png," />
+		</form> 
 
 		<!-- Interface -->
-		<div id="interface" class="">
+		<div id="interface" class="loading">
 
 			<!-- Canvas for displaying preview -->
 			<canvas id="editor-canvas" class=""></canvas>
 			<curtain id="editor-curtain"></curtain>
 
+			<layer id="bars">
+				<flex id="top-bar">
+					<bar-button id="scene-button" class="" onclick="EVENTS._onSceneButtonClick(this)">SCENE</bar-button>
+					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
+					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick()">START RENDERING</bar-button>
+					<bar-button id="output-button" class="hidden" onclick="EVENTS._onOpenOutputClick()">OPEN OUTPUT</bar-button>
+					<div style="flex-grow: 2;"></div>
+				</flex>
+			</layer>
+			
+			<layer id="dropdowns" class="hidden">
+				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
+				<list></list>
+			</layer>
+
 			<flex id="bottom-row">
-				<editor-popup>
-					<!-- Info about mouse position -->
-					<section>
-						<label>Mouse positions (x, y)</label>
-						<flex>
-							<input type="number" id="mouse-x-input" class="disabled">
-							<divider-y-small></divider-y-small>
-							<input type="number" id="mouse-y-input" class="disabled">
-						</flex>				
-					</section>
-					<divider-x-small></divider-x-small>
-		
-					<!-- Info about camera position -->
-					<section>
-						<label>Camera positions (x, y, z)</label>
-						<flex>
-							<input type="number" id="camera-x-input" class="disabled">
-							<divider-y-small></divider-y-small>
-							<input type="number" id="camera-y-input" class="disabled">
-							<divider-y-small></divider-y-small>
-							<input type="number" id="camera-z-input" class="disabled">
-						</flex>				
-					</section>
-					<divider-x-small></divider-x-small>	
-	
-					<!-- Canvas width and height inputs -->
-					<flex>
-						<section>
-							<label>Canvas width (px)</label>
-							<input type="number" id="canvas-width-input" class="disabled">
-						</section>
-						<divider-y-small></divider-y-small>
-						<section>
-							<label>Canvas height (px)</label>
-							<input type="number" id="canvas-height-input" class="disabled">
-						</section>				
-					</flex>
-					<divider-x-small></divider-x-small>
-
-					<!-- Resolution width and height inputs -->
-					<flex>
-						<section>
-							<label>Resolution width (px)</label>
-							<input type="number" id="resolution-width-input" class="" onchange="GLOBALS._onResolutionWidthChange(this.value)">
-						</section>
-						<divider-y-small></divider-y-small>
-						<section>
-							<label>Resolution height (px)</label>
-							<input type="number" id="resolution-height-input" class="" onchange="GLOBALS._onResolutionHeightChange(this.value)">
-						</section>				
-					</flex>
-					<divider-x-small></divider-x-small>
-	
-					<!-- Block width and height inputs -->
-					<flex>
-						<section>
-							<label>Block width (px)</label>
-							<input type="number" id="block-width-input" class="" onchange="GLOBALS._onBlockWidthChange(this.value)">
-						</section>
-						<divider-y-small></divider-y-small>
-						<section>
-							<label>Block height (px)</label>
-							<input type="number" id="block-height-input" class=""  onchange="GLOBALS._onBlockHeightChange(this.value)">
-						</section>
-					</flex>
-					<divider-x-small></divider-x-small>
-	
-					<!-- Recalculate button -->
-					<checkbox-button id="recalculate-layout-button" class="dark" onclick="GLOBALS._onStartStopRenderingClick()">Start rendering</checkbox-button>
-					<divider-x-small></divider-x-small>
-
-					<!-- Recalculate button -->
-					<checkbox-button id="open-output-button" class="dark" onclick="GLOBALS._onOpenOutputClick()">Open output</checkbox-button>
-				</editor-popup>
-
+				
 				<editor-popup>
 					<!-- Statistics -->
 					<section>
@@ -187,12 +138,23 @@
 						<label>Clients connected</label>
 						<flex>
 							<input type="number" id="clients-connected-input" value="0" class="disabled">
-							<button id="start-new-client-button" class="dark" onclick="GLOBALS._onStartNewClientClick()"> + </button>
+							<button id="start-new-client-button" class="dark" onclick="EVENTS._onStartNewClientClick()"> + </button>
 						</flex>				
 					</section>
 					<divider-x></divider-x>		
 				</editor-popup>
 			</flex>			
+
+			<debug>
+				<div id="mouse-position">
+					<span class="title">Mouse positions</span>
+					<span class="value"></span>
+				</div>
+				<div id="canvas-size">
+					<span class="title">Canvas size</span>
+					<span class="value"></span>
+				</div>				
+			</debug>
 		</div>		
 
 		<!-- ----------------------------- -->

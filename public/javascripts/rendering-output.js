@@ -19,7 +19,7 @@ var GLOBALS =
 		
 		GLOBALS.onViewLoaded();
 
-		API.init('renderer');		
+		API.init(enums.apiClientType.RENDERING_OUTPUT);		
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 

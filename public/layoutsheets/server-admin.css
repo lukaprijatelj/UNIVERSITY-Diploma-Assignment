@@ -11,7 +11,39 @@
 }
 
 
+#top-bar
+{
+	position: absolute;
+	left: 1px;
+	top: 1px;
+}
 
+
+debug
+{
+	position: absolute;
+	display: block;
+	bottom: 0px;
+	right: 0px;
+	text-align: right;
+}
+
+
+dropdown>wrapper_
+{
+	display: block;	
+}
+
+dropdown#options-dropdown>wrapper_
+{
+	max-width: 210px;
+	padding: 15px;
+}
+
+#upload-button
+{
+	padding-bottom: 15px;
+}
 
 /* ----------------------------- */
 /* Editor canvas */
