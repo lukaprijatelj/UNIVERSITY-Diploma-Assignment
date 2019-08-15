@@ -24,10 +24,19 @@ debug
 	position: absolute;
 	display: block;
 	bottom: 0px;
+}
+
+debug.left-side
+{
+	left: 0;
+	text-align: left;
+}
+
+debug.right-side
+{
 	right: 0px;
 	text-align: right;
 }
-
 
 dropdown>wrapper_
 {

@@ -80,7 +80,9 @@ var API =
 		// -----------------------------
 
 		var result = DATABASE.getClients();
-		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
+
+		// emits to all and also to socket that send this call
+		io.sockets.emit(API.baseUrl + '/clients/updated', result);
 	},
 
 	/**
@@ -101,6 +103,8 @@ var API =
 		// -----------------------------
 
 		var result = DATABASE.getClients();
+
+		// emits to all except socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
 	},
 

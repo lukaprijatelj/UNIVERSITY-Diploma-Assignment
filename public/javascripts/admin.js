@@ -242,10 +242,10 @@ var GLOBALS =
 	_onClientsUpdated: function(data)
 	{
 		var clients = data;
-		var activeClientsCount = clients.filter(item => item.active == true).length;
+		var renderingClientsCount = clients.filter(item => item.admin == false).length;
 
-		var clientsConnectedInput = document.getElementById('clients-connected-input');
-		clientsConnectedInput.value = activeClientsCount;
+		var clientsConnectedInput = document.querySelector('#num-clients-connected .value');
+		clientsConnectedInput.innerHTML = renderingClientsCount;
 	},
 
 	/**
@@ -271,6 +271,9 @@ var GLOBALS =
 
 			let outputButton = document.getElementById('output-button');
 			outputButton.show();
+
+			let newRendererButton = document.getElementById('new-renderer-button');
+			newRendererButton.show();
 				
 			startRenderingButtonV.addClass('selected');
 			startRenderingButtonV.innerHTML = 'STOP RENDERING';
@@ -293,6 +296,9 @@ var GLOBALS =
 
 			let outputButton = document.getElementById('output-button');
 			outputButton.hide();
+
+			let newRendererButton = document.getElementById('new-renderer-button');
+			newRendererButton.hide();
 
 			startRenderingButtonV.removeClass('selected');
 			startRenderingButtonV.innerHTML = 'START RENDERING';

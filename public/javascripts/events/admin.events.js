@@ -22,6 +22,18 @@ var EVENTS =
 		layer.show();
 	},
 
+	_onNewRendererClick: function()
+	{
+		/*var a = document.createElement("a");    
+		a.href = window.location.origin + '/client';    
+		a.setAttribute('target', '_blank');
+		var evt = document.createEvent("MouseEvents");   
+		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
+		a.dispatchEvent(evt);*/
+
+		window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
+	},
+
 	_onOptionsButtonClick: async function(button)
 	{
 		let ajaxCall = new namespace.core.Ajax('html/options-dropdown.html');
@@ -166,21 +178,5 @@ var EVENTS =
 	{
 		// open rendering output window
 		window.open("/renderingOutput", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
-	},
-
-	/**
-	 * Starts new client/tab for rendering.
-	 * @private
-	 */
-	_onStartNewClientClick: function()
-	{
-		/*var a = document.createElement("a");    
-		a.href = window.location.origin + '/client';    
-		a.setAttribute('target', '_blank');
-		var evt = document.createEvent("MouseEvents");   
-		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
-		a.dispatchEvent(evt);*/
-
-		window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	}
 };

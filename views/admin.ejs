@@ -105,6 +105,7 @@
 					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
 					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick()">START RENDERING</bar-button>
 					<bar-button id="output-button" class="hidden" onclick="EVENTS._onOpenOutputClick()">OPEN OUTPUT</bar-button>
+					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick()">NEW RENDERER</bar-button>
 					<div style="flex-grow: 2;"></div>
 				</flex>
 			</layer>
@@ -113,40 +114,23 @@
 				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
 				<list></list>
 			</layer>
+			
+			<debug class="left-side">
+				<div id="num-clients-connected">
+					<span class="title">Number of clients:</span>
+					<span class="value">0</span>
+				</div>	
+				<div id="avg-processing-time">
+					<span class="title">Avg processing time:</span>
+					<span class="value">undefined</span>
+				</div>
+				<div id="best-processing-time">
+					<span class="title">Best processing time:</span>
+					<span class="value">undefined</span>
+				</div>		
+			</debug>
 
-			<flex id="bottom-row">
-				
-				<editor-popup>
-					<!-- Statistics -->
-					<section>
-						<h3>Statistics</h3>
-						<flex>
-							<section>
-								<label>Average rendering time</label>
-								<input type="number" id="avg-render-time-input" class="disabled">
-							</section>					
-							<divider-y-small></divider-y-small>
-							<section>
-								<label>Best speed</label>
-								<input type="number" id="best-speed-input" class="disabled">
-							</section>
-						</flex>				
-					</section>
-					<divider-x></divider-x>	
-	
-					<!-- Start new client button -->
-					<section>
-						<label>Clients connected</label>
-						<flex>
-							<input type="number" id="clients-connected-input" value="0" class="disabled">
-							<button id="start-new-client-button" class="dark" onclick="EVENTS._onStartNewClientClick()"> + </button>
-						</flex>				
-					</section>
-					<divider-x></divider-x>		
-				</editor-popup>
-			</flex>			
-
-			<debug>
+			<debug class="right-side">
 				<div id="mouse-position">
 					<span class="title">Mouse positions</span>
 					<span class="value"></span>
