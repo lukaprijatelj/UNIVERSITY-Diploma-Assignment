@@ -86,6 +86,10 @@ var GLOBALS =
 		}
 
 		options = data.options;
+
+		let browser = new namespace.core.Browser();
+		browser.setTitle('Output (' + options.RESOLUTION_WIDTH + ' x ' + options.RESOLUTION_HEIGHT + ')');
+
 		GLOBALS.rendererCanvas.resizeCanvas();
 
 
