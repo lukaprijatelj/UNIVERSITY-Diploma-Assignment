@@ -1,3 +1,9 @@
+(async () =>
+{
+	await new namespace.core.AsyncImporter('javascripts/api.js');
+	GLOBALS.init();
+})();
+
 var options = null;
 
 /**
@@ -13,7 +19,7 @@ var GLOBALS =
 		
 		GLOBALS.onViewLoaded();
 
-		API.init('renderer');		
+		API.init(enums.apiClientType.RENDERING_OUTPUT);		
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 	},
 
@@ -144,5 +150,3 @@ var GLOBALS =
 		GLOBALS.rendererCanvas.updateCell(cell);
 	}
 };
-
-window.onload = GLOBALS.init();

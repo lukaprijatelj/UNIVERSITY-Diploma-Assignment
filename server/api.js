@@ -33,7 +33,7 @@ var API =
 
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
-		app.post(API.baseUrl + '/uploadScene', upload.single('Scene'), API.onUploadFile);
+		app.post(API.baseUrl + '/uploadScene', upload.single('reserved_word-scene'), API.onUploadFile);
 		
 		io.on('connection', API.onConnect);
 	},
@@ -204,8 +204,8 @@ var API =
 		var path = request.file.path;
 		
 		DATABASE.addUploadedFile(filename, path);
-
-		response.send('Scene was uploaded!');		
+	
+		response.status(200);	
 	},
 
 	/**

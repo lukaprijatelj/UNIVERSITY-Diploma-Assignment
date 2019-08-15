@@ -14,12 +14,14 @@ body
 	--LIGHT-RED-COLOR: #C3272B;
 	--DARK-RED-COLOR: #8F1D21;
 	--TEXT-COLOR: rgba(255, 255, 255, 0.5);
+	--LIGHT-BLACK-COLOR: rgba(20,19,22,1); 
+	--DARK-BLACK-COLOR: black;
 
 	--EDITOR-POPUP-BACKGROUND: rgba(255, 255, 255, 0.05);
 	
 
 	background-color: var(--LIGHT-GRAY-COLOR);
-	color: var(--TEXT-COLOR);
+	color: white;
 	font-family: 'Muli', sans-serif;
 }
 
@@ -38,6 +40,16 @@ body.busy
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; 
+}
+
+.no-highlight 
+{
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 .hidden
@@ -110,7 +122,58 @@ checkbox-button
 			color: var(--DARK-BLUE-COLOR);
 		}
 
+bar-button
+{
+	background-color: var(--LIGHT-BLACK-COLOR);
+	color: rgba(255, 255, 255, 1);
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
 
+bar-button:not(.disabled):hover
+{
+	background-color: var(--LIGHT-BLACK-COLOR);
+	color: rgba(255, 255, 255, 0.7);
+	cursor: pointer;
+}
+
+bar-button.disabled
+{
+	opacity: 0.2;
+}
+
+
+
+
+layer>curtain
+{
+	background: transparent;
+	cursor: default !important;
+}
+
+dropdown>wrapper_
+{
+	background-color: var(--LIGHT-BLACK-COLOR);
+}
+
+dropdown .entry
+{
+	color: rgba(255, 255, 255, 1);
+}
+
+dropdown .entry:not(.disabled):hover
+{
+	color: rgba(255, 255, 255, 0.7) !important;
+	cursor: pointer;
+}
+dropdown .entry.disabled
+{
+	opacity: 0.2;
+}
 
 
 /* ----------------------------- */
@@ -156,7 +219,7 @@ input:focus
 	
 editor-popup
 {
-	background-color: var(--EDITOR-POPUP-BACKGROUND);
+	background-color: var(--LIGHT-BLACK-COLOR);
 }
 
 curtain
@@ -167,7 +230,7 @@ curtain
 
 #editor-canvas
 {
-	background-color: black;
+	background-color: var(--DARK-BLACK-COLOR);
 }
 
 #rendering-canvas

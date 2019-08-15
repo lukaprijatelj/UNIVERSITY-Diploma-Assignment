@@ -1,5 +1,11 @@
+(async () =>
+{
+    await new namespace.core.AsyncImporter('javascripts/enums.js');
+    await new namespace.core.AsyncImporter('javascripts/debug.js');
+	await new namespace.core.AsyncImporter('javascripts/api.js');
+	GLOBALS.init();
+})();
 
-new AsyncImporter('javascripts/enums.js', () => { GLOBALS.init() });
 
 /**
  * Globals. 
@@ -41,19 +47,30 @@ var GLOBALS =
 	 */
 	editorCanvas: null,
 
+	/**
+	 * Is rendering service running.
+	 */
+	isRendering: false,
+
 
 	init: function()
 	{	
+		document.getElementById('upload-file-input').onchange = EVENTS.onFileUploadChange;
+
 		GLOBALS.editorCanvas = new EditorCanvas();
 		GLOBALS.editorCanvas.init();
 		
 		DEBUG.init();	
 		
-		API.init('admin');	
+		API.init(enums.apiClientType.ADMIN);	
 
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 		
+		GLOBALS.openScene();
+	},
 
+	openScene: function()
+	{
 		GLOBALS._initScene();
 		GLOBALS._initCamera();
 		GLOBALS._initLights();
@@ -78,7 +95,7 @@ var GLOBALS =
 
 		API.request('rendering/checkAdmin', GLOBALS._onCheckRendering);	
 
-		new Thread(GLOBALS.onLoaded);
+		new namespace.core.Thread(GLOBALS.onLoaded);
 	},
 
 	/**
@@ -94,7 +111,9 @@ var GLOBALS =
 	 */
 	_onCheckRendering: function(data)
 	{
-		GLOBALS._updateRenderingState(data.isRenderingServiceRunning);
+		GLOBALS.isRendering = data.isRenderingServiceRunning;
+
+		GLOBALS._updateRenderingState();
 	},
 
 	/**
@@ -204,6 +223,18 @@ var GLOBALS =
 		}
 	},
 
+	/**
+	 * Clears scene.
+	 */
+	clearScene: function()
+	{
+		let scene = GLOBALS.scene;
+
+		while(scene.children.length > 0)
+		{ 
+			scene.remove(scene.children[0]); 
+		}
+	},
 
 	/**
 	 * Server has notified us that clients were updated.
@@ -217,20 +248,32 @@ var GLOBALS =
 		clientsConnectedInput.value = activeClientsCount;
 	},
 
-	_updateRenderingState: function(isRendering)
+	/**
+	 * Updates buttons and popups when rendering state is switched.
+	 */
+	_updateRenderingState: function()
 	{
-		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
+		var startRenderingButtonV = document.getElementById('render-button');
 
-		if (isRendering == true)
+		if (GLOBALS.isRendering == true)
 		{
 			var interfaceV = document.getElementById('interface');
 			interfaceV.addClass('rendering');
 
 			var canvasV = document.getElementById('editor-canvas');
 			canvasV.disable();
+
+			let sceneButton = document.getElementById('scene-button');
+			sceneButton.disable();
+
+			let optionsButton = document.getElementById('options-button');
+			optionsButton.disable();
+
+			let outputButton = document.getElementById('output-button');
+			outputButton.show();
 				
 			startRenderingButtonV.addClass('selected');
-			startRenderingButtonV.innerHTML = 'Stop rendering';
+			startRenderingButtonV.innerHTML = 'STOP RENDERING';
 
 			startRenderingButtonV.enable();
 		}
@@ -242,82 +285,20 @@ var GLOBALS =
 			var canvasV = document.getElementById('editor-canvas');
 			canvasV.enable();
 
+			let sceneButton = document.getElementById('scene-button');
+			sceneButton.enable();
+
+			let optionsButton = document.getElementById('options-button');
+			optionsButton.enable();
+
+			let outputButton = document.getElementById('output-button');
+			outputButton.hide();
+
 			startRenderingButtonV.removeClass('selected');
-			startRenderingButtonV.innerHTML = 'Start rendering';
+			startRenderingButtonV.innerHTML = 'START RENDERING';
 
 			startRenderingButtonV.enable();
 		}
-	},
-
-	/**
-	 * Sends request to recalculate grid layout.
-	 * @private
-	 */
-	_onStartStopRenderingClick: function()
-	{
-		var startRenderingButtonV = document.getElementById('recalculate-layout-button');
-		startRenderingButtonV.disable();
-
-		var data = {};
-
-		if (startRenderingButtonV.hasClass('selected'))
-		{
-			API.request('rendering/stop', () =>
-			{
-				GLOBALS._updateRenderingState(false);
-			}, data);
-		}
-		else
-		{
-			data.options = options;
-
-			API.request('rendering/start', () =>
-			{
-				GLOBALS._updateRenderingState(true);
-			}, data);
-		}
-	},
-
-	_onResolutionWidthChange: function(val)
-	{
-		options.RESOLUTION_WIDTH = val;
-	},
-
-	_onResolutionHeightChange: function(val)
-	{
-		options.RESOLUTION_HEIGHT = val;
-	},
-
-	_onBlockWidthChange: function(val)
-	{
-		options.BLOCK_WIDTH = val;
-	},
-
-	_onBlockHeightChange: function(val)
-	{
-		options.BLOCK_HEIGHT = val;
-	},
-
-	_onOpenOutputClick: function()
-	{
-		// open rendering output window
-		window.open("/renderingOutput", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
-	},
-
-	/**
-	 * Starts new client/tab for rendering.
-	 * @private
-	 */
-	_onStartNewClientClick: function()
-	{
-		/*var a = document.createElement("a");    
-		a.href = window.location.origin + '/client';    
-		a.setAttribute('target', '_blank');
-		var evt = document.createEvent("MouseEvents");   
-		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
-		a.dispatchEvent(evt);*/
-
-		window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
 	},
 
 	/**
@@ -327,28 +308,10 @@ var GLOBALS =
 	onLoaded: function()
 	{
 		// -----------------------------
-		// set default values
-		// -----------------------------
-
-		var resolutionWidthInput = document.getElementById('resolution-width-input');
-		resolutionWidthInput.value = options.RESOLUTION_WIDTH;
-
-		var resolutionHeightInput = document.getElementById('resolution-height-input');
-		resolutionHeightInput.value = options.RESOLUTION_HEIGHT;
-
-		var blockWidthV = document.getElementById('block-width-input');
-		blockWidthV.value = options.BLOCK_WIDTH;
-
-		var blockHeightV = document.getElementById('block-height-input');
-		blockHeightV.value = options.BLOCK_HEIGHT;
-
-
-
-		// -----------------------------
 		// remove .loading flag
 		// -----------------------------
 
-		document.body.removeClass('loading');
+		document.getElementById('interface').removeClass('loading');
 	}
 };
 

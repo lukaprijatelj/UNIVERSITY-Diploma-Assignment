@@ -2909,6 +2909,7 @@
 				name: this.name,
 
 				mapping: this.mapping,
+				rawImage: this.rawImage,
 
 				repeat: [ this.repeat.x, this.repeat.y ],
 				offset: [ this.offset.x, this.offset.y ],
@@ -12926,6 +12927,7 @@
 			if ( this.clearCoat !== undefined ) data.clearCoat = this.clearCoat;
 			if ( this.clearCoatRoughness !== undefined ) data.clearCoatRoughness = this.clearCoatRoughness;
 
+			if ( this.map && this.map.rawImage ) data.rawImage = this.map.rawImage;
 			if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
 			if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
 			if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
@@ -38769,6 +38771,7 @@
 
 					}
 
+					texture.image = data.rawImage;
 					texture.needsUpdate = true;
 
 					texture.uuid = data.uuid;
