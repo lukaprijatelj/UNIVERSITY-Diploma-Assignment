@@ -281,7 +281,7 @@ var GLOBALS =
 			newRendererButton.show();
 				
 			startRenderingButtonV.addClass('selected');
-			startRenderingButtonV.innerHTML = 'STOP RENDERING';
+			startRenderingButtonV.innerHTML = 'DISABLE RENDERING';
 
 			startRenderingButtonV.enable();
 		}
