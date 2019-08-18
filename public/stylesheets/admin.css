@@ -13,7 +13,8 @@ body
 	background-color: var(--LIGHT-RED-COLOR);
 }
 
-#output-button
+#output-button,
+#new-renderer-button
 {
 	background-color: var(--DARK-BLUE-COLOR);
 }
@@ -33,4 +34,16 @@ body
 #interface.rendering
 {
 	border-color: var(--LIGHT-RED-COLOR);
+}
+
+
+layer#loading>curtain
+{
+	background-color: rgba(0, 0, 0, 1);
+	opacity: 0.87;
+}
+
+layer#loading>.centered-text wrapper_
+{
+	background-color: var(--DARK-GRAY-COLOR);
 }

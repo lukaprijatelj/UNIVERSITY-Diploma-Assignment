@@ -1,10 +1,6 @@
 // -----------------------------
 // import constants
 // -----------------------------
-if (console)
-{
-	console.type = 'server';
-}
 var constants = require('./public/javascripts/constants.js');
 
 

@@ -54,6 +54,22 @@ dropdown#options-dropdown>wrapper_
 	padding-bottom: 15px;
 }
 
+
+
+layer#loading .centered-text
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+}
+
+layer#loading .centered-text wrapper_
+{
+	margin-left: -50%;
+	padding: 20px;
+}
+
+
 /* ----------------------------- */
 /* Editor canvas */
 /* ----------------------------- */

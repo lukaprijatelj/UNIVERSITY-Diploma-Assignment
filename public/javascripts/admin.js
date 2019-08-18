@@ -123,11 +123,16 @@ var GLOBALS =
 	{
 		console.log('[Globals] Requesting GLTF model');
 
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
+
 		var loader = new GltfLoader();
 		loader.path = options.SCENE_FILEPATH;
-		loader.onSuccess = function(gltf) 
+		loader.onSuccess = (gltf) =>
 		{
 			console.log('[glTF loader] Scene finished loading');
+
+			loadingLayer.hide();
 
 			GLOBALS.scene.add(gltf.scene);
 
@@ -182,7 +187,7 @@ var GLOBALS =
 	{
 		console.log('[Globals] Initializing lights');
 
-		var light = new THREE.AmbientLight(0x404040, 3);
+		var light = new THREE.AmbientLight(0x404040, 7);
 		GLOBALS.scene.add(light);
 	},
 

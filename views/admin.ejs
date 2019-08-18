@@ -28,12 +28,6 @@
 		<script type="namespace-core:css-loader"></script>
 
 		<!-- constants -->
-		<script>
-			if (console)
-			{
-				console.type = 'client';
-			}
-		</script>
 		<script src="javascripts/constants.js"></script>
 		<script src="javascripts/options.js"></script>
 
@@ -99,22 +93,6 @@
 			<canvas id="editor-canvas" class=""></canvas>
 			<curtain id="editor-curtain"></curtain>
 
-			<layer id="bars">
-				<flex id="top-bar">
-					<bar-button id="scene-button" class="" onclick="EVENTS._onSceneButtonClick(this)">SCENE</bar-button>
-					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
-					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick()">START RENDERING</bar-button>
-					<bar-button id="output-button" class="hidden" onclick="EVENTS._onOpenOutputClick()">OPEN OUTPUT</bar-button>
-					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick()">NEW RENDERER</bar-button>
-					<div style="flex-grow: 2;"></div>
-				</flex>
-			</layer>
-			
-			<layer id="dropdowns" class="hidden">
-				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
-				<list></list>
-			</layer>
-			
 			<debug class="left-side">
 				<div id="num-clients-connected">
 					<span class="title">Number of clients:</span>
@@ -140,6 +118,30 @@
 					<span class="value"></span>
 				</div>				
 			</debug>
+
+			<layer id="bars">
+				<flex id="top-bar">
+					<bar-button id="scene-button" class="" onclick="EVENTS._onSceneButtonClick(this)">SCENE</bar-button>
+					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
+					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick()">START RENDERING</bar-button>
+					<bar-button id="output-button" class="hidden" onclick="EVENTS._onOpenOutputClick()">OPEN OUTPUT</bar-button>
+					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick()">NEW RENDERER</bar-button>
+					<div style="flex-grow: 2;"></div>
+				</flex>
+			</layer>
+			
+			<layer id="dropdowns" class="hidden">
+				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
+				<list></list>
+			</layer>
+			
+			<!-- Loading layer must always be on the top of all other layers -->
+			<layer id="loading" class="hidden">
+				<curtain></curtain>
+				<div class="centered-text">
+					<wrapper_>LOADING</wrapper_>
+				</div>
+			</layer>			
 		</div>		
 
 		<!-- ----------------------------- -->
