@@ -274,8 +274,8 @@ var GLOBALS =
 			let optionsButton = document.getElementById('options-button');
 			optionsButton.disable();
 
-			let outputButton = document.getElementById('output-button');
-			outputButton.show();
+			//let outputButton = document.getElementById('output-button');
+			//outputButton.show();
 
 			let newRendererButton = document.getElementById('new-renderer-button');
 			newRendererButton.show();
@@ -299,8 +299,8 @@ var GLOBALS =
 			let optionsButton = document.getElementById('options-button');
 			optionsButton.enable();
 
-			let outputButton = document.getElementById('output-button');
-			outputButton.hide();
+			//let outputButton = document.getElementById('output-button');
+			//outputButton.hide();
 
 			let newRendererButton = document.getElementById('new-renderer-button');
 			newRendererButton.hide();
