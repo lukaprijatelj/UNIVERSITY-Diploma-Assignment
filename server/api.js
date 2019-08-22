@@ -3,7 +3,7 @@ var DATABASE = require('./database.js');
 var constants = require('../public/javascripts/constants.js');
 var Exception = require('../public/javascripts/namespace-core/Exception.js');
 var Warning = require('../public/javascripts/namespace-core/Warning.js');
-var options = null;
+var options = require('../public/javascripts/options.js');
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(constants.SOCKETIO_PORT);
@@ -119,7 +119,11 @@ var API =
 		}
 
 		var socket = this;
-		var result = { isRenderingServiceRunning: API.isRenderingServiceRunning };
+		var result = 
+		{ 
+			isRenderingServiceRunning: API.isRenderingServiceRunning,
+			options: options
+		};
 
 		callback(result);
 	},

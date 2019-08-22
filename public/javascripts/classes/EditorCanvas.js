@@ -11,8 +11,6 @@ EditorCanvas.prototype.init = function()
 	{
 		editorCanvas.resizeCanvas();
 	}, false);
-
-	editorCanvas.resizeCanvas();
 };
 
 EditorCanvas.prototype.resizeCanvas = function()
@@ -27,9 +25,12 @@ EditorCanvas.prototype.resizeCanvas = function()
 	canvas.width = width;
 	canvas.height = height;
 
-	options.CANVAS_WIDTH = width;
-	options.CANVAS_HEIGHT = height;
-
+	if (options)
+	{
+		options.CANVAS_WIDTH = width;
+		options.CANVAS_HEIGHT = height;
+	}
+	
 	if (GLOBALS.renderer)
 	{
 		GLOBALS.renderer.setSize(width, height);

@@ -1,39 +1,15 @@
-/* -------------------------------------------------------------------------------------------------------------------- */
-/* Styles (fires browsers repaint event - fast processing) */
-/* -------------------------------------------------------------------------------------------------------------------- */
-
 body
 {
 	background-color: var(--DARK-BLACK-COLOR);
 }
 
 
-#render-button
-{
-	background-color: var(--LIGHT-RED-COLOR);
-}
-
-#output-button,
-#new-renderer-button
-{
-	background-color: var(--DARK-BLUE-COLOR);
-}
-
-#upload-button
-{
-	color: var(--LIGHT-BLUE-COLOR);
-	padding-bottom: 15px;
-}
 
 
-#top-bar
-{
-	position: absolute;
-	left: 1px;
-	top: 1px;
-}
 
-
+/* ----------------------------- */
+/* Interface */
+/* ----------------------------- */
 #interface
 {
 	border-style: solid;
@@ -50,17 +26,26 @@ body
 }
 
 
+
+
+
+
+/* ----------------------------- */
+/* Layer */
+/* ----------------------------- */
 layer#loading>curtain
 {
 	background-color: rgba(0, 0, 0, 1);
 	opacity: 0.87;
 }
+
 layer#loading .centered-text
 {
 	position: absolute;
 	left: 50%;
 	top: 50%;
 }
+
 layer#loading>.centered-text wrapper_
 {
 	background-color: var(--DARK-GRAY-COLOR);
@@ -68,6 +53,14 @@ layer#loading>.centered-text wrapper_
 	padding: 20px;
 }
 
+
+
+
+
+
+/* ----------------------------- */
+/* Debug */
+/* ----------------------------- */
 debug
 {
 	position: absolute;
@@ -87,6 +80,13 @@ debug.right-side
 	text-align: right;
 }
 
+
+
+
+
+/* ----------------------------- */
+/* Dropdown */
+/* ----------------------------- */
 dropdown>wrapper_
 {
 	display: block;	
@@ -99,7 +99,33 @@ dropdown#options-dropdown>wrapper_
 }
 
 
+
+
 #editor-canvas
 {
 	position: absolute;
+}
+
+#render-button
+{
+	background-color: var(--LIGHT-RED-COLOR);
+}
+
+#output-button,
+#new-renderer-button
+{
+	background-color: var(--DARK-BLUE-COLOR);
+}
+
+#upload-button
+{
+	color: var(--LIGHT-BLUE-COLOR);
+	padding-bottom: 15px;
+}
+
+#top-bar
+{
+	position: absolute;
+	left: 1px;
+	top: 1px;
 }

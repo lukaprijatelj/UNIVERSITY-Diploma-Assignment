@@ -1,7 +1,6 @@
-/* -------------------------------------------------------------------------------------------------------------------- */
-/* Styles (fires browsers repaint event - fast processing) */
-/* -------------------------------------------------------------------------------------------------------------------- */
-
+/* ----------------------------- */
+/* Interface */
+/* ----------------------------- */
 #interface
 {
     position: absolute;
@@ -9,6 +8,10 @@
 
 
 
+
+/* ----------------------------- */
+/* Debug info */
+/* ----------------------------- */
 #debug-info 
 {
 	color: white;
@@ -22,39 +25,39 @@
 	font-size: 2em;
 }
 
-	#debug-info .field
-	{
-		color: rgba(255, 255, 255, 0.6);
-		font-size: 0.8em;
-	}
+#debug-info .field
+{
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 0.8em;
+}
 
-	#debug-info .field .value
-	{
-		flex-grow: 1;
-		text-align: center;
-		padding: 10px;
-	}
+#debug-info .field .value
+{
+	flex-grow: 1;
+	text-align: center;
+	padding: 10px;
+}
 
-	#debug-info .field .key
-	{
-		flex-grow: 1;
-		text-align: center;
-		flex-shrink: 1;
-		padding: 10px;
-	}
+#debug-info .field .key
+{
+	flex-grow: 1;
+	text-align: center;
+	flex-shrink: 1;
+	padding: 10px;
+}
 
-	#debug-info .group>.name
-	{
-		background-color: var(--DARK-BLUE-COLOR);
-		
-		padding-left: 20px;
-		padding-right: 20px;
-		text-align: center;
-	}
+#debug-info .group>.name
+{
+	background-color: var(--DARK-BLUE-COLOR);
+	
+	padding-left: 20px;
+	padding-right: 20px;
+	text-align: center;
+}
 
-	#debug-info .group table
-	{
-		table-layout: fixed;
-		width: 100%;
-	}
+#debug-info .group table
+{
+	table-layout: fixed;
+	width: 100%;
+}
 

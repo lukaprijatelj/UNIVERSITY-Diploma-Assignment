@@ -75,13 +75,13 @@ body.busy
 	pointer-events: none !important;
 }
 
-
-
-
 flex
 {
 	display: flex;
 }
+
+
+
 
 
 /* ----------------------------- */
@@ -101,6 +101,9 @@ divider-x-small
 	height: 10px;
 	flex-shrink: 0;
 }
+
+
+
 
 
 
@@ -125,10 +128,13 @@ divider-y-small
 
 
 
+
+
+
+
 /* ----------------------------- */
 /* Buttons */
 /* ----------------------------- */
-
 button,
 checkbox-button
 {
@@ -258,6 +264,8 @@ layer>curtain
 
 
 
+
+
 /* ----------------------------- */
 /* Dropdowns */
 /* ----------------------------- */
@@ -295,10 +303,12 @@ dropdown .entry:not(.disabled):hover
 }
 
 
+
+
+
 /* ----------------------------- */
 /* Inputs */
 /* ----------------------------- */
-
 input
 {
 	font-family: 'Muli', sans-serif;
@@ -362,7 +372,6 @@ input[type=number]::-webkit-outer-spin-button
 /* ----------------------------- */
 /* Labels */
 /* ----------------------------- */
-
 label
 {
 	display: block;
@@ -377,13 +386,11 @@ label
 /* ----------------------------- */
 /* Rendering grid */
 /* ----------------------------- */
-
 canvas
 {
 	display: block;
 }
 	
-
 editor-popup
 {
 	background-color: var(--LIGHT-BLACK-COLOR);
@@ -414,10 +421,13 @@ curtain
 
 
 
+
+
+
+
 /* ----------------------------- */
 /* interface */
 /* ----------------------------- */
-
 #interface
 {
 	--BORDER-WIDTH: 1px;

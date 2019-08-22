@@ -1,6 +1,3 @@
 - popravim, da admin.js na začetku odpre sceno v options na serverju in ne default optionsih kot je cube.gltf
 - dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
 - popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
-- pri ray-tracingu bom popravil asynchrono loadanje tekstur preko document.loadImage
-- pri rendering output windowu dodam še resolucijo "Output 1920x1080"
-- poskusil bom v GltfLoader.js dodati prednalaganje textur in nato s canvasom pretvoril sliko in bral pixle, zato da webWorker ne bo uporabljal documenta, ker javi error.

@@ -7,6 +7,8 @@
 })();
 
 
+var options = null;
+
 /**
  * Globals. 
  */
@@ -65,8 +67,6 @@ var GLOBALS =
 		API.init(enums.apiClientType.ADMIN);	
 
 		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-		
-		GLOBALS.openScene();
 	},
 
 	openScene: function()
@@ -112,6 +112,11 @@ var GLOBALS =
 	_onCheckRendering: function(data)
 	{
 		GLOBALS.isRendering = data.isRenderingServiceRunning;
+		
+		options = data.options;
+		GLOBALS.editorCanvas.resizeCanvas();
+
+		GLOBALS.openScene();
 
 		GLOBALS._updateRenderingState();
 	},
