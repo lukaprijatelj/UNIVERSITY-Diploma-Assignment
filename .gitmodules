@@ -1,0 +1,3 @@
+[submodule "public/javascripts/namespace-core"]
+	path = public/javascripts/namespace-core
+	url = https://github.com/lukaprijatelj/core-javascript-extensions.git
