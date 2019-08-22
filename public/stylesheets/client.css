@@ -2,19 +2,59 @@
 /* Styles (fires browsers repaint event - fast processing) */
 /* -------------------------------------------------------------------------------------------------------------------- */
 
+#interface
+{
+    position: absolute;
+}
+
+
+
 #debug-info 
 {
 	color: white;
 	font-family: "Lucida Console", Monaco, monospace;
 	background-color: var(--DARK-BLUE-COLOR);
+
+	position: fixed;
+	max-width: 300px;
+	bottom: 0;
+	right: 0;
+	font-size: 2em;
 }
 
-#debug-info .field
-{
-	color: rgba(255, 255, 255, 0.6);
-}
+	#debug-info .field
+	{
+		color: rgba(255, 255, 255, 0.6);
+		font-size: 0.8em;
+	}
 
-#debug-info .group>.name
-{
-	background-color: var(--DARK-BLUE-COLOR);
-}
+	#debug-info .field .value
+	{
+		flex-grow: 1;
+		text-align: center;
+		padding: 10px;
+	}
+
+	#debug-info .field .key
+	{
+		flex-grow: 1;
+		text-align: center;
+		flex-shrink: 1;
+		padding: 10px;
+	}
+
+	#debug-info .group>.name
+	{
+		background-color: var(--DARK-BLUE-COLOR);
+		
+		padding-left: 20px;
+		padding-right: 20px;
+		text-align: center;
+	}
+
+	#debug-info .group table
+	{
+		table-layout: fixed;
+		width: 100%;
+	}
+

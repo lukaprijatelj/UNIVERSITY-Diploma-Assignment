@@ -1,3 +1,5 @@
-/* -------------------------------------------------------------------------------------------------------------------- */
-/* Styles (fires browsers repaint event - fast processing) */
-/* -------------------------------------------------------------------------------------------------------------------- */
+#rendering-canvas
+{
+	/** rendering canvas is for the real view for the rendering-output and must not be scaled */
+	width: auto !important;
+}

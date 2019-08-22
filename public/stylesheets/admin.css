@@ -22,6 +22,15 @@ body
 #upload-button
 {
 	color: var(--LIGHT-BLUE-COLOR);
+	padding-bottom: 15px;
+}
+
+
+#top-bar
+{
+	position: absolute;
+	left: 1px;
+	top: 1px;
 }
 
 
@@ -29,6 +38,10 @@ body
 {
 	border-style: solid;
 	border-color: var(--EDITOR-POPUP-BACKGROUND);
+
+	position: fixed;
+	width: calc(100% - var(--BORDER-WIDTH) * 2);
+    height: calc(100% - var(--BORDER-WIDTH) * 2);
 }
 
 #interface.rendering
@@ -42,8 +55,51 @@ layer#loading>curtain
 	background-color: rgba(0, 0, 0, 1);
 	opacity: 0.87;
 }
-
+layer#loading .centered-text
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+}
 layer#loading>.centered-text wrapper_
 {
 	background-color: var(--DARK-GRAY-COLOR);
+	margin-left: -50%;
+	padding: 20px;
+}
+
+debug
+{
+	position: absolute;
+	display: block;
+	bottom: 0px;
+}
+
+debug.left-side
+{
+	left: 0;
+	text-align: left;
+}
+
+debug.right-side
+{
+	right: 0px;
+	text-align: right;
+}
+
+dropdown>wrapper_
+{
+	display: block;	
+}
+
+dropdown#options-dropdown>wrapper_
+{
+	max-width: 210px;
+	padding: 15px;
+}
+
+
+#editor-canvas
+{
+	position: absolute;
 }
