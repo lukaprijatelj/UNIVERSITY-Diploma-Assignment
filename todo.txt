@@ -1,1 +1,2 @@
 - spremenim layoutsheets v stylesheets in mergam z obstojočimi
+- popravim, da admin.js na začetku odpre sceno v options na serverju in ne default optionsih kot je cube.gltf
