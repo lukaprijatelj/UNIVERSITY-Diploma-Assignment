@@ -26,12 +26,12 @@ var DATABASE = require('./server/database.js');
 // -----------------------------
 // import javascript extensions
 // -----------------------------
-require('./public/javascripts/core-javascript-extensions/Function.js');
-require('./public/javascripts/core-javascript-extensions/Array.js');
-require('./public/javascripts/core-javascript-extensions/Date.js');
-require('./public/javascripts/core-javascript-extensions/Math.js');
-require('./public/javascripts/core-javascript-extensions/Object.js');
-require('./public/javascripts/core-javascript-extensions/console.js');
+require('./public/javascripts/namespace-core/Function.js');
+require('./public/javascripts/namespace-core/Array.js');
+require('./public/javascripts/namespace-core/Date.js');
+require('./public/javascripts/namespace-core/Math.js');
+require('./public/javascripts/namespace-core/Object.js');
+require('./public/javascripts/namespace-core/console.js');
 
 
 // -----------------------------

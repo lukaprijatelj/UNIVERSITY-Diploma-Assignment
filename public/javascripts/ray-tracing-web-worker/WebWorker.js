@@ -1,5 +1,5 @@
 importScripts('../constants.js');
-importScripts('../core-javascript-extensions/console.js');
+importScripts('../namespace-core/console.js');
 
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
