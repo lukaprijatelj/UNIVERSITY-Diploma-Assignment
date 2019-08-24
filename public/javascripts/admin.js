@@ -130,6 +130,7 @@ var GLOBALS =
 		console.log('[Globals] Requesting GLTF model');
 
 		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
 		loadingLayer.show();
 
 		var loader = new GltfLoader();

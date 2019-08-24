@@ -8,7 +8,7 @@ var STORAGE = multer.diskStorage(
 	destination: function (req, file, cb) 
 	{
 		// saves files to uploads folder
-		cb(null, 'public/scenes');
+		cb(null, 'public/scenes/Uploads');
 	},
 
 	/**
@@ -16,8 +16,8 @@ var STORAGE = multer.diskStorage(
 	 */
 	filename: function (req, file, cb) 
 	{
+		/*
 		var extension = '';
-
 		switch (file.mimetype)
 		{
 			case 'image/jpeg':
@@ -27,9 +27,10 @@ var STORAGE = multer.diskStorage(
 			case 'image/png':
 				extension = '.png';
 				break;
-		}
-		
-		cb(null, file.fieldname + '-' + Date.now() + extension);
+		}		
+		cb(null, file.fieldname + '-' + Date.now() + extension);*/
+
+		cb(null, file.originalname);
 	}
 });  
 

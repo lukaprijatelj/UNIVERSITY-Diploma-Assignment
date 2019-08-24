@@ -97,17 +97,40 @@ var EVENTS =
 		EVENTS.onDropdownsCurtainClick();
 	},
 
-	onFileUploadChange: function(event)
+	onFileUploadChange: async function(event)
     {
+		EVENTS.onDropdownsCurtainClick();
+
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Uploading...';
+		loadingLayer.show();
+
 		var form = document.getElementById("scene-upload-form");
 		var formData = new FormData(form);
 
 		var ajaxCall = new namespace.core.Ajax('/api/uploadScene');
 		ajaxCall.method = 'POST';
-		ajaxCall.send(formData);
+		
+		await ajaxCall.send(formData);
 
-		EVENTS.onDropdownsCurtainClick();
-    },
+		EVENTS.onFileUploadDone();
+	},
+
+	onFileUploadDone: function()
+	{
+		EVENTS.resetFilesInput();
+
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.hide();
+	},
+	
+	resetFilesInput: function()
+	{
+		var input = document.getElementById('upload-file-input');
+
+		// reset input files so that onChange event will properly work when reselecting same files
+		input.value = '';
+	},
 
 	onUploadSceneClick: function()
 	{

@@ -78,7 +78,7 @@
 
 		<!-- dummy input tag, so that file upload dialog is presented to user -->
 		<form id="scene-upload-form" enctype="multipart/form-data" action="/api/uploadScene" method="post" class="hidden">
-			<input id="upload-file-input" name="reserved_word-scene" type="file" accept="image/jpg,image/png," onchange="EVENTS.onFileUploadChange(event)" />
+			<input id="upload-file-input" name="reserved_word-scene" type="file" webkitdirectory mozdirectory directory multiple onchange="EVENTS.onFileUploadChange(event)" />
 		</form> 
 
 		<!-- Interface -->
@@ -134,7 +134,7 @@
 			<layer id="loading" class="hidden">
 				<curtain></curtain>
 				<div class="centered-text">
-					<wrapper_>LOADING</wrapper_>
+					<wrapper_></wrapper_>
 				</div>
 			</layer>			
 		</div>		

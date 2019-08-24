@@ -7,6 +7,8 @@ var options = require('../public/javascripts/options.js');
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(constants.SOCKETIO_PORT);
+const fsExtra = require('fs-extra');
+
 
 
 var API =
@@ -33,11 +35,10 @@ var API =
 
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
-		app.post(API.baseUrl + '/uploadScene', upload.single('reserved_word-scene'), API.onUploadFile);
+		app.post(API.baseUrl + '/uploadScene', API.emptyUploadsFolder, upload.array('reserved_word-scene'), API.onUploadFile);
 		
 		io.on('connection', API.onConnect);
 	},
-
 	
 	/**
 	 * New client has connected via socket IO.
@@ -202,18 +203,34 @@ var API =
 	},
 
 	/**
+	 * Empties uploads folder before saving files there.
+	 */
+	emptyUploadsFolder: async function middleware1(req, res, next)
+	{
+		// perform middleware function e.g. check if user is authenticated
+
+		var folder = 'public/scenes/Uploads';
+
+		await fsExtra.remove(folder);
+
+		await fsExtra.mkdir(folder);
+	
+		next();  // move on to the next middleware
+	},
+
+	/**
 	 * Catches users scene and saves it to local storage.
 	 */
     onUploadFile: function(request, response)
     {
 		console.log("[Api] File was uploaded");
 
-		var filename = request.file.filename;
+		/*var filename = request.file.filename;
 		var path = request.file.path;
 		
-		DATABASE.addUploadedFile(filename, path);
+		DATABASE.addUploadedFile(filename, path);*/
 	
-		response.status(200);	
+		response.sendStatus(200)
 	},
 
 	/**
