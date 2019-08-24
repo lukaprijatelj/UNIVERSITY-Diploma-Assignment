@@ -57,18 +57,19 @@ var GLOBALS =
 
 	init: function()
 	{	
-		document.getElementById('upload-file-input').onchange = EVENTS.onFileUploadChange;
+		API.init(enums.apiClientType.ADMIN);	
+
+		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
 
 		GLOBALS.editorCanvas = new EditorCanvas();
 		GLOBALS.editorCanvas.init();
 		
-		DEBUG.init();	
-		
-		API.init(enums.apiClientType.ADMIN);	
-
-		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
+		DEBUG.init();
 	},
 
+	/**
+	 * Opens scene and loads cameras and lights.
+	 */
 	openScene: function()
 	{
 		GLOBALS._initScene();
@@ -112,7 +113,7 @@ var GLOBALS =
 	_onCheckRendering: function(data)
 	{
 		GLOBALS.isRendering = data.isRenderingServiceRunning;
-		
+
 		options = data.options;
 		GLOBALS.editorCanvas.resizeCanvas();
 
