@@ -178,17 +178,20 @@ RaytracingRendererWorker.prototype.setSize = function (width, height)
 /**
  * Sets canvas size.
  */
-RaytracingRendererWorker.prototype.getTexturePixel = function (texture, posX, posY) 
+RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY) 
 {
 	// r, g, b, a bits
 	var NUM_OF_COLOR_BITS = 4;
 
-	var above = posY * (texture.width * NUM_OF_COLOR_BITS);
-	var start = above + (posX * NUM_OF_COLOR_BITS);
+	let posX = Math.floor(texture.width * uvX);
+	let posY = Math.floor(texture.height * uvY);
+
+	let above = posY * (texture.width * NUM_OF_COLOR_BITS);
+	let start = above + (posX * NUM_OF_COLOR_BITS);
 	
-	var red = texture.pixels[start++];
-	var green = texture.pixels[start++];
-	var blue = texture.pixels[start++];
+	let red = texture.pixels[start++];
+	let green = texture.pixels[start++];
+	let blue = texture.pixels[start++];
 
 	return new THREE.Color(red/255, green/255, blue/255);
 };
@@ -253,20 +256,73 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// add texture colour
 	// resolve pixel diffuse color
 
-	if (material.map && material.map.image && intersection.uv)
+	var alphaMap = null;
+	var aoMap = null;
+	var emissiveMap = null;
+	var envMap = null;
+	var lightMap = null;
+	var map = null;
+	var metalnessMap = null;
+	var normalMap = null;
+	var roughnessMap = null; 
+
+	if (intersection.uv)
+	{
+		if (material.alphaMap)
+		{
+			alphaMap = this.getTexturePixel(material.alphaMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.aoMap)
+		{
+			// ambient occulsion map
+			aoMap = this.getTexturePixel(material.aoMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.emissiveMap)
+		{
+			emissiveMap = this.getTexturePixel(material.emissiveMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.envMap)
+		{
+			envMap = this.getTexturePixel(material.envMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.lightMap)
+		{
+			lightMap = this.getTexturePixel(material.lightMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.map)
+		{
+			map = this.getTexturePixel(material.map.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.metalnessMap)
+		{
+			metalnessMap =  this.getTexturePixel(material.metalnessMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.normalMap)
+		{
+			normalMap = this.getTexturePixel(material.normalMap.image, intersection.uv.x, intersection.uv.y);
+		}
+
+		if (material.roughnessMap)
+		{
+			roughnessMap = this.getTexturePixel(material.roughnessMap.image, intersection.uv.x, intersection.uv.y);
+		}
+	}
+
+
+	// -----------------------------
+	// diffuse color (also called albedo color)
+	// -----------------------------
+
+	if (map)
 	{	
-		var texture = material.map.image;
-
-		// read texture pixels
-		var uv = intersection.uv;
-		material.map.transformUv(uv);
-
-		var posX = Math.floor(texture.width * uv.x);
-		var posY = Math.floor(texture.height * uv.y);
-
-		let pixelTextureColor = this.getTexturePixel(texture, posX, posY);
-
-		diffuseColor.copyGammaToLinear(pixelTextureColor);
+		diffuseColor.copyGammaToLinear(map);
 	}
 	else
 	{
@@ -369,6 +425,11 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 			outputColor.add( lightContribution );
 		}
+	}
+
+	if (aoMap)
+	{	
+		outputColor.multiply(aoMap);
 	}
 
 
