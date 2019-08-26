@@ -1,16 +1,15 @@
 // namespace
-var constants = { };
-
+var _this = this;
 
 if (typeof module !== 'undefined' && module.exports)
 {
 	// export for nodeJS use
-	module.exports = constants;
+	_this = global;
 }
 
 
-constants.IS_DEBUG_MODE = true;
-constants.IS_CONSOLE_ENABLED = true;
+_this.IS_DEBUG_MODE = true;
+_this.IS_CONSOLE_ENABLED = true;
 
-constants.NODEJS_PORT = 30003;
-constants.SOCKETIO_PORT = 30004;
+_this.NODEJS_PORT = 30003;
+_this.SOCKETIO_PORT = 30004;

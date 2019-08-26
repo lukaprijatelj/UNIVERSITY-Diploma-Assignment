@@ -1,12 +1,9 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
-var constants = require('../public/javascripts/constants.js');
-var Exception = require('../public/javascripts/namespace-core/Exception.js');
-var Warning = require('../public/javascripts/namespace-core/Warning.js');
 var options = require('../public/javascripts/options.js');
 
 var socketIO = require('socket.io');
-var io = socketIO.listen(constants.SOCKETIO_PORT);
+var io = socketIO.listen(SOCKETIO_PORT);
 const fsExtra = require('fs-extra');
 
 

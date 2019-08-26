@@ -67,7 +67,7 @@ var API =
 	 */
 	connect: function(onConnect, onDisconnect)
 	{
-		socket = io.connect(window.location.hostname + ':' + constants.SOCKETIO_PORT, { query: "clientType=" + API.clientType });
+		socket = io.connect(window.location.hostname + ':' + SOCKETIO_PORT, { query: "clientType=" + API.clientType });
 
 		socket.on('connect', onConnect);
 		socket.on('disconnect', onDisconnect);

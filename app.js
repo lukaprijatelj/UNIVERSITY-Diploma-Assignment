@@ -1,10 +1,4 @@
 // -----------------------------
-// import constants
-// -----------------------------
-var constants = require('./public/javascripts/constants.js');
-
-
-// -----------------------------
 // import npm packages
 // -----------------------------
 var createError = require('http-errors');
@@ -24,14 +18,23 @@ var DATABASE = require('./server/database.js');
 
 
 // -----------------------------
-// import javascript extensions
+// import namespace-core
 // -----------------------------
-require('./public/javascripts/namespace-core/Function.js');
 require('./public/javascripts/namespace-core/Array.js');
+require('./public/javascripts/namespace-core/Char.js');
+require('./public/javascripts/namespace-core/console.js');
 require('./public/javascripts/namespace-core/Date.js');
+require('./public/javascripts/namespace-core/Enum.js');
+require('./public/javascripts/namespace-core/Event.js');
+require('./public/javascripts/namespace-core/Exception.js');
+require('./public/javascripts/namespace-core/Function.js');
 require('./public/javascripts/namespace-core/Math.js');
 require('./public/javascripts/namespace-core/Object.js');
-require('./public/javascripts/namespace-core/console.js');
+require('./public/javascripts/namespace-core/Path.js');
+require('./public/javascripts/namespace-core/String.js');
+require('./public/javascripts/namespace-core/Timer.js');
+require('./public/javascripts/namespace-core/Unit.js');
+require('./public/javascripts/namespace-core/Warning.js');
 
 
 // -----------------------------

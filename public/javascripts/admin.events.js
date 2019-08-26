@@ -3,6 +3,7 @@ var EVENTS =
 	_onSceneButtonClick: async function(button)
 	{
 		let ajaxCall = new namespace.core.Ajax('html/scene-dropdown.html');
+		ajaxCall.method = 'GET';
 		let xhrCall = await ajaxCall.send();
 		
 		let offset = button.getOffset();
@@ -11,7 +12,7 @@ var EVENTS =
 		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
 		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
 
-		let sceneDropdown = HTMLElement.createElement(xhrCall.responseText);
+		let sceneDropdown = HTMLElement.create(xhrCall.responseText);
 		sceneDropdown.style.top = top.toString();
 		sceneDropdown.style.left = left.toString();
 
@@ -37,6 +38,7 @@ var EVENTS =
 	_onOptionsButtonClick: async function(button)
 	{
 		let ajaxCall = new namespace.core.Ajax('html/options-dropdown.html');
+		ajaxCall.method = 'GET';
 		let xhrCall = await ajaxCall.send();
 
 
@@ -50,7 +52,7 @@ var EVENTS =
 		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
 		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
 
-		let dropdown = HTMLElement.createElement(xhrCall.responseText);
+		let dropdown = HTMLElement.create(xhrCall.responseText);
 		dropdown.style.top = top.toString();
 		dropdown.style.left = left.toString();
 
@@ -108,9 +110,7 @@ var EVENTS =
 		var form = document.getElementById("scene-upload-form");
 		var formData = new FormData(form);
 
-		var ajaxCall = new namespace.core.Ajax('/api/uploadScene');
-		ajaxCall.method = 'POST';
-		
+		var ajaxCall = new namespace.core.Ajax('/api/uploadScene');		
 		await ajaxCall.send(formData);
 
 		EVENTS.onFileUploadDone();
