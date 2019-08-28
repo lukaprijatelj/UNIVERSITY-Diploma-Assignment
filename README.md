@@ -14,6 +14,7 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 	- preimenujem javascripts v scripts
 	- dodam mapo externals in premaknem namespace-core v exports/namespace-core/scripts/  in dodam mapo exports/namespace-core/stylesheets/
 	- dodam mapo externals in premaknem namespace-html v exports/namespace-html/scripts/  in dodam mapo exports/namespace-html/stylesheets/
+	- dodam mapo externals in premaknem v namespace-debug, ter dodam logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 
 
 ## Demo verzija
