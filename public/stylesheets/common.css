@@ -450,3 +450,53 @@ curtain
 	{
 		display: block;
 	}
+
+
+
+	
+
+
+/* ----------------------------- */
+/* Responsive design */
+/* ----------------------------- */
+@media (min-width: 1024px)
+{
+    /** Wide screens */
+
+    .hidden-on-wide-screens
+    {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1024px) and (min-width: 767px)
+{
+    /** Medium screens */
+    
+    .hidden-on-medium-screens
+    {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px)
+{
+	/** Small screens */
+
+	.hidden-on-small-screens
+	{
+		display: none !important;
+	}
+}
+
+
+
+/* ---------------------------------- */
+/* Retina support */
+/* ---------------------------------- */
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5),
+    only screen and (min-resolution: 1.5dppx),
+    only screen and (min-resolution: 144dpi)
+{
+
+}
