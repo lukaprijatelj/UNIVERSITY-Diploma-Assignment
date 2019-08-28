@@ -10,8 +10,10 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 	- popravim Lights, da bodo enake v client.js in admin.js
 	- dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
 	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
-	- dodam namespace-view za ScrollViewer, Div, Button, Span, Table, Paragraph, Link in podobne stvari zato da boš lahko kot WPF declariral elemente brez da bi uporabljal HTMLElement.create() funkcije
-
+	- dodam namespace-html za ScrollViewer, Div, Button, Span, Table, Paragraph, Link in podobne stvari zato da boš lahko kot WPF declariral elemente brez da bi uporabljal HTMLElement.create() funkcije
+	- preimenujem javascripts v scripts
+	- dodam mapo externals in premaknem namespace-core v exports/namespace-core/scripts/  in dodam mapo exports/namespace-core/stylesheets/
+	- dodam mapo externals in premaknem namespace-html v exports/namespace-html/scripts/  in dodam mapo exports/namespace-html/stylesheets/
 
 
 ## Demo verzija
