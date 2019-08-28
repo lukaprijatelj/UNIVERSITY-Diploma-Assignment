@@ -1,3 +1,0 @@
-- popravim Lights, da bodo enake v client.js in admin.js
-- dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
-- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike

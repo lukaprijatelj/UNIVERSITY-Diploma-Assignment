@@ -7,8 +7,10 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 # TODO:
 	- implement AsyncImport and SyncImport classes into JS file
 	- Uporabim await in async ter Promise v diplomski nalogi
-
-
+	- popravim Lights, da bodo enake v client.js in admin.js
+	- dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
+	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
+	- dodam namespace-view za ScrollViewer in podobne stvari
 
 
 
