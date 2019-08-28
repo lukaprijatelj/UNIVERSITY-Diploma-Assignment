@@ -17,7 +17,7 @@ var STORAGE = multer.diskStorage(
 	filename: function (req, file, cb) 
 	{
 		/*
-		var extension = '';
+		var extension = String();
 		switch (file.mimetype)
 		{
 			case 'image/jpeg':

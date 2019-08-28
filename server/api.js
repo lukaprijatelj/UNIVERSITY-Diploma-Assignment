@@ -18,7 +18,7 @@ var API =
 	/**
 	 * Admin client session ID.
 	 */
-	adminSessionId: '',
+	adminSessionId: String(),
 
 	/**
 	 * Is rendering service currently running.

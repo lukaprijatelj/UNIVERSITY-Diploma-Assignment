@@ -110,7 +110,7 @@ var DATABASE =
 				continue;
 			}
 
-			cell.sessionId = "";
+			cell.sessionId = String();
 		}
 
 		table.save();

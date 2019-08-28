@@ -1,7 +1,7 @@
 // -----------------------------
 // import SocketIO
 // -----------------------------
-var socket;
+var socket = null;
 
 var API =
 {
@@ -20,7 +20,7 @@ var API =
 	 * Type of the client.
 	 * @type {string}
 	 */
-	clientType: '',
+	clientType: String(),
 
 	/**
 	 * Is rendering service running on server.

@@ -8,7 +8,7 @@ function GltfLoader()
     /**
      * Path of the 3D GLTF model that needs to be loaded.
      */
-    this.path = '';
+    this.path = String();
 
     /**
      * GLTF model successfuly loaded callback.

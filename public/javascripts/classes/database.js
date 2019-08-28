@@ -26,7 +26,7 @@ database.RenderingCell = function(id, startX, startY, width, height)
 	var basicCell = new database.BasicCell(id, startX, startY, width, height);
 	Object.cloneData(this, basicCell);
 
-	this.sessionId = '';
+	this.sessionId = String();
 	this.progress = 0;
 	this.imageData = null;
 };

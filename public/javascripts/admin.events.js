@@ -129,7 +129,7 @@ var EVENTS =
 		var input = document.getElementById('upload-file-input');
 
 		// reset input files so that onChange event will properly work when reselecting same files
-		input.value = '';
+		input.value = String();
 	},
 
 	onUploadSceneClick: function()
