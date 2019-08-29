@@ -1,6 +1,6 @@
 (async () =>
 {
-	await new namespace.core.AsyncImporter('javascripts/api.js');
+	await new namespace.core.AsyncImporter('scripts/api.js');
 	GLOBALS.init();
 })();
 

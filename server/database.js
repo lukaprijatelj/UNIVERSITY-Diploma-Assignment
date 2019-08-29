@@ -1,7 +1,7 @@
 
 var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
-var database = require('../public/javascripts/classes/database.js');
+var database = require('../public/scripts/classes/database.js');
 
 
 var DATABASE =

@@ -20,21 +20,21 @@ var DATABASE = require('./server/database.js');
 // -----------------------------
 // import namespace-core
 // -----------------------------
-require('./public/javascripts/namespace-core/Array.js');
-require('./public/javascripts/namespace-core/Char.js');
-require('./public/javascripts/namespace-core/console.js');
-require('./public/javascripts/namespace-core/Date.js');
-require('./public/javascripts/namespace-core/Enum.js');
-require('./public/javascripts/namespace-core/Event.js');
-require('./public/javascripts/namespace-core/Exception.js');
-require('./public/javascripts/namespace-core/Function.js');
-require('./public/javascripts/namespace-core/Math.js');
-require('./public/javascripts/namespace-core/Object.js');
-require('./public/javascripts/namespace-core/Path.js');
-require('./public/javascripts/namespace-core/String.js');
-require('./public/javascripts/namespace-core/Timer.js');
-require('./public/javascripts/namespace-core/Unit.js');
-require('./public/javascripts/namespace-core/Warning.js');
+require('./public/scripts/namespace-core/Array.js');
+require('./public/scripts/namespace-core/Char.js');
+require('./public/scripts/namespace-core/console.js');
+require('./public/scripts/namespace-core/Date.js');
+require('./public/scripts/namespace-core/Enum.js');
+require('./public/scripts/namespace-core/Event.js');
+require('./public/scripts/namespace-core/Exception.js');
+require('./public/scripts/namespace-core/Function.js');
+require('./public/scripts/namespace-core/Math.js');
+require('./public/scripts/namespace-core/Object.js');
+require('./public/scripts/namespace-core/Path.js');
+require('./public/scripts/namespace-core/String.js');
+require('./public/scripts/namespace-core/Timer.js');
+require('./public/scripts/namespace-core/Unit.js');
+require('./public/scripts/namespace-core/Warning.js');
 
 
 // -----------------------------
