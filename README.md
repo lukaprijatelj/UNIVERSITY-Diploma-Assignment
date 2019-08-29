@@ -11,7 +11,7 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 	- odstarnim stare branche
 	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
-	- dodam logiko BackgroundFunction, ki bo implementirala WebWorker logiko.
+
 
 
 
