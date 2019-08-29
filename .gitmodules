@@ -7,3 +7,6 @@
 [submodule "public/externals/namespace-debug"]
 	path = public/externals/namespace-debug
 	url = https://github.com/lukaprijatelj/js-namespace-debug.git
+[submodule "public/externals/namespace-enums"]
+	path = public/externals/namespace-enums
+	url = https://github.com/lukaprijatelj/js-namespace-enums.git

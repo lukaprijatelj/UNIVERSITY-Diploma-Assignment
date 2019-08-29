@@ -11,13 +11,12 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 	- dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
 	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
 	- dodam namespace-html za ScrollViewer, Div, Button, Span, Table, Paragraph, Link in podobne stvari zato da boš lahko kot WPF declariral elemente brez da bi uporabljal HTMLElement.create() funkcije
-	- preimenujem javascripts v scripts
-	- dodam mapo externals in premaknem namespace-core v exports/namespace-core/scripts/  in dodam mapo exports/namespace-core/stylesheets/
-	- dodam mapo externals in premaknem namespace-html v exports/namespace-html/scripts/  in dodam mapo exports/namespace-html/stylesheets/
-	- dodam mapo externals in premaknem v namespace-debug, ter dodam logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
+
+	
+	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
 	- premaknem dropdown.html v svoj Dropdown.js element, ki je narejen preko document.createElement() funkcije.
-	- popravim HTMLElement.addJsClass in .hasJsClass da bo delovalo
+
 
 
 ## Demo verzija
