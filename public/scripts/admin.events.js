@@ -12,7 +12,7 @@ var EVENTS =
 		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
 		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
 
-		let sceneDropdown = HTMLElement.create(xhrCall.responseText);
+		let sceneDropdown = HTMLElement.parse(xhrCall.responseText);
 		sceneDropdown.style.top = top.toString();
 		sceneDropdown.style.left = left.toString();
 
@@ -52,7 +52,7 @@ var EVENTS =
 		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
 		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
 
-		let dropdown = HTMLElement.create(xhrCall.responseText);
+		let dropdown = HTMLElement.parse(xhrCall.responseText);
 		dropdown.style.top = top.toString();
 		dropdown.style.left = left.toString();
 

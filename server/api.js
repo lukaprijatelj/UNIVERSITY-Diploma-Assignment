@@ -1,6 +1,6 @@
 var upload = require('./upload.js');
 var DATABASE = require('./database.js');
-var options = require('../public/javascripts/options.js');
+var options = require('../public/scripts/options.js');
 
 var socketIO = require('socket.io');
 var io = socketIO.listen(SOCKETIO_PORT);

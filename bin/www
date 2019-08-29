@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-require('../public/javascripts/constants.js');
+require('../public/scripts/constants.js');
 
 var app = require('../app');
 var debug = require('debug')('client:server');

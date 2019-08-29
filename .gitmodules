@@ -1,3 +1,12 @@
-[submodule "public/javascripts/namespace-core"]
-	path = public/javascripts/namespace-core
-	url = https://github.com/lukaprijatelj/core-javascript-extensions.git
+[submodule "public/externals/namespace-core"]
+	path = public/externals/namespace-core
+	url = https://github.com/lukaprijatelj/js-namespace-core.git
+[submodule "public/externals/namespace-html"]
+	path = public/externals/namespace-html
+	url = https://github.com/lukaprijatelj/js-namespace-html.git
+[submodule "public/externals/namespace-debug"]
+	path = public/externals/namespace-debug
+	url = https://github.com/lukaprijatelj/js-namespace-debug.git
+[submodule "public/externals/namespace-enums"]
+	path = public/externals/namespace-enums
+	url = https://github.com/lukaprijatelj/js-namespace-enums.git

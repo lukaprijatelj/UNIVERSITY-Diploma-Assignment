@@ -126,7 +126,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 
 	for (let i=0; i<renderer.numOfWorkers; i++)
 	{
-		var worker = new Worker('./javascripts/ray-tracing-web-worker/WebWorker.js');
+		var worker = new Worker('./scripts/ray-tracing-web-worker/WebWorker.js');
 		worker.isRendering = false;
 		worker.postMessage({
 			type: 'init',
