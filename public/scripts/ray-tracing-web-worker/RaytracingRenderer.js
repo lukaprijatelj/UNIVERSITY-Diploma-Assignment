@@ -209,18 +209,20 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	_this.images = new Object();
 
+	var options = 
+	{
+		type: 'initScene',
+		sceneJSON: _this.sceneJSON,
+		cameraJSON: _this.cameraJSON,
+		images: _this.images,
+		materials: _this.materials
+	};
+
 	for (let i=0; i<_this.workers.length; i++)
 	{
 		var worker = _this.workers[i];
 		
-		worker.postMessage(
-		{
-			type: 'initScene',
-			sceneJSON: _this.sceneJSON,
-			cameraJSON: _this.cameraJSON,
-			images: _this.images,
-			materials: _this.materials
-		});		
+		worker.postMessage(options);		
 	}	
 
 	callback();
