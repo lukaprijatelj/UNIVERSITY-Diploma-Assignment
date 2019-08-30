@@ -155,7 +155,7 @@ var EVENTS =
 		var startRenderingButtonV = document.getElementById('render-button');
 		startRenderingButtonV.disable();
 
-		var data = {};
+		var data = new Object();
 
 		if (startRenderingButtonV.hasClass('selected'))
 		{

@@ -1,4 +1,4 @@
-var enums = {};
+var enums = new Object();
 
 enums.rendererType = new Enum(
 {

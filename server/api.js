@@ -312,7 +312,7 @@ var API =
 		// notifies that server stopped rendering service (clients must stop rendering)
 		// -----------------------------
 
-		var stopData = {};
+		var stopData = new Object();
 		socket.broadcast.emit(API.baseUrl + '/rendering/stop', stopData);
 	}
 };

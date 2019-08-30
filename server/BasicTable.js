@@ -157,7 +157,7 @@ BasicTable.prototype._readExistingTable = function()
 			return;
 		}
 
-		var obj = {};
+		var obj = new Object();
 
 		try
 		{

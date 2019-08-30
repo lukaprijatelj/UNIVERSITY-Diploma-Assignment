@@ -32,10 +32,10 @@ var RaytracingRenderer = function(canvas)
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.materials = {};
+	this.materials = new Object();
 	this.sceneJSON;
 	this.cameraJSON;
-	this.images = {};
+	this.images = new Object();
 	this._annex = 
 	{
 		mirror: 1,
@@ -155,7 +155,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 /**
  * probably to override parent functions
  */
-RaytracingRenderer.prototype.setPixelRatio = function () {};
+RaytracingRenderer.prototype.setPixelRatio = Function.empty;
 
 
 /**
@@ -167,7 +167,7 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 
 	if (!mat || mat.uuid in this.materials) return;
 
-	var props = {};
+	var props = new Object();
 
 	for ( var m in this._annex ) 
 	{
@@ -207,7 +207,7 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	_this.scene.traverse(_this.serializeObject.bind(_this));
 
-	_this.images = {};
+	_this.images = new Object();
 
 	for (let i=0; i<_this.workers.length; i++)
 	{

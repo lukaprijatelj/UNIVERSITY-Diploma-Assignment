@@ -44,7 +44,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.images;
 	this.objects;
 	this.lights = [];
-	this.cache = {};
+	this.cache = new Object();
 
 	this.loader = new THREE.ObjectLoader();
 	this.onCellRendered = onCellRendered;		
