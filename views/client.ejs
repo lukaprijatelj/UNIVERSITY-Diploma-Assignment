@@ -22,44 +22,7 @@
 		<link rel="stylesheet" href="stylesheets/client.css">
 
 		<!-- Placeholder for dynamically loading CSS files -->
-		<script type="namespace-core:css-loader"></script>
-		
-		<!-- constants -->
-		<script src="scripts/constants.js"></script>
-
-		<!-- Extension scripts -->
-		<script src="externals/namespace-core/Path.js"></script>
-		<script src="externals/namespace-core/Importer.js"></script>
-		<script src="externals/namespace-core/Function.js"></script>
-		<script src="externals/namespace-core/Array.js"></script>
-		<script src="externals/namespace-core/Date.js"></script>
-		<script src="externals/namespace-core/Enum.js"></script>
-		<script src="externals/namespace-core/Math.js"></script>
-		<script src="externals/namespace-core/String.js"></script>
-		<script src="externals/namespace-core/Object.js"></script>
-		<script src="externals/namespace-core/HTMLElement.js"></script>
-		<script src="externals/namespace-core/console.js"></script>
-		<script src="externals/namespace-core/Exception.js"></script>
-		<script src="externals/namespace-core/Warning.js"></script>
-		<script src="externals/namespace-core/Thread.js"></script>
-		<script src="externals/namespace-core/Timer.js"></script>
-		<script src="externals/namespace-core/Mouse.js"></script>
-		<script src="externals/namespace-core/Event.js"></script>
-		<script src="externals/namespace-core/Image.js"></script>
-		<script src="externals/namespace-core/RawImage.js"></script>
-		<script src="externals/namespace-core/Ajax.js"></script>
-		<script src="externals/namespace-core/Unit.js"></script>
-		<script src="externals/namespace-core/Char.js"></script>
-		<script src="externals/namespace-core/Browser.js"></script>
-
-
-		<!-- scripts -->
-		<script src="scripts/socket.io/socket.io.js"></script>	
-
-		<!-- ThreeJS -->
-		<script src="scripts/threejs/three.js"></script>
-		<script src="scripts/threejs/OrbitControls.js"></script>
-		<script src="scripts/threejs/GLTFLoader.js"></script>
+		<script type="namespace-core:css-loader"></script>	
 		
 		<!-- Path tracing scripts -->
 		<!-- <script src="scripts/path-tracing/threex.keyboardstate.js"></script>
@@ -67,15 +30,6 @@
 		<script src="scripts/path-tracing/pathTracingCommon.js"></script>
 		<script src="scripts/path-tracing/Geometry_Showcase.js"></script>		
 		<script src="scripts/path-tracing/FirstPersonCameraControls.js"></script> -->
-
-		<!-- Ray tracing scripts -->
-		<script src="scripts/ray-tracing-web-worker/RaytracingRenderer.js"></script>
-		<script src="scripts/ray-tracing-web-worker/RaytracingWorker.js"></script>
-
-		<!-- Classes scrips -->
-		<script src="scripts/classes/RawImageLoader.js"></script>
-		<script src="scripts/classes/RendererCanvas.js"></script>
-		<script src="scripts/classes/GltfLoader.js"></script>
 
 		<!-- Placeholder for dynamically loading JS files -->
 		<script type="namespace-core:js-loader"></script>
@@ -90,6 +44,7 @@
 		<!-- ----------------------------- -->
 		<!-- Start main script -->
 		<!-- ----------------------------- -->
-		<script src="scripts/client.js"></script>		
+		<script src="externals/namespace-core/Importer.js"></script>
+		<script src="scripts/client.autoloader.js"></script>
 	</body>
 </html>

@@ -20,6 +20,11 @@ var DATABASE = require('./server/database.js');
 // -----------------------------
 // import namespace-core
 // -----------------------------
+require('./public/externals/namespace-core/interfaces/IDisposable.js');
+require('./public/externals/namespace-core/interfaces/IStringify.js');
+
+require('./public/externals/namespace-core/Class.js');
+require('./public/externals/namespace-core/Interface.js');
 require('./public/externals/namespace-core/Array.js');
 require('./public/externals/namespace-core/Char.js');
 require('./public/externals/namespace-core/console.js');

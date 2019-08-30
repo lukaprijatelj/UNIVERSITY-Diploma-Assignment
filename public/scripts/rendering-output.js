@@ -1,9 +1,3 @@
-(async () =>
-{
-	await new namespace.core.AsyncImporter('scripts/api.js');
-	GLOBALS.init();
-})();
-
 var options = null;
 
 /**

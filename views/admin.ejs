@@ -23,57 +23,7 @@
 		<!-- Placeholder for dynamically loading CSS files -->
 		<script type="namespace-core:css-loader"></script>
 
-		<!-- constants -->
-		<script src="scripts/constants.js"></script>
-
-		<!-- Extension scripts -->
-		<script defer src="externals/namespace-core/Path.js"></script>
-		<script defer src="externals/namespace-core/Importer.js"></script>
-		<script defer src="externals/namespace-core/Function.js"></script>
-		<script defer src="externals/namespace-core/Array.js"></script>
-		<script defer src="externals/namespace-core/Date.js"></script>
-		<script defer src="externals/namespace-core/Enum.js"></script>
-		<script defer src="externals/namespace-core/Math.js"></script>
-		<script defer src="externals/namespace-core/String.js"></script>
-		<script defer src="externals/namespace-core/Object.js"></script>
-		<script defer src="externals/namespace-core/HTMLElement.js"></script>
-		<script defer src="externals/namespace-core/console.js"></script>
-		<script defer src="externals/namespace-core/Exception.js"></script>
-		<script defer src="externals/namespace-core/Warning.js"></script>
-		<script defer src="externals/namespace-core/Thread.js"></script>
-		<script defer src="externals/namespace-core/Timer.js"></script>
-		<script defer src="externals/namespace-core/Mouse.js"></script>
-		<script defer src="externals/namespace-core/Event.js"></script>
-		<script defer src="externals/namespace-core/Image.js"></script>
-		<script defer src="externals/namespace-core/RawImage.js"></script>
-		<script defer src="externals/namespace-core/Ajax.js"></script>
-		<script defer src="externals/namespace-core/Unit.js"></script>
-		<script defer src="externals/namespace-core/Char.js"></script>
-		<script defer src="externals/namespace-core/Browser.js"></script>
-		<script defer src="externals/namespace-core/Class.js"></script>
-		<script defer src="externals/namespace-core/Interface.js"></script>
-		<script defer src="externals/namespace-core/GarbageCollector.js"></script>
-
-		<!-- ----------------------------- -->
-		<!-- Scripts that will be loaded asynchronously -->
-		<!-- ----------------------------- -->
-		<script src="scripts/socket.io/socket.io.js"></script>
-
-
-		<!-- ThreeJS -->
-		<script src="scripts/threejs/three.js"></script>
-		<script src="scripts/threejs/OrbitControls.js"></script>
-		<script src="scripts/threejs/GLTFLoader.js"></script>
-		
-		
-		<!-- Classes scrips -->		
-		<script src="scripts/classes/RendererCanvas.js"></script>
-		<script src="scripts/classes/EditorCanvas.js"></script>
-		<script src="scripts/classes/GltfLoader.js"></script>
-		
-
 		<!-- Placeholder for dynamically loading JS files -->
-		<script src="scripts/admin.events.js"></script>
 		<script type="namespace-core:js-loader"></script>		
 	</head>
 	<body>
@@ -144,6 +94,7 @@
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded synchronously -->
 		<!-- ----------------------------- -->
-		<script src="scripts/admin.js"></script>
+		<script src="externals/namespace-core/Importer.js"></script>
+		<script src="scripts/admin.autoloader.js"></script>
 	</body>
 </html>

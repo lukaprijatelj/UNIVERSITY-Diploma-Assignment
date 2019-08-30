@@ -7,10 +7,10 @@ var EVENTS =
 		let xhrCall = await ajaxCall.send();
 		
 		let offset = button.getOffset();
-		let offsetTop = new namespace.core.Unit(offset.top);
-		let left = new namespace.core.Unit(offset.left);
-		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
-		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
+		let offsetTop = new Unit(offset.top);
+		let left = new Unit(offset.left);
+		let top = Unit.add(offsetTop, button.getOuterHeight());
+		top = Unit.add(top, new Unit('1px'));
 
 		let sceneDropdown = HTMLElement.parse(xhrCall.responseText);
 		sceneDropdown.style.top = top.toString();
@@ -47,10 +47,10 @@ var EVENTS =
 		// -----------------------------
 		
 		let offset = button.getOffset();
-		let offsetTop = new namespace.core.Unit(offset.top);
-		let left = new namespace.core.Unit(offset.left);
-		let top = namespace.core.Unit.add(offsetTop, button.getOuterHeight());
-		top = namespace.core.Unit.add(top, new namespace.core.Unit('1px'));
+		let offsetTop = new Unit(offset.top);
+		let left = new Unit(offset.left);
+		let top = Unit.add(offsetTop, button.getOuterHeight());
+		top = Unit.add(top, new Unit('1px'));
 
 		let dropdown = HTMLElement.parse(xhrCall.responseText);
 		dropdown.style.top = top.toString();

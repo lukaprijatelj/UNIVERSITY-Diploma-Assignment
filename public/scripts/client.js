@@ -1,10 +1,3 @@
-(async () =>
-{
-    await new namespace.core.AsyncImporter('scripts/enums.js');
-	await new namespace.core.AsyncImporter('scripts/api.js');	
-	GLOBALS.init();
-})();
-
 /** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
