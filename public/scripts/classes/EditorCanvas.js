@@ -31,11 +31,11 @@ EditorCanvas.prototype.resizeCanvas = function()
 		options.CANVAS_HEIGHT = height;
 	}
 	
-	if (GLOBALS.renderer)
+	if (WebPage.renderer)
 	{
-		GLOBALS.renderer.setSize(width, height);
-		GLOBALS.camera.aspect = width/height;
-		GLOBALS.camera.updateProjectionMatrix();
+		WebPage.renderer.setSize(width, height);
+		WebPage.camera.aspect = width/height;
+		WebPage.camera.updateProjectionMatrix();
 	}
 	
 	//var ctx = canvas.getContext('2d');

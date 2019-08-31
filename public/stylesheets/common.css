@@ -26,61 +26,12 @@ body
 	font-size: var(--FONT-SIZE);
 }
 
-body.busy
-{
-	cursor: wait;
-}
-
-.clickable
-{
-    cursor: pointer;
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; 
-}
-
-.no-highlight 
-{
-	-webkit-touch-callout: none; /* iOS Safari */
-	-webkit-user-select: none; /* Safari */
-	-khtml-user-select: none; /* Konqueror HTML */
-	-moz-user-select: none; /* Firefox */
-	-ms-user-select: none; /* Internet Explorer/Edge */
-	user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
-}
-
-.hidden
-{
-	opacity: 0 !important;
-	display: none !important; 
-}
-
-.visible
-{
-    display: block;
-}
 
 .center-align-block
 {
     margin-left: auto;
     margin-right: auto;
 }
-
-.disabled
-{
-	cursor: default !important;
-	pointer-events: none !important;
-}
-
-flex
-{
-	display: flex;
-}
-
-
 
 
 
@@ -138,13 +89,9 @@ divider-y-small
 button,
 checkbox-button
 {
-    cursor: pointer;
 	font-family: 'Muli', sans-serif;
 	background-color: var(--LIGHT-GRAY-COLOR);
 	border-style: solid;
-
-	/** Removes chrome's glow effect */
-	outline: none;
 
 	display: block;
 	max-width: 300px;
@@ -152,13 +99,6 @@ checkbox-button
     padding: 5px 8px;
 	font-size: var(--FONT-SIZE);
 	border-width: 1px;
-
-	-webkit-touch-callout: none;
-    -webkit-user-select: none; 
-	-khtml-user-select: none; 
-	-moz-user-select: none; 
-	-ms-user-select: none; 
-	user-select: none; 
 }
 
 button
@@ -235,33 +175,6 @@ bar-button:not(.disabled):hover
 	color: rgba(255, 255, 255, 0.7);
 	cursor: pointer;
 }
-
-
-
-
-
-/* ----------------------------- */
-/* Layer */
-/* ----------------------------- */
-
-layer
-{
-	position: static;
-	display: block;
-}
-
-layer>curtain
-{
-	background: transparent;
-	cursor: default !important;
-
-	display: block;
-	position: absolute;
-	width: 100%;
-	height: 100%;
-}
-
-
 
 
 
@@ -346,21 +259,6 @@ input.disabled
 {
 	outline: none;
 	border: none !important;
-}
-
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button 
-{ 
-	/** WebKit desktop browsers add little up down arrows to number inputs called spinners. We need to turn them off! */
-	margin: 0; 
-}
-
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button 
-{ 
-	/** WebKit desktop browsers add little up down arrows to number inputs called spinners. We need to turn them off! */
-	margin: 0; 
-	-webkit-appearance: none;
 }
 
 
@@ -450,53 +348,3 @@ curtain
 	{
 		display: block;
 	}
-
-
-
-	
-
-
-/* ----------------------------- */
-/* Responsive design */
-/* ----------------------------- */
-@media (min-width: 1024px)
-{
-    /** Wide screens */
-
-    .hidden-on-wide-screens
-    {
-        display: none !important;
-    }
-}
-
-@media (max-width: 1024px) and (min-width: 767px)
-{
-    /** Medium screens */
-    
-    .hidden-on-medium-screens
-    {
-        display: none !important;
-    }
-}
-
-@media (max-width: 767px)
-{
-	/** Small screens */
-
-	.hidden-on-small-screens
-	{
-		display: none !important;
-	}
-}
-
-
-
-/* ---------------------------------- */
-/* Retina support */
-/* ---------------------------------- */
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5),
-    only screen and (min-resolution: 1.5dppx),
-    only screen and (min-resolution: 144dpi)
-{
-
-}

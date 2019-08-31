@@ -24,17 +24,17 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		if (GLOBALS.isRendering == true)
+		if (WebPage.isRendering == true)
 		{
 			// no need to update values if rendering is enabled
 			return;
 		}
 
-		if (GLOBALS.camera && GLOBALS.camera.position)
+		if (WebPage.camera && WebPage.camera.position)
 		{		
 			var vec = new THREE.Vector3();
-			vec.copy(GLOBALS.controls.target);
-			var position = GLOBALS.camera.getWorldPosition(vec);
+			vec.copy(WebPage.controls.target);
+			var position = WebPage.camera.getWorldPosition(vec);
 
 			options.CAMERA_POSITION_X = Math.roundToTwoDecimals(position.x);
 			options.CAMERA_POSITION_Y = Math.roundToTwoDecimals(position.y);

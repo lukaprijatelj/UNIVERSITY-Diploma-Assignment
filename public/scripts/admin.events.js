@@ -93,8 +93,8 @@ var EVENTS =
 	{
 		options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
-		GLOBALS.renderer.dispose();
-		GLOBALS.openScene();
+		WebPage.renderer.dispose();
+		WebPage.openScene();
 
 		EVENTS.onDropdownsCurtainClick();
 	},
@@ -161,8 +161,8 @@ var EVENTS =
 		{
 			API.request('rendering/stop', () =>
 			{
-				GLOBALS.isRendering = false;
-				GLOBALS._updateRenderingState();
+				WebPage.isRendering = false;
+				WebPage._updateRenderingState();
 			}, data);
 		}
 		else
@@ -171,8 +171,8 @@ var EVENTS =
 
 			API.request('rendering/start', () =>
 			{
-				GLOBALS.isRendering = true;
-				GLOBALS._updateRenderingState();
+				WebPage.isRendering = true;
+				WebPage._updateRenderingState();
 			}, data);
 		}
 	},

@@ -92,7 +92,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 
 	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
 
-	GLOBALS.tryUpdatingCell(cell);
+	WebPage.tryUpdatingCell(cell);
 
 	renderer.cellsDone.push(cell);
 
@@ -105,7 +105,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	{
 		if (renderer.areWorkersDone())
 		{
-			GLOBALS.onRendererDone(renderer.cellsDone);	
+			WebPage.onRendererDone(renderer.cellsDone);	
 				
 			renderer.cellsDone = [];
 		}
@@ -277,7 +277,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 
 	var cellToRender = renderer.cellsWaiting.pop();
 
-	GLOBALS.rendererCanvas.flagRenderCell(cellToRender);
+	WebPage.rendererCanvas.flagRenderCell(cellToRender);
 
 	worker.postMessage({ type: 'setCell', cell: cellToRender });
 	

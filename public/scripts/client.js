@@ -1,3 +1,5 @@
+var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
+
 /** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
@@ -5,447 +7,445 @@
 var options = null;
 var previousOptions = null;
 
+var WebPage = new namespace.core.WebPage('Client');
+
 /**
- * Global properties.
+ * ThreeJS scene.
  */
-var GLOBALS =
+WebPage.scene = null;
+
+/**
+ * GLTF loader.
+ */
+WebPage.loader = null;
+
+/**
+ * ThreeJS camera in the scene.
+ */
+WebPage.camera = null;
+
+/**
+ * Canvas renderer.
+ */
+WebPage.renderer = null;
+
+/**
+ * Grid layout of cells that are rendered or are waiting for rendering.
+ */
+WebPage.cells = [];
+
+/**
+ * Current renderer type.
+ */
+WebPage.rendererType = null;
+
+/**
+ * Camera controls affected by mouse movement.
+ */
+WebPage.controls = null;
+
+/**
+ * Last rendered time.
+ */
+WebPage.lastRenderingTime = 0;
+
+
+/**
+ * Initializes page.
+ */
+WebPage.init = function()
 {
-	/**
-	 * ThreeJS scene.
-	 */
-	scene: null,
+	WebPage.rendererType = enums.rendererType.RAY_TRACING;
 
-	/**
-	 * GLTF loader.
-	 */
-	loader: null,
-
-	/**
-	 * ThreeJS camera in the scene.
-	 */
-	camera: null,
-
-	/**
-	 * Canvas renderer.
-	 */
-	renderer: null,
-
-	/**
-	 * Grid layout of cells that are rendered or are waiting for rendering.
-	 */
-	cells: [],
-
-	/**
-	 * Current renderer type.
-	 */
-	rendererType: null,
-
-	/**
-	 * Camera controls affected by mouse movement.
-	 */
-	controls: null,
-
-	/**
-	 * Last rendered time.
-	 */
-	lastRenderingTime: 0,
-
-
+	WebPage.rendererCanvas = new RendererCanvas();
+	WebPage.rendererCanvas.init();
 	
-	init: function()
+	WebPage.onViewLoaded();
+
+	API.init(enums.apiClientType.RENDERER);		
+	API.connect(WebPage._onServerConnected, WebPage._onServerDisconnect);
+};
+
+
+/**
+ * On server-client connection.
+ */
+WebPage._onServerConnected = function()
+{
+	console.log('[Globals] Connected to server!');
+
+	API.isConnected = true;
+
+	API.listen('cells/update', WebPage._onCellUpdate);
+	API.listen('rendering/start', WebPage._onStartRenderingService);	
+	API.listen('rendering/stop', WebPage._onStopRenderingService);	
+
+	API.request('cells/getAll', WebPage.onGetLayout);
+};	
+
+/**
+ * Server started rendering service.
+ */
+WebPage._onStartRenderingService = function(data)
+{
+	API.request('cells/getAll', WebPage.onGetLayout);
+};
+
+/**
+ * Server stopped rendering service.
+ */
+WebPage._onStopRenderingService = function(data)
+{
+	previousOptions = options;
+	options = null;
+};
+
+/**
+ * Client has disconnected from server.
+ */
+WebPage._onServerDisconnect = function()
+{
+	console.log('[Globals] Disconnected from server!');
+
+	API.isConnected = false;
+};
+
+/**
+ * Progress was updated.
+ */
+WebPage._onCellUpdate = function(data)
+{
+	var cells = data.cells;
+	
+	for (var i=0; i<cells.length; i++)
 	{
-		GLOBALS.rendererType = enums.rendererType.RAY_TRACING;
+		var current = cells[i];
 
-		GLOBALS.rendererCanvas = new RendererCanvas();
-		GLOBALS.rendererCanvas.init();
-		
-		GLOBALS.onViewLoaded();
+		WebPage.tryUpdatingCell(current);
+	}
+};
 
-		API.init(enums.apiClientType.RENDERER);		
-		API.connect(GLOBALS._onServerConnected, GLOBALS._onServerDisconnect);
-	},
+/**
+ * Starts loading GLTF model.
+ */
+WebPage.startLoadingGltfModel = function()
+{
+	console.log('[Globals] Requesting GLTF model');
 
-
-	/**
-	 * On server-client connection.
-	 */
-	_onServerConnected: function()
+	var loader = new GltfLoader();
+	loader.path = options.SCENE_FILEPATH;
+	loader.onSuccess = function(gltf) 
 	{
-		console.log('[Globals] Connected to server!');
+		console.log('[glTF loader] Scene finished loading');
 
-		API.isConnected = true;
+		WebPage.scene.add(gltf.scene);
 
-		API.listen('cells/update', GLOBALS._onCellUpdate);
-		API.listen('rendering/start', GLOBALS._onStartRenderingService);	
-		API.listen('rendering/stop', GLOBALS._onStopRenderingService);	
-
-		API.request('cells/getAll', GLOBALS.onGetLayout);
-	},	
-
-	/**
-	 * Server started rendering service.
-	 */
-	_onStartRenderingService: function(data)
-	{
-		API.request('cells/getAll', GLOBALS.onGetLayout);
-	},
-
-	/**
-	 * Server stopped rendering service.
-	 */
-	_onStopRenderingService: function(data)
-	{
-		previousOptions = options;
-		options = null;
-	},
-
-	/**
-	 * Client has disconnected from server.
-	 */
-	_onServerDisconnect: function()
-	{
-		console.log('[Globals] Disconnected from server!');
-
-		API.isConnected = false;
-	},
-
-	/**
-	 * Progress was updated.
-	 */
-	_onCellUpdate: function(data)
-	{
-		var cells = data.cells;
-		
-		for (var i=0; i<cells.length; i++)
+		gltf.animations; // Array<THREE.AnimationClip>
+		gltf.scene; // THREE.Scene
+		gltf.scenes; // Array<THREE.Scene>
+		gltf.cameras; // Array<THREE.Camera>
+		gltf.asset; // Object
+					
+		WebPage.renderer.prepareJsonData(() =>
 		{
-			var current = cells[i];
+			API.request('cells/getWaiting', WebPage.onGetWaitingCells);
+		});
+	};
+	loader.start();	
+};
 
-			GLOBALS.tryUpdatingCell(current);
-		}
-	},
+/**
+ * Initializes scene.
+ */
+WebPage._initScene = function()
+{
+	WebPage.scene = new THREE.Scene();
+};
 
-	/**
-	 * Starts loading GLTF model.
-	 */
-	startLoadingGltfModel: function()
+/**
+ * Intializes camera in the scene.
+ */
+WebPage._initCamera = function()
+{
+	console.log('[Globals] Initializing camera');
+
+	var ratio = options.RESOLUTION_WIDTH / options.RESOLUTION_HEIGHT;
+	WebPage.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+
+	WebPage.camera.position.x = options.CAMERA_POSITION_X;
+	WebPage.camera.position.y = options.CAMERA_POSITION_Y;
+	WebPage.camera.position.z = options.CAMERA_POSITION_Z;		
+};
+
+/**
+ * Initializes camera mouse controls, so that changing view is easier.
+ */
+WebPage._initCameraControls = function()
+{
+	console.log('[Globals] Initializing camera controls');
+
+	WebPage.controls = new THREE.OrbitControls(WebPage.camera);
+	WebPage.controls.enabled = false;
+};
+
+/**
+ * Initializes lights.
+ */
+WebPage._initLights = function()
+{
+	console.log('[Globals] Initializing lights');
+
+	var intensity = 70000;
+
+	// WARNING:
+	// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
+	// only Use PointLight
+
+	var light = new THREE.PointLight(0xffaa55, intensity);
+	light.position.set( - 200, 100, 100 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
+
+	var light = new THREE.PointLight(0x55aaff, intensity);
+	light.position.set( 200, 100, 100 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
+
+	var light = new THREE.PointLight(0xffffff, intensity);
+	light.position.set( 0, 0, 300 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
+};
+
+/**
+ * Initializes renderer.
+ */
+WebPage._initRenderer = function()
+{
+	console.log('[Globals] Initialize renderer of type "' + WebPage.rendererType + '"');
+
+	var renderer = null;
+	var canvas = document.getElementById('rendering-canvas');
+
+	switch(WebPage.rendererType)
 	{
-		console.log('[Globals] Requesting GLTF model');
+		case enums.rendererType.RAY_TRACING:
+			renderer = new RaytracingRenderer(canvas);
+			break;
 
-		var loader = new GltfLoader();
-		loader.path = options.SCENE_FILEPATH;
-		loader.onSuccess = function(gltf) 
-		{
-			console.log('[glTF loader] Scene finished loading');
+		case enums.rendererType.PATH_TRACING:
+			init();
+			break;
+	}	
+	
+	WebPage.renderer = renderer;
 
-			GLOBALS.scene.add(gltf.scene);
+	// -----------------------------
+	// set properties
+	// -----------------------------
+	renderer.scene = WebPage.scene;
+	renderer.camera = WebPage.camera;
+	
+	renderer.init();
+};	
 
-			gltf.animations; // Array<THREE.AnimationClip>
-			gltf.scene; // THREE.Scene
-			gltf.scenes; // Array<THREE.Scene>
-			gltf.cameras; // Array<THREE.Camera>
-			gltf.asset; // Object
-						
-			GLOBALS.renderer.prepareJsonData(() =>
-			{
-				API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
-			});
-		};
-		loader.start();	
-	},
+/**
+ * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
+ * @async
+ */
+WebPage.onGetLayout = function(data)
+{
+	console.log('[Globals] Grid layout drawn');
 
-	/**
-	 * Initializes scene.
-	 */
-	_initScene: function()
+
+	// -----------------------------
+	// update options
+	// -----------------------------
+
+	if (!data.options)
 	{
-		GLOBALS.scene = new THREE.Scene();
-	},
+		return;
+	}
 
-	/**
-	 * Intializes camera in the scene.
-	 */
-	_initCamera: function()
+	options = data.options;
+	previousOptions = options;
+
+	let browser = new namespace.core.Browser();
+	browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+
+	WebPage.rendererCanvas.resizeCanvas();
+
+
+	// -----------------------------
+	// draw layout
+	// -----------------------------
+
+	WebPage.cells = data.cells;
+	WebPage.rendererCanvas.createLayout(WebPage.cells);
+
+
+	// -----------------------------
+	// draw all already rendered cells
+	// -----------------------------
+
+	for (var i=0; i<WebPage.cells.length; i++)
 	{
-		console.log('[Globals] Initializing camera');
+		var current = WebPage.cells[i];
 
-		var ratio = options.RESOLUTION_WIDTH / options.RESOLUTION_HEIGHT;
-		GLOBALS.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+		WebPage.tryUpdatingCell(current);
+	}
+	
 
-		GLOBALS.camera.position.x = options.CAMERA_POSITION_X;
-		GLOBALS.camera.position.y = options.CAMERA_POSITION_Y;
-		GLOBALS.camera.position.z = options.CAMERA_POSITION_Z;		
-	},
-
-	/**
-	 * Initializes camera mouse controls, so that changing view is easier.
-	 */
-	_initCameraControls: function()
+	// -----------------------------
+	// check if rendering service is running on server
+	// -----------------------------
+	
+	if (!data.isRenderingServiceRunning)
 	{
-		console.log('[Globals] Initializing camera controls');
+		// nothing to render
+		return;
+	}
+	API.isRenderingServiceRunning = data.isRenderingServiceRunning;
 
-		GLOBALS.controls = new THREE.OrbitControls(GLOBALS.camera);
-		GLOBALS.controls.enabled = false;
-	},
+	WebPage.onDataLoaded();
+};
 
-	/**
-	 * Initializes lights.
-	 */
-	_initLights: function()
+/**
+ * View has done loading.
+ * Remove skeleton screens by removing 'loading' class from elements.
+ */
+WebPage.onViewLoaded = function()
+{
+	document.body.removeClass('loading');
+};
+
+/**
+ * Initial data is loaded.
+ */
+WebPage.onDataLoaded = function()
+{
+	WebPage._initScene();
+	WebPage._initCamera();
+	
+	WebPage._initLights();
+	
+	WebPage._initRenderer();
+	WebPage._initCameraControls();
+
+	WebPage.startLoadingGltfModel();
+};
+
+/**
+ * Tries to update canvas with data from this cell.
+ */
+WebPage.tryUpdatingCell = function(cell)
+{
+	if (!cell.imageData)
 	{
-		console.log('[Globals] Initializing lights');
+		return;
+	}
 
-		var intensity = 70000;
+	WebPage.rendererCanvas.updateCell(cell);
+};
 
-		// WARNING:
-		// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
-		// only Use PointLight
-
-		var light = new THREE.PointLight(0xffaa55, intensity);
-		light.position.set( - 200, 100, 100 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );
-
-		var light = new THREE.PointLight(0x55aaff, intensity);
-		light.position.set( 200, 100, 100 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );
-
-		var light = new THREE.PointLight(0xffffff, intensity);
-		light.position.set( 0, 0, 300 );
-		light.physicalAttenuation = true;
-		GLOBALS.scene.add( light );
-	},
-
-	/**
-	 * Initializes renderer.
-	 */
-	_initRenderer: function()
+/**
+ * All waiting cells are done rendering.
+ */
+WebPage.onRendererDone = function(cells)
+{
+	WebPage.lastRenderingTime = window.setTimeout(()=>
 	{
-		console.log('[Globals] Initialize renderer of type "' + GLOBALS.rendererType + '"');
-
-		var renderer = null;
-		var canvas = document.getElementById('rendering-canvas');
-
-		switch(GLOBALS.rendererType)
-		{
-			case enums.rendererType.RAY_TRACING:
-				renderer = new RaytracingRenderer(canvas);
-				break;
-
-			case enums.rendererType.PATH_TRACING:
-				init();
-				break;
-		}	
-		
-		GLOBALS.renderer = renderer;
-
-		// -----------------------------
-		// set properties
-		// -----------------------------
-		renderer.scene = GLOBALS.scene;
-		renderer.camera = GLOBALS.camera;
-		
-		renderer.init();
-	},	
-
-	/**
-	 * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
-	 * @async
-	 */
-	onGetLayout: function(data)
-	{
-		console.log('[Globals] Grid layout drawn');
-
-
-		// -----------------------------
-		// update options
-		// -----------------------------
-
-		if (!data.options)
-		{
-			return;
-		}
-
-		options = data.options;
-		previousOptions = options;
+		document.getElementById('interface').removeClass('rendering');
+		WebPage.lastRenderingTime = 0;
 
 		let browser = new namespace.core.Browser();
 		browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+	}, 1000);
 
-		GLOBALS.rendererCanvas.resizeCanvas();
-
-
-		// -----------------------------
-		// draw layout
-		// -----------------------------
-
-		GLOBALS.cells = data.cells;
-		GLOBALS.rendererCanvas.createLayout(GLOBALS.cells);
-
-
-		// -----------------------------
-		// draw all already rendered cells
-		// -----------------------------
-
-		for (var i=0; i<GLOBALS.cells.length; i++)
-		{
-			var current = GLOBALS.cells[i];
-
-			GLOBALS.tryUpdatingCell(current);
-		}
-		
-
-		// -----------------------------
-		// check if rendering service is running on server
-		// -----------------------------
-		
-		if (!data.isRenderingServiceRunning)
-		{
-			// nothing to render
-			return;
-		}
-		API.isRenderingServiceRunning = data.isRenderingServiceRunning;
-
-		GLOBALS.onDataLoaded();
-	},
-
-	/**
-	 * View has done loading.
-	 * Remove skeleton screens by removing 'loading' class from elements.
-	 */
-	onViewLoaded: function()
+	if (!API.isRenderingServiceRunning)
 	{
-		document.body.removeClass('loading');
-	},
-
-	/**
-	 * Initial data is loaded.
-	 */
-	onDataLoaded: function()
-	{
-		GLOBALS._initScene();
-		GLOBALS._initCamera();
-		
-		GLOBALS._initLights();
-		
-		GLOBALS._initRenderer();
-		GLOBALS._initCameraControls();
-
-		GLOBALS.startLoadingGltfModel();
-	},
-
-	/**
-	 * Tries to update canvas with data from this cell.
-	 */
-	tryUpdatingCell: function(cell)
-	{
-		if (!cell.imageData)
-		{
-			return;
-		}
-
-		GLOBALS.rendererCanvas.updateCell(cell);
-	},
-
-	/**
-	 * All waiting cells are done rendering.
-	 */
-	onRendererDone: function(cells)
-	{
-		GLOBALS.lastRenderingTime = window.setTimeout(()=>
-		{
-			document.getElementById('interface').removeClass('rendering');
-			GLOBALS.lastRenderingTime = 0;
-
-			let browser = new namespace.core.Browser();
-			browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
-		}, 1000);
-
-		if (!API.isRenderingServiceRunning)
-		{
-			return;
-		}
-
-		GLOBALS.updateProgressAsync(cells, 100);
-				
-		API.request('cells/getWaiting', GLOBALS.onGetWaitingCells);
-	},
-
-	/**
-	 * Cell waiting to be rendered is received.
-	 */
-	onGetWaitingCells: function(cells)
-	{
-		console.log('[Globals] Rendering cells received');
-
-		if (!cells)
-		{
-			new Exception.ValueUndefined();
-		}
-
-		if (!cells.length)
-		{
-			new Exception.ArrayEmpty();
-		}
-
-		if (GLOBALS.lastRenderingTime > 0)
-		{
-			window.clearTimeout(GLOBALS.lastRenderingTime);
-		}
-
-		var cellsWaiting = [];
-
-		for (let i=0; i<GLOBALS.cells.length; i++)
-		{
-			let current = GLOBALS.cells[i];
-
-			for (let j=0; j<cells.length; j++)
-			{
-				let waitingCurrent = cells[j];
-
-				if (current._id != waitingCurrent._id)
-				{
-					continue;
-				}
-
-				cellsWaiting.push(current);
-			}
-		}
-
-		// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
-		// heavy duty operation
-		GLOBALS.startRendering(cellsWaiting);
-	},
-
-	/**
-	 * Starts rendering.
-	 */
-	startRendering: function(cellsWaiting)
-	{
-		document.getElementById('interface').addClass('rendering');
-
-		let browser = new namespace.core.Browser();
-		browser.setTitle('Rendering (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
-
-		if (GLOBALS.rendererType == enums.rendererType.RAY_TRACING)
-		{
-			// start rendering
-			GLOBALS.renderer.render(cellsWaiting);
-		}
-	},
-
-	/**
-	 * Notifies server how much has client already rendered.
-	 * @async
-	 */
-	updateProgressAsync: function(cells, progress)
-	{
-		var data = 
-		{
-			cells: cells,
-			progress: progress
-		};
-
-		API.request('cells/update', undefined, data);
+		return;
 	}
+
+	WebPage.updateProgressAsync(cells, 100);
+			
+	API.request('cells/getWaiting', WebPage.onGetWaitingCells);
+};
+
+/**
+ * Cell waiting to be rendered is received.
+ */
+WebPage.onGetWaitingCells = function(cells)
+{
+	console.log('[Globals] Rendering cells received');
+
+	if (!cells)
+	{
+		new Exception.ValueUndefined();
+	}
+
+	if (!cells.length)
+	{
+		new Exception.ArrayEmpty();
+	}
+
+	if (WebPage.lastRenderingTime > 0)
+	{
+		window.clearTimeout(WebPage.lastRenderingTime);
+	}
+
+	var cellsWaiting = [];
+
+	for (let i=0; i<WebPage.cells.length; i++)
+	{
+		let current = WebPage.cells[i];
+
+		for (let j=0; j<cells.length; j++)
+		{
+			let waitingCurrent = cells[j];
+
+			if (current._id != waitingCurrent._id)
+			{
+				continue;
+			}
+
+			cellsWaiting.push(current);
+		}
+	}
+
+	// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
+	// heavy duty operation
+	WebPage.startRendering(cellsWaiting);
+};
+
+/**
+ * Starts rendering.
+ */
+WebPage.startRendering = function(cellsWaiting)
+{
+	document.getElementById('interface').addClass('rendering');
+
+	let browser = new namespace.core.Browser();
+	browser.setTitle('Rendering (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+
+	if (WebPage.rendererType == enums.rendererType.RAY_TRACING)
+	{
+		// start rendering
+		WebPage.renderer.render(cellsWaiting);
+	}
+};
+
+/**
+ * Notifies server how much has client already rendered.
+ * @async
+ */
+WebPage.updateProgressAsync = function(cells, progress)
+{
+	var data = 
+	{
+		cells: cells,
+		progress: progress
+	};
+
+	API.request('cells/update', undefined, data);
 };
