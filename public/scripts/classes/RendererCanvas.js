@@ -14,7 +14,7 @@ RendererCanvas.prototype.resizeCanvas = function()
 {
 	var gridLayout = this;
 
-	/*var interfaceV = document.getElementById('interface');
+	/*var interfaceV = document.querySelector('interface');
 	var width = interfaceV.clientWidth;  
 	var height = interfaceV.clientHeight; */
 

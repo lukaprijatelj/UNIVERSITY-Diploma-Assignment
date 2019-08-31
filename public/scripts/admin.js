@@ -260,7 +260,7 @@ WebPage._updateRenderingState = function()
 
 	if (WebPage.isRendering == true)
 	{
-		var interfaceV = document.getElementById('interface');
+		var interfaceV = document.querySelector('interface');
 		interfaceV.addClass('rendering');
 
 		var canvasV = document.getElementById('editor-canvas');
@@ -285,7 +285,7 @@ WebPage._updateRenderingState = function()
 	}
 	else
 	{
-		var interfaceV = document.getElementById('interface');
+		var interfaceV = document.querySelector('interface');
 		interfaceV.removeClass('rendering');
 
 		var canvasV = document.getElementById('editor-canvas');
@@ -320,5 +320,5 @@ WebPage.onLoaded = function()
 	// remove .loading flag
 	// -----------------------------
 
-	document.getElementById('interface').removeClass('loading');
+	document.querySelector('interface').removeClass('loading');
 };

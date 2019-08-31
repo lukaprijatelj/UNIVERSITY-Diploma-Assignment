@@ -355,7 +355,7 @@ WebPage.onRendererDone = function(cells)
 {
 	WebPage.lastRenderingTime = window.setTimeout(()=>
 	{
-		document.getElementById('interface').removeClass('rendering');
+		document.querySelector('interface').removeClass('rendering');
 		WebPage.lastRenderingTime = 0;
 
 		let browser = new namespace.core.Browser();
@@ -423,7 +423,7 @@ WebPage.onGetWaitingCells = function(cells)
  */
 WebPage.startRendering = function(cellsWaiting)
 {
-	document.getElementById('interface').addClass('rendering');
+	document.querySelector('interface').addClass('rendering');
 
 	let browser = new namespace.core.Browser();
 	browser.setTitle('Rendering (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');

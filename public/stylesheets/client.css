@@ -1,7 +1,7 @@
 /* ----------------------------- */
 /* Interface */
 /* ----------------------------- */
-#interface
+interface
 {
     position: absolute;
 }

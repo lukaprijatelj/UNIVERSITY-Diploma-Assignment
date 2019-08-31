@@ -326,13 +326,13 @@ curtain
 /* ----------------------------- */
 /* interface */
 /* ----------------------------- */
-#interface
+interface
 {
 	--BORDER-WIDTH: 1px;
 
 	border-width: var(--BORDER-WIDTH);
 }
-	#interface.rendering .hide-on-rendering
+	interface.rendering .hide-on-rendering
 	{
 		display: none;
 	}
@@ -344,7 +344,7 @@ curtain
 	left: 0px;
 }
 
-	#interface.rendering curtain
+	interface.rendering curtain
 	{
 		display: block;
 	}

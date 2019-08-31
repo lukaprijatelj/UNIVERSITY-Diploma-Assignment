@@ -19,7 +19,7 @@ EditorCanvas.prototype.resizeCanvas = function()
 {
 	var editorCanvas = this;
 
-	var interfaceV = document.getElementById('interface');
+	var interfaceV = document.querySelector('interface');
 	var width = interfaceV.clientWidth;  
 	var height = interfaceV.clientHeight; 
 

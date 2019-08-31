@@ -61,7 +61,7 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Timer.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Unit.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Version.js"));
-	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/WebPage.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/WebPage.js"));
 	await Promise.all(loadingBlock);
 
 

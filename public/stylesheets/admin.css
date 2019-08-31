@@ -10,7 +10,7 @@ body
 /* ----------------------------- */
 /* Interface */
 /* ----------------------------- */
-#interface
+interface
 {
 	border-style: solid;
 	border-color: var(--EDITOR-POPUP-BACKGROUND);
@@ -20,7 +20,7 @@ body
     height: calc(100% - var(--BORDER-WIDTH) * 2);
 }
 
-#interface.rendering
+interface.rendering
 {
 	border-color: var(--LIGHT-RED-COLOR);
 }

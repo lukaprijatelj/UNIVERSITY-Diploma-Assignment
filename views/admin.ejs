@@ -35,7 +35,7 @@
 		</form> 
 
 		<!-- Interface -->
-		<div id="interface" class="loading">
+		<interface class="loading">
 
 			<!-- Canvas for displaying preview -->
 			<canvas id="editor-canvas" class=""></canvas>
@@ -67,7 +67,7 @@
 				</div>				
 			</debug>
 
-			<layer id="bars">
+			<layer-resizable id="bars">
 				<flex id="top-bar">
 					<bar-button id="scene-button" class="" onclick="EVENTS._onSceneButtonClick(this)">SCENE</bar-button>
 					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
@@ -76,7 +76,7 @@
 					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick()">NEW RENDERER</bar-button>
 					<div style="flex-grow: 2;"></div>
 				</flex>
-			</layer>
+			</layer-resizable>
 			
 			<layer id="dropdowns" class="hidden">
 				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
@@ -90,7 +90,7 @@
 					<wrapper_></wrapper_>
 				</div>
 			</layer>			
-		</div>		
+		</interface>		
 
 		<!-- ----------------------------- -->
 		<!-- Scripts that will be loaded synchronously -->

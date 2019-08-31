@@ -2,7 +2,7 @@ var DEBUG =
 {
 	timer: new namespace.core.Timer(1000),
 
-	interface: document.getElementById('interface'),
+	interface: document.querySelector('interface'),
 
 	mouse: document.querySelector('#mouse-position .value'),
 
