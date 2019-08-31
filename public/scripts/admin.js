@@ -6,7 +6,7 @@ var WebPage = new namespace.core.WebPage('Admin');
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-WebPage.cells = [];
+WebPage.cells = new List();
 
 /**
  * Socket io instance.

@@ -25,6 +25,8 @@ require('./public/externals/namespace-core/interfaces/IStringify.js');
 
 require('./public/externals/namespace-core/Class.js');
 require('./public/externals/namespace-core/Interface.js');
+require('./public/externals/namespace-core/List.js');
+require('./public/externals/namespace-core/StaticArray.js');
 require('./public/externals/namespace-core/Array.js');
 require('./public/externals/namespace-core/Char.js');
 require('./public/externals/namespace-core/console.js');

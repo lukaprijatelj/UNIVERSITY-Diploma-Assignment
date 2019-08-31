@@ -32,7 +32,7 @@ WebPage.renderer = null;
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-WebPage.cells = [];
+WebPage.cells = new List();
 
 /**
  * Current renderer type.
@@ -394,7 +394,7 @@ WebPage.onGetWaitingCells = function(cells)
 		window.clearTimeout(WebPage.lastRenderingTime);
 	}
 
-	var cellsWaiting = [];
+	var cellsWaiting = new List();
 
 	for (let i=0; i<WebPage.cells.length; i++)
 	{

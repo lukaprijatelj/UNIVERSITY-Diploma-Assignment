@@ -93,7 +93,8 @@ var EVENTS =
 	{
 		options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
-		WebPage.renderer.dispose();
+		GarbageCollector.dispose(WebPage.renderer);
+		
 		WebPage.openScene();
 
 		EVENTS.onDropdownsCurtainClick();

@@ -34,6 +34,8 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Mouse.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Keyboard.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/GarbageCollector.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/List.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/StaticArray.js"));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();

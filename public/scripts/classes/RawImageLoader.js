@@ -3,7 +3,7 @@ function RawImage(url)
 	this.url = url;
 	this.width = null;
 	this.height = null;
-	this.pixels = [];
+	this.pixels = new List();
 }
 
 function RawImageLoader()

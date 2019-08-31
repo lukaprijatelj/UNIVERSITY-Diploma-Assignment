@@ -19,15 +19,15 @@ var RaytracingRenderer = function(canvas)
 	/**
 	 * Cells that will be rendered.
 	 */
-	this.cellsWaiting = [];
+	this.cellsWaiting = new List();
 	
 	/**
 	 * Cells that are done rendering.
 	 */
-	this.cellsDone = [];
+	this.cellsDone = new List();
 
-	this.workers = [];
 	this.numOfWorkers = 1;
+	this.workers = new StaticArray(this.numOfWorkers);
 
 	/**
 	 * Additional properties that were not serialize automatically
@@ -107,7 +107,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 		{
 			WebPage.onRendererDone(renderer.cellsDone);	
 				
-			renderer.cellsDone = [];
+			renderer.cellsDone = new List();
 		}
 	}
 	else

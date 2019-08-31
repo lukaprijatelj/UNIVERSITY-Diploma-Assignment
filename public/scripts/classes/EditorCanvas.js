@@ -1,7 +1,9 @@
 function EditorCanvas()
 {
+	Interface.inherit(this, IDisposable);
 	this.canvasV = document.getElementById('editor-canvas');
 }
+Interface.inheritPrototype(EditorCanvas, IDisposable);
 
 EditorCanvas.prototype.init = function()
 {

@@ -1,23 +1,14 @@
 function RendererCanvas()
 {
+	Interface.inherit(this, IDisposable);
 	this.canvasV = document.getElementById('rendering-canvas');
 };
-
+Interface.inheritPrototype(RendererCanvas, IDisposable);
 
 RendererCanvas.prototype.init = function()
 {
 	var gridLayout = this;
 };
-
-
-RendererCanvas.prototype.dispose = function()
-{
-	var _this = this;
-
-	// always call at the end of the function
-    GarbageCollector.dispose(_this);
-};
-
 
 RendererCanvas.prototype.resizeCanvas = function()
 {

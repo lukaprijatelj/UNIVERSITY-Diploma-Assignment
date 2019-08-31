@@ -43,7 +43,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.scene;
 	this.images;
 	this.objects;
-	this.lights = [];
+	this.lights = new List();
 	this.cache = new Object();
 
 	this.loader = new THREE.ObjectLoader();
@@ -219,7 +219,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	var tmpVec = new THREE.Vector3();
 
-	var tmpColor = [];
+	var tmpColor = new List();
 
 	for ( var i = 0; i < this.maxRecursionDepth; i ++ ) 
 	{
