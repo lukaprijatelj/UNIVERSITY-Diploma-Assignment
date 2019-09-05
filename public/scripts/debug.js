@@ -43,7 +43,7 @@ var DEBUG =
 		
 		let mouse = new namespace.core.Mouse();
 
-		DEBUG.mouse.innerHTML = '(' + mouse.getPositionX() + ' x ' + Math.roundToTwoDecimals(mouse.getPositionY()) + ')';
+		DEBUG.mouse.innerHTML = '(' + mouse.getPositionX() + ' x ' + mouse.getPositionY() + ')';
 		DEBUG.canvas.innerHTML = '(' + DEBUG.interface.clientWidth + ' x ' + DEBUG.interface.clientHeight + ')';
 	}	
 };

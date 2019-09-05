@@ -50,7 +50,6 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Enum.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Function.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/HTMLElement.js"));
-	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Image.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/LoadingCounter.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Math.js"));  
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Object.js"));

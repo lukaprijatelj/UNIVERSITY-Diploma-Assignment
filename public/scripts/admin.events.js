@@ -6,9 +6,8 @@ var EVENTS =
 		ajaxCall.method = 'GET';
 		let xhrCall = await ajaxCall.send();
 		
-		let offset = button.getOffset();
-		let offsetTop = new Unit(offset.top);
-		let left = new Unit(offset.left);
+		let offsetTop = button.getTop();
+		let left = button.getLeft();
 		let top = Unit.add(offsetTop, button.getOuterHeight());
 		top = Unit.add(top, new Unit('1px'));
 
@@ -46,9 +45,8 @@ var EVENTS =
 		// calculate position of the dropdown
 		// -----------------------------
 		
-		let offset = button.getOffset();
-		let offsetTop = new Unit(offset.top);
-		let left = new Unit(offset.left);
+		let offsetTop = button.getTop();
+		let left = button.getLeft();
 		let top = Unit.add(offsetTop, button.getOuterHeight());
 		top = Unit.add(top, new Unit('1px'));
 
@@ -111,7 +109,8 @@ var EVENTS =
 		var form = document.getElementById("scene-upload-form");
 		var formData = new FormData(form);
 
-		var ajaxCall = new namespace.core.Ajax('/api/uploadScene');		
+		var ajaxCall = new namespace.core.Ajax('/api/uploadScene');	
+		ajaxCall.skipJsonStringify = true;	
 		await ajaxCall.send(formData);
 
 		EVENTS.onFileUploadDone();
