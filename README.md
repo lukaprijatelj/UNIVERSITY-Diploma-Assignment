@@ -11,7 +11,30 @@ Run VS code debugger and go to browser and type "http://localhost:30000/"
 	- odstarnim stare branche
 	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
-
+	- spremenim namespace.html.Anchor, da bodo elementi imeli <div class="has-anchor">, ki doda "before" in "after" keyworde:
+		span.quoted {
+			font-family: Georgia;
+			font-size: 16px;
+			display: block;
+			margin: 14px 0 0 0;
+			font-style: italic;
+		}
+		span.quoted:before {
+			content: "“";
+			font-size: 40px;
+			color: #999;
+			line-height: 0;
+			display: inline-block;
+			margin: 0 6px 0 0;
+		}
+		span.quoted:after {
+			content: " ”";
+			font-size: 40px;
+			color: #999;
+			line-height: 0;
+			display: inline-block;
+			margin: 0 0 0 4px;
+		}
 
 
 
