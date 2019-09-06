@@ -348,3 +348,14 @@ interface
 	{
 		display: block;
 	}
+
+
+layer#dropdowns
+{
+	background-color: rgba(0,0,0,0.5);
+}
+
+layer#dropdowns[num-of-children="0"]
+{
+	display: none !important;
+}

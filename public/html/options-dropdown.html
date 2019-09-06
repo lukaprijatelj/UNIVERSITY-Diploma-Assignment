@@ -1,42 +1,40 @@
-<dropdown id="options-dropdown">	
-	<wrapper_>
-		<!-- Info about camera position -->
-		<section>
-			<label>CAMERA POSITIONS (x, y, z)</label>
-			<divider-x-small></divider-x-small>
-			<flex>
-				<input type="number" id="camera-x-input" class="disabled">
-				<divider-y-small></divider-y-small>
-				<input type="number" id="camera-y-input" class="disabled">
-				<divider-y-small></divider-y-small>
-				<input type="number" id="camera-z-input" class="disabled">
-			</flex>				
-		</section>
-		<divider-x-small></divider-x-small>	
+<wrapper_>
+	<!-- Info about camera position -->
+	<section>
+		<label>CAMERA POSITIONS (x, y, z)</label>
 		<divider-x-small></divider-x-small>
+		<flex>
+			<input type="number" id="camera-x-input" class="disabled">
+			<divider-y-small></divider-y-small>
+			<input type="number" id="camera-y-input" class="disabled">
+			<divider-y-small></divider-y-small>
+			<input type="number" id="camera-z-input" class="disabled">
+		</flex>				
+	</section>
+	<divider-x-small></divider-x-small>	
+	<divider-x-small></divider-x-small>
 
-		<!-- Resolution width and height inputs -->
-		<section>
-			<label>RESOLUTION (width, height)</label>
-			<divider-x-small></divider-x-small>
-			<flex>
-				<input type="number" id="resolution-width-input" class="" onchange="EVENTS._onResolutionWidthChange(this.value)">
-				<divider-y-small></divider-y-small>
-				<input type="number" id="resolution-height-input" class="" onchange="EVENTS._onResolutionHeightChange(this.value)">
-			</flex>
-		</section>
+	<!-- Resolution width and height inputs -->
+	<section>
+		<label>RESOLUTION (width, height)</label>
 		<divider-x-small></divider-x-small>
-		<divider-x-small></divider-x-small>
+		<flex>
+			<input type="number" id="resolution-width-input" class="" onchange="EVENTS._onResolutionWidthChange(this.value)">
+			<divider-y-small></divider-y-small>
+			<input type="number" id="resolution-height-input" class="" onchange="EVENTS._onResolutionHeightChange(this.value)">
+		</flex>
+	</section>
+	<divider-x-small></divider-x-small>
+	<divider-x-small></divider-x-small>
 
-		<!-- Block width and height inputs -->
-		<section>
-			<label>BLOCK SIZE (width, height)</label>
-			<divider-x-small></divider-x-small>
-			<flex>
-				<input type="number" id="block-width-input" class="" onchange="EVENTS._onBlockWidthChange(this.value)">
-				<divider-y-small></divider-y-small>
-				<input type="number" id="block-height-input" class=""  onchange="EVENTS._onBlockHeightChange(this.value)">
-			</flex>
-		</section>
-	</wrapper_>	
-</dropdown>
+	<!-- Block width and height inputs -->
+	<section>
+		<label>BLOCK SIZE (width, height)</label>
+		<divider-x-small></divider-x-small>
+		<flex>
+			<input type="number" id="block-width-input" class="" onchange="EVENTS._onBlockWidthChange(this.value)">
+			<divider-y-small></divider-y-small>
+			<input type="number" id="block-height-input" class=""  onchange="EVENTS._onBlockHeightChange(this.value)">
+		</flex>
+	</section>
+</wrapper_>

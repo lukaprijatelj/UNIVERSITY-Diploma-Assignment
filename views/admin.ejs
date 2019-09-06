@@ -71,17 +71,14 @@
 				<flex id="top-bar">
 					<bar-button id="scene-button" class="" onclick="EVENTS._onSceneButtonClick(this)">SCENE</bar-button>
 					<bar-button id="options-button" class="" onclick="EVENTS._onOptionsButtonClick(this)">OPTIONS</bar-button>
-					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick()">ENABLE RENDERING</bar-button>
+					<bar-button id="render-button" onclick="EVENTS._onStartStopRenderingClick(event)">ENABLE RENDERING</bar-button>
 					<!-- <bar-button id="output-button" class="hidden" onclick="EVENTS._onOpenOutputClick()">OPEN OUTPUT</bar-button> -->
-					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick()">NEW RENDERER</bar-button>
+					<bar-button id="new-renderer-button" class="hidden" onclick="EVENTS._onNewRendererClick(event)">NEW RENDERER</bar-button>
 					<div style="flex-grow: 2;"></div>
 				</flex>
 			</layer-resizable>
 			
-			<layer id="dropdowns" class="hidden">
-				<curtain onclick="EVENTS.onDropdownsCurtainClick()"></curtain>
-				<list></list>
-			</layer>
+			<layer id="dropdowns" class="hidden" js-class="" num-of-children="" onclick="EVENTS.onDropdownsCurtainClick(event)"></layer>
 			
 			<!-- Loading layer must always be on the top of all other layers -->
 			<layer id="loading" class="hidden">

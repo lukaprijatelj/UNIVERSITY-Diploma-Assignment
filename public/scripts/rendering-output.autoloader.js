@@ -49,7 +49,6 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Date.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Enum.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Function.js"));
-	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/HTMLElement.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/LoadingCounter.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Math.js"));  
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Object.js"));
@@ -99,6 +98,7 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/TextArea.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/TextInput.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Video.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/HTMLElement.js"));
 	await Promise.all(loadingBlock);
 
 	

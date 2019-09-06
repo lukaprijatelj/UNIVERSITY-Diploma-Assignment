@@ -49,7 +49,6 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Date.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Enum.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Function.js"));
-	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/HTMLElement.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/LoadingCounter.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Math.js"));  
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-core/Object.js"));
@@ -79,8 +78,10 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Anchor.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Button.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Canvas.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Curtain.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Checkbox.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Div.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/EmbeddedObject.js"));
@@ -99,6 +100,7 @@
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/TextArea.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/TextInput.js"));
 	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/Video.js"));
+	loadingBlock.push(new namespace.core.AsyncImporter("externals/namespace-html/HTMLElement.js"));
 	await Promise.all(loadingBlock);
 
 	
@@ -126,6 +128,7 @@
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/EditorCanvas.js'));
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/GltfLoader.js'));
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/RawImageLoader.js'));
+	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/Dropdown.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();

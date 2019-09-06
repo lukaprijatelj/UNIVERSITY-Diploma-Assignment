@@ -15,10 +15,12 @@ var EVENTS =
 		sceneDropdown.style.top = top.toString();
 		sceneDropdown.style.left = left.toString();
 
-		let list = document.querySelector('layer#dropdowns>list');
-		list.appendChild(sceneDropdown);
-
+		let curtain = new namespace.html.Curtain();
+		curtain.onClick(EVENTS.hideLastDropdown);
+		
 		let layer = document.querySelector('layer#dropdowns');
+		layer.appendChild(curtain);
+		layer.appendChild(sceneDropdown);
 		layer.show();
 	},
 
@@ -45,45 +47,47 @@ var EVENTS =
 		// calculate position of the dropdown
 		// -----------------------------
 		
-		let offsetTop = button.getTop();
-		let left = button.getLeft();
-		let top = Unit.add(offsetTop, button.getOuterHeight());
-		top = Unit.add(top, new Unit('1px'));
-
-		let dropdown = HTMLElement.parse(xhrCall.responseText);
-		dropdown.style.top = top.toString();
-		dropdown.style.left = left.toString();
-
-		let list = document.querySelector('layer#dropdowns>list');
-		list.appendChild(dropdown);
-
-
+		let dropdown = new namespace.html.Dropdown();
+		dropdown.setAttribute('id', 'options-dropdown');
+		dropdown.appendChild(xhrCall.responseText);
+		
 		// -----------------------------
 		// set default values
 		// -----------------------------
 
-		document.getElementById('camera-x-input').value = options.CAMERA_POSITION_X;
-		document.getElementById('camera-y-input').value = options.CAMERA_POSITION_Y;
-		document.getElementById('camera-z-input').value = options.CAMERA_POSITION_Z;
+		dropdown.querySelector('#camera-x-input').value = options.CAMERA_POSITION_X;
+		dropdown.querySelector('#camera-y-input').value = options.CAMERA_POSITION_Y;
+		dropdown.querySelector('#camera-z-input').value = options.CAMERA_POSITION_Z;
 
-		var resolutionWidthInput = document.getElementById('resolution-width-input');
+		var resolutionWidthInput = dropdown.querySelector('#resolution-width-input');
 		resolutionWidthInput.value = options.RESOLUTION_WIDTH;
 
-		var resolutionHeightInput = document.getElementById('resolution-height-input');
+		var resolutionHeightInput = dropdown.querySelector('#resolution-height-input');
 		resolutionHeightInput.value = options.RESOLUTION_HEIGHT;
 
-		var blockWidthV = document.getElementById('block-width-input');
+		var blockWidthV = dropdown.querySelector('#block-width-input');
 		blockWidthV.value = options.BLOCK_WIDTH;
 
-		var blockHeightV = document.getElementById('block-height-input');
+		var blockHeightV = dropdown.querySelector('#block-height-input');
 		blockHeightV.value = options.BLOCK_HEIGHT;
 
+
+		let anchor = new namespace.html.Anchor(dropdown);
+		anchor.setTarget(button);
+
+		let top = Unit.add(button.getOuterHeight(), new Unit('1px'));
+		anchor.setCenter(top, new Unit());
 
 		// -----------------------------
 		// show dropdown
 		// -----------------------------
 
+		let curtain = new namespace.html.Curtain();
+		curtain.onClick(EVENTS.hideLastDropdown);
+
 		let layer = document.querySelector('layer#dropdowns');
+		layer.appendChild(curtain);
+		layer.appendChild(dropdown);
 		layer.show();
 	},
 
@@ -137,13 +141,29 @@ var EVENTS =
 		document.getElementById('upload-file-input').click();
 	},
 
-	onDropdownsCurtainClick: function()
+	onDropdownsCurtainClick: function(event)
 	{
-		let list = document.querySelector('layer#dropdowns>list');
-		list.empty();
+		let mouse = new namespace.core.Mouse(event);
+		let list = document.querySelector('layer#dropdowns');
+		
+		if (mouse.isTarget(list) == false)
+		{
+			return;
+		}
 
-		let layer = document.querySelector('layer#dropdowns');
-		layer.hide();
+		list.empty();
+	},
+
+	/**
+	 * Hides popups layer.
+	 */
+	hideLastDropdown: function()
+	{
+		let popup = document.querySelector('layer#dropdowns > *:last-child');
+
+		// removes curtain
+		popup.previousSibling.remove();
+		popup.remove();
 	},
 
 	/**
