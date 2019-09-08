@@ -151,6 +151,23 @@ WebPage.startLoadingGltfModel = function(path)
 WebPage._initScene = function()
 {
 	WebPage.scene = new THREE.Scene();
+	/*WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/sor_lake1/').load([
+		'posX.png',
+		'negX.png',
+		'posY.png',
+		'negY.png',
+		'posZ.png',
+		'negZ.png'
+	]);*/
+
+	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
+		'posX.jpg',
+		'negX.jpg',
+		'posY.jpg',
+		'negY.jpg',
+		'posZ.jpg',
+		'negZ.jpg'
+	]);
 };
 
 /**
@@ -160,8 +177,14 @@ WebPage._initCamera = function()
 {
 	console.log('[Globals] Initializing camera');
 
-	var ratio = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
-	WebPage.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+	const fov = 75;
+	const aspect = 2;  // the canvas default
+	const near = 0.1;
+	const far = 100;
+	WebPage.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+	/*var ratio = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
+	WebPage.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);*/
 
 	WebPage.camera.position.x = options.CAMERA_POSITION_X;
 	WebPage.camera.position.y = options.CAMERA_POSITION_Y;
@@ -185,8 +208,25 @@ WebPage._initLights = function()
 {
 	console.log('[Globals] Initializing lights');
 
-	var light = new THREE.AmbientLight(0x404040, 7);
-	WebPage.scene.add(light);
+	/*var light = new THREE.AmbientLight(0x404040, 7);
+	WebPage.scene.add(light);*/
+
+	var intensity = 1;
+
+	var light = new THREE.PointLight(0xffaa55, intensity);
+	light.position.set( - 200, 100, 100 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
+
+	var light = new THREE.PointLight(0x55aaff, intensity);
+	light.position.set( 200, -100, 100 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
+
+	var light = new THREE.PointLight(0xffffff, intensity);
+	light.position.set( 0, 0, -300 );
+	light.physicalAttenuation = true;
+	WebPage.scene.add( light );
 };
 
 /**

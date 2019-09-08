@@ -1,6 +1,7 @@
 importScripts('../constants.js');
 importScripts('../../externals/namespace-core/console.js');
 
+
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
 

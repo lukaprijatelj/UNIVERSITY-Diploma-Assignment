@@ -19,12 +19,12 @@ var RaytracingRenderer = function(canvas)
 	/**
 	 * Cells that will be rendered.
 	 */
-	this.cellsWaiting = new List();
+	this.cellsWaiting = new Array();
 	
 	/**
 	 * Cells that are done rendering.
 	 */
-	this.cellsDone = new List();
+	this.cellsDone = new Array();
 
 	this.numOfWorkers = 1;
 	this.workers = new StaticArray(this.numOfWorkers);
@@ -107,7 +107,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 		{
 			WebPage.onRendererDone(renderer.cellsDone);	
 				
-			renderer.cellsDone = new List();
+			renderer.cellsDone = new Array();
 		}
 	}
 	else
@@ -147,7 +147,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 			renderer.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
 		};
 	
-		renderer.workers.push(worker);
+		renderer.workers[i] = worker;
 	}
 };
 
@@ -226,27 +226,6 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 	}	
 
 	callback();
-
-	/*GltfLoader.loadTextures(_this.sceneJSON.images, _this.images, () =>
-	{
-		console.log('[GltfLoader] Textures loaded');
-
-		for (let i=0; i<_this.workers.length; i++)
-		{
-			var worker = _this.workers[i];
-			
-			worker.postMessage(
-			{
-				type: 'initScene',
-				sceneJSON: _this.sceneJSON,
-				cameraJSON: _this.cameraJSON,
-				images: _this.images,
-				materials: _this.materials
-			});		
-		}	
-
-		callback();
-	});*/
 };
 
 

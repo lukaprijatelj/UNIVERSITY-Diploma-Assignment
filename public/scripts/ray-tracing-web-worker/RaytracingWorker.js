@@ -43,7 +43,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.scene;
 	this.images;
 	this.objects;
-	this.lights = new List();
+	this.lights = new Array();
 	this.cache = new Object();
 
 	this.loader = new THREE.ObjectLoader();
@@ -219,7 +219,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	var tmpVec = new THREE.Vector3();
 
-	var tmpColor = new List();
+	var tmpColor = new Array();
 
 	for ( var i = 0; i < this.maxRecursionDepth; i ++ ) 
 	{
@@ -238,6 +238,102 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	{
 		// ray didn't find anything
 		// (here should come setting of background color?)
+
+		let skyMap;
+		let pixelColor;
+		let posU;
+		let posV;
+
+		if(Math.abs(rayDirection.x)>Math.abs(rayDirection.y))
+		{
+			if(Math.abs(rayDirection.x)>Math.abs(rayDirection.z))
+			{
+				// x is dominant axis.
+				if(rayDirection.x<0)
+				{
+					// -X is dominant axis -> left face
+					skyMap = this.scene.background.rawImage[0];
+
+					posU = rayDirection.z/(rayDirection.x);
+ 					posV = -rayDirection.y/(-rayDirection.x);
+				}
+				else
+				{
+					// +X is dominant axis -> right face
+					skyMap = this.scene.background.rawImage[1];
+
+					posU = rayDirection.z/(rayDirection.x);
+ 					posV = -rayDirection.y/(rayDirection.x);
+				}				
+			}
+			else
+			{
+				// z is dominant axis.
+				if(rayDirection.z<0)
+				{
+					// -Z is dominant axis -> left face
+					skyMap = this.scene.background.rawImage[5];
+
+					posU = rayDirection.x/(-rayDirection.z);
+ 					posV = -rayDirection.y/(-rayDirection.z);
+				}
+				else
+				{
+					// +Z is dominant axis -> right face
+					skyMap = this.scene.background.rawImage[4];
+
+					posU = -rayDirection.x/(rayDirection.z);
+ 					posV = -rayDirection.y/(rayDirection.z);
+				}
+			}
+		}
+		else if(Math.abs(rayDirection.y)>Math.abs(rayDirection.z))
+		{
+			// y is dominant axis.
+			if(rayDirection.y<0)
+			{
+				// -Y is dominant axis -> left face
+				skyMap = this.scene.background.rawImage[3];
+
+				posU = rayDirection.x/(rayDirection.y);
+				posV = -rayDirection.z/(-rayDirection.y);
+			}
+			else
+			{
+				// +Y is dominant axis -> right face
+				skyMap = this.scene.background.rawImage[2];
+
+				posU = -rayDirection.x/(rayDirection.y);
+				posV = rayDirection.z/(rayDirection.y);
+			}
+		}
+		else
+		{
+			// z is dominant axis.
+			if(rayDirection.z<0)
+			{
+				// -Z is dominant axis -> left face
+				skyMap = this.scene.background.rawImage[5];
+
+				posU = rayDirection.x/(-rayDirection.z);
+ 				posV = -rayDirection.y/(-rayDirection.z);
+			}
+			else
+			{
+				// +Z is dominant axis -> right face
+				skyMap = this.scene.background.rawImage[4];
+
+				posU = -rayDirection.x/(rayDirection.z);
+				posV = -rayDirection.y/(rayDirection.z);
+			}
+		}
+
+		posU=(posU+1)/2;
+		posV=(posV+1)/2;
+		pixelColor = this.getTexturePixel(skyMap, posU, posV);
+
+		outputColor.set(pixelColor);
+
 		return;
 	}
 
@@ -256,12 +352,31 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// add texture colour
 	// resolve pixel diffuse color
 
+	// -----------------------------
+	// 
+	// 
+	// -----------------------------
+
+	/**
+	 * PHONG MODEL:
+	 * - diffuse color (base color)
+	 * - specular color
+	 * - reflectivenes 
+	 * 
+	 * 
+	 * PBR MODEL:
+	 * - albedo color (base color)
+	 * - metallic factor
+	 * - roughness factor
+	 * 
+	 */
+
 	var alphaMap = null;
 	var aoMap = null;
 	var emissiveMap = null;
 	var envMap = null;
 	var lightMap = null;
-	var map = null;
+	var albedo = null;
 	var metalnessMap = null;
 	var normalMap = null;
 	var roughnessMap = null; 
@@ -296,12 +411,13 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		if (material.map)
 		{
-			map = this.getTexturePixel(material.map.image, intersection.uv.x, intersection.uv.y);
+			// diffuseColor or albedo color
+			albedo = this.getTexturePixel(material.map.image, intersection.uv.x, intersection.uv.y);
 		}
 
 		if (material.metalnessMap)
 		{
-			metalnessMap =  this.getTexturePixel(material.metalnessMap.image, intersection.uv.x, intersection.uv.y);
+			metalnessMap = this.getTexturePixel(material.metalnessMap.image, intersection.uv.x, intersection.uv.y);
 		}
 
 		if (material.normalMap)
@@ -320,14 +436,18 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// diffuse color (also called albedo color)
 	// -----------------------------
 
-	if (map)
+	let diffuse;
+
+	if (albedo)
 	{	
-		diffuseColor.copyGammaToLinear(map);
+		diffuse = albedo;
 	}
 	else
 	{
-		diffuseColor.copyGammaToLinear(material.color);
+		diffuse = material.color;
 	} 
+
+	diffuseColor.copyGammaToLinear(diffuse);
 
 	if ( material.vertexColors === THREE.FaceColors) 
 	{
@@ -339,7 +459,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// compute light shading
 	// -----------------------------
 
-	this.rayLight.origin.copy( point );	
+	this.rayLight.origin.copy(point);	
 
 	var normalComputed = false;
 
@@ -363,7 +483,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		// point lit
 
-		if ( normalComputed === false ) 
+		if (normalComputed === false) 
 		{
 			// the same normal can be reused for all lights
 			// (should be possible to cache even more)
@@ -375,13 +495,13 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			normalComputed = true;
 		}
 
-		lightColor.copyGammaToLinear( light.color );
+		lightColor.copyGammaToLinear(light.color);
 
 		// compute attenuation
 
 		var attenuation = 1.0;
 
-		if ( light.physicalAttenuation === true ) 
+		if (light.physicalAttenuation === true) 
 		{
 			attenuation = lightVector.length();
 			attenuation = 1.0 / (attenuation * attenuation);
@@ -404,16 +524,30 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		if (material.isMeshPhongMaterial) 
 		{
+
+			let specular;
+			let shininess;
+
+			if (material.specular)
+			{
+				specular = material.specular;
+			}
+
+			if (material.shininess)
+			{
+				shininess = material.shininess;
+			}
+
 			halfVector.addVectors( lightVector, eyeVector ).normalize();
 
-			var dotNormalHalf = Math.max( normalVector.dot( halfVector ), 0.0 );
-			var specularIntensity = Math.max( Math.pow( dotNormalHalf, material.shininess ), 0.0 ) * diffuseIntensity;
+			var dotNormalHalf = Math.max(normalVector.dot(halfVector), 0.0);
+			var specularIntensity = Math.max(Math.pow(dotNormalHalf, shininess), 0.0) * diffuseIntensity;
 
-			var specularNormalization = ( material.shininess + 2.0 ) / 8.0;
+			var specularNormalization = (shininess + 2.0) / 8.0;
 
-			specularColor.copyGammaToLinear( material.specular );
+			specularColor.copyGammaToLinear(specular);
 
-			var alpha = Math.pow( Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0 );
+			var alpha = Math.pow(Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0);
 
 			schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
 			schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
@@ -437,7 +571,12 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// reflection / refraction
 	// -----------------------------
 
-	var reflectivity = material.reflectivity;
+	var reflectivity;
+
+	if (material.reflectivity)
+	{
+		reflectivity = material.reflectivity;
+	}
 
 	if ( ( material.mirror || material.glass ) && reflectivity > 0 && recursionDepth < this.maxRecursionDepth ) 
 	{

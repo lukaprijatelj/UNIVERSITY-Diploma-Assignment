@@ -32,7 +32,7 @@ WebPage.renderer = null;
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-WebPage.cells = new List();
+WebPage.cells = new Array();
 
 /**
  * Current renderer type.
@@ -160,6 +160,15 @@ WebPage.startLoadingGltfModel = function()
 WebPage._initScene = function()
 {
 	WebPage.scene = new THREE.Scene();
+
+	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
+		'posX.jpg',
+		'negX.jpg',
+		'posY.jpg',
+		'negY.jpg',
+		'posZ.jpg',
+		'negZ.jpg'
+	]);
 };
 
 /**
@@ -169,8 +178,11 @@ WebPage._initCamera = function()
 {
 	console.log('[Globals] Initializing camera');
 
-	var ratio = options.RESOLUTION_WIDTH / options.RESOLUTION_HEIGHT;
-	WebPage.camera = new THREE.PerspectiveCamera(45, ratio, 1, 20000);
+	const fov = 75;
+	const aspect = 2;  // the canvas default
+	const near = 0.1;
+	const far = 100;
+	WebPage.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
 	WebPage.camera.position.x = options.CAMERA_POSITION_X;
 	WebPage.camera.position.y = options.CAMERA_POSITION_Y;
@@ -195,11 +207,11 @@ WebPage._initLights = function()
 {
 	console.log('[Globals] Initializing lights');
 
-	var intensity = 70000;
-
 	// WARNING:
 	// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
 	// only Use PointLight
+
+	var intensity = 1;
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
 	light.position.set( - 200, 100, 100 );
@@ -207,12 +219,12 @@ WebPage._initLights = function()
 	WebPage.scene.add( light );
 
 	var light = new THREE.PointLight(0x55aaff, intensity);
-	light.position.set( 200, 100, 100 );
+	light.position.set( 200, -100, 100 );
 	light.physicalAttenuation = true;
 	WebPage.scene.add( light );
 
 	var light = new THREE.PointLight(0xffffff, intensity);
-	light.position.set( 0, 0, 300 );
+	light.position.set( 0, 0, -300 );
 	light.physicalAttenuation = true;
 	WebPage.scene.add( light );
 };
@@ -394,7 +406,7 @@ WebPage.onGetWaitingCells = function(cells)
 		window.clearTimeout(WebPage.lastRenderingTime);
 	}
 
-	var cellsWaiting = new List();
+	var cellsWaiting = new Array();
 
 	for (let i=0; i<WebPage.cells.length; i++)
 	{

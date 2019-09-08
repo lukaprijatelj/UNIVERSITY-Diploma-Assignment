@@ -127,7 +127,6 @@
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/RendererCanvas.js'));
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/EditorCanvas.js'));
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/GltfLoader.js'));
-	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/RawImageLoader.js'));
 	loadingBlock.push(new namespace.core.AsyncImporter('scripts/classes/Dropdown.js'));
 	await Promise.all(loadingBlock);
 

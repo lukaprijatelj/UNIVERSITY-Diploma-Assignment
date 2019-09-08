@@ -2985,6 +2985,16 @@
 				meta.textures[ this.uuid ] = output;
 
 			}
+			else
+			{
+				// NOTE: Added by Luka Prijatelj
+				output.rawImage = new Array();
+
+				for (let i=0; i<image.length; i++)
+				{
+					output.rawImage.push(image[i].toRawImage());
+				}
+			}
 
 			return output;
 
@@ -38879,6 +38889,10 @@
 
 							object.background = new Color( data.background );
 
+						}
+						else
+						{
+							object.background = data.background;
 						}
 
 					}
