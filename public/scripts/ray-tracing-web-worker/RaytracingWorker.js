@@ -383,51 +383,71 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	if (intersection.uv)
 	{
+		let vectorUV;
+
 		if (material.alphaMap)
 		{
-			alphaMap = this.getTexturePixel(material.alphaMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.alphaMap.transformUv(vectorUV);
+			alphaMap = this.getTexturePixel(material.alphaMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.aoMap)
 		{
 			// ambient occulsion map
-			aoMap = this.getTexturePixel(material.aoMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.aoMap.transformUv(vectorUV);
+			aoMap = this.getTexturePixel(material.aoMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.emissiveMap)
 		{
-			emissiveMap = this.getTexturePixel(material.emissiveMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.emissiveMap.transformUv(vectorUV);
+			emissiveMap = this.getTexturePixel(material.emissiveMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.envMap)
 		{
-			envMap = this.getTexturePixel(material.envMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.envMap.transformUv(vectorUV);
+			envMap = this.getTexturePixel(material.envMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.lightMap)
 		{
-			lightMap = this.getTexturePixel(material.lightMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.lightMap.transformUv(vectorUV);
+			lightMap = this.getTexturePixel(material.lightMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.map)
 		{
 			// diffuseColor or albedo color
-			albedo = this.getTexturePixel(material.map.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.map.transformUv(vectorUV);
+			albedo = this.getTexturePixel(material.map.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.metalnessMap)
 		{
-			metalnessMap = this.getTexturePixel(material.metalnessMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.metalnessMap.transformUv(vectorUV);
+			metalnessMap = this.getTexturePixel(material.metalnessMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.normalMap)
 		{
-			normalMap = this.getTexturePixel(material.normalMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.normalMap.transformUv(vectorUV);
+			normalMap = this.getTexturePixel(material.normalMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.roughnessMap)
 		{
-			roughnessMap = this.getTexturePixel(material.roughnessMap.image, intersection.uv.x, intersection.uv.y);
+			vectorUV = intersection.uv.clone();
+			material.roughnessMap.transformUv(vectorUV);
+			roughnessMap = this.getTexturePixel(material.roughnessMap.image, vectorUV.x, vectorUV.y);
 		}
 	}
 
@@ -501,11 +521,12 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		var attenuation = 1.0;
 
-		if (light.physicalAttenuation === true) 
+		// todo: I have commented this because light is not too good when rendering.
+		/*if (light.physicalAttenuation === true) 
 		{
 			attenuation = lightVector.length();
 			attenuation = 1.0 / (attenuation * attenuation);
-		}
+		}*/
 
 		lightVector.normalize();
 
