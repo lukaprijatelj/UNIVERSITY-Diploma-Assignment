@@ -224,7 +224,15 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		// ray didn't hit any object
 		// -----------------------------
 
-		let pixelColor = this.getSkyboxTexturePixel(rayDirection);
+		let background = this.scene.background;
+
+		if (!background || !background.rawImage || !background.rawImage.length)
+		{
+			outputColor.setRGB( 0, 0, 0 );
+			return;
+		}
+
+		let pixelColor = this.texCUBE(background.rawImage, rayDirection);
 		outputColor.set(pixelColor);
 
 		return;
@@ -379,7 +387,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	let normalComputed = false;
 
-	for (let i = 0, l = this.lights.length; i < l; i++) 
+	for (let i = 0; i < this.lights.length; i++) 
 	{
 		let light = this.lights[ i ];
 
@@ -483,6 +491,10 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		return;
 	}
 
+	/*let aoValue = aoMap.r;
+	let roughnessValue = roughnessMap.g;
+	let metalnessValue = metalnessMap.b;*/
+		
 	let reflectivity;
 
 	if (material.reflectivity)
@@ -490,9 +502,9 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		reflectivity = material.reflectivity;
 	}
 
-	if (( material.mirror || material.glass) && reflectivity > 0) 
+	//if (( material.mirror || material.glass) && reflectivity > 0) 
 	{
-		if ( material.mirror ) 
+		/*if ( material.mirror ) 
 		{
 			reflectionVector.copy( rayDirection );
 			reflectionVector.reflect( normalVector );
@@ -518,14 +530,19 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 				tmpVec.multiplyScalar( alpha );
 				reflectionVector.sub( tmpVec );
 			}
-		}
+		}*/
 
-		let theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+		// 0 (theta) - Theta is the angle between the viewing direction and the half vector;
+		//let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
 
 		// F0 - Fresnel Reflectance at 0 degrees
-		let rf0 = reflectivity;
-		let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+		//let F0 = reflectivity;
+
+		// fresnel
+		//let fresnel = this.Fresnel_Schlick(cosinusTheta, F0);
+		let fresnel = this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
 		let weight = fresnel;
+
 		let zColor = tmpColor[ recursionDepth ];
 
 		// recursive call
@@ -542,19 +559,130 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	}
 };
 
+RaytracingRendererWorker.prototype.chiGGX = function(viewVector)
+{
+    return viewVector > 0 ? 1 : 0;
+};
+
+RaytracingRendererWorker.prototype.GGX_PartialGeometryTerm = function(viewVector, normal, halfVector, alpha)
+{
+    let VoH2 = saturate(viewVector.dot(halfVector));
+	let chi = this.chiGGX( VoH2 / saturate( viewVector.dot(normal)) );
+	
+	VoH2 = VoH2 * VoH2;
+	
+	let tan2 = ( 1 - VoH2 ) / VoH2;
+	
+    return (chi * 2) / ( 1 + Math.sqrt( 1 + alpha * alpha * tan2 ) );
+};
+
+RaytracingRendererWorker.prototype.GGX_Specular = function(SpecularEnvmap, normal, viewVector, roughness, F0, kS)
+{
+   // let reflectionVector = viewVector.negate().reflect(normal);
+	let worldFrame = new THREE.Matrix3(); // GenerateFrame(reflectionVector);
+    let radiance = 0;
+	//let NoV = saturate(dot(normal, viewVector));
+	
+	// dunno
+	let SamplesCount = 64;
+
+    for(let i = 0; i < SamplesCount; ++i)
+    {
+        // Generate a sample vector in some local space
+        let sampleVector = new THREE.Vector3();
+        // Convert the vector in world space
+        //sampleVector = sampleVector.multiply(worldFrame).normalize();
+
+        // Calculate the half vector
+        let halfVector = sampleVector.add(viewVector).normalize();
+		//let cosT = saturate(dot(sampleVector, normal));
+      //  let sinT = Math.sqrt( 1 - cosT * cosT);
+
+        // Calculate fresnel
+		let fresnel = this.Fresnel_Schlick( saturate(halfVector.dot(viewVector )), F0 );
+		
+        // Geometry term
+		//let geometry = this.GGX_PartialGeometryTerm(viewVector, normal, halfVector, roughness) * this.GGX_PartialGeometryTerm(sampleVector, normal, halfVector, roughness);
+		
+        // Calculate the Cook-Torrance denominator
+       // let denominator = saturate( 4 * (NoV * saturate(dot(halfVector, normal)) + 0.05) );
+		kS.value += fresnel;
+		
+        // Accumulate the radiance
+        radiance += 0.0;// SpecularEnvmap.SampleLevel( trilinearSampler, sampleVector, ( roughness * mipsCount ) ).rgb * geometry * fresnel * sinT / denominator;
+    }
+
+    // Scale back for the samples count
+	kS.value = saturate( kS.value / SamplesCount );
+	
+    return radiance / SamplesCount;        
+};
+
+function saturate(value)
+{
+	if (value < 0)
+	{
+		return 0;
+	}
+
+	if (value > 1)
+	{
+		return 1;
+	}
+
+	return value;
+};
+
+function lerp(a,b,w)
+{
+	return a + w*(b-a);
+};
+
+RaytracingRendererWorker.prototype.PixelShaderFunction = function(diffuseColor, metalnessColor, viewVector, normal)
+{
+	if (!diffuseColor || !metalnessColor)
+	{
+		return new Vector4();
+	}
+
+	let EPSILON = 8;
+    let ior = 1 + metalnessColor.r;
+    let roughness = saturate(metalnessColor.g - EPSILON) + EPSILON;
+    let metallic = metalnessColor.b;
+
+    // Calculate colour at normal incidence
+    let F0 = Math.abs((1.0 - ior) / (1.0 + ior));
+    F0 = F0 * F0;
+    F0 = lerp(F0, diffuseColor.r, metallic);
+        
+    // Calculate the specular contribution
+    let ks = { value: 0 };
+    let specular = this.GGX_Specular(undefined, normal, viewVector, roughness, F0, ks );
+	let kd = (1 - ks.value) * (1 - metallic);
+	
+    // Calculate the diffuse contribution
+   // let irradiance = this.texCUBE(diffuseCubemap_Sampler, normal);
+   // let diffuse = materialColour * irradiance;
+   let diffuse = 1;
+
+    return kd * diffuse + specular;     
+};
+
+
+/**
+ * Gets F0 (Fresnel Reflectance at 0 degrees).
+ */
+RaytracingRendererWorker.prototype.Fresnel_Schlick = function(cosT, F0)
+{
+	return F0 + (1.0 - F0) * Math.pow((1.0 - cosT), 5.0);
+};
+
 
 /**
  * Gets pixel color of the skybox environment.
  */
-RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection)
+RaytracingRendererWorker.prototype.texCUBE = function(images, rayDirection)
 {
-	let background = this.scene.background;
-
-	if (!background || !background.rawImage || !background.rawImage.length)
-	{
-		return new THREE.Color();
-	}
-
 	let skyMap;
 	let posU;
 	let posV;
@@ -570,7 +698,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 			if(rayDirection.x < 0)
 			{
 				// -X is dominant axis -> left face
-				skyMap = background.rawImage[0];
+				skyMap = images[0];
 
 				posU = rayDirection.z / rayDirection.x;
 				posV = -rayDirection.y / (-rayDirection.x);
@@ -578,7 +706,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 			else
 			{
 				// +X is dominant axis -> right face
-				skyMap = background.rawImage[1];
+				skyMap = images[1];
 
 				posU = rayDirection.z / rayDirection.x;
 				posV = -rayDirection.y / rayDirection.x;
@@ -590,7 +718,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 			if(rayDirection.z<0)
 			{
 				// -Z is dominant axis -> front face
-				skyMap = background.rawImage[5];
+				skyMap = images[5];
 
 				posU = rayDirection.x / (-rayDirection.z);
 				posV = -rayDirection.y / (-rayDirection.z);
@@ -598,7 +726,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 			else
 			{
 				// +Z is dominant axis -> back face
-				skyMap = background.rawImage[4];
+				skyMap = images[4];
 
 				posU = -rayDirection.x / rayDirection.z;
 				posV = -rayDirection.y / rayDirection.z;
@@ -611,7 +739,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 		if(rayDirection.y < 0)
 		{
 			// -Y is dominant axis -> bottom face
-			skyMap = background.rawImage[3];
+			skyMap = images[3];
 
 			posU = rayDirection.x / rayDirection.y;
 			posV = -rayDirection.z / (-rayDirection.y);
@@ -619,7 +747,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 		else
 		{
 			// +Y is dominant axis -> top face
-			skyMap = background.rawImage[2];
+			skyMap = images[2];
 
 			posU = -rayDirection.x / rayDirection.y;
 			posV = rayDirection.z / rayDirection.y;
@@ -631,7 +759,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 		if(rayDirection.z < 0)
 		{
 			// -Z is dominant axis -> front face
-			skyMap = background.rawImage[5];
+			skyMap = images[5];
 
 			posU = rayDirection.x / (-rayDirection.z);
 			posV = -rayDirection.y / (-rayDirection.z);
@@ -639,7 +767,7 @@ RaytracingRendererWorker.prototype.getSkyboxTexturePixel = function(rayDirection
 		else
 		{
 			// +Z is dominant axis -> back face
-			skyMap = background.rawImage[4];
+			skyMap = images[4];
 
 			// compute the orthogonal normalized texture coordinates. Start with a normalized [-1..1] space
 			posU = -rayDirection.x / rayDirection.z;
