@@ -17,7 +17,12 @@ var options =
 
 	CAMERA_POSITION_X: 0.81,
 	CAMERA_POSITION_Y: -0.1,
-	CAMERA_POSITION_Z: -2.47	
+	CAMERA_POSITION_Z: -2.47,
+
+	CAMERA_FOV: 75,
+	CAMERA_ASPECT: 2,  // the canvas default
+	CAMERA_NEAR: 0.1,
+	CAMERA_FAR: 100
 };
 
 

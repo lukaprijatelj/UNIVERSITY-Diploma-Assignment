@@ -35,7 +35,6 @@ var RaytracingRenderer = function(canvas)
 	this.materials = new Object();
 	this.sceneJSON;
 	this.cameraJSON;
-	this.images = new Object();
 	this._annex = 
 	{
 		mirror: 1,
@@ -205,14 +204,11 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	_this.scene.traverse(_this.serializeObject.bind(_this));
 
-	_this.images = new Object();
-
 	let options = 
 	{
 		type: 'initScene',
 		sceneJSON: _this.sceneJSON,
 		cameraJSON: _this.cameraJSON,
-		images: _this.images,
 		materials: _this.materials
 	};
 

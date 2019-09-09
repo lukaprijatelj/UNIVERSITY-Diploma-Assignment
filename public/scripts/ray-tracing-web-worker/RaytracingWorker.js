@@ -41,7 +41,6 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.perspective;
 	
 	this.scene;
-	this.images;
 	this.objects;
 	this.lights = new Array();
 	this.cache = new Object();
@@ -79,13 +78,13 @@ RaytracingRendererWorker.prototype.init = function(width, height)
 /**
  * Initializes scene.
  */
-RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, images, annexData)
+RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, annexData)
 {
 	let _this = this;
 
+	let images = new Object();
 	_this.scene = _this.loader.parse(sceneData, images);
 	_this.camera = _this.loader.parse(cameraData, images);
-	_this.images = images;
 
 	let meta = annexData;
 	_this.scene.traverse(function(o) 
@@ -149,15 +148,6 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, i
 };
 
 
-/**
- * Starts rendering.
- */
-RaytracingRendererWorker.prototype.startRendering = function()
-{
-	let _this = this;
-	_this.render();
-};
-
 
 /**
  * Sets canvas size.
@@ -165,6 +155,7 @@ RaytracingRendererWorker.prototype.startRendering = function()
 RaytracingRendererWorker.prototype.setSize = function (width, height) 
 {
 	let _this = this;
+
 	_this.canvasWidth = width;
 	_this.canvasHeight = height;
 

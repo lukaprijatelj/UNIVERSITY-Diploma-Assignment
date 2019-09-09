@@ -178,11 +178,7 @@ WebPage._initCamera = function()
 {
 	console.log('[Globals] Initializing camera');
 
-	const fov = 75;
-	const aspect = 2;  // the canvas default
-	const near = 0.1;
-	const far = 100;
-	WebPage.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+	WebPage.camera = new THREE.PerspectiveCamera(options.CAMERA_FOV, options.CAMERA_ASPECT, options.CAMERA_NEAR, options.CAMERA_FAR);
 
 	WebPage.camera.position.x = options.CAMERA_POSITION_X;
 	WebPage.camera.position.y = options.CAMERA_POSITION_Y;

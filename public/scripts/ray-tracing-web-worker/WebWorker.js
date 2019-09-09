@@ -41,11 +41,11 @@ self.onmessage = function(e)
 			break;
 
 		case 'initScene':
-			worker.initScene(data.sceneJSON, data.cameraJSON, data.images, data.materials);
+			worker.initScene(data.sceneJSON, data.cameraJSON, data.materials);
 			break;
 
 		case 'startRendering':
-			worker.startRendering();
+			worker.render();
 			break;
 	}
 };
