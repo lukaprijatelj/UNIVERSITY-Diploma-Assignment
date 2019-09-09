@@ -53,9 +53,11 @@ Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
  */
 RaytracingRenderer.prototype.areWorkersDone = function()
 {
-	for (let i=0; i<this.workers.length; i++)
+	let _this = this;
+
+	for (let i=0; i<_this.workers.length; i++)
 	{
-		var current = this.workers[i];
+		let current = _this.workers[i];
 
 		if (current.isRendering)
 		{
@@ -72,47 +74,40 @@ RaytracingRenderer.prototype.areWorkersDone = function()
  */
 RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
-	var renderer = this;
+	let _this = this;
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 
-	var webWorker = renderer.workers[workerIndex];
+	let webWorker = _this.workers[workerIndex];
 	webWorker.isRendering = false;
 	
 	// -----------------------------
 	// convert buffer data into png image data
 	// -----------------------------
 
-	/*var imagedata = new ImageData(new Uint8ClampedArray(buffer), cell.width, cell.height);
-	var canvas = document.createElement('canvas');
-	canvas.width  = cell.width;
-	canvas.height = cell.height;
-	canvas.getContext('2d').putImageData(imagedata, 0, 0);
-	cell.imageData = canvas.toDataURL('image/png');*/
-
 	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
 
 	WebPage.tryUpdatingCell(cell);
 
-	renderer.cellsDone.push(cell);
+	_this.cellsDone.push(cell);
 
 	
 	// -----------------------------
 	// continue rendering next cell in queue
 	// -----------------------------
 
-	if (renderer.cellsWaiting.isEmpty())
+	if (_this.cellsWaiting.isEmpty())
 	{
-		if (renderer.areWorkersDone())
+		if (_this.areWorkersDone())
 		{
-			WebPage.onRendererDone(renderer.cellsDone);	
+			WebPage.onRendererDone(_this.cellsDone);	
 				
-			renderer.cellsDone = new Array();
+			_this.cellsDone = new Array();
 		}
 	}
 	else
 	{
-		renderer._runWorker(webWorker);
+		_this._runWorker(webWorker);
 	}		
 };
 
@@ -122,19 +117,21 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
  */
 RaytracingRenderer.prototype.setWorkers = function() 
 {
-	var renderer = this;
+	let _this = this;
 
-	for (let i=0; i<renderer.numOfWorkers; i++)
+	for (let i=0; i<_this.numOfWorkers; i++)
 	{
-		var worker = new Worker('./scripts/ray-tracing-web-worker/WebWorker.js');
-		worker.isRendering = false;
-		worker.postMessage({
+		let options = 
+		{
 			type: 'init',
 			workerIndex: i,
-			canvasWidth: renderer.canvas.width,
-			canvasHeight: renderer.canvas.height
-		});
-	
+			canvasWidth: _this.canvas.width,
+			canvasHeight: _this.canvas.height
+		};
+
+		let worker = new Worker('./scripts/ray-tracing-web-worker/WebWorker.js');
+		worker.isRendering = false;
+		worker.postMessage(options);
 		worker.onmessage = (e) =>
 		{
 			var data = e.data;
@@ -144,10 +141,10 @@ RaytracingRenderer.prototype.setWorkers = function()
 				return;
 			}
 	
-			renderer.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
+			_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
 		};
 	
-		renderer.workers[i] = worker;
+		_this.workers[i] = worker;
 	}
 };
 
@@ -163,13 +160,14 @@ RaytracingRenderer.prototype.setPixelRatio = Function.empty;
  */
 RaytracingRenderer.prototype.serializeObject = function(o) 
 {
-	var mat = o.material;
+	let _this = this;
+	let mat = o.material;
 
-	if (!mat || mat.uuid in this.materials) return;
+	if (!mat || mat.uuid in _this.materials) return;
 
-	var props = new Object();
+	let props = new Object();
 
-	for ( var m in this._annex ) 
+	for (let m in _this._annex ) 
 	{
 		if ( mat[ m ] !== undefined ) 
 		{
@@ -177,7 +175,7 @@ RaytracingRenderer.prototype.serializeObject = function(o)
 		}
 	}
 
-	this.materials[mat.uuid] = props;
+	_this.materials[mat.uuid] = props;
 };
 
 
@@ -186,7 +184,7 @@ RaytracingRenderer.prototype.serializeObject = function(o)
  */
 RaytracingRenderer.prototype.prepareJsonData = function(callback) 
 {
-	var _this = this;
+	let _this = this;
 
 	// update scene graph
 
@@ -209,7 +207,7 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	_this.images = new Object();
 
-	var options = 
+	let options = 
 	{
 		type: 'initScene',
 		sceneJSON: _this.sceneJSON,
@@ -220,7 +218,7 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	for (let i=0; i<_this.workers.length; i++)
 	{
-		var worker = _this.workers[i];
+		let worker = _this.workers[i];
 		
 		worker.postMessage(options);		
 	}	
@@ -234,13 +232,13 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
  */
 RaytracingRenderer.prototype.render = function(cellsWaiting) 
 {
-	var _this = this;
+	let _this = this;
 
 	_this.cellsWaiting = cellsWaiting;	
 
 	for (let i=0; i<_this.workers.length; i++)
 	{
-		var worker = _this.workers[i];
+		let worker = _this.workers[i];
 	
 		_this._runWorker(worker);
 	}	
@@ -252,15 +250,15 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
  */
 RaytracingRenderer.prototype._runWorker = function(worker)
 {
-	var renderer = this;
+	let _this = this;
 
-	var cellToRender = renderer.cellsWaiting.pop();
+	let cellToRender = _this.cellsWaiting.pop();
 
 	WebPage.rendererCanvas.flagRenderCell(cellToRender);
-
 	worker.postMessage({ type: 'setCell', cell: cellToRender });
 	
 	worker.isRendering = true;
+
 	worker.postMessage({ type: 'startRendering' });
 };
 
@@ -270,7 +268,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
  */
 RaytracingRenderer.prototype.init = function()
 {
-	var renderer = this;
+	let _this = this;
 
-	renderer.setWorkers();
+	_this.setWorkers();
 };

@@ -215,17 +215,14 @@ WebPage._initLights = function()
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
 	light.position.set( - 200, 100, 100 );
-	light.physicalAttenuation = true;
 	WebPage.scene.add( light );
 
 	var light = new THREE.PointLight(0x55aaff, intensity);
 	light.position.set( 200, -100, 100 );
-	light.physicalAttenuation = true;
 	WebPage.scene.add( light );
 
 	var light = new THREE.PointLight(0xffffff, intensity);
 	light.position.set( 0, 0, -300 );
-	light.physicalAttenuation = true;
 	WebPage.scene.add( light );
 };
 
