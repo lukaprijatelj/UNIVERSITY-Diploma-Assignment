@@ -1,6 +1,6 @@
 importScripts('../constants.js');
 importScripts('../../externals/namespace-core/console.js');
-
+importScripts('../../externals/namespace-core/Thread.js');
 
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
@@ -13,39 +13,37 @@ var canvasWidth = -1;
 var canvasHeight = -1;
 var cell = null;
 
-self.onmessage = function(e) 
+var mainThread = new namespace.core.MainThread();
+
+mainThread.onWorkerFunction('init', (data) =>
 {
-	var data = e.data;
-
-	switch(data.type)
+	worker = new RaytracingRendererWorker((workerIndex, buffer, cell, timeMs) =>
 	{
-		case 'init':
-			worker = new RaytracingRendererWorker((workerIndex, buffer, cell, timeMs) =>
-			{
-				let data = 
-				{
-					type: 'renderCell',
-					workerIndex: workerIndex,
-					buffer: buffer,
-					cell: cell,
-					timeMs: timeMs
-				};
-				self.postMessage(data);
-			}, data.workerIndex);
-			worker.init(data.canvasWidth, data.canvasHeight);
-			break;
+		let data = 
+		{
+			type: 'renderCell',
+			workerIndex: workerIndex,
+			buffer: buffer,
+			cell: cell,
+			timeMs: timeMs
+		};
+		self.postMessage(data);
+	}, data.workerIndex);
+	worker.init(data.canvasWidth, data.canvasHeight);
+});
 
-		case 'setCell':
-			cell = data.cell;
-			worker.setCell(cell);
-			break;
+mainThread.onWorkerFunction('setCell', (data) =>
+{
+	cell = data.cell;
+	worker.setCell(cell);
+});
 
-		case 'initScene':
-			worker.initScene(data.sceneJSON, data.cameraJSON, data.materials);
-			break;
+mainThread.onWorkerFunction('initScene', (data) =>
+{
+	worker.initScene(data.sceneJSON, data.cameraJSON, data.materials);
+});
 
-		case 'startRendering':
-			worker.render();
-			break;
-	}
-};
+mainThread.onWorkerFunction('startRendering', (data) =>
+{
+	worker.render();
+});

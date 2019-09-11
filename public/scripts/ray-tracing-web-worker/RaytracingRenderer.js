@@ -122,26 +122,18 @@ RaytracingRenderer.prototype.setWorkers = function()
 	{
 		let options = 
 		{
-			type: 'init',
 			workerIndex: i,
 			canvasWidth: _this.canvas.width,
 			canvasHeight: _this.canvas.height
 		};
 
-		let worker = new Worker('./scripts/ray-tracing-web-worker/WebWorker.js');
+		let worker = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
 		worker.isRendering = false;
-		worker.postMessage(options);
-		worker.onmessage = (e) =>
+		worker.workerFunction('init', options);
+		worker.onMainFunction('renderCell', (data) =>
 		{
-			var data = e.data;
-	
-			if (data.type != 'renderCell')
-			{
-				return;
-			}
-	
 			_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
-		};
+		});
 	
 		_this.workers[i] = worker;
 	}
@@ -206,7 +198,6 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 
 	let options = 
 	{
-		type: 'initScene',
 		sceneJSON: _this.sceneJSON,
 		cameraJSON: _this.cameraJSON,
 		materials: _this.materials
@@ -216,7 +207,7 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 	{
 		let worker = _this.workers[i];
 		
-		worker.postMessage(options);		
+		worker.workerFunction('initScene', options);		
 	}	
 
 	callback();
@@ -251,11 +242,11 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 	let cellToRender = _this.cellsWaiting.pop();
 
 	WebPage.rendererCanvas.flagRenderCell(cellToRender);
-	worker.postMessage({ type: 'setCell', cell: cellToRender });
+	worker.workerFunction('setCell', { cell: cellToRender });
 	
 	worker.isRendering = true;
 
-	worker.postMessage({ type: 'startRendering' });
+	worker.workerFunction('startRendering');
 };
 
 
