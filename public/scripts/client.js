@@ -100,6 +100,7 @@ WebPage._onStopRenderingService = function(data)
 	options = null;
 
 	WebPage.renderer.stopRendering();
+	WebPage.stopRendererUi();
 };
 
 /**
@@ -355,19 +356,21 @@ WebPage.tryUpdatingCell = function(cell)
 	WebPage.rendererCanvas.updateCell(cell);
 };
 
+WebPage.stopRendererUi = function()
+{
+	document.querySelector('interface').removeClass('rendering');
+	WebPage.lastRenderingTime = 0;
+
+	let browser = new namespace.core.Browser();
+	browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+};
+
 /**
  * All waiting cells are done rendering.
  */
 WebPage.onRendererDone = function(cells)
 {
-	WebPage.lastRenderingTime = window.setTimeout(()=>
-	{
-		document.querySelector('interface').removeClass('rendering');
-		WebPage.lastRenderingTime = 0;
-
-		let browser = new namespace.core.Browser();
-		browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
-	}, 1000);
+	WebPage.lastRenderingTime = window.setTimeout(WebPage.stopRendererUi, 1000);
 
 	if (!API.isRenderingServiceRunning)
 	{

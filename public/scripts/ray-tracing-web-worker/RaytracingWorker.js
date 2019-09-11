@@ -78,28 +78,13 @@ RaytracingRendererWorker.prototype.init = function(width, height)
 /**
  * Initializes scene.
  */
-RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, annexData)
+RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData)
 {
 	let _this = this;
 
 	let images = new Object();
 	_this.scene = _this.loader.parse(sceneData, images);
 	_this.camera = _this.loader.parse(cameraData, images);
-
-	let meta = annexData;
-	_this.scene.traverse(function(o) 
-	{
-		let mat = o.material;
-
-		if (!mat) return;
-
-		let material = meta[ mat.uuid ];
-
-		for ( let m in material ) 
-		{
-			mat[ m ] = material[ m ];
-		}
-	});
 
 	// update scene graph
 
@@ -123,7 +108,7 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, a
 
 	// collect lights and set up object matrices
 
-	_this.lights.length = 0;
+	_this.lights = new Array();
 
 	_this.scene.traverse(function(object) 
 	{

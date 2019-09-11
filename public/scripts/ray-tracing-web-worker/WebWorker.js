@@ -38,7 +38,7 @@ mainThread.onWorkerFunction('setCell', (data) =>
 
 mainThread.onWorkerFunction('initScene', (data) =>
 {
-	worker.initScene(data.sceneJSON, data.cameraJSON, data.materials);
+	worker.initScene(data.sceneJSON, data.cameraJSON);
 });
 
 mainThread.onWorkerFunction('startRendering', (data) =>

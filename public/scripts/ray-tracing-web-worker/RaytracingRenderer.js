@@ -32,16 +32,8 @@ var RaytracingRenderer = function(canvas)
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.materials = new Object();
 	this.sceneJSON;
 	this.cameraJSON;
-	this._annex = 
-	{
-		mirror: 1,
-		reflectivity: 1,
-		refractionRatio: 1,
-		glass: 1
-	};	
 };
 
 Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
@@ -163,30 +155,6 @@ RaytracingRenderer.prototype.setPixelRatio = Function.empty;
 
 
 /**
- * Serializes materials.
- */
-RaytracingRenderer.prototype.serializeObject = function(o) 
-{
-	let _this = this;
-	let mat = o.material;
-
-	if (!mat || mat.uuid in _this.materials) return;
-
-	let props = new Object();
-
-	for (let m in _this._annex ) 
-	{
-		if ( mat[ m ] !== undefined ) 
-		{
-			props[ m ] = mat[ m ];
-		}
-	}
-
-	_this.materials[mat.uuid] = props;
-};
-
-
-/**
  * Starts rendering.
  */
 RaytracingRenderer.prototype.prepareJsonData = function(callback) 
@@ -210,13 +178,10 @@ RaytracingRenderer.prototype.prepareJsonData = function(callback)
 	_this.sceneJSON = _this.scene.toJSON();
 	_this.cameraJSON = _this.camera.toJSON();	
 
-	_this.scene.traverse(_this.serializeObject.bind(_this));
-
 	let options = 
 	{
 		sceneJSON: _this.sceneJSON,
-		cameraJSON: _this.cameraJSON,
-		materials: _this.materials
+		cameraJSON: _this.cameraJSON
 	};
 
 	for (let i=0; i<_this.workers.length; i++)
