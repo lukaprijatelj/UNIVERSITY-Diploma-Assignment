@@ -120,23 +120,39 @@ RaytracingRenderer.prototype.setWorkers = function()
 
 	for (let i=0; i<_this.numOfWorkers; i++)
 	{
-		let options = 
+		let data = 
 		{
 			workerIndex: i,
 			canvasWidth: _this.canvas.width,
-			canvasHeight: _this.canvas.height
+			canvasHeight: _this.canvas.height,
+			near: options.CAMERA_NEAR,
+			far: options.CAMERA_FAR
 		};
 
-		let worker = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
-		worker.isRendering = false;
-		worker.workerFunction('init', options);
-		worker.onMainFunction('renderCell', (data) =>
+		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
+		thread.isRendering = false;
+		thread.workerFunction('init', data);
+		thread.onMainFunction('renderCell', (data) =>
 		{
 			_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
 		});
 	
-		_this.workers[i] = worker;
+		_this.workers[i] = thread;
 	}
+};
+
+
+RaytracingRenderer.prototype.stopRendering = function()
+{
+	let _this = this;
+
+	for (let i=0; i<_this.numOfWorkers; i++)
+	{
+		let thread = _this.workers[i];
+
+		thread.isRendering = false;
+		thread.terminate();
+	};
 };
 
 
@@ -239,7 +255,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 {
 	let _this = this;
 
-	let cellToRender = _this.cellsWaiting.pop();
+	let cellToRender = _this.cellsWaiting.shift();
 
 	WebPage.rendererCanvas.flagRenderCell(cellToRender);
 	worker.workerFunction('setCell', { cell: cellToRender });

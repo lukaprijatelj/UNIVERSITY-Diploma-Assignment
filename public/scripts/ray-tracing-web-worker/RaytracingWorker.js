@@ -4,7 +4,7 @@
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-var RaytracingRendererWorker = function(onCellRendered, index) 
+var RaytracingRendererWorker = function(onCellRendered, index, near, far) 
 {
 	console.log('[RaytracingRendererWorker] Initializing worker');
 
@@ -33,7 +33,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
 
-	this.raycaster = new THREE.Raycaster(this.origin, this.direction);
+	this.raycaster = new THREE.Raycaster(this.origin, this.direction, near, far);
 	this.ray = this.raycaster.ray;
 	this.raycasterLight = new THREE.Raycaster();
 	this.rayLight = this.raycasterLight.ray;
@@ -127,34 +127,24 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, a
 
 	_this.scene.traverse(function(object) 
 	{
-		if (object.isPointLight) 
+		if (object instanceof THREE.PointLight || object instanceof THREE.SpotLight || object instanceof THREE.DirectionalLight)
 		{
-			this.lights.push(object);
+			_this.lights.push(object);
 		}
 
-		for (let i=0; i<object.children.length; i++)
+		if (_this.cache[object.id] === undefined) 
 		{
-			let current = object.children[i];
-
-			if (current instanceof THREE.SpotLight)
-			{
-				this.lights.push(current);
-			}
-		}
-
-		if (this.cache[object.id] === undefined) 
-		{
-			this.cache[object.id] = {
+			_this.cache[object.id] = {
 				normalMatrix: new THREE.Matrix3(),
 				inverseMatrix: new THREE.Matrix4()
 			};
 		}
 
-		var _object = this.cache[object.id];
+		var _object = _this.cache[object.id];
 
 		_object.normalMatrix.getNormalMatrix(object.matrixWorld);
 		_object.inverseMatrix.getInverse(object.matrixWorld);
-	}.bind(_this));
+	});
 };
 
 
@@ -200,6 +190,41 @@ RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY
  */
 RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
 {
+	let _this = this;
+
+	_this.ray.origin = rayOrigin;
+	_this.ray.direction = rayDirection;
+
+	// weird function. somettimes needs a lot of time even though there is not even that much objects in the scene
+	let intersections = _this.raycaster.intersectObjects(_this.objects, true);
+
+	if (intersections.length === 0) 
+	{
+		// -----------------------------
+		// ray didn't hit any object
+		// -----------------------------
+
+		let background = _this.scene.background;
+
+		if (!background || !background.rawImage || !background.rawImage.length)
+		{
+			outputColor.setRGB( 0, 0, 0 );
+			return;
+		}
+
+		let pixelColor = _this.texCUBE(background.rawImage, rayDirection);
+		outputColor.set(pixelColor);
+
+		return;
+	}
+
+	let tmpColor = new Array();
+
+	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
+	{
+		tmpColor[i] = new THREE.Color();
+	}	
+
 	let diffuseColor = new THREE.Color();
 	let specularColor = new THREE.Color();
 	let lightColor = new THREE.Color();
@@ -216,38 +241,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	let reflectionVector = new THREE.Vector3();
 
 	let tmpVec = new THREE.Vector3();
-	let tmpColor = new Array();
-
-	for ( let i = 0; i < this.maxRecursionDepth; i ++ ) 
-	{
-		tmpColor[i] = new THREE.Color();
-	}	
-
-	this.ray.origin = rayOrigin;
-	this.ray.direction = rayDirection;
-
-	let intersections = this.raycaster.intersectObjects(this.objects, true);
-
-	if (intersections.length === 0) 
-	{
-		// -----------------------------
-		// ray didn't hit any object
-		// -----------------------------
-
-		let background = this.scene.background;
-
-		if (!background || !background.rawImage || !background.rawImage.length)
-		{
-			outputColor.setRGB( 0, 0, 0 );
-			return;
-		}
-
-		let pixelColor = this.texCUBE(background.rawImage, rayDirection);
-		outputColor.set(pixelColor);
-
-		return;
-	}
-
 
 	// -----------------------------
 	// Ray hit one of the objects
@@ -261,9 +254,9 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	let material = object.material;
 	let face = intersection.face;
 	let geometry = object.geometry;
-	let _object = this.cache[object.id];
+	let _object = _this.cache[object.id];
 
-	eyeVector.subVectors(this.ray.origin, point).normalize();
+	eyeVector.subVectors(_this.ray.origin, point).normalize();
 
 	/**
 	 * ------------------------------------------
@@ -303,7 +296,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		{
 			vectorUV = intersection.uv.clone();
 			material.alphaMap.transformUv(vectorUV);
-			alphaMap = this.getTexturePixel(material.alphaMap.image, vectorUV.x, vectorUV.y);
+			alphaMap = _this.getTexturePixel(material.alphaMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.aoMap)
@@ -311,28 +304,28 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			// ambient occulsion map
 			vectorUV = intersection.uv.clone();
 			material.aoMap.transformUv(vectorUV);
-			aoMap = this.getTexturePixel(material.aoMap.image, vectorUV.x, vectorUV.y);
+			aoMap = _this.getTexturePixel(material.aoMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.emissiveMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.emissiveMap.transformUv(vectorUV);
-			emissiveMap = this.getTexturePixel(material.emissiveMap.image, vectorUV.x, vectorUV.y);
+			emissiveMap = _this.getTexturePixel(material.emissiveMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.envMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.envMap.transformUv(vectorUV);
-			envMap = this.getTexturePixel(material.envMap.image, vectorUV.x, vectorUV.y);
+			envMap = _this.getTexturePixel(material.envMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.lightMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.lightMap.transformUv(vectorUV);
-			lightMap = this.getTexturePixel(material.lightMap.image, vectorUV.x, vectorUV.y);
+			lightMap = _this.getTexturePixel(material.lightMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.map)
@@ -340,28 +333,28 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			// diffuseColor or albedo color
 			vectorUV = intersection.uv.clone();
 			material.map.transformUv(vectorUV);
-			albedo = this.getTexturePixel(material.map.image, vectorUV.x, vectorUV.y);
+			albedo = _this.getTexturePixel(material.map.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.metalnessMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.metalnessMap.transformUv(vectorUV);
-			metalnessMap = this.getTexturePixel(material.metalnessMap.image, vectorUV.x, vectorUV.y);
+			metalnessMap = _this.getTexturePixel(material.metalnessMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.normalMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.normalMap.transformUv(vectorUV);
-			normalMap = this.getTexturePixel(material.normalMap.image, vectorUV.x, vectorUV.y);
+			normalMap = _this.getTexturePixel(material.normalMap.image, vectorUV.x, vectorUV.y);
 		}
 
 		if (material.roughnessMap)
 		{
 			vectorUV = intersection.uv.clone();
 			material.roughnessMap.transformUv(vectorUV);
-			roughnessMap = this.getTexturePixel(material.roughnessMap.image, vectorUV.x, vectorUV.y);
+			roughnessMap = _this.getTexturePixel(material.roughnessMap.image, vectorUV.x, vectorUV.y);
 		}
 	}
 
@@ -393,20 +386,20 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// compute light shading
 	// -----------------------------
 
-	this.rayLight.origin.copy(point);	
+	_this.rayLight.origin.copy(point);	
 
 	let normalComputed = false;
 
-	for (let i = 0; i < this.lights.length; i++) 
+	for (let i = 0; i < _this.lights.length; i++) 
 	{
-		let light = this.lights[ i ];
+		let light = _this.lights[ i ];
 
 		lightVector.setFromMatrixPosition( light.matrixWorld );
 		lightVector.sub( point );
 
-		this.rayLight.direction.copy( lightVector ).normalize();
+		_this.rayLight.direction.copy( lightVector ).normalize();
 
-		let lightIntersections = this.raycasterLight.intersectObjects(this.objects, true);
+		let lightIntersections = _this.raycasterLight.intersectObjects(_this.objects, true);
 		
 		if ( lightIntersections.length > 0 ) 
 		{
@@ -423,7 +416,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			// (should be possible to cache even more)
 
 			localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
-			this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
+			_this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
 			normalVector.applyMatrix3( _object.normalMatrix ).normalize();
 
 			normalComputed = true;
@@ -495,7 +488,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// reflection / refraction
 	// -----------------------------
 
-	if (recursionDepth >= this.maxRecursionDepth)
+	if (recursionDepth >= _this.maxRecursionDepth)
 	{
 		// no need to spawn new ray cast, because we have reached max recursion depth
 		return;
@@ -551,14 +544,14 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		//let F0 = reflectivity;
 
 		// fresnel
-		//let fresnel = this.Fresnel_Schlick(cosinusTheta, F0);
-		let fresnel = this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
+		//let fresnel = _this.Fresnel_Schlick(cosinusTheta, F0);
+		let fresnel = _this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
 		let weight = fresnel;
 
 		let zColor = tmpColor[ recursionDepth ];
 
 		// recursive call
-		this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
+		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 
 		if (material.specular !== undefined) 
 		{
@@ -695,6 +688,8 @@ RaytracingRendererWorker.prototype.Fresnel_Schlick = function(cosT, F0)
  */
 RaytracingRendererWorker.prototype.texCUBE = function(images, rayDirection)
 {
+	let _this = this;
+
 	let skyMap;
 	let posU;
 	let posV;
@@ -791,7 +786,7 @@ RaytracingRendererWorker.prototype.texCUBE = function(images, rayDirection)
 	posU = (posU + 1) / 2;
 	posV = (posV + 1) / 2;
 
-	return this.getTexturePixel(skyMap, posU, posV);
+	return _this.getTexturePixel(skyMap, posU, posV);
 };
 
 /**

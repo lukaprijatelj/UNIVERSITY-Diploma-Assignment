@@ -98,6 +98,8 @@ WebPage._onStopRenderingService = function(data)
 {
 	previousOptions = options;
 	options = null;
+
+	WebPage.renderer.stopRendering();
 };
 
 /**
