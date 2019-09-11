@@ -21,8 +21,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-enums/Unit.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-enums/BrowserType.js"));
+	loadingBlock.push(new AsyncImporter("externals/namespace-enums/namespace-enums.js"));
 	await Promise.all(loadingBlock);
 
 
