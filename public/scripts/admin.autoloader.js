@@ -31,29 +31,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Anchor.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Button.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Canvas.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Curtain.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Checkbox.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Div.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/EmbeddedObject.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/FileInput.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Frame.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Icon.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Image.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Input.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Label.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/LoadingBar.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Paragraph.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/ScrollViewer.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Span.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/SpriteIcon.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Table.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/TextArea.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/TextInput.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Video.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/HTMLElement.js"));
+	loadingBlock.push(new AsyncImporter("externals/namespace-html/namespace-html.js"));
 	await Promise.all(loadingBlock);
 
 	
