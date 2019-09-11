@@ -20,10 +20,11 @@ var DATABASE = require('./server/database.js');
 // -----------------------------
 // import namespace-core
 // -----------------------------
-require('./public/externals/namespace-core/interfaces/IDisposable.js');
+/*require('./public/externals/namespace-core/interfaces/IDisposable.js');
 require('./public/externals/namespace-core/interfaces/IStringify.js');
-
-require('./public/externals/namespace-core/Class.js');
+*/
+require('./public/externals/namespace-core/build/namespace.core.js');
+/*require('./public/externals/namespace-core/Class.js');
 require('./public/externals/namespace-core/Interface.js');
 require('./public/externals/namespace-core/List.js');
 require('./public/externals/namespace-core/StaticArray.js');
@@ -41,7 +42,7 @@ require('./public/externals/namespace-core/Path.js');
 require('./public/externals/namespace-core/String.js');
 require('./public/externals/namespace-core/Timer.js');
 require('./public/externals/namespace-core/Unit.js');
-require('./public/externals/namespace-core/Warning.js');
+require('./public/externals/namespace-core/Warning.js');*/
 
 
 // -----------------------------

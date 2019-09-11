@@ -1,6 +1,5 @@
 importScripts('../constants.js');
-importScripts('../../externals/namespace-core/console.js');
-importScripts('../../externals/namespace-core/Thread.js');
+importScripts('../../externals/namespace-core/namespace-core.js');
 
 importScripts('../threejs/three.js');
 importScripts('./RaytracingWorker.js');
@@ -21,13 +20,12 @@ mainThread.onWorkerFunction('init', (data) =>
 	{
 		let data = 
 		{
-			type: 'renderCell',
 			workerIndex: workerIndex,
 			buffer: buffer,
 			cell: cell,
 			timeMs: timeMs
 		};
-		self.postMessage(data);
+		mainThread.mainFunction('renderCell', data);
 	}, data.workerIndex);
 	worker.init(data.canvasWidth, data.canvasHeight);
 });

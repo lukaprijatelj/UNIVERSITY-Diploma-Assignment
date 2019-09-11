@@ -87,7 +87,7 @@ WebPage._onServerConnected = function(socket, data)
 
 	API.request('rendering/checkAdmin', WebPage._onCheckRendering);	
 
-	new namespace.core.Thread(WebPage.onLoaded);
+	WebPage.onLoaded();
 };
 
 /**
