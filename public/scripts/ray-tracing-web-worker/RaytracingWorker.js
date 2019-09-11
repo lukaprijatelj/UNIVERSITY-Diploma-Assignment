@@ -132,6 +132,16 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData, a
 			this.lights.push(object);
 		}
 
+		for (let i=0; i<object.children.length; i++)
+		{
+			let current = object.children[i];
+
+			if (current instanceof THREE.SpotLight)
+			{
+				this.lights.push(current);
+			}
+		}
+
 		if (this.cache[object.id] === undefined) 
 		{
 			this.cache[object.id] = {
@@ -490,6 +500,8 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		// no need to spawn new ray cast, because we have reached max recursion depth
 		return;
 	}
+
+	return;
 
 	/*let aoValue = aoMap.r;
 	let roughnessValue = roughnessMap.g;

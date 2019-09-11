@@ -64,7 +64,6 @@
 	loadingBlock.push(new AsyncImporter('scripts/enums.js'));
 	loadingBlock.push(new AsyncImporter('scripts/debug.js'));
 	loadingBlock.push(new AsyncImporter('scripts/api.js'));
-	loadingBlock.push(new AsyncImporter('scripts/admin.events.js'));
 	loadingBlock.push(new AsyncImporter('scripts/admin.js'));
 	await Promise.all(loadingBlock);
 	

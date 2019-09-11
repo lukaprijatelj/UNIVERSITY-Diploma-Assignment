@@ -207,7 +207,7 @@ WebPage._initLights = function()
 	// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
 	// only Use PointLight
 
-	var intensity = 1;
+	/*var intensity = 1;
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
 	light.position.set( - 200, 100, 100 );
@@ -219,7 +219,7 @@ WebPage._initLights = function()
 
 	var light = new THREE.PointLight(0xffffff, intensity);
 	light.position.set( 0, 0, -300 );
-	WebPage.scene.add( light );
+	WebPage.scene.add( light );*/
 };
 
 /**

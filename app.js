@@ -20,29 +20,7 @@ var DATABASE = require('./server/database.js');
 // -----------------------------
 // import namespace-core
 // -----------------------------
-/*require('./public/externals/namespace-core/interfaces/IDisposable.js');
-require('./public/externals/namespace-core/interfaces/IStringify.js');
-*/
-require('./public/externals/namespace-core/build/namespace.core.js');
-/*require('./public/externals/namespace-core/Class.js');
-require('./public/externals/namespace-core/Interface.js');
-require('./public/externals/namespace-core/List.js');
-require('./public/externals/namespace-core/StaticArray.js');
-require('./public/externals/namespace-core/Array.js');
-require('./public/externals/namespace-core/Char.js');
-require('./public/externals/namespace-core/console.js');
-require('./public/externals/namespace-core/Date.js');
-require('./public/externals/namespace-core/Enum.js');
-require('./public/externals/namespace-core/Event.js');
-require('./public/externals/namespace-core/Exception.js');
-require('./public/externals/namespace-core/Function.js');
-require('./public/externals/namespace-core/Math.js');
-require('./public/externals/namespace-core/Object.js');
-require('./public/externals/namespace-core/Path.js');
-require('./public/externals/namespace-core/String.js');
-require('./public/externals/namespace-core/Timer.js');
-require('./public/externals/namespace-core/Unit.js');
-require('./public/externals/namespace-core/Warning.js');*/
+require('./public/externals/namespace-core/namespace-core.js');
 
 
 // -----------------------------
