@@ -33,9 +33,9 @@ var RaytracingRendererWorker = function(onCellRendered, index, near, far)
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
 
-	this.raycaster = new THREE.Raycaster(this.origin, this.direction, near, far);
+	this.raycaster = new THREE.Raycaster(this.origin, this.direction, 0, far);
 	this.ray = this.raycaster.ray;
-	this.raycasterLight = new THREE.Raycaster();
+	this.raycasterLight = new THREE.Raycaster(undefined, undefined, 0, far);
 	this.rayLight = this.raycasterLight.ray;
 
 	this.perspective;
@@ -203,12 +203,11 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		return;
 	}
 
-	let tmpColor = new Array();
+	// -----------------------------
+	// Ray hit one of the objects
+	// -----------------------------
 
-	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
-	{
-		tmpColor[i] = new THREE.Color();
-	}	
+	outputColor.setRGB(0, 0, 0);
 
 	let diffuseColor = new THREE.Color();
 	let specularColor = new THREE.Color();
@@ -226,12 +225,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	let reflectionVector = new THREE.Vector3();
 
 	let tmpVec = new THREE.Vector3();
-
-	// -----------------------------
-	// Ray hit one of the objects
-	// -----------------------------
-
-	outputColor.setRGB( 0, 0, 0 );
 
 	let intersection = intersections[0];
 	let point = intersection.point;
@@ -363,7 +356,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	if ( material.vertexColors === THREE.FaceColors) 
 	{
-		diffuseColor.multiply( face.color );
+		diffuseColor.multiply(face.color);
 	}
 
 
@@ -375,18 +368,18 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	let normalComputed = false;
 
-	for (let i = 0; i < _this.lights.length; i++) 
+	for (let i=0; i<_this.lights.length; i++) 
 	{
-		let light = _this.lights[ i ];
+		let light = _this.lights[i];
 
-		lightVector.setFromMatrixPosition( light.matrixWorld );
-		lightVector.sub( point );
+		lightVector.setFromMatrixPosition(light.matrixWorld);
+		lightVector.sub(point);
 
-		_this.rayLight.direction.copy( lightVector ).normalize();
+		_this.rayLight.direction.copy(lightVector).normalize();
 
 		let lightIntersections = _this.raycasterLight.intersectObjects(_this.objects, true);
 		
-		if ( lightIntersections.length > 0 ) 
+		if (lightIntersections.length > 0) 
 		{
 			// point in shadow
 
@@ -463,11 +456,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		}
 	}
 
-	if (aoMap)
-	{	
-		outputColor.multiply(aoMap);
-	}
-
 
 	// -----------------------------
 	// reflection / refraction
@@ -480,6 +468,13 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	}
 
 	return;
+
+	let tmpColor = new Array();
+
+	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
+	{
+		tmpColor[i] = new THREE.Color();
+	}	
 
 	/*let aoValue = aoMap.r;
 	let roughnessValue = roughnessMap.g;
