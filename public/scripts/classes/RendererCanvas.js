@@ -19,8 +19,8 @@ RendererCanvas.prototype.resizeCanvas = function()
 	var height = interfaceV.clientHeight; */
 
 	var canvas = gridLayout.canvasV;
-	canvas.width = options.RESOLUTION_WIDTH;
-	canvas.height = options.RESOLUTION_HEIGHT;
+	canvas.width = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
+	canvas.height = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
 
 	//var ctx = canvas.getContext('2d');
 	//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.

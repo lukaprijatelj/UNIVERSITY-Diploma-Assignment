@@ -279,7 +279,9 @@ WebPage.onGetLayout = function(data)
 	previousOptions = options;
 
 	let browser = new namespace.core.Browser();
-	browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+	browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 
 	WebPage.rendererCanvas.resizeCanvas();
 
@@ -362,7 +364,9 @@ WebPage.stopRendererUi = function()
 	WebPage.lastRenderingTime = 0;
 
 	let browser = new namespace.core.Browser();
-	browser.setTitle('Idle (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+	browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 };
 
 /**
@@ -436,7 +440,10 @@ WebPage.startRendering = function(cellsWaiting)
 	document.querySelector('interface').addClass('rendering');
 
 	let browser = new namespace.core.Browser();
-	browser.setTitle('Rendering (' + previousOptions.RESOLUTION_WIDTH + ' x ' + previousOptions.RESOLUTION_HEIGHT + ')');
+	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+
+	browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 
 	if (WebPage.rendererType == enums.rendererType.RAY_TRACING)
 	{

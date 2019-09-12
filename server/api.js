@@ -253,18 +253,20 @@ var API =
 		DATABASE.removeAllCells();
 
 		var startY = 0;
+		var MAX_WIDTH = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
+		var MAX_HEIGHT = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
 
-		while(startY < options.RESOLUTION_HEIGHT)
+		while(startY < MAX_HEIGHT)
 		{
 			var startX = 0;
 
-			while(startX < options.RESOLUTION_WIDTH)
+			while(startX < MAX_WIDTH)
 			{
 				var endX = startX + options.BLOCK_WIDTH;
 				var endY = startY + options.BLOCK_HEIGHT;
 
-				var MAX_X = endX < options.RESOLUTION_WIDTH ? endX : options.RESOLUTION_WIDTH;
-				var MAX_Y = endY < options.RESOLUTION_HEIGHT ? endY : options.RESOLUTION_HEIGHT;
+				var MAX_X = endX < MAX_WIDTH ? endX : MAX_WIDTH;
+				var MAX_Y = endY < MAX_HEIGHT ? endY : MAX_HEIGHT;
 
 				DATABASE.addRenderingCell(startX, startY, MAX_X - startX, MAX_Y - startY);
 

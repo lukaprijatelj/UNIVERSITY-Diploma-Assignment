@@ -387,7 +387,10 @@ WebPage._onNewRendererClick = function()
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
 	a.dispatchEvent(evt);*/
 
-	window.open("/client", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
+	let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
+	let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+
+	window.open("/client", "", "width=" + width + ",height=" + height);
 };
 
 WebPage._onOptionsButtonClick = async function(button)
@@ -413,11 +416,14 @@ WebPage._onOptionsButtonClick = async function(button)
 	dropdown.querySelector('#camera-y-input').value = options.CAMERA_POSITION_Y;
 	dropdown.querySelector('#camera-z-input').value = options.CAMERA_POSITION_Z;
 
-	var resolutionWidthInput = dropdown.querySelector('#resolution-width-input');
-	resolutionWidthInput.value = options.RESOLUTION_WIDTH;
+	var canvasWidthInput = dropdown.querySelector('#canvas-width-input');
+	canvasWidthInput.value = options.CANVAS_WIDTH;
 
-	var resolutionHeightInput = dropdown.querySelector('#resolution-height-input');
-	resolutionHeightInput.value = options.RESOLUTION_HEIGHT;
+	var canvasHeightInput = dropdown.querySelector('#canvas-height-input');
+	canvasHeightInput.value = options.CANVAS_HEIGHT;
+
+	var resolutionFactorInput = dropdown.querySelector('#resolution-factor-input');
+	resolutionFactorInput.value = options.RESOLUTION_FACTOR;
 
 	var blockWidthV = dropdown.querySelector('#block-width-input');
 	blockWidthV.value = options.BLOCK_WIDTH;
@@ -551,14 +557,19 @@ WebPage._onStartStopRenderingClick = function()
 	}
 };
 
-WebPage._onResolutionWidthChange = function(val)
+WebPage._onCanvasWidthChange = function(val)
 {
-	options.RESOLUTION_WIDTH = Number(val);
+	options.CANVAS_WIDTH = Number(val);
 };
 
-WebPage._onResolutionHeightChange = function(val)
+WebPage._onCanvasHeightChange = function(val)
 {
-	options.RESOLUTION_HEIGHT = Number(val);
+	options.CANVAS_HEIGHT = Number(val);
+};
+
+WebPage._onResolutionFactorChange = function(val)
+{
+	options.RESOLUTION_FACTOR = Number(val);
 };
 
 WebPage._onBlockWidthChange = function(val)
@@ -573,6 +584,9 @@ WebPage._onBlockHeightChange = function(val)
 
 WebPage._onOpenOutputClick = function()
 {
+	let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
+	let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+
 	// open rendering output window
-	window.open("/renderingOutput", "", "width=" + options.RESOLUTION_WIDTH + ",height=" + options.RESOLUTION_HEIGHT);
+	window.open("/renderingOutput", "", "width=" + width + ",height=" + height);
 };

@@ -83,7 +83,10 @@ WebPage.onGetLayout = function(data)
 	options = data.options;
 
 	let browser = new namespace.core.Browser();
-	browser.setTitle('Output (' + options.RESOLUTION_WIDTH + ' x ' + options.RESOLUTION_HEIGHT + ')');
+	let optionsWidth = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
+	let optionsHeight = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+
+	browser.setTitle('Output (' + optionsWidth + ' x ' + optionsHeight + ')');
 
 	WebPage.rendererCanvas.resizeCanvas();
 

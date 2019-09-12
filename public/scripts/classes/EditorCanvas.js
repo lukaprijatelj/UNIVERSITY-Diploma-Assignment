@@ -27,11 +27,11 @@ EditorCanvas.prototype.resizeCanvas = function()
 	canvas.width = width;
 	canvas.height = height;
 
-	if (options)
+	/*if (options)
 	{
 		options.CANVAS_WIDTH = width;
 		options.CANVAS_HEIGHT = height;
-	}
+	}*/
 	
 	if (WebPage.renderer)
 	{

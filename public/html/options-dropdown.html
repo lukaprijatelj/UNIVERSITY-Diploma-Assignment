@@ -14,17 +14,22 @@
 	<divider-x-small></divider-x-small>	
 	<divider-x-small></divider-x-small>
 
-	<!-- Resolution width and height inputs -->
+	<!-- Canvas width and height inputs -->
 	<section>
-		<label>RESOLUTION (width, height)</label>
+		<label>CANVAS (width, height)</label>
 		<divider-x-small></divider-x-small>
 		<flex>
-			<input type="number" id="resolution-width-input" class="" onchange="WebPage._onResolutionWidthChange(this.value)">
+			<input type="number" id="canvas-width-input" class="" onchange="WebPage._onCanvasWidthChange(this.value)">
 			<divider-y-small></divider-y-small>
-			<input type="number" id="resolution-height-input" class="" onchange="WebPage._onResolutionHeightChange(this.value)">
+			<input type="number" id="canvas-height-input" class="" onchange="WebPage._onCanvasHeightChange(this.value)">
 		</flex>
 	</section>
 	<divider-x-small></divider-x-small>
+	<section>
+		<label>Resolution factor</label>
+		<divider-x-small></divider-x-small>
+		<input type="number" id="resolution-factor-input" class="" onchange="WebPage._onResolutionFactorChange(this.value)">
+	</section>
 	<divider-x-small></divider-x-small>
 
 	<!-- Block width and height inputs -->
