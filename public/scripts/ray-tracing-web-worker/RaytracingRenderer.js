@@ -5,7 +5,7 @@
  *
  * @author zz85 / http://github.com/zz85
  */
-var RaytracingRenderer = function(canvas) 
+var RaytracingRenderer = function(canvas, scene, camera) 
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
@@ -13,8 +13,8 @@ var RaytracingRenderer = function(canvas)
 	this.domElement = canvas; // do not delete, this is only for referencing
 	this.context = null;
 
-	this.scene = null;
-	this.camera = null;
+	this.scene = scene;
+	this.camera = camera;
 
 	/**
 	 * Cells that will be rendered.
@@ -34,6 +34,8 @@ var RaytracingRenderer = function(canvas)
 	 */
 	this.sceneJSON;
 	this.cameraJSON;
+
+	this.init();
 };
 
 Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
@@ -116,9 +118,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 		{
 			workerIndex: i,
 			canvasWidth: _this.canvas.width,
-			canvasHeight: _this.canvas.height,
-			near: options.CAMERA_NEAR,
-			far: options.CAMERA_FAR
+			canvasHeight: _this.canvas.height		
 		};
 
 		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');

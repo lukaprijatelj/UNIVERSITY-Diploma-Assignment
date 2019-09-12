@@ -4,7 +4,7 @@
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-var RaytracingRendererWorker = function(onCellRendered, index, near, far) 
+var RaytracingRendererWorker = function(onCellRendered, index) 
 {
 	console.log('[RaytracingRendererWorker] Initializing worker');
 
@@ -25,17 +25,15 @@ var RaytracingRendererWorker = function(onCellRendered, index, near, far)
 	 */
 	this.cell = null;
 
-	this.isRendering = false;
-	
 	this.camera;
 	this.cameraPosition = new THREE.Vector3();
 	this.cameraNormalMatrix = new THREE.Matrix3();
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
 
-	this.raycaster = new THREE.Raycaster(this.origin, this.direction, 0, far);
+	this.raycaster = new THREE.Raycaster(this.origin, this.direction);
 	this.ray = this.raycaster.ray;
-	this.raycasterLight = new THREE.Raycaster(undefined, undefined, 0, far);
+	this.raycasterLight = new THREE.Raycaster(undefined, undefined);
 	this.rayLight = this.raycasterLight.ray;
 
 	this.perspective;
@@ -865,7 +863,6 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 		}
 	}
 
-	_this.isRendering = false;
 	_this.onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
 
@@ -877,7 +874,6 @@ RaytracingRendererWorker.prototype.render = function()
 {
 	let _this = this;
 
-	_this.isRendering = true;
 	_this.renderingStartedDate = new Date();
 
 	_this.renderBlock();

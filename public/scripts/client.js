@@ -238,7 +238,7 @@ WebPage._initRenderer = function()
 	switch(WebPage.rendererType)
 	{
 		case enums.rendererType.RAY_TRACING:
-			renderer = new RaytracingRenderer(canvas);
+			renderer = new RaytracingRenderer(canvas, WebPage.scene, WebPage.camera);
 			break;
 
 		case enums.rendererType.PATH_TRACING:
@@ -247,14 +247,6 @@ WebPage._initRenderer = function()
 	}	
 	
 	WebPage.renderer = renderer;
-
-	// -----------------------------
-	// set properties
-	// -----------------------------
-	renderer.scene = WebPage.scene;
-	renderer.camera = WebPage.camera;
-	
-	renderer.init();
 };	
 
 /**

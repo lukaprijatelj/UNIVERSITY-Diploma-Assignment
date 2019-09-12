@@ -26,7 +26,7 @@ mainThread.onWorkerFunction('init', (data) =>
 			timeMs: timeMs
 		};
 		mainThread.mainFunction('renderCell', data);
-	}, data.workerIndex, data.near, data.far);
+	}, data.workerIndex);
 	worker.init(data.canvasWidth, data.canvasHeight);
 });
 
