@@ -3,6 +3,9 @@
 Run VS code debugger and go to browser and type "http://localhost:30000/"
 
 
+## Building typescript and scss
+	npm run build
+Build task will be read from scripts property of the package.json file.
 
 # TODO:
 	- popravim Lights, da bodo enake v client.js in admin.js
