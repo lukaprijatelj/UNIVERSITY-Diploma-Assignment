@@ -21,7 +21,7 @@ var options =
 	CAMERA_FOV: 75,
 	CAMERA_ASPECT: 2,  // the canvas default
 	CAMERA_NEAR: 0.1,
-	CAMERA_FAR: 100
+	CAMERA_FAR: 10000
 };
 
 

@@ -35,6 +35,11 @@ var RaytracingRenderer = function(canvas, scene, camera)
 	this.sceneJSON;
 	this.cameraJSON;
 
+	/**
+	 * Event handlers.
+	 */
+	this.renderCell = this.renderCell.bind(this);
+
 	this.init();
 };
 
@@ -123,14 +128,16 @@ RaytracingRenderer.prototype.setWorkers = function()
 
 		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
 		thread.isRendering = false;
-		thread.workerFunction('init', data);
-		thread.onMainFunction('renderCell', (data) =>
-		{
-			_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
-		});
-	
+		thread.workerFunction('init', data);	
 		_this.workers[i] = thread;
 	}
+};
+
+
+RaytracingRenderer.prototype.renderCell = function(data)
+{
+	let _this = this;
+	_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
 };
 
 

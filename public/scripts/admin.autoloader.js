@@ -8,6 +8,15 @@
 
 
 	// -----------------------------
+	// namespace-debug
+	// -----------------------------
+
+	loadingBlock = new Array();
+	loadingBlock.push(new AsyncImporter("externals/namespace-debug/namespace-debug.js"));;
+	await Promise.all(loadingBlock);
+
+
+	// -----------------------------
 	// namespace-core
 	// -----------------------------
 

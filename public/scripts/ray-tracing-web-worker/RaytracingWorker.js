@@ -9,7 +9,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	console.log('[RaytracingRendererWorker] Initializing worker');
 
 	// basically how many tmes it spawns ray (how many times ray hits object)
-	this.maxRecursionDepth = 3;
+	this.maxRecursionDepth = 2;
 
 	this.canvasWidth;
 	this.canvasHeight;
@@ -465,7 +465,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		return;
 	}
 
-	return;
 
 	let tmpColor = new Array();
 
@@ -474,18 +473,14 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		tmpColor[i] = new THREE.Color();
 	}	
 
-	/*let aoValue = aoMap.r;
-	let roughnessValue = roughnessMap.g;
-	let metalnessValue = metalnessMap.b;*/
-		
-	let reflectivity;
+	let reflectivity = 0;
 
-	if (material.reflectivity)
+	if (metalnessMap)
 	{
-		reflectivity = material.reflectivity;
+		reflectivity = metalnessMap.b;
 	}
 
-	//if (( material.mirror || material.glass) && reflectivity > 0) 
+	if (reflectivity > 0) 
 	{
 		/*if ( material.mirror ) 
 		{
@@ -515,15 +510,18 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			}
 		}*/
 
+		reflectionVector.copy( rayDirection );
+		reflectionVector.reflect( normalVector );
+
 		// 0 (theta) - Theta is the angle between the viewing direction and the half vector;
-		//let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+		let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
 
 		// F0 - Fresnel Reflectance at 0 degrees
-		//let F0 = reflectivity;
+		let F0 = reflectivity;
 
 		// fresnel
-		//let fresnel = _this.Fresnel_Schlick(cosinusTheta, F0);
-		let fresnel = _this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
+		let fresnel = _this.Fresnel_Schlick(cosinusTheta, F0);
+		//let fresnel = _this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
 		let weight = fresnel;
 
 		let zColor = tmpColor[ recursionDepth ];
@@ -540,7 +538,119 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		outputColor.multiplyScalar( 1 - weight );
 		outputColor.add( zColor );
 	}
+
+
+
+	/*reflectionVector.copy( rayDirection );
+	reflectionVector.reflect( normalVector );
+
+	let DistributionGGX = function(N, H, a)
+	{
+		let a2 = a*a;
+		let NdotH  = Math.max(N.dot(H), 0.0);
+		let NdotH2 = NdotH*NdotH;
+		
+		let nom = a2;
+		let denom  = (NdotH2 * (a2 - 1.0) + 1.0);
+		denom = Math.PI * denom * denom;
+		
+		return nom / denom;
+	};
+
+	let GeometrySchlickGGX = function(NdotV, k)
+	{
+		let nom   = NdotV;
+		let denom = NdotV * (1.0 - k) + k;
+		
+		return nom / denom;
+	};
+	
+	let GeometrySmith = function(N, V, L, k)
+	{
+		let NdotV = Math.max(N.dot(V), 0.0);
+		let NdotL = Math.max(N.dot(L), 0.0);
+		let ggx1 = GeometrySchlickGGX(NdotV, k);
+		let ggx2 = GeometrySchlickGGX(NdotL, k);
+		
+		return ggx1 * ggx2;
+	};
+
+	let F0 = new THREE.Vector3(0.04, 0.04, 0.04);
+	F0 = lerp(F0, surfaceColor.rgb, metalnessMap.b);
+	let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+
+	let fresnelSchlick = function(cosTheta, F0)
+	{
+		return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	};
+
+	halfVector.addVectors( lightVector, eyeVector ).normalize();
+
+	let D = DistributionGGX(normalVector, halfVector);
+	let F = fresnelSchlick(cosinusTheta, F0);
+	let G = GeometrySmith(normalVector, eyeVector, lightVector, roughnessMap.g);
+
+	let zColor = tmpColor[ recursionDepth ];
+
+	// recursive call
+	_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
+
+
+	zColor.multiplyScalar( weight );
+	outputColor.multiplyScalar( 1 - weight );
+	outputColor.add( zColor );*/
 };
+
+
+
+
+
+
+
+
+function saturate(value)
+{
+	if (value < 0)
+	{
+		return 0;
+	}
+
+	if (value > 1)
+	{
+		return 1;
+	}
+
+	return value;
+};
+
+function lerp(a,b,w)
+{
+	return a.add((b.sub(a)).multiplyScalar(w));
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RaytracingRendererWorker.prototype.chiGGX = function(viewVector)
 {
@@ -601,25 +711,6 @@ RaytracingRendererWorker.prototype.GGX_Specular = function(SpecularEnvmap, norma
     return radiance / SamplesCount;        
 };
 
-function saturate(value)
-{
-	if (value < 0)
-	{
-		return 0;
-	}
-
-	if (value > 1)
-	{
-		return 1;
-	}
-
-	return value;
-};
-
-function lerp(a,b,w)
-{
-	return a + w*(b-a);
-};
 
 RaytracingRendererWorker.prototype.PixelShaderFunction = function(diffuseColor, metalnessColor, viewVector, normal)
 {

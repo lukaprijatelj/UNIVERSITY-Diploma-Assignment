@@ -2,10 +2,9 @@
   "name": "client",
   "version": "0.0.0",
   "private": true,
-  "scripts": 
-  {
+  "scripts": {
     "start": "node ./bin/www",
-    "build:scss": "cd js-namespace-html && sass stylesheets/root.scss output.css --style compressed",
+    "build:scss": "cd js-namespace-html && sass stylesheets/_root.scss namespace-html.css --style compressed",
     "build:ts": "cd js-namespace-html && tsc",
     "build": "npm run build:ts && npm run build:scss"
   },
@@ -20,6 +19,7 @@
     "morgan": "~1.9.0",
     "multer": "^1.4.1",
     "npm": "^6.9.0",
+    "sass": "^1.22.12",
     "socket.io": "^2.2.0",
     "three": "^0.103.0",
     "uuid": "^3.3.2"

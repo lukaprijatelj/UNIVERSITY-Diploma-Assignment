@@ -14,7 +14,7 @@ var cell = null;
 
 var mainThread = new namespace.core.MainThread();
 
-mainThread.onWorkerFunction('init', (data) =>
+function init(data)
 {
 	worker = new RaytracingRendererWorker((workerIndex, buffer, cell, timeMs) =>
 	{
@@ -25,23 +25,23 @@ mainThread.onWorkerFunction('init', (data) =>
 			cell: cell,
 			timeMs: timeMs
 		};
-		mainThread.mainFunction('renderCell', data);
+		mainThread.mainFunction('WebPage.renderer.renderCell', data);
 	}, data.workerIndex);
 	worker.init(data.canvasWidth, data.canvasHeight);
-});
+}
 
-mainThread.onWorkerFunction('setCell', (data) =>
+function setCell(data)
 {
 	cell = data.cell;
 	worker.setCell(cell);
-});
+}
 
-mainThread.onWorkerFunction('initScene', (data) =>
+function initScene(data)
 {
 	worker.initScene(data.sceneJSON, data.cameraJSON);
-});
+}
 
-mainThread.onWorkerFunction('startRendering', (data) =>
+function startRendering(data)
 {
 	worker.render();
-});
+}

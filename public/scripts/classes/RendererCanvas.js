@@ -69,6 +69,8 @@ RendererCanvas.prototype.flagRenderCell = function(cell)
 
 	var canvas = gridLayout.canvasV;
 	var ctx = canvas.getContext('2d');
+
+	// draw border
 	ctx.beginPath();
 	ctx.lineWidth = String(borderWidth);
 	ctx.strokeStyle = "red";

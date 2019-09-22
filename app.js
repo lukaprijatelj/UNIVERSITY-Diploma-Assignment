@@ -27,7 +27,6 @@ require('./public/externals/namespace-core/namespace-core.js');
 // import routes
 // -----------------------------
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/upload');
 var clientRendererRouter = require('./routes/client');
 var clientAdminRouter = require('./routes/admin');
 var renderingOutputRouter = require('./routes/rendering-output');
@@ -83,7 +82,6 @@ var EXPRESS_APP =
 		// Build url routes scheme
 		// -----------------------------
 		app.use('/', indexRouter);
-		app.use('/upload', usersRouter);
 		app.use('/client', clientRendererRouter);
 		app.use('/admin', clientAdminRouter);
 		app.use('/renderingOutput', renderingOutputRouter);

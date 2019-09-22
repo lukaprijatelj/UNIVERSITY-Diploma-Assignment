@@ -151,23 +151,23 @@ WebPage.startLoadingGltfModel = function(path)
 WebPage._initScene = function()
 {
 	WebPage.scene = new THREE.Scene();
-	/*WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/sor_lake1/').load([
+	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/sor_lake1/').load([
 		'posX.png',
 		'negX.png',
 		'posY.png',
 		'negY.png',
 		'posZ.png',
 		'negZ.png'
-	]);*/
+	]);
 
-	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
+	/*WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
 		'posX.jpg',
 		'negX.jpg',
 		'posY.jpg',
 		'negY.jpg',
 		'posZ.jpg',
 		'negZ.jpg'
-	]);
+	]);*/
 };
 
 /**
@@ -371,6 +371,7 @@ WebPage._onSceneButtonClick = async function(button)
 
 	let curtain = new namespace.html.Curtain();
 	curtain.onClick(WebPage.hideLastDropdown);
+	curtain.show();
 	
 	let layer = document.querySelector('layer#dropdowns');
 	layer.appendChild(curtain);
@@ -444,6 +445,7 @@ WebPage._onOptionsButtonClick = async function(button)
 
 	let curtain = new namespace.html.Curtain();
 	curtain.onClick(WebPage.hideLastDropdown);
+	curtain.show();
 
 	let layer = document.querySelector('layer#dropdowns');
 	layer.appendChild(curtain);
