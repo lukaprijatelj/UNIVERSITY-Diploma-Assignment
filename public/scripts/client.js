@@ -164,14 +164,17 @@ WebPage._initScene = function()
 {
 	WebPage.scene = new THREE.Scene();
 
-	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
-		'posX.jpg',
-		'negX.jpg',
-		'posY.jpg',
-		'negY.jpg',
-		'posZ.jpg',
-		'negZ.jpg'
-	]);
+	var skyImages = 
+	[
+		'posX.png',
+		'negX.png',
+		'posY.png',
+		'negY.png',
+		'posZ.png',
+		'negZ.png'
+	];
+
+	WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
 };
 
 /**

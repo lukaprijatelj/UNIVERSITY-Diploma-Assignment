@@ -1,37 +1,51 @@
 # UNIVERSITY-Diploma-Assignment
+Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 
-Run VS code debugger and go to browser and type "http://localhost:30000/"
 
-
-## Building typescript and scss
+# Building 
 	npm run build
 Build task will be read from scripts property of the package.json file.
 
+## Compiling typescript
+	cd <folder-with-tsconfig.json> && tsc
+
+## Compiling Sass (scss)
+	sass stylesheets/_root.scss namespace-html.css --style compressed
+
+
 # TODO:
-	- popravim Lights, da bodo enake v client.js in admin.js
-	- dodam možnost, da bom lahko uploadal sceno kar preko server admin-a
 	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
 	- odstarnim stare branche
 	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
 	- spremenim Event.prototype.invoke v Event.invoke() statično funkcijo, saj potem lahko preverim ali je typeof Event ali typeof function in tako invokam funkcijo ali pa event
+	- spremenim, da se camera bere iz scene in spreeni preko gumba v free camera
 
 
+# Implementation
+I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
 
-## Demo verzija
+
+## Demo verzija (cPanel)
 http://lukaprij.wwwnl1-ss11.a2hosted.com/admin
+http://lukaprij.wwwnl1-ss11.a2hosted.com/client
+
+## Demo verzija (friMinecraft)
+http://minecraft.fri.uni-lj.si:30003/admin
+http://minecraft.fri.uni-lj.si:30003/client
+
 
 ## Libraries used
 - SocketIO (bidirectional communication between server and client. It can also send to all clients at once)
 - glMatrix (vector and matrix operations )
+- Typescript
+- Sass (Scss)
 
-## NPM packages used
+
+## NPM Packages used
 - MongoDB
 - ExpressJS
 - uuidv1 (for GUID key generation for database tables)
-
-# UI design inspiration
-https://www.behance.net/gallery/80267021/Xave-Expense-Tracker
 
 
 ## Browser compatibility
@@ -47,9 +61,6 @@ https://www.behance.net/gallery/80267021/Xave-Expense-Tracker
 A2 hosting also has a problem with NodeJS hosting. Servers kill nodejs application when terminal is closed and aplication works in background.
 
 # Shell
-Username (cPanel/SSH/FTP):  lukaprij
-Password (cPanel/SSH/FTP):  dg[OC3tS.86tC4
-
 Open putty SSH and type
 screen
 cd University-Diploma

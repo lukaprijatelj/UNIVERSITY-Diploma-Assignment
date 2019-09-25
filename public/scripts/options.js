@@ -5,6 +5,9 @@ var options =
 	//SCENE_FILEPATH: 'scenes/Buggy/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/MetalRoughSpheres/Scene.gltf',
 
+	SKY_CUBE_FILEPATH: 'images/sor_lake1/',
+	//SKY_CUBE_FILEPATH: 'images/skycube_2/',
+
 	RESOLUTION_FACTOR: 1,
 
 	CANVAS_WIDTH: 1280,

@@ -151,23 +151,18 @@ WebPage.startLoadingGltfModel = function(path)
 WebPage._initScene = function()
 {
 	WebPage.scene = new THREE.Scene();
-	WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/sor_lake1/').load([
+
+	var skyImages = 
+	[
 		'posX.png',
 		'negX.png',
 		'posY.png',
 		'negY.png',
 		'posZ.png',
 		'negZ.png'
-	]);
-
-	/*WebPage.scene.background = new THREE.CubeTextureLoader().setPath('images/skycube_2/').load([
-		'posX.jpg',
-		'negX.jpg',
-		'posY.jpg',
-		'negY.jpg',
-		'posZ.jpg',
-		'negZ.jpg'
-	]);*/
+	];
+		
+	WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
 };
 
 /**
@@ -353,21 +348,24 @@ WebPage.onLoaded = function()
 	document.querySelector('interface').removeClass('loading');
 };
 
-
+/**
+ * Scene button od dropdown was clicked.
+*/
 WebPage._onSceneButtonClick = async function(button)
 {
 	let ajaxCall = new namespace.core.Ajax('html/scene-dropdown.html');
 	ajaxCall.method = 'GET';
 	let xhrCall = await ajaxCall.send();
 	
-	let offsetTop = button.getTop();
-	let left = button.getLeft();
-	let top = Unit.add(offsetTop, button.getOuterHeight());
-	top = Unit.add(top, new Unit('1px'));
+	let dropdown = new namespace.html.Dropdown();
+	dropdown.setAttribute('id', 'scene-dropdown');
+	dropdown.appendChild(xhrCall.responseText);
 
-	let sceneDropdown = HTMLElement.parse(xhrCall.responseText);
-	sceneDropdown.style.top = top.toString();
-	sceneDropdown.style.left = left.toString();
+	let anchor = new namespace.html.Anchor(dropdown);
+	anchor.setTarget(button);
+
+	let top = Unit.add(new Unit('1px'), button.getOuterHeight());
+	anchor.setCenter(top, new Unit());
 
 	let curtain = new namespace.html.Curtain();
 	curtain.onClick(WebPage.hideLastDropdown);
@@ -375,7 +373,7 @@ WebPage._onSceneButtonClick = async function(button)
 	
 	let layer = document.querySelector('layer#dropdowns');
 	layer.appendChild(curtain);
-	layer.appendChild(sceneDropdown);
+	layer.appendChild(dropdown);
 	layer.show();
 };
 
@@ -453,17 +451,21 @@ WebPage._onOptionsButtonClick = async function(button)
 	layer.show();
 };
 
+/**
+ * User choose different scene.
+ */
 WebPage.onPreloadedSceneClick = function(element)
 {
 	options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
-	GarbageCollector.dispose(WebPage.renderer);
-	
 	WebPage.openScene();
 
 	WebPage.onDropdownsCurtainClick();
 };
 
+/**
+ * User picked file/folder with 3D scene.
+ */
 WebPage.onFileUploadChange = async function(event)
 {
 	WebPage.onDropdownsCurtainClick();

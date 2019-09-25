@@ -416,7 +416,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		// compute specular
 
-		if (material.isMeshPhongMaterial) 
+		if (material.specular || material.shininess) 
 		{
 			let specular;
 			let shininess;
@@ -473,7 +473,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		tmpColor[i] = new THREE.Color();
 	}	
 
-	let reflectivity = 0;
+	/*let reflectivity = 0;
 
 	if (metalnessMap)
 	{
@@ -482,7 +482,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 	if (reflectivity > 0) 
 	{
-		/*if ( material.mirror ) 
+		if ( material.mirror ) 
 		{
 			reflectionVector.copy( rayDirection );
 			reflectionVector.reflect( normalVector );
@@ -508,7 +508,7 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 				tmpVec.multiplyScalar( alpha );
 				reflectionVector.sub( tmpVec );
 			}
-		}*/
+		}
 
 		reflectionVector.copy( rayDirection );
 		reflectionVector.reflect( normalVector );
@@ -538,7 +538,65 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		outputColor.multiplyScalar( 1 - weight );
 		outputColor.add( zColor );
 	}
+*/
 
+	var reflectivity = material.reflectivity;
+
+	if (( material.mirror || material.glass ) && reflectivity > 0) 
+	{
+		if ( material.mirror ) 
+		{
+			reflectionVector.copy( rayDirection );
+			reflectionVector.reflect( normalVector );
+		}
+		else if ( material.glass ) 
+		{
+			var eta = material.refractionRatio;
+
+			var dotNI = rayDirection.dot( normalVector );
+			var k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
+
+			if ( k < 0.0 ) 
+			{
+				reflectionVector.set( 0, 0, 0 );
+			}
+			else 
+			{
+				reflectionVector.copy( rayDirection );
+				reflectionVector.multiplyScalar( eta );
+
+				var alpha = eta * dotNI + Math.sqrt( k );
+				tmpVec.copy( normalVector );
+				tmpVec.multiplyScalar( alpha );
+				reflectionVector.sub( tmpVec );
+			}
+		}
+
+		var theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+		var rf0 = reflectivity;
+		var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+		var weight = fresnel;
+		
+
+		if ( material.specular !== undefined ) 
+		{
+			zColor.multiply( material.specular );
+		}
+
+		zColor.multiplyScalar( weight );
+		outputColor.multiplyScalar( 1 - weight );
+		outputColor.add( zColor );
+	}
+
+	var zColor = tmpColor[ recursionDepth ];
+
+	_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
+
+	if (material.specular !== undefined) 
+	{
+		zColor.multiply( material.specular );
+	}
+	outputColor.add( zColor );
 
 
 	/*reflectionVector.copy( rayDirection );
