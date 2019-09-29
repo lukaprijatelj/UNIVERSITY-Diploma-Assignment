@@ -1,9 +1,10 @@
 var options = 
 {
 	//SCENE_FILEPATH: 'scenes/Castle/Scene.gltf',
-	SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
+	//SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/Buggy/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/MetalRoughSpheres/Scene.gltf',
+	SCENE_FILEPATH: 'scenes/boomBox/Scene.gltf',
 
 	SKY_CUBE_FILEPATH: 'images/sor_lake1/',
 	//SKY_CUBE_FILEPATH: 'images/skycube_2/',
@@ -23,7 +24,7 @@ var options =
 
 	CAMERA_FOV: 75,
 	CAMERA_ASPECT: 2,  // the canvas default
-	CAMERA_NEAR: 0.1,
+	CAMERA_NEAR: 0.001,
 	CAMERA_FAR: 10000
 };
 
