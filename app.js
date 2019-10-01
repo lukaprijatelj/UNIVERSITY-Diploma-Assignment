@@ -32,6 +32,16 @@ var clientAdminRouter = require('./routes/admin');
 var renderingOutputRouter = require('./routes/rendering-output');
 
 
+// -----------------------------
+// check if scenes folder exists, if not than create it
+// -----------------------------
+
+var dir = './public/scenes';
+
+if (!fs.existsSync(dir))
+{
+    fs.mkdirSync(dir);
+}
 
 var app = express();
 var EXPRESS_APP =

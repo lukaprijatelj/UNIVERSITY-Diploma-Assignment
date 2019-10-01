@@ -353,7 +353,7 @@ WebPage.onLoaded = function()
 */
 WebPage._onSceneButtonClick = async function(button)
 {
-	let ajaxCall = new namespace.core.Ajax('html/scene-dropdown.html');
+	let ajaxCall = new namespace.core.Ajax('api/list');
 	ajaxCall.method = 'GET';
 	let xhrCall = await ajaxCall.send();
 	

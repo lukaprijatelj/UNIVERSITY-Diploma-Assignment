@@ -254,55 +254,11 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	 * 
 	 */
 
-	let alphaMap = null;
-	let aoMap = null;
-	let emissiveMap = null;
-	let envMap = null;
-	let lightMap = null;
 	let albedo = null;
-	let metalnessMap = null;
-	let normalMap = null;
-	let roughnessMap = null; 
 
 	if (intersection.uv)
 	{
 		let vectorUV;
-
-		if (material.alphaMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.alphaMap.transformUv(vectorUV);
-			alphaMap = _this.getTexturePixel(material.alphaMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.aoMap)
-		{
-			// ambient occulsion map
-			vectorUV = intersection.uv.clone();
-			material.aoMap.transformUv(vectorUV);
-			aoMap = _this.getTexturePixel(material.aoMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.emissiveMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.emissiveMap.transformUv(vectorUV);
-			emissiveMap = _this.getTexturePixel(material.emissiveMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.envMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.envMap.transformUv(vectorUV);
-			envMap = _this.getTexturePixel(material.envMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.lightMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.lightMap.transformUv(vectorUV);
-			lightMap = _this.getTexturePixel(material.lightMap.image, vectorUV.x, vectorUV.y);
-		}
 
 		if (material.map)
 		{
@@ -310,27 +266,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 			vectorUV = intersection.uv.clone();
 			material.map.transformUv(vectorUV);
 			albedo = _this.getTexturePixel(material.map.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.metalnessMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.metalnessMap.transformUv(vectorUV);
-			metalnessMap = _this.getTexturePixel(material.metalnessMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.normalMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.normalMap.transformUv(vectorUV);
-			normalMap = _this.getTexturePixel(material.normalMap.image, vectorUV.x, vectorUV.y);
-		}
-
-		if (material.roughnessMap)
-		{
-			vectorUV = intersection.uv.clone();
-			material.roughnessMap.transformUv(vectorUV);
-			roughnessMap = _this.getTexturePixel(material.roughnessMap.image, vectorUV.x, vectorUV.y);
 		}
 	}
 
@@ -466,6 +401,77 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	}
 
 
+	let alphaMap = null;
+	let aoMap = null;
+	let emissiveMap = null;
+	let envMap = null;
+	let lightMap = null;
+	let metalnessMap = null;
+	let normalMap = null;
+	let roughnessMap = null; 
+
+	if (intersection.uv)
+	{
+		let vectorUV;
+
+		if (material.alphaMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.alphaMap.transformUv(vectorUV);
+			alphaMap = _this.getTexturePixel(material.alphaMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.aoMap)
+		{
+			// ambient occulsion map
+			vectorUV = intersection.uv.clone();
+			material.aoMap.transformUv(vectorUV);
+			aoMap = _this.getTexturePixel(material.aoMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.emissiveMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.emissiveMap.transformUv(vectorUV);
+			emissiveMap = _this.getTexturePixel(material.emissiveMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.envMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.envMap.transformUv(vectorUV);
+			envMap = _this.getTexturePixel(material.envMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.lightMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.lightMap.transformUv(vectorUV);
+			lightMap = _this.getTexturePixel(material.lightMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.metalnessMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.metalnessMap.transformUv(vectorUV);
+			metalnessMap = _this.getTexturePixel(material.metalnessMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.normalMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.normalMap.transformUv(vectorUV);
+			normalMap = _this.getTexturePixel(material.normalMap.image, vectorUV.x, vectorUV.y);
+		}
+
+		if (material.roughnessMap)
+		{
+			vectorUV = intersection.uv.clone();
+			material.roughnessMap.transformUv(vectorUV);
+			roughnessMap = _this.getTexturePixel(material.roughnessMap.image, vectorUV.x, vectorUV.y);
+		}
+	}
+
 	let tmpColor = new Array();
 
 	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
@@ -473,76 +479,16 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		tmpColor[i] = new THREE.Color();
 	}	
 
-	/*let reflectivity = 0;
-
-	if (metalnessMap)
-	{
-		reflectivity = metalnessMap.b;
-	}
-
-	if (reflectivity > 0) 
-	{
-		if ( material.mirror ) 
-		{
-			reflectionVector.copy( rayDirection );
-			reflectionVector.reflect( normalVector );
-		}
-		else if ( material.glass ) 
-		{
-			let eta = material.refractionRatio;
-
-			let dotNI = rayDirection.dot( normalVector );
-			let k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
-
-			if ( k < 0.0 ) 
-			{
-				reflectionVector.set( 0, 0, 0 );
-			}
-			else 
-			{
-				reflectionVector.copy( rayDirection );
-				reflectionVector.multiplyScalar( eta );
-
-				let alpha = eta * dotNI + Math.sqrt( k );
-				tmpVec.copy( normalVector );
-				tmpVec.multiplyScalar( alpha );
-				reflectionVector.sub( tmpVec );
-			}
-		}
-
-		reflectionVector.copy( rayDirection );
-		reflectionVector.reflect( normalVector );
-
-		// 0 (theta) - Theta is the angle between the viewing direction and the half vector;
-		let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
-
-		// F0 - Fresnel Reflectance at 0 degrees
-		let F0 = reflectivity;
-
-		// fresnel
-		let fresnel = _this.Fresnel_Schlick(cosinusTheta, F0);
-		//let fresnel = _this.PixelShaderFunction(diffuse, metalnessMap, rayDirection, normalVector);
-		let weight = fresnel;
-
-		let zColor = tmpColor[ recursionDepth ];
-
-		// recursive call
-		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
-
-		if (material.specular !== undefined) 
-		{
-			zColor.multiply( material.specular );
-		}
-
-		zColor.multiplyScalar( weight );
-		outputColor.multiplyScalar( 1 - weight );
-		outputColor.add( zColor );
-	}
-*/
 
 	var reflectivity = material.reflectivity;
 
-	if (( material.mirror || material.glass ) && reflectivity > 0) 
+	if (reflectivity <= 0)
+	{
+		// not reflection means we don't need to spawn ray
+		return;
+	}
+
+	if ( material.mirror || material.glass) 
 	{
 		if ( material.mirror ) 
 		{
@@ -577,7 +523,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
 		var weight = fresnel;
 		
-
 		if ( material.specular !== undefined ) 
 		{
 			zColor.multiply( material.specular );
