@@ -20,6 +20,9 @@ Build task will be read from scripts property of the package.json file.
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
 	- spremenim Event.prototype.invoke v Event.invoke() statično funkcijo, saj potem lahko preverim ali je typeof Event ali typeof function in tako invokam funkcijo ali pa event
 	- spremenim, da se camera bere iz scene in spreeni preko gumba v free camera
+	- dodoam ObservableProperty in ObservableArray (na .push in .pop se refresha array)
+	- dodam background color oziroma skybox v options dropdown
+	- popravim scene dropdowns da doda dynamično vse scene iz scenes/ mape preko NodeJSa
 
 
 # Implementation
