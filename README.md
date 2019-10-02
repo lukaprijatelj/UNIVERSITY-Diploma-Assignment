@@ -22,7 +22,7 @@ Build task will be read from scripts property of the package.json file.
 	- spremenim, da se camera bere iz scene in spreeni preko gumba v free camera
 	- dodoam ObservableProperty in ObservableArray (na .push in .pop se refresha array)
 	- dodam background color oziroma skybox v options dropdown
-	- popravim scene dropdowns da doda dynamično vse scene iz scenes/ mape preko NodeJSa
+
 
 
 # Implementation

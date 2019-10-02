@@ -353,13 +353,33 @@ WebPage.onLoaded = function()
 */
 WebPage._onSceneButtonClick = async function(button)
 {
-	let ajaxCall = new namespace.core.Ajax('api/list');
-	ajaxCall.method = 'GET';
+	let ajaxCall = new namespace.core.Ajax('api/listScenes');
 	let xhrCall = await ajaxCall.send();
-	
+	var scenes = JSON.parse(xhrCall.responseText);	
+
+	let wrapper = new namespace.html.Wrapper();	
+
+	for (let i=0; i<scenes.length; i++)
+	{
+		let div = new namespace.html.Div();
+		div.addClass('entry');
+		div.setAttribute('onclick', 'WebPage.onPreloadedSceneClick(this)');
+
+		let divText = scenes[i] + '/' + 'Scene.gltf';
+		div.appendChild(divText);
+		wrapper.appendChild(div);
+	}
+
+	let uploadDiv = new namespace.html.Div();
+	uploadDiv.id = 'upload-button';
+	uploadDiv.addClass('entry');
+	uploadDiv.setAttribute('onclick', 'WebPage.onUploadSceneClick()');
+	uploadDiv.appendChild('UPLOAD SCENE');
+	wrapper.appendChild(uploadDiv);
+
 	let dropdown = new namespace.html.Dropdown();
 	dropdown.setAttribute('id', 'scene-dropdown');
-	dropdown.appendChild(xhrCall.responseText);
+	dropdown.appendChild(wrapper);
 
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
