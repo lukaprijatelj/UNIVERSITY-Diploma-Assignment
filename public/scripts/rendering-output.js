@@ -25,7 +25,7 @@ WebPage.init = function()
  */
 WebPage._onServerConnected = function()
 {
-	console.log('[Globals] Connected to server!');
+	console.log('[WebPage] Connected to server!');
 
 	API.isConnected = true;
 
@@ -41,7 +41,7 @@ WebPage._onServerConnected = function()
  */
 WebPage._onServerDisconnect = function()
 {
-	console.log('[Globals] Disconnected from server!');
+	console.log('[WebPage] Disconnected from server!');
 
 	API.isConnected = false;
 };
@@ -68,7 +68,7 @@ WebPage._onStopRenderingService = function(data)
  */
 WebPage.onGetLayout = function(data)
 {
-	console.log('[Globals] Grid layout drawn');
+	console.log('[WebPage] Grid layout drawn');
 
 
 	// -----------------------------

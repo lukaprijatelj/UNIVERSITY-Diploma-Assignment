@@ -16,6 +16,10 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.canvasWidthHalf;
 	this.canvasHeightHalf;
 
+	/**
+	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
+	 */
+	this.antialiasing = 3;
 	this.workerIndex = index;
 
 	this.renderingStartedDate;	
@@ -41,6 +45,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.scene;
 	this.objects;
 	this.lights = new Array();
+	this.ambientLight = null;
 	this.cache = new Object();
 
 	this.loader = new THREE.ObjectLoader();
@@ -115,6 +120,11 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData)
 			_this.lights.push(object);
 		}
 
+		if (object instanceof THREE.AmbientLight)
+		{
+			_this.ambientLight = object;
+		}
+
 		if (_this.cache[object.id] === undefined) 
 		{
 			_this.cache[object.id] = {
@@ -139,8 +149,8 @@ RaytracingRendererWorker.prototype.setSize = function (width, height)
 {
 	let _this = this;
 
-	_this.canvasWidth = width;
-	_this.canvasHeight = height;
+	_this.canvasWidth = width * _this.antialiasing;
+	_this.canvasHeight = height * _this.antialiasing;
 
 	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
 	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
@@ -292,7 +302,14 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		diffuseColor.multiply(face.color);
 	}
 
-
+	if (_this.ambientLight)
+	{
+		lightContribution.copy(diffuseColor);
+		lightContribution.multiply(_this.ambientLight.color);
+		lightContribution.multiplyScalar(_this.ambientLight.intensity);
+		outputColor.add(lightContribution);
+	}
+	
 	// -----------------------------
 	// compute light shading
 	// -----------------------------
@@ -399,7 +416,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		// no need to spawn new ray cast, because we have reached max recursion depth
 		return;
 	}
-
 
 	let alphaMap = null;
 	let aoMap = null;
@@ -522,6 +538,10 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		var rf0 = reflectivity;
 		var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
 		var weight = fresnel;
+
+		var zColor = tmpColor[ recursionDepth ];
+
+		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 		
 		if ( material.specular !== undefined ) 
 		{
@@ -533,15 +553,8 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		outputColor.add( zColor );
 	}
 
-	var zColor = tmpColor[ recursionDepth ];
+	
 
-	_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
-
-	if (material.specular !== undefined) 
-	{
-		zColor.multiply( material.specular );
-	}
-	outputColor.add( zColor );
 
 
 	/*reflectionVector.copy( rayDirection );
@@ -935,13 +948,17 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 
 	for (let y = 0; y < cell.height; y ++)
 	{
+		let yPos = - ( y + cell.startY - _this.canvasHeightHalf );
+
 		for (let x = 0; x < cell.width; x++) 
 		{
+			let xPos = x + cell.startX - _this.canvasWidthHalf;
+			
 			// spawn primary ray at pixel position
 
 			_this.origin.copy(_this.cameraPosition);
 
-			_this.direction.set( x + cell.startX - _this.canvasWidthHalf, - ( y + cell.startY - _this.canvasHeightHalf ), - _this.perspective );
+			_this.direction.set(xPos, yPos, - _this.perspective );
 			_this.direction.applyMatrix3(_this.cameraNormalMatrix ).normalize();
 
 			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
@@ -960,6 +977,90 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 	_this.onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
 
+RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function() 
+{
+	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
+
+	let _this = this;
+	
+	let pixelColor = new THREE.Color();
+	let index = 0;
+
+	let cell = _this.cell;
+	let colorBits = 4;
+
+	let cellHeight = cell.height * _this.antialiasing;
+	let cellWidth = cell.width * _this.antialiasing;
+	
+	let data = new Uint8ClampedArray(cellWidth * cellHeight * colorBits);
+
+	for (let y = 0; y < cellHeight; y ++)
+	{
+		for (let x = 0; x < cellWidth; x++) 
+		{
+			let xPos = x + cell.startX * _this.antialiasing  - _this.canvasWidthHalf;
+			let yPos = - ( y + cell.startY * _this.antialiasing  - _this.canvasHeightHalf);
+
+			// spawn primary ray at pixel position
+
+			_this.origin.copy(_this.cameraPosition);
+
+			_this.direction.set(xPos, yPos, - _this.perspective );
+			_this.direction.applyMatrix3(_this.cameraNormalMatrix ).normalize();
+
+			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
+
+			// convert from linear to gamma
+
+			data[ index + 0 ] = Math.sqrt( pixelColor.r ) * 255;
+			data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
+			data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
+			data[ index + 3 ] = 255;
+
+			index += colorBits;
+		}
+	}
+
+	let aliasedData = new Uint8ClampedArray(cell.width * cell.height * colorBits);
+	let sampleRate = Math.pow(_this.antialiasing, 2);
+
+	for (let j = 0; j < cell.height; j++)
+	{
+		for (let i = 0; i < cell.width; i++) 
+		{
+			let above = cell.width * colorBits * j;
+			let index = above + (i * colorBits);
+
+			let tmpArray = new Array(4);
+			tmpArray[0] = 0;
+			tmpArray[1] = 0;
+			tmpArray[2] = 0;
+			tmpArray[3] = 0;
+
+			for (let y = 0; y < _this.antialiasing; y++)
+			{
+				for (let x = 0; x < _this.antialiasing; x++) 
+				{
+					let largerAbove = (cell.width * colorBits * _this.antialiasing) * (y + j*_this.antialiasing);
+					let largeIndex = largerAbove + ((x + i*_this.antialiasing) * colorBits);
+
+					tmpArray[0] += data[largeIndex + 0]; 
+					tmpArray[1] += data[largeIndex + 1]; 
+					tmpArray[2] += data[largeIndex + 2]; 
+					tmpArray[3] += data[largeIndex + 3]; 
+				}
+			}
+
+			aliasedData[index + 0] = tmpArray[0] / sampleRate;
+			aliasedData[index + 1] = tmpArray[1] / sampleRate;
+			aliasedData[index + 2] = tmpArray[2] / sampleRate;
+			aliasedData[index + 3] = tmpArray[3] / sampleRate;
+		}
+	}
+
+	_this.onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
+};
+
 
 /**
  * Starts rendering.
@@ -970,5 +1071,12 @@ RaytracingRendererWorker.prototype.render = function()
 
 	_this.renderingStartedDate = new Date();
 
-	_this.renderBlock();
+	if (_this.antialiasing > 1)
+	{
+		_this.renderBlockWithAntialiasing();
+	}
+	else
+	{
+		_this.renderBlock();
+	}
 };

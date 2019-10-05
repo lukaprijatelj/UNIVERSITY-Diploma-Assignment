@@ -34,6 +34,11 @@ WebPage.controls = null;
 WebPage.camera = null;
 
 /**
+ * Additional scene lights.
+ */
+WebPage.lights = [];
+
+/**
  * Canvas for editor aka preview.
  */
 WebPage.editorCanvas = null;
@@ -42,6 +47,7 @@ WebPage.editorCanvas = null;
  * Is rendering service running.
  */
 WebPage.isRendering = false;
+
 
 /**
  * Initializes page.
@@ -61,9 +67,9 @@ WebPage.init = function()
 /**
  * Opens scene and loads cameras and lights.
  */
-WebPage.openScene = function()
+WebPage.openScene = async function()
 {
-	WebPage._initScene();
+	await WebPage._initScene();
 	WebPage._initCamera();
 	WebPage._initLights();
 	
@@ -101,7 +107,7 @@ WebPage._onServerDisconnect = function()
 /**
  * Check is server rendering service is running.
  */
-WebPage._onCheckRendering = function(data)
+WebPage._onCheckRendering = async function(data)
 {
 	WebPage.isRendering = data.isRenderingServiceRunning;
 
@@ -116,9 +122,9 @@ WebPage._onCheckRendering = function(data)
 /**
  * Starts loading GLTF model.
  */
-WebPage.startLoadingGltfModel = function(path)
+WebPage.startLoadingGltfModel = function()
 {
-	console.log('[Globals] Requesting GLTF model');
+	console.log('[WebPage] Requesting GLTF model');
 
 	let loadingLayer = document.querySelector('layer#loading');
 	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
@@ -129,11 +135,13 @@ WebPage.startLoadingGltfModel = function(path)
 	loader.onSuccess = (gltf) =>
 	{
 		console.log('[glTF loader] Scene finished loading');
-
+	
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
 		loadingLayer.hide();
-
+	
 		WebPage.scene.add(gltf.scene);
-
+	
 		gltf.animations; // Array<THREE.AnimationClip>
 		gltf.scene; // THREE.Scene
 		gltf.scenes; // Array<THREE.Scene>
@@ -148,21 +156,39 @@ WebPage.startLoadingGltfModel = function(path)
 /**
  * Initializes scene.
  */
-WebPage._initScene = function()
+WebPage._initScene = async function()
 {
-	WebPage.scene = new THREE.Scene();
+	var asyncCallback = async function(resolve, reject)
+    {
+        WebPage.scene = new THREE.Scene();
 
-	var skyImages = 
-	[
-		'posX.png',
-		'negX.png',
-		'posY.png',
-		'negY.png',
-		'posZ.png',
-		'negZ.png'
-	];
-		
-	WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+		if (options.SKY_CUBE_FILEPATH)
+		{
+			var skyImages = 
+			[
+				'posX.png',
+				'negX.png',
+				'posY.png',
+				'negY.png',
+				'posZ.png',
+				'negZ.png'
+			];
+
+			let loadingBlock = new Array();
+
+			for (let i=0; i<skyImages.length; i++)
+			{
+				loadingBlock.push(new AsyncImporter(options.SKY_CUBE_FILEPATH + '/' + skyImages[i]));
+			}
+			
+			await Promise.all(loadingBlock);
+				
+			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+		}	
+
+		resolve();
+    };
+	return new Promise(asyncCallback);
 };
 
 /**
@@ -170,13 +196,17 @@ WebPage._initScene = function()
  */
 WebPage._initCamera = function()
 {
-	console.log('[Globals] Initializing camera');
+	console.log('[WebPage] Initializing camera');
 
-	WebPage.camera = new THREE.PerspectiveCamera(options.CAMERA_FOV, options.CAMERA_ASPECT, options.CAMERA_NEAR, options.CAMERA_FAR);
+	let CAMERA_FOV = 75;
+	let CAMERA_ASPECT = 2;  // the canvas default
+	let CAMERA_NEAR = 0.001;
+	let CAMERA_FAR = 10000;
 
-	WebPage.camera.position.x = options.CAMERA_POSITION_X;
-	WebPage.camera.position.y = options.CAMERA_POSITION_Y;
-	WebPage.camera.position.z = options.CAMERA_POSITION_Z;
+	WebPage.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
+	WebPage.camera.position.x = -1.55877021541765;
+	WebPage.camera.position.y = 0.6214917314103046;
+	WebPage.camera.position.z = 0.9543815583821418;
 };
 
 /**
@@ -184,9 +214,10 @@ WebPage._initCamera = function()
  */
 WebPage._initCameraControls = function()
 {
-	console.log('[Globals] Initializing camera controls');
+	console.log('[WebPage] Initializing camera controls');
 
 	WebPage.controls = new THREE.OrbitControls(WebPage.camera, WebPage.renderer.domElement);
+	WebPage.controls.screenSpacePanning = true;
 };
 
 /**
@@ -194,10 +225,11 @@ WebPage._initCameraControls = function()
  */
 WebPage._initLights = function()
 {
-	console.log('[Globals] Initializing lights');
+	console.log('[WebPage] Initializing lights');
 
-	/*var light = new THREE.AmbientLight(0x404040, 7);
-	WebPage.scene.add(light);*/
+	var light = new THREE.AmbientLight(0x404040, 1);
+	WebPage.scene.add(light);
+	WebPage.lights.push(light);
 
 	/*var intensity = 1;
 
@@ -219,13 +251,14 @@ WebPage._initLights = function()
  */
 WebPage._initRenderer = function()
 {
-	console.log('[Globals] Initialize editor renderer');
+	console.log('[WebPage] Initialize editor renderer');
 
 	var canvas = document.getElementById('editor-canvas');
 
 	var options = 
 	{ 
-		canvas: canvas 
+		canvas: canvas,
+		antialias: true 
 	};
 	WebPage.renderer = new THREE.WebGLRenderer(options);
 	WebPage.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
@@ -431,9 +464,9 @@ WebPage._onOptionsButtonClick = async function(button)
 	// set default values
 	// -----------------------------
 
-	dropdown.querySelector('#camera-x-input').value = options.CAMERA_POSITION_X;
-	dropdown.querySelector('#camera-y-input').value = options.CAMERA_POSITION_Y;
-	dropdown.querySelector('#camera-z-input').value = options.CAMERA_POSITION_Z;
+	dropdown.querySelector('#camera-x-input').value = DEBUG.CAMERA_POSITION_X;
+	dropdown.querySelector('#camera-y-input').value = DEBUG.CAMERA_POSITION_Y;
+	dropdown.querySelector('#camera-z-input').value = DEBUG.CAMERA_POSITION_Z;
 
 	var canvasWidthInput = dropdown.querySelector('#canvas-width-input');
 	canvasWidthInput.value = options.CANVAS_WIDTH;
@@ -474,7 +507,7 @@ WebPage._onOptionsButtonClick = async function(button)
 /**
  * User choose different scene.
  */
-WebPage.onPreloadedSceneClick = function(element)
+WebPage.onPreloadedSceneClick = async function(element)
 {
 	options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
@@ -571,6 +604,14 @@ WebPage._onStartStopRenderingClick = function()
 	}
 	else
 	{
+		options.CAMERA = WebPage.camera.toJSON();
+	
+		for (let i=0; i<WebPage.lights.length; i++)
+		{
+			options.LIGHTS = [];
+			options.LIGHTS.push(WebPage.lights[i].toJSON());
+		}
+		
 		data.options = options;
 
 		API.request('rendering/start', () =>

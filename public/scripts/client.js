@@ -72,7 +72,7 @@ WebPage.init = function()
  */
 WebPage._onServerConnected = function()
 {
-	console.log('[Globals] Connected to server!');
+	console.log('[WebPage] Connected to server!');
 
 	API.isConnected = true;
 
@@ -108,7 +108,7 @@ WebPage._onStopRenderingService = function(data)
  */
 WebPage._onServerDisconnect = function()
 {
-	console.log('[Globals] Disconnected from server!');
+	console.log('[WebPage] Disconnected from server!');
 
 	API.isConnected = false;
 };
@@ -133,7 +133,15 @@ WebPage._onCellUpdate = function(data)
  */
 WebPage.startLoadingGltfModel = function()
 {
-	console.log('[Globals] Requesting GLTF model');
+	console.log('[WebPage] Requesting GLTF model');
+
+	let onSuccess = () =>
+	{
+		WebPage.renderer.prepareJsonData(() =>
+		{
+			API.request('cells/getWaiting', WebPage.onGetWaitingCells);
+		});
+	};
 
 	var loader = new GltfLoader();
 	loader.path = options.SCENE_FILEPATH;
@@ -149,10 +157,7 @@ WebPage.startLoadingGltfModel = function()
 		gltf.cameras; // Array<THREE.Camera>
 		gltf.asset; // Object
 					
-		WebPage.renderer.prepareJsonData(() =>
-		{
-			API.request('cells/getWaiting', WebPage.onGetWaitingCells);
-		});
+		onSuccess();
 	};
 	loader.start();	
 };
@@ -162,19 +167,37 @@ WebPage.startLoadingGltfModel = function()
  */
 WebPage._initScene = function()
 {
-	WebPage.scene = new THREE.Scene();
+	var asyncCallback = async function(resolve, reject)
+    {
+        WebPage.scene = new THREE.Scene();
 
-	var skyImages = 
-	[
-		'posX.png',
-		'negX.png',
-		'posY.png',
-		'negY.png',
-		'posZ.png',
-		'negZ.png'
-	];
+		if (options.SKY_CUBE_FILEPATH)
+		{
+			var skyImages = 
+			[
+				'posX.png',
+				'negX.png',
+				'posY.png',
+				'negY.png',
+				'posZ.png',
+				'negZ.png'
+			];
 
-	WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+			let loadingBlock = new Array();
+
+			for (let i=0; i<skyImages.length; i++)
+			{
+				loadingBlock.push(new AsyncImporter(options.SKY_CUBE_FILEPATH + '/' + skyImages[i]));
+			}
+			
+			await Promise.all(loadingBlock);
+				
+			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+		}	
+
+		resolve();
+    };
+	return new Promise(asyncCallback);
 };
 
 /**
@@ -182,24 +205,16 @@ WebPage._initScene = function()
  */
 WebPage._initCamera = function()
 {
-	console.log('[Globals] Initializing camera');
+	console.log('[WebPage] Initializing camera');
 
-	WebPage.camera = new THREE.PerspectiveCamera(options.CAMERA_FOV, options.CAMERA_ASPECT, options.CAMERA_NEAR, options.CAMERA_FAR);
+	if (!options.CAMERA)
+	{
+		return;
+	}
 
-	WebPage.camera.position.x = options.CAMERA_POSITION_X;
-	WebPage.camera.position.y = options.CAMERA_POSITION_Y;
-	WebPage.camera.position.z = options.CAMERA_POSITION_Z;		
-};
+	var loader = new THREE.ObjectLoader();
 
-/**
- * Initializes camera mouse controls, so that changing view is easier.
- */
-WebPage._initCameraControls = function()
-{
-	console.log('[Globals] Initializing camera controls');
-
-	WebPage.controls = new THREE.OrbitControls(WebPage.camera);
-	WebPage.controls.enabled = false;
+	WebPage.camera = loader.parse(options.CAMERA);
 };
 
 /**
@@ -207,7 +222,20 @@ WebPage._initCameraControls = function()
  */
 WebPage._initLights = function()
 {
-	console.log('[Globals] Initializing lights');
+	console.log('[WebPage] Initializing lights');
+
+	if (!options.LIGHTS)
+	{
+		return;
+	}
+
+	var loader = new THREE.ObjectLoader();
+	
+	for (let i=0; i<options.LIGHTS.length; i++)
+	{
+		var light = loader.parse(options.LIGHTS[i]);
+		WebPage.scene.add(light);
+	}
 
 	// WARNING:
 	// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
@@ -233,7 +261,7 @@ WebPage._initLights = function()
  */
 WebPage._initRenderer = function()
 {
-	console.log('[Globals] Initialize renderer of type "' + WebPage.rendererType + '"');
+	console.log('[WebPage] Initialize renderer of type "' + WebPage.rendererType + '"');
 
 	var renderer = null;
 	var canvas = document.getElementById('rendering-canvas');
@@ -258,7 +286,7 @@ WebPage._initRenderer = function()
  */
 WebPage.onGetLayout = function(data)
 {
-	console.log('[Globals] Grid layout drawn');
+	console.log('[WebPage] Grid layout drawn');
 
 
 	// -----------------------------
@@ -270,13 +298,16 @@ WebPage.onGetLayout = function(data)
 		return;
 	}
 
-	options = data.options;
 	previousOptions = options;
+	options = data.options;	
 
-	let browser = new namespace.core.Browser();
-	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
-	browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
+	if (previousOptions)
+	{
+		let browser = new namespace.core.Browser();
+		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
+	}
 
 	WebPage.rendererCanvas.resizeCanvas();
 
@@ -298,6 +329,8 @@ WebPage.onGetLayout = function(data)
 		var current = WebPage.cells[i];
 
 		WebPage.tryUpdatingCell(current);
+
+		current.imageData = null;
 	}
 	
 
@@ -327,15 +360,14 @@ WebPage.onViewLoaded = function()
 /**
  * Initial data is loaded.
  */
-WebPage.onDataLoaded = function()
+WebPage.onDataLoaded = async function()
 {
-	WebPage._initScene();
+	await WebPage._initScene();
+
 	WebPage._initCamera();
-	
 	WebPage._initLights();
 	
 	WebPage._initRenderer();
-	WebPage._initCameraControls();
 
 	WebPage.startLoadingGltfModel();
 };
@@ -353,15 +385,21 @@ WebPage.tryUpdatingCell = function(cell)
 	WebPage.rendererCanvas.updateCell(cell);
 };
 
+/**
+ * Stop rendering UI.
+ */
 WebPage.stopRendererUi = function()
 {
 	document.querySelector('interface').removeClass('rendering');
 	WebPage.lastRenderingTime = 0;
 
-	let browser = new namespace.core.Browser();
-	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
-	browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
+	if (previousOptions)
+	{
+		let browser = new namespace.core.Browser();
+		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
+	}
 };
 
 /**
@@ -386,7 +424,7 @@ WebPage.onRendererDone = function(cells)
  */
 WebPage.onGetWaitingCells = function(cells)
 {
-	console.log('[Globals] Rendering cells received');
+	console.log('[WebPage] Rendering cells received');
 
 	if (!cells)
 	{
@@ -434,11 +472,14 @@ WebPage.startRendering = function(cellsWaiting)
 {
 	document.querySelector('interface').addClass('rendering');
 
-	let browser = new namespace.core.Browser();
-	let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-	let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+	if (previousOptions)
+	{
+		let browser = new namespace.core.Browser();
+		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
+		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
 
-	browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
+		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
+	}
 
 	if (WebPage.rendererType == enums.rendererType.RAY_TRACING)
 	{

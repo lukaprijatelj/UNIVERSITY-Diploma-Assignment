@@ -42,7 +42,7 @@ var API =
 		data = data ? data : null;
 		url = API.apiUrl + '/' + url;
 
-		console.log('[Globals] Requesting ' + url);
+		console.log('[WebPage] Requesting ' + url);
 
 		socket.emit(url, data, callback);
 	},

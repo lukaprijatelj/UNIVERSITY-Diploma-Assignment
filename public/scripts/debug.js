@@ -13,6 +13,13 @@ var DEBUG =
 		
 	},
 
+	CAMERA_POSITION_X:0,
+	CAMERA_POSITION_Y:0,
+	CAMERA_POSITION_Z:0,
+	CAMERA_ROTATION_X:0,
+	CAMERA_ROTATION_Y:0,
+	CAMERA_ROTATION_Z:0,
+
 
 	init: function()
 	{
@@ -36,9 +43,12 @@ var DEBUG =
 			vec.copy(WebPage.controls.target);
 			var position = WebPage.camera.getWorldPosition(vec);
 
-			options.CAMERA_POSITION_X = Math.roundToTwoDecimals(position.x);
-			options.CAMERA_POSITION_Y = Math.roundToTwoDecimals(position.y);
-			options.CAMERA_POSITION_Z = Math.roundToTwoDecimals(position.z);
+			DEBUG.CAMERA_POSITION_X = Math.roundToTwoDecimals(position.x);
+			DEBUG.CAMERA_POSITION_Y = Math.roundToTwoDecimals(position.y);
+			DEBUG.CAMERA_POSITION_Z = Math.roundToTwoDecimals(position.z);
+			DEBUG.CAMERA_ROTATION_X = WebPage.camera.rotation.x;
+			DEBUG.CAMERA_ROTATION_Y = WebPage.camera.rotation.y; 
+			DEBUG.CAMERA_ROTATION_Z = WebPage.camera.rotation.z; 
 		}
 		
 		let mouse = new namespace.core.Mouse();
