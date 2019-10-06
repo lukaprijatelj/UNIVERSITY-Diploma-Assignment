@@ -13,7 +13,7 @@ body
 interface
 {
 	border-style: solid;
-	border-color: var(--EDITOR-POPUP-BACKGROUND);
+	border-color: var(--LIGHT-BLACK-COLOR);
 
 	position: fixed;
 	width: calc(100% - var(--BORDER-WIDTH) * 2);
@@ -131,6 +131,4 @@ interface:not(.rendering) #editor-curtain
 #top-bar
 {
 	position: absolute;
-	left: 1px;
-	top: 1px;
 }
