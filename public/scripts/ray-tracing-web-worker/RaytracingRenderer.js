@@ -164,41 +164,44 @@ RaytracingRenderer.prototype.setPixelRatio = Function.empty;
 /**
  * Starts rendering.
  */
-RaytracingRenderer.prototype.prepareJsonData = function(callback) 
+RaytracingRenderer.prototype.prepareJsonData = function() 
 {
-	let _this = this;
+	return new Promise((resolve, reject) =>
+	{	
+		let _this = this;
 
-	// update scene graph
+		// update scene graph
 
-	if (_this.scene.autoUpdate === true) 
-	{
-		_this.scene.updateMatrixWorld();
-	}
+		if (_this.scene.autoUpdate === true) 
+		{
+			_this.scene.updateMatrixWorld();
+		}
 
-	// update camera matrices
+		// update camera matrices
 
-	if (_this.camera.parent === null) 
-	{
-		_this.camera.updateMatrixWorld();
-	}
+		if (_this.camera.parent === null) 
+		{
+			_this.camera.updateMatrixWorld();
+		}
 
-	_this.sceneJSON = _this.scene.toJSON();
-	_this.cameraJSON = _this.camera.toJSON();	
+		_this.sceneJSON = _this.scene.toJSON();
+		_this.cameraJSON = _this.camera.toJSON();	
 
-	let options = 
-	{
-		sceneJSON: _this.sceneJSON,
-		cameraJSON: _this.cameraJSON
-	};
+		let options = 
+		{
+			sceneJSON: _this.sceneJSON,
+			cameraJSON: _this.cameraJSON
+		};
 
-	for (let i=0; i<_this.workers.length; i++)
-	{
-		let worker = _this.workers[i];
-		
-		worker.workerFunction('initScene', options);		
-	}	
+		for (let i=0; i<_this.workers.length; i++)
+		{
+			let worker = _this.workers[i];
+			
+			worker.workerFunction('initScene', options);		
+		}	
 
-	callback();
+		resolve();
+	});				
 };
 
 

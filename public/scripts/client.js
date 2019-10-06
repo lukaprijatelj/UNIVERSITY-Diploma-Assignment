@@ -133,33 +133,21 @@ WebPage._onCellUpdate = function(data)
  */
 WebPage.startLoadingGltfModel = function()
 {
-	console.log('[WebPage] Requesting GLTF model');
+	console.log('[WebPage] Requesting GLTF model');	
 
-	let onSuccess = () =>
+	var onSuccess = (resolve, reject) =>
 	{
-		WebPage.renderer.prepareJsonData(() =>
+		var loader = new GltfLoader();
+		loader.path = options.SCENE_FILEPATH;
+		loader.onSuccess = (gltf) =>
 		{
-			API.request('cells/getWaiting', WebPage.onGetWaitingCells);
-		});
+			console.log('[glTF loader] Scene finished loading');
+		
+			resolve(gltf);
+		};
+		loader.start();	
 	};
-
-	var loader = new GltfLoader();
-	loader.path = options.SCENE_FILEPATH;
-	loader.onSuccess = function(gltf) 
-	{
-		console.log('[glTF loader] Scene finished loading');
-
-		WebPage.scene.add(gltf.scene);
-
-		gltf.animations; // Array<THREE.AnimationClip>
-		gltf.scene; // THREE.Scene
-		gltf.scenes; // Array<THREE.Scene>
-		gltf.cameras; // Array<THREE.Camera>
-		gltf.asset; // Object
-					
-		onSuccess();
-	};
-	loader.start();	
+	return new Promise(onSuccess);
 };
 
 /**
@@ -169,7 +157,7 @@ WebPage._initScene = function()
 {
 	var asyncCallback = async function(resolve, reject)
     {
-        WebPage.scene = new THREE.Scene();
+		WebPage.scene = new THREE.Scene();
 
 		if (options.SKY_CUBE_FILEPATH)
 		{
@@ -182,20 +170,13 @@ WebPage._initScene = function()
 				'posZ.png',
 				'negZ.png'
 			];
-
-			let loadingBlock = new Array();
-
-			for (let i=0; i<skyImages.length; i++)
-			{
-				loadingBlock.push(new AsyncImporter(options.SKY_CUBE_FILEPATH + '/' + skyImages[i]));
-			}
-			
-			await Promise.all(loadingBlock);
 				
-			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
 		}	
-
-		resolve();
+		else
+		{
+			resolve();
+		}		
     };
 	return new Promise(asyncCallback);
 };
@@ -362,14 +343,25 @@ WebPage.onViewLoaded = function()
  */
 WebPage.onDataLoaded = async function()
 {
-	await WebPage._initScene();
+	var gltf = await WebPage.startLoadingGltfModel();
 
+	await WebPage._initScene();
 	WebPage._initCamera();
 	WebPage._initLights();
 	
 	WebPage._initRenderer();
 
-	WebPage.startLoadingGltfModel();
+	WebPage.scene.add(gltf.scene);
+
+	gltf.animations; // Array<THREE.AnimationClip>
+	gltf.scene; // THREE.Scene
+	gltf.scenes; // Array<THREE.Scene>
+	gltf.cameras; // Array<THREE.Camera>
+	gltf.asset; // Object
+	
+	await WebPage.renderer.prepareJsonData();
+
+	API.request('cells/getWaiting', WebPage.onGetWaitingCells);
 };
 
 /**

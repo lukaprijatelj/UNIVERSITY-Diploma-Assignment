@@ -69,14 +69,30 @@ WebPage.init = function()
  */
 WebPage.openScene = async function()
 {
+	let loadingLayer = document.querySelector('layer#loading');
+	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
+	loadingLayer.show();
+
+	var gltf = await WebPage.startLoadingGltfModel();
+
+	loadingLayer.hide();
+
 	await WebPage._initScene();
-	WebPage._initCamera();
+	WebPage.scene.add(gltf.scene);
+
+	WebPage._initCamera(gltf.cameras);
 	WebPage._initLights();
 	
 	WebPage._initRenderer();
 	WebPage._initCameraControls();
 
-	WebPage.startLoadingGltfModel();
+	gltf.animations; // Array<THREE.AnimationClip>
+	gltf.scene; // THREE.Scene
+	gltf.scenes; // Array<THREE.Scene>
+	gltf.cameras; // Array<THREE.Camera>
+	gltf.asset; // Object
+				
+	WebPage.onRenderFrame();
 };
 
 /**
@@ -124,33 +140,21 @@ WebPage._onCheckRendering = async function(data)
  */
 WebPage.startLoadingGltfModel = function()
 {
-	console.log('[WebPage] Requesting GLTF model');
+	console.log('[WebPage] Requesting GLTF model');	
 
-	let loadingLayer = document.querySelector('layer#loading');
-	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
-	loadingLayer.show();
-
-	var loader = new GltfLoader();
-	loader.path = options.SCENE_FILEPATH;
-	loader.onSuccess = (gltf) =>
+	var onSuccess = (resolve, reject) =>
 	{
-		console.log('[glTF loader] Scene finished loading');
-	
-		let loadingLayer = document.querySelector('layer#loading');
-		loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
-		loadingLayer.hide();
-	
-		WebPage.scene.add(gltf.scene);
-	
-		gltf.animations; // Array<THREE.AnimationClip>
-		gltf.scene; // THREE.Scene
-		gltf.scenes; // Array<THREE.Scene>
-		gltf.cameras; // Array<THREE.Camera>
-		gltf.asset; // Object
-					
-		WebPage.onRenderFrame();
+		var loader = new GltfLoader();
+		loader.path = options.SCENE_FILEPATH;
+		loader.onSuccess = (gltf) =>
+		{
+			console.log('[glTF loader] Scene finished loading');
+		
+			resolve(gltf);
+		};
+		loader.start();	
 	};
-	loader.start();	
+	return new Promise(onSuccess);
 };
 
 /**
@@ -173,20 +177,13 @@ WebPage._initScene = async function()
 				'posZ.png',
 				'negZ.png'
 			];
-
-			let loadingBlock = new Array();
-
-			for (let i=0; i<skyImages.length; i++)
-			{
-				loadingBlock.push(new AsyncImporter(options.SKY_CUBE_FILEPATH + '/' + skyImages[i]));
-			}
-			
-			await Promise.all(loadingBlock);
 				
-			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages);
+			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
 		}	
-
-		resolve();
+		else
+		{
+			resolve();
+		}		
     };
 	return new Promise(asyncCallback);
 };
@@ -194,7 +191,7 @@ WebPage._initScene = async function()
 /**
  * Intializes camera in the scene.
  */
-WebPage._initCamera = function()
+WebPage._initCamera = function(cameras)
 {
 	console.log('[WebPage] Initializing camera');
 
@@ -204,9 +201,26 @@ WebPage._initCamera = function()
 	let CAMERA_FAR = 10000;
 
 	WebPage.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
-	WebPage.camera.position.x = -1.55877021541765;
-	WebPage.camera.position.y = 0.6214917314103046;
-	WebPage.camera.position.z = 0.9543815583821418;
+
+	if (cameras && cameras.length)
+	{
+		// model has camera included, so we will use it's position and rotation
+
+		let existingCamera = cameras[0];
+		WebPage.camera.position.x = existingCamera.parent.position.x;
+		WebPage.camera.position.y = existingCamera.parent.position.y;
+		WebPage.camera.position.z = existingCamera.parent.position.z;
+		WebPage.camera.rotation.x = existingCamera.parent.rotation.x;
+		WebPage.camera.rotation.y = existingCamera.parent.rotation.y;
+		WebPage.camera.rotation.z = existingCamera.parent.rotation.z;
+	}
+	else
+	{
+		// set default position and rotation
+		WebPage.camera.position.x = -1.55877021541765;
+		WebPage.camera.position.y = 0.6214917314103046;
+		WebPage.camera.position.z = 0.9543815583821418;
+	}	
 };
 
 /**

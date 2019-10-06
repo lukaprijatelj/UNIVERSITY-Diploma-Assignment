@@ -8,7 +8,9 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 {
 	console.log('[RaytracingRendererWorker] Initializing worker');
 
-	// basically how many tmes it spawns ray (how many times ray hits object)
+	/**
+	 * Number of times ray bounces from objects. Each time bounce is detected new ray is cast.
+	 */
 	this.maxRecursionDepth = 2;
 
 	this.canvasWidth;
@@ -19,7 +21,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
-	this.antialiasing = 3;
+	this.antialiasing = 2;
 	this.workerIndex = index;
 
 	this.renderingStartedDate;	
@@ -29,26 +31,29 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	 */
 	this.cell = null;
 
+	this.scene;
+
 	this.camera;
 	this.cameraPosition = new THREE.Vector3();
 	this.cameraNormalMatrix = new THREE.Matrix3();
+	this.perspective;
 	this.origin = new THREE.Vector3();
 	this.direction = new THREE.Vector3();
+
+	/**
+	 * Ambient light is here in order to render shadowed are more beautifully.
+	 */
+	this.ambientLight = null;
+	this.lights = new Array();
 
 	this.raycaster = new THREE.Raycaster(this.origin, this.direction);
 	this.ray = this.raycaster.ray;
 	this.raycasterLight = new THREE.Raycaster(undefined, undefined);
 	this.rayLight = this.raycasterLight.ray;
-
-	this.perspective;
-	
-	this.scene;
+		
 	this.objects;
-	this.lights = new Array();
-	this.ambientLight = null;
 	this.cache = new Object();
-
-	this.loader = new THREE.ObjectLoader();
+	
 	this.onCellRendered = onCellRendered;		
 };
 
@@ -86,8 +91,11 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData)
 	let _this = this;
 
 	let images = new Object();
-	_this.scene = _this.loader.parse(sceneData, images);
-	_this.camera = _this.loader.parse(cameraData, images);
+
+	let loader = new THREE.ObjectLoader();
+	_this.scene = loader.parse(sceneData, images);
+	_this.camera = loader.parse(cameraData, images);
+
 
 	// update scene graph
 
@@ -156,7 +164,6 @@ RaytracingRendererWorker.prototype.setSize = function (width, height)
 	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
 };
 
-
 /**
  * Sets canvas size.
  */
@@ -170,13 +177,16 @@ RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY
 	let above = posY * (texture.width * NUM_OF_COLOR_BITS);
 	let start = above + (posX * NUM_OF_COLOR_BITS);
 	
-	let red = texture.pixels[start++];
-	let green = texture.pixels[start++];
-	let blue = texture.pixels[start++];
+	let MAX_VALUE = 255;
+	let red = texture.pixels[start + 0];
+	let green = texture.pixels[start + 1];
+	let blue = texture.pixels[start + 2];
 
-	return new THREE.Color(red/255, green/255, blue/255);
+	// THREE.Color does not support alpha channel
+	let alpha = texture.pixels[start + 3];
+
+	return new THREE.Color(red / MAX_VALUE, green / MAX_VALUE, blue / MAX_VALUE);
 };
-
 
 /**
  * Spawns ray for calculating colour.
@@ -191,6 +201,8 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	// weird function. somettimes needs a lot of time even though there is not even that much objects in the scene
 	let intersections = _this.raycaster.intersectObjects(_this.objects, true);
 
+	outputColor.setRGB(0, 0, 0);
+
 	if (intersections.length === 0) 
 	{
 		// -----------------------------
@@ -201,21 +213,20 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 
 		if (!background || !background.rawImage || !background.rawImage.length)
 		{
-			outputColor.setRGB( 0, 0, 0 );
 			return;
 		}
 
 		let pixelColor = _this.texCUBE(background.rawImage, rayDirection);
-		outputColor.set(pixelColor);
+		pixelColor.copyGammaToLinear(pixelColor);
+		outputColor.add(pixelColor);
 
 		return;
 	}
 
+
 	// -----------------------------
 	// Ray hit one of the objects
 	// -----------------------------
-
-	outputColor.setRGB(0, 0, 0);
 
 	let diffuseColor = new THREE.Color();
 	let specularColor = new THREE.Color();
@@ -301,6 +312,13 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 	{
 		diffuseColor.multiply(face.color);
 	}
+	
+	
+	// -----------------------------
+	// compute light shading
+	// -----------------------------
+
+	_this.rayLight.origin.copy(point);	
 
 	if (_this.ambientLight)
 	{
@@ -309,12 +327,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		lightContribution.multiplyScalar(_this.ambientLight.intensity);
 		outputColor.add(lightContribution);
 	}
-	
-	// -----------------------------
-	// compute light shading
-	// -----------------------------
-
-	_this.rayLight.origin.copy(point);	
 
 	let normalComputed = false;
 
@@ -332,7 +344,6 @@ RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, 
 		if (lightIntersections.length > 0) 
 		{
 			// point in shadow
-
 			continue;
 		}
 
@@ -938,17 +949,17 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 {
 	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
 
-	let _this = this;
-	
+	let _this = this;	
+
+	let NUM_OF_COLOR_BITS = 4;
+	let cell = _this.cell;
+	let data = new Uint8ClampedArray(cell.width * cell.height * NUM_OF_COLOR_BITS);
 	let pixelColor = new THREE.Color();
 	let index = 0;
 
-	let cell = _this.cell;
-	let data = new Uint8ClampedArray(cell.width * cell.height * 4);
-
 	for (let y = 0; y < cell.height; y ++)
 	{
-		let yPos = - ( y + cell.startY - _this.canvasHeightHalf );
+		let yPos = - (y + cell.startY - _this.canvasHeightHalf);
 
 		for (let x = 0; x < cell.width; x++) 
 		{
@@ -965,41 +976,43 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 
 			// convert from linear to gamma
 
-			data[ index + 0 ] = Math.sqrt( pixelColor.r ) * 255;
-			data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
-			data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
-			data[ index + 3 ] = 255;
+			data[index + 0] = Math.sqrt(pixelColor.r) * 255;
+			data[index + 1] = Math.sqrt(pixelColor.g) * 255;
+			data[index + 2] = Math.sqrt(pixelColor.b) * 255;
+			data[index + 3] = 255;
 
-			index += 4;
+			index += NUM_OF_COLOR_BITS;
 		}
 	}
 
 	_this.onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
 
+/**
+ * Renders block with specified antialiasing factor.
+ */
 RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function() 
 {
 	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
 
 	let _this = this;
 	
+	let cell = _this.cell;
+
+	let cellAntialiasingHeight = cell.height * _this.antialiasing;
+	let cellAntialiasingWidth = cell.width * _this.antialiasing;
+	
+	let NUM_OF_COLOR_BITS = 4;
+	let data = new Uint8ClampedArray(cellAntialiasingWidth * cellAntialiasingHeight * NUM_OF_COLOR_BITS);
 	let pixelColor = new THREE.Color();
 	let index = 0;
 
-	let cell = _this.cell;
-	let colorBits = 4;
-
-	let cellHeight = cell.height * _this.antialiasing;
-	let cellWidth = cell.width * _this.antialiasing;
-	
-	let data = new Uint8ClampedArray(cellWidth * cellHeight * colorBits);
-
-	for (let y = 0; y < cellHeight; y ++)
+	for (let y = 0; y < cellAntialiasingHeight; y ++)
 	{
-		for (let x = 0; x < cellWidth; x++) 
+		for (let x = 0; x < cellAntialiasingWidth; x++) 
 		{
-			let xPos = x + cell.startX * _this.antialiasing  - _this.canvasWidthHalf;
-			let yPos = - ( y + cell.startY * _this.antialiasing  - _this.canvasHeightHalf);
+			let xPos = x + cell.startX * _this.antialiasing - _this.canvasWidthHalf;
+			let yPos = - (y + cell.startY * _this.antialiasing - _this.canvasHeightHalf);
 
 			// spawn primary ray at pixel position
 
@@ -1012,37 +1025,47 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 
 			// convert from linear to gamma
 
-			data[ index + 0 ] = Math.sqrt( pixelColor.r ) * 255;
-			data[ index + 1 ] = Math.sqrt( pixelColor.g ) * 255;
-			data[ index + 2 ] = Math.sqrt( pixelColor.b ) * 255;
-			data[ index + 3 ] = 255;
+			data[index + 0] = Math.sqrt(pixelColor.r) * 255;
+			data[index + 1] = Math.sqrt(pixelColor.g) * 255;
+			data[index + 2] = Math.sqrt(pixelColor.b) * 255;
+			data[index + 3] = 255;
 
-			index += colorBits;
+			index += NUM_OF_COLOR_BITS;
 		}
 	}
 
-	let aliasedData = new Uint8ClampedArray(cell.width * cell.height * colorBits);
-	let sampleRate = Math.pow(_this.antialiasing, 2);
+	let aliasedData = _this.scaleDownImage(data, cellAntialiasingWidth, cellAntialiasingHeight, _this.antialiasing);
 
-	for (let j = 0; j < cell.height; j++)
+	_this.onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
+};
+
+RaytracingRendererWorker.prototype.scaleDownImage = function(data, dataWidth, dataHeight, scale)
+{
+	let NUM_OF_COLOR_BITS = 4;	
+	let width = dataWidth / scale;
+	let height = dataHeight / scale;
+	let aliasedData = new Uint8ClampedArray(width * height * NUM_OF_COLOR_BITS);
+	let sampleRate = Math.pow(scale, 2);
+
+	for (let j = 0; j < height; j++)
 	{
-		for (let i = 0; i < cell.width; i++) 
+		for (let i = 0; i < width; i++) 
 		{
-			let above = cell.width * colorBits * j;
-			let index = above + (i * colorBits);
+			let above = width * NUM_OF_COLOR_BITS * j;
+			let index = above + (i * NUM_OF_COLOR_BITS);
 
-			let tmpArray = new Array(4);
+			let tmpArray = new Array(NUM_OF_COLOR_BITS);
 			tmpArray[0] = 0;
 			tmpArray[1] = 0;
 			tmpArray[2] = 0;
 			tmpArray[3] = 0;
 
-			for (let y = 0; y < _this.antialiasing; y++)
+			for (let y = 0; y < scale; y++)
 			{
-				for (let x = 0; x < _this.antialiasing; x++) 
+				for (let x = 0; x < scale; x++) 
 				{
-					let largerAbove = (cell.width * colorBits * _this.antialiasing) * (y + j*_this.antialiasing);
-					let largeIndex = largerAbove + ((x + i*_this.antialiasing) * colorBits);
+					let largerAbove = (width * NUM_OF_COLOR_BITS * scale) * (y + j * scale);
+					let largeIndex = largerAbove + ((x + i * scale) * NUM_OF_COLOR_BITS);
 
 					tmpArray[0] += data[largeIndex + 0]; 
 					tmpArray[1] += data[largeIndex + 1]; 
@@ -1058,7 +1081,7 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 		}
 	}
 
-	_this.onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
+	return aliasedData;
 };
 
 
