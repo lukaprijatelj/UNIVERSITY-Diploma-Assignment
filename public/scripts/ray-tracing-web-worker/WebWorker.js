@@ -45,3 +45,8 @@ function startRendering(data)
 {
 	worker.render();
 }
+
+function stopRendering(data)
+{
+	worker.render();
+}

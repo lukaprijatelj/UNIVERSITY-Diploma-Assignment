@@ -73,9 +73,14 @@ WebPage.openScene = async function()
 	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
 	loadingLayer.show();
 
+	/**
+	 * gltf.animations; // Array<THREE.AnimationClip>
+	 * gltf.scene; // THREE.Scene
+	 * gltf.scenes; // Array<THREE.Scene>
+	 * gltf.cameras; // Array<THREE.Camera>
+	 * gltf.asset; // Object
+	 */
 	var gltf = await WebPage.startLoadingGltfModel();
-
-	loadingLayer.hide();
 
 	await WebPage._initScene();
 	WebPage.scene.add(gltf.scene);
@@ -84,13 +89,9 @@ WebPage.openScene = async function()
 	WebPage._initLights();
 	
 	WebPage._initRenderer();
-	WebPage._initCameraControls();
+	WebPage._initCameraControls();	
 
-	gltf.animations; // Array<THREE.AnimationClip>
-	gltf.scene; // THREE.Scene
-	gltf.scenes; // Array<THREE.Scene>
-	gltf.cameras; // Array<THREE.Camera>
-	gltf.asset; // Object
+	loadingLayer.hide();
 				
 	WebPage.onRenderFrame();
 };
@@ -210,6 +211,7 @@ WebPage._initCamera = function(cameras)
 		WebPage.camera.position.x = existingCamera.parent.position.x;
 		WebPage.camera.position.y = existingCamera.parent.position.y;
 		WebPage.camera.position.z = existingCamera.parent.position.z;
+
 		WebPage.camera.rotation.x = existingCamera.parent.rotation.x;
 		WebPage.camera.rotation.y = existingCamera.parent.rotation.y;
 		WebPage.camera.rotation.z = existingCamera.parent.rotation.z;
@@ -241,7 +243,7 @@ WebPage._initLights = function()
 {
 	console.log('[WebPage] Initializing lights');
 
-	var light = new THREE.AmbientLight(0x404040, 1);
+	var light = new THREE.AmbientLight(0x404040, 2);
 	WebPage.scene.add(light);
 	WebPage.lights.push(light);
 

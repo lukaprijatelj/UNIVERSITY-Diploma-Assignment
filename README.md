@@ -23,6 +23,7 @@ Build task will be read from scripts property of the package.json file.
 	- dodam background color oziroma skybox v options dropdown
 	- dodam v namespace-debug funkcijo, ki se bo sprehodila po funkcijah in dodala datetime.start in datetime.end za računanje hitrosti funkcij. 
 	  Nato bo preko cookiejev zapisala <key>GLOBALS</key><value>.select</value>  izračune. Nato bo en drug window pa to prikazoval in vsakih n milisekund refreshal podatke.
+	- popravim 
 
 
 # Implementation

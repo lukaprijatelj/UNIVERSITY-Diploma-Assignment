@@ -57,23 +57,36 @@ RendererCanvas.prototype.updateCell = function(cell)
 };
 
 
-RendererCanvas.prototype.flagRenderCell = function(cell)
+RendererCanvas.prototype._createCellBorder = function(cell, color)
 {
-	var gridLayout = this;
-	
+	var _this = this;
 	var borderWidth = 0.3;
 	var posX = cell.startX + borderWidth;
 	var posY = cell.startY + borderWidth;
 	var width = cell.width - borderWidth * 2;
 	var height = cell.height - borderWidth * 2;
 
-	var canvas = gridLayout.canvasV;
+	var canvas = _this.canvasV;
 	var ctx = canvas.getContext('2d');
 
 	// draw border
 	ctx.beginPath();
 	ctx.lineWidth = String(borderWidth);
-	ctx.strokeStyle = "red";
+	ctx.strokeStyle = color;
 	ctx.rect(posX, posY, width, height);
 	ctx.stroke();
+};
+
+RendererCanvas.prototype.flagRenderCell = function(cell)
+{
+	var _this = this;
+	
+	_this._createCellBorder(cell, "red");
+};
+
+RendererCanvas.prototype.unflagRenderCell = function(cell)
+{
+	var _this = this;
+	
+	_this._createCellBorder(cell, "white");
 };

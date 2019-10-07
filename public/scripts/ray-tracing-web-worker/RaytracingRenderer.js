@@ -78,6 +78,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 
 	let webWorker = _this.workers[workerIndex];
 	webWorker.isRendering = false;
+	webWorker.cell = null;
 	
 	// -----------------------------
 	// convert buffer data into png image data
@@ -143,13 +144,20 @@ RaytracingRenderer.prototype.renderCell = function(data)
 
 RaytracingRenderer.prototype.stopRendering = function()
 {
-	let _this = this;
+	let _this = this;	
 
 	for (let i=0; i<_this.numOfWorkers; i++)
 	{
 		let thread = _this.workers[i];
 
 		thread.isRendering = false;
+
+		if (thread.cell)
+		{
+			WebPage.rendererCanvas.unflagRenderCell(thread.cell);
+		}		
+
+		thread.workerFunction('stopRendering');
 		thread.terminate();
 	};
 };
@@ -232,6 +240,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 
 	let cellToRender = _this.cellsWaiting.shift();
 
+	worker.cell = cellToRender;
 	WebPage.rendererCanvas.flagRenderCell(cellToRender);
 	worker.workerFunction('setCell', { cell: cellToRender });
 	

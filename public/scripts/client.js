@@ -218,10 +218,6 @@ WebPage._initLights = function()
 		WebPage.scene.add(light);
 	}
 
-	// WARNING:
-	// do not use THREE.AmbientLight because RayTracing does not recognize it. Nothing is rendered if it is used. 
-	// only Use PointLight
-
 	/*var intensity = 1;
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
@@ -254,6 +250,7 @@ WebPage._initRenderer = function()
 			break;
 
 		case enums.rendererType.PATH_TRACING:
+			new Exception.NotImplemented();
 			init();
 			break;
 	}	
@@ -343,6 +340,13 @@ WebPage.onViewLoaded = function()
  */
 WebPage.onDataLoaded = async function()
 {
+	/**
+	 * gltf.animations; // Array<THREE.AnimationClip>
+	 * gltf.scene; // THREE.Scene
+	 * gltf.scenes; // Array<THREE.Scene>
+	 * gltf.cameras; // Array<THREE.Camera>
+	 * gltf.asset; // Object
+	 */
 	var gltf = await WebPage.startLoadingGltfModel();
 
 	await WebPage._initScene();
@@ -352,12 +356,6 @@ WebPage.onDataLoaded = async function()
 	WebPage._initRenderer();
 
 	WebPage.scene.add(gltf.scene);
-
-	gltf.animations; // Array<THREE.AnimationClip>
-	gltf.scene; // THREE.Scene
-	gltf.scenes; // Array<THREE.Scene>
-	gltf.cameras; // Array<THREE.Camera>
-	gltf.asset; // Object
 	
 	await WebPage.renderer.prepareJsonData();
 

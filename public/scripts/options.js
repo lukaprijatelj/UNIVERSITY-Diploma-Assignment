@@ -1,10 +1,10 @@
 var options = 
 {
 	//SCENE_FILEPATH: 'scenes/Castle/Scene.gltf',
-	//SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
+	SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/Buggy/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/MetalRoughSpheres/Scene.gltf',
-	SCENE_FILEPATH: 'scenes/boomBox/Scene.gltf',
+	//SCENE_FILEPATH: 'scenes/boomBox/Scene.gltf',
 
 	//SKY_CUBE_FILEPATH: 'images/sor_lake1/',
 	//SKY_CUBE_FILEPATH: 'images/skycube_2/',
