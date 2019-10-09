@@ -31,24 +31,24 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		if (WebPage.isRendering == true)
+		if (globals.isRendering == true)
 		{
 			// no need to update values if rendering is enabled
 			return;
 		}
 
-		if (WebPage.camera && WebPage.camera.position)
+		if (globals.camera && globals.camera.position)
 		{		
 			var vec = new THREE.Vector3();
-			vec.copy(WebPage.controls.target);
-			var position = WebPage.camera.getWorldPosition(vec);
+			vec.copy(globals.controls.target);
+			var position = globals.camera.getWorldPosition(vec);
 
 			DEBUG.CAMERA_POSITION_X = Math.roundToTwoDecimals(position.x);
 			DEBUG.CAMERA_POSITION_Y = Math.roundToTwoDecimals(position.y);
 			DEBUG.CAMERA_POSITION_Z = Math.roundToTwoDecimals(position.z);
-			DEBUG.CAMERA_ROTATION_X = WebPage.camera.rotation.x;
-			DEBUG.CAMERA_ROTATION_Y = WebPage.camera.rotation.y; 
-			DEBUG.CAMERA_ROTATION_Z = WebPage.camera.rotation.z; 
+			DEBUG.CAMERA_ROTATION_X = globals.camera.rotation.x;
+			DEBUG.CAMERA_ROTATION_Y = globals.camera.rotation.y; 
+			DEBUG.CAMERA_ROTATION_Z = globals.camera.rotation.z; 
 		}
 		
 		let mouse = new namespace.core.Mouse();

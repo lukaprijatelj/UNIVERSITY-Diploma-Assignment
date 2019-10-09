@@ -86,7 +86,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 
 	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
 
-	WebPage.tryUpdatingCell(cell);
+	ClientPage.tryUpdatingCell(cell);
 
 	_this.cellsDone.push(cell);
 
@@ -99,7 +99,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	{
 		if (_this.areWorkersDone())
 		{
-			WebPage.onRendererDone(_this.cellsDone);	
+			ClientPage.onRendererDone(_this.cellsDone);	
 				
 			_this.cellsDone = new Array();
 		}
@@ -154,7 +154,7 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 		if (thread.cell)
 		{
-			WebPage.rendererCanvas.unflagRenderCell(thread.cell);
+			ClientPage.rendererCanvas.unflagRenderCell(thread.cell);
 		}		
 
 		thread.workerFunction('stopRendering');
@@ -241,7 +241,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 	let cellToRender = _this.cellsWaiting.shift();
 
 	worker.cell = cellToRender;
-	WebPage.rendererCanvas.flagRenderCell(cellToRender);
+	ClientPage.rendererCanvas.flagRenderCell(cellToRender);
 	worker.workerFunction('setCell', { cell: cellToRender });
 	
 	worker.isRendering = true;

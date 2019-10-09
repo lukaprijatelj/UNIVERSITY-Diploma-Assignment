@@ -33,11 +33,11 @@ EditorCanvas.prototype.resizeCanvas = function()
 		options.CANVAS_HEIGHT = height;
 	}*/
 	
-	if (WebPage.renderer)
+	if (globals.renderer)
 	{
-		WebPage.renderer.setSize(width, height);
-		WebPage.camera.aspect = width/height;
-		WebPage.camera.updateProjectionMatrix();
+		globals.renderer.setSize(width, height);
+		globals.camera.aspect = width/height;
+		globals.camera.updateProjectionMatrix();
 	}
 	
 	//var ctx = canvas.getContext('2d');

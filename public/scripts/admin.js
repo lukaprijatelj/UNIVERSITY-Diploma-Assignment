@@ -1,65 +1,61 @@
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 var options = null;
 
-var WebPage = new namespace.core.WebPage('Admin');
+var AdminPage = new namespace.core.WebPage('Admin');
+var globals = new namespace.core.Globals();
 
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-WebPage.cells = new List();
-
-/**
- * Socket io instance.
- */
-WebPage.io = null;
+globals.cells = new List();
 
 /**
  * ThreeJS scene.
  */
-WebPage.scene = null;
+globals.scene = null;
 
 /**
  * GLTF loader.
  */
-WebPage.loader = null;
+globals.loader = null;
 
 /**
  * Camera controls affected by mouse movement.
  */
-WebPage.controls = null;
+globals.controls = null;
 
 /**
  * ThreeJS camera in the scene.
  */
-WebPage.camera = null;
+globals.camera = null;
 
 /**
  * Additional scene lights.
  */
-WebPage.lights = [];
+globals.lights = [];
 
 /**
  * Canvas for editor aka preview.
  */
-WebPage.editorCanvas = null;
+globals.editorCanvas = null;
 
 /**
  * Is rendering service running.
  */
-WebPage.isRendering = false;
+globals.isRendering = false;
 
 
 /**
  * Initializes page.
  */
-WebPage.init = function()
+AdminPage.init = function()
 {	
 	API.init(enums.apiClientType.ADMIN);	
 
-	API.connect(WebPage._onServerConnected, WebPage._onServerDisconnect);
+	API.connect(AdminPage._onServerConnected, AdminPage._onServerDisconnect);
 
-	WebPage.editorCanvas = new EditorCanvas();
-	WebPage.editorCanvas.init();
+	globals.editorCanvas = new EditorCanvas();
+	globals.editorCanvas.init();
 	
 	DEBUG.init();
 };
@@ -67,7 +63,7 @@ WebPage.init = function()
 /**
  * Opens scene and loads cameras and lights.
  */
-WebPage.openScene = async function()
+AdminPage.openScene = async function()
 {
 	let loadingLayer = document.querySelector('layer#loading');
 	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
@@ -80,43 +76,43 @@ WebPage.openScene = async function()
 	 * gltf.cameras; // Array<THREE.Camera>
 	 * gltf.asset; // Object
 	 */
-	var gltf = await WebPage.startLoadingGltfModel();
+	var gltf = await AdminPage.startLoadingGltfModel();
 
-	await WebPage._initScene();
-	WebPage.scene.add(gltf.scene);
+	await AdminPage._initScene();
+	globals.scene.add(gltf.scene);
 
-	WebPage._initCamera(gltf.cameras);
-	WebPage._initLights();
+	AdminPage._initCamera(gltf.cameras);
+	AdminPage._initLights();
 	
-	WebPage._initRenderer();
-	WebPage._initCameraControls();	
+	AdminPage._initRenderer();
+	AdminPage._initCameraControls();	
 
 	loadingLayer.hide();
 				
-	WebPage.onRenderFrame();
+	AdminPage.onRenderFrame();
 };
 
 /**
  * On server-client connection.
  * @private
  */
-WebPage._onServerConnected = function(socket, data)
+AdminPage._onServerConnected = function(socket, data)
 {
 	console.log('[Main] Connected to server!');
 
 	API.isConnected = true;
 
-	API.listen('clients/updated', WebPage._onClientsUpdated);
+	API.listen('clients/updated', AdminPage._onClientsUpdated);
 
-	API.request('rendering/checkAdmin', WebPage._onCheckRendering);	
+	API.request('rendering/checkAdmin', AdminPage._onCheckRendering);	
 
-	WebPage.onLoaded();
+	AdminPage.onLoaded();
 };
 
 /**
  * Client has disconnected from server.
  */
-WebPage._onServerDisconnect = function()
+AdminPage._onServerDisconnect = function()
 {
 	API.isConnected = false;
 };
@@ -124,24 +120,24 @@ WebPage._onServerDisconnect = function()
 /**
  * Check is server rendering service is running.
  */
-WebPage._onCheckRendering = async function(data)
+AdminPage._onCheckRendering = async function(data)
 {
-	WebPage.isRendering = data.isRenderingServiceRunning;
+	globals.isRendering = data.isRenderingServiceRunning;
 
 	options = data.options;
-	WebPage.editorCanvas.resizeCanvas();
+	globals.editorCanvas.resizeCanvas();
 
-	WebPage.openScene();
+	AdminPage.openScene();
 
-	WebPage._updateRenderingState();
+	AdminPage._updateRenderingState();
 };
 
 /**
  * Starts loading GLTF model.
  */
-WebPage.startLoadingGltfModel = function()
+AdminPage.startLoadingGltfModel = function()
 {
-	console.log('[WebPage] Requesting GLTF model');	
+	console.log('[AdminPage] Requesting GLTF model');	
 
 	var onSuccess = (resolve, reject) =>
 	{
@@ -161,11 +157,11 @@ WebPage.startLoadingGltfModel = function()
 /**
  * Initializes scene.
  */
-WebPage._initScene = async function()
+AdminPage._initScene = async function()
 {
 	var asyncCallback = async function(resolve, reject)
     {
-        WebPage.scene = new THREE.Scene();
+        globals.scene = new THREE.Scene();
 
 		if (options.SKY_CUBE_FILEPATH)
 		{
@@ -179,7 +175,7 @@ WebPage._initScene = async function()
 				'negZ.png'
 			];
 				
-			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
+			globals.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
 		}	
 		else
 		{
@@ -192,82 +188,82 @@ WebPage._initScene = async function()
 /**
  * Intializes camera in the scene.
  */
-WebPage._initCamera = function(cameras)
+AdminPage._initCamera = function(cameras)
 {
-	console.log('[WebPage] Initializing camera');
+	console.log('[AdminPage] Initializing camera');
 
 	let CAMERA_FOV = 75;
 	let CAMERA_ASPECT = 2;  // the canvas default
 	let CAMERA_NEAR = 0.001;
 	let CAMERA_FAR = 10000;
 
-	WebPage.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
+	globals.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
 
 	if (cameras && cameras.length)
 	{
 		// model has camera included, so we will use it's position and rotation
 
 		let existingCamera = cameras[0];
-		WebPage.camera.position.x = existingCamera.parent.position.x;
-		WebPage.camera.position.y = existingCamera.parent.position.y;
-		WebPage.camera.position.z = existingCamera.parent.position.z;
+		globals.camera.position.x = existingCamera.parent.position.x;
+		globals.camera.position.y = existingCamera.parent.position.y;
+		globals.camera.position.z = existingCamera.parent.position.z;
 
-		WebPage.camera.rotation.x = existingCamera.parent.rotation.x;
-		WebPage.camera.rotation.y = existingCamera.parent.rotation.y;
-		WebPage.camera.rotation.z = existingCamera.parent.rotation.z;
+		globals.camera.rotation.x = existingCamera.parent.rotation.x;
+		globals.camera.rotation.y = existingCamera.parent.rotation.y;
+		globals.camera.rotation.z = existingCamera.parent.rotation.z;
 	}
 	else
 	{
 		// set default position and rotation
-		WebPage.camera.position.x = -1.55877021541765;
-		WebPage.camera.position.y = 0.6214917314103046;
-		WebPage.camera.position.z = 0.9543815583821418;
+		globals.camera.position.x = -1.55877021541765;
+		globals.camera.position.y = 0.6214917314103046;
+		globals.camera.position.z = 0.9543815583821418;
 	}	
 };
 
 /**
  * Initializes camera mouse controls, so that changing view is easier.
  */
-WebPage._initCameraControls = function()
+AdminPage._initCameraControls = function()
 {
-	console.log('[WebPage] Initializing camera controls');
+	console.log('[AdminPage] Initializing camera controls');
 
-	WebPage.controls = new THREE.OrbitControls(WebPage.camera, WebPage.renderer.domElement);
-	WebPage.controls.screenSpacePanning = true;
+	globals.controls = new THREE.OrbitControls(globals.camera, globals.renderer.domElement);
+	globals.controls.screenSpacePanning = true;
 };
 
 /**
  * Initializes lights.
  */
-WebPage._initLights = function()
+AdminPage._initLights = function()
 {
-	console.log('[WebPage] Initializing lights');
+	console.log('[AdminPage] Initializing lights');
 
-	var light = new THREE.AmbientLight(0x404040, 2);
-	WebPage.scene.add(light);
-	WebPage.lights.push(light);
+	var light = new THREE.AmbientLight(0x404040, 3);
+	globals.scene.add(light);
+	globals.lights.push(light);
 
 	/*var intensity = 1;
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
 	light.position.set( - 200, 100, 100 );
-	WebPage.scene.add( light );
+	globals.scene.add( light );
 
 	var light = new THREE.PointLight(0x55aaff, intensity);
 	light.position.set( 200, -100, 100 );
-	WebPage.scene.add( light );
+	globals.scene.add( light );
 
 	var light = new THREE.PointLight(0xffffff, intensity);
 	light.position.set( 0, 0, -300 );
-	WebPage.scene.add( light );*/
+	globals.scene.add( light );*/
 };
 
 /**
  * Initializes renderer.
  */
-WebPage._initRenderer = function()
+AdminPage._initRenderer = function()
 {
-	console.log('[WebPage] Initialize editor renderer');
+	console.log('[AdminPage] Initialize editor renderer');
 
 	var canvas = document.getElementById('editor-canvas');
 
@@ -276,36 +272,36 @@ WebPage._initRenderer = function()
 		canvas: canvas,
 		antialias: true 
 	};
-	WebPage.renderer = new THREE.WebGLRenderer(options);
-	WebPage.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+	globals.renderer = new THREE.WebGLRenderer(options);
+	globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
 
-	WebPage.editorCanvas.resizeCanvas();
+	globals.editorCanvas.resizeCanvas();
 };
 
 /**
  * Main rendering loop.
  */
-WebPage.onRenderFrame = function()
+AdminPage.onRenderFrame = function()
 {
 	// will start loop for this function
-	requestAnimationFrame(WebPage.onRenderFrame);	
+	requestAnimationFrame(AdminPage.onRenderFrame);	
 
 	// render current frame
-	WebPage.renderer.render(WebPage.scene, WebPage.camera);
+	globals.renderer.render(globals.scene, globals.camera);
 		
-	if (WebPage.controls)
+	if (globals.controls)
 	{
 		// update camera
-		WebPage.controls.update();
+		globals.controls.update();
 	}
 };
 
 /**
  * Clears scene.
  */
-WebPage.clearScene = function()
+AdminPage.clearScene = function()
 {
-	let scene = WebPage.scene;
+	let scene = globals.scene;
 
 	while(scene.children.length > 0)
 	{ 
@@ -316,7 +312,7 @@ WebPage.clearScene = function()
 /**
  * Server has notified us that clients were updated.
  */
-WebPage._onClientsUpdated = function(data)
+AdminPage._onClientsUpdated = function(data)
 {
 	var clients = data;
 	var renderingClientsCount = clients.filter(item => item.admin == false).length;
@@ -328,11 +324,11 @@ WebPage._onClientsUpdated = function(data)
 /**
  * Updates buttons and popups when rendering state is switched.
  */
-WebPage._updateRenderingState = function()
+AdminPage._updateRenderingState = function()
 {
 	var startRenderingButtonV = document.getElementById('render-button');
 
-	if (WebPage.isRendering == true)
+	if (globals.isRendering == true)
 	{
 		var interfaceV = document.querySelector('interface');
 		interfaceV.addClass('rendering');
@@ -388,7 +384,7 @@ WebPage._updateRenderingState = function()
  * Initial data is loaded.
  * Remove skeleton screens by removing 'loading' class from elements.
  */
-WebPage.onLoaded = function()
+AdminPage.onLoaded = function()
 {
 	// -----------------------------
 	// remove .loading flag
@@ -400,7 +396,7 @@ WebPage.onLoaded = function()
 /**
  * Scene button od dropdown was clicked.
 */
-WebPage._onSceneButtonClick = async function(button)
+AdminPage._onSceneButtonClick = async function(button)
 {
 	let ajaxCall = new namespace.core.Ajax('api/listScenes');
 	let xhrCall = await ajaxCall.send();
@@ -412,7 +408,7 @@ WebPage._onSceneButtonClick = async function(button)
 	{
 		let div = new namespace.html.Div();
 		div.addClass('entry');
-		div.setAttribute('onclick', 'WebPage.onPreloadedSceneClick(this)');
+		div.setAttribute('onclick', 'AdminPage.onPreloadedSceneClick(this)');
 
 		let divText = scenes[i] + '/' + 'Scene.gltf';
 		div.appendChild(divText);
@@ -422,7 +418,7 @@ WebPage._onSceneButtonClick = async function(button)
 	let uploadDiv = new namespace.html.Div();
 	uploadDiv.id = 'upload-button';
 	uploadDiv.addClass('entry');
-	uploadDiv.setAttribute('onclick', 'WebPage.onUploadSceneClick()');
+	uploadDiv.setAttribute('onclick', 'AdminPage.onUploadSceneClick()');
 	uploadDiv.appendChild('UPLOAD SCENE');
 	wrapper.appendChild(uploadDiv);
 
@@ -437,7 +433,7 @@ WebPage._onSceneButtonClick = async function(button)
 	anchor.setCenter(top, new Unit());
 
 	let curtain = new namespace.html.Curtain();
-	curtain.onClick(WebPage.hideLastDropdown);
+	curtain.onClick(AdminPage.hideLastDropdown);
 	curtain.show();
 	
 	let layer = document.querySelector('layer#dropdowns');
@@ -446,7 +442,7 @@ WebPage._onSceneButtonClick = async function(button)
 	layer.show();
 };
 
-WebPage._onNewRendererClick = function()
+AdminPage._onNewRendererClick = function()
 {
 	/*var a = document.createElement("a");    
 	a.href = window.location.origin + '/client';    
@@ -461,7 +457,7 @@ WebPage._onNewRendererClick = function()
 	window.open("/client", "", "width=" + width + ",height=" + height);
 };
 
-WebPage._onOptionsButtonClick = async function(button)
+AdminPage._onOptionsButtonClick = async function(button)
 {
 	let ajaxCall = new namespace.core.Ajax('html/options-dropdown.html');
 	ajaxCall.method = 'GET';
@@ -511,7 +507,7 @@ WebPage._onOptionsButtonClick = async function(button)
 	// -----------------------------
 
 	let curtain = new namespace.html.Curtain();
-	curtain.onClick(WebPage.hideLastDropdown);
+	curtain.onClick(AdminPage.hideLastDropdown);
 	curtain.show();
 
 	let layer = document.querySelector('layer#dropdowns');
@@ -523,21 +519,21 @@ WebPage._onOptionsButtonClick = async function(button)
 /**
  * User choose different scene.
  */
-WebPage.onPreloadedSceneClick = async function(element)
+AdminPage.onPreloadedSceneClick = async function(element)
 {
 	options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
-	WebPage.openScene();
+	AdminPage.openScene();
 
-	WebPage.onDropdownsCurtainClick();
+	AdminPage.onDropdownsCurtainClick();
 };
 
 /**
  * User picked file/folder with 3D scene.
  */
-WebPage.onFileUploadChange = async function(event)
+AdminPage.onFileUploadChange = async function(event)
 {
-	WebPage.onDropdownsCurtainClick();
+	AdminPage.onDropdownsCurtainClick();
 
 	let loadingLayer = document.querySelector('layer#loading');
 	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Uploading...';
@@ -550,18 +546,18 @@ WebPage.onFileUploadChange = async function(event)
 	ajaxCall.skipJsonStringify = true;	
 	await ajaxCall.send(formData);
 
-	WebPage.onFileUploadDone();
+	AdminPage.onFileUploadDone();
 };
 
-WebPage.onFileUploadDone = function()
+AdminPage.onFileUploadDone = function()
 {
-	WebPage.resetFilesInput();
+	AdminPage.resetFilesInput();
 
 	let loadingLayer = document.querySelector('layer#loading');
 	loadingLayer.hide();
 };
 
-WebPage.resetFilesInput = function()
+AdminPage.resetFilesInput = function()
 {
 	var input = document.getElementById('upload-file-input');
 
@@ -569,12 +565,12 @@ WebPage.resetFilesInput = function()
 	input.value = String();
 };
 
-WebPage.onUploadSceneClick = function()
+AdminPage.onUploadSceneClick = function()
 {
 	document.getElementById('upload-file-input').click();
 };
 
-WebPage.onDropdownsCurtainClick = function(event)
+AdminPage.onDropdownsCurtainClick = function(event)
 {
 	let mouse = new namespace.core.Mouse(event);
 	let list = document.querySelector('layer#dropdowns');
@@ -590,7 +586,7 @@ WebPage.onDropdownsCurtainClick = function(event)
 /**
  * Hides popups layer.
  */
-WebPage.hideLastDropdown = function()
+AdminPage.hideLastDropdown = function()
 {
 	let popup = document.querySelector('layer#dropdowns > *:last-child');
 
@@ -603,7 +599,7 @@ WebPage.hideLastDropdown = function()
  * Sends request to recalculate grid layout.
  * @private
  */
-WebPage._onStartStopRenderingClick = function()
+AdminPage._onStartStopRenderingClick = function()
 {
 	var startRenderingButtonV = document.getElementById('render-button');
 	startRenderingButtonV.disable();
@@ -614,56 +610,56 @@ WebPage._onStartStopRenderingClick = function()
 	{
 		API.request('rendering/stop', () =>
 		{
-			WebPage.isRendering = false;
-			WebPage._updateRenderingState();
+			globals.isRendering = false;
+			AdminPage._updateRenderingState();
 		}, data);
 	}
 	else
 	{
-		options.CAMERA = WebPage.camera.toJSON();
+		options.CAMERA = globals.camera.toJSON();
 	
-		for (let i=0; i<WebPage.lights.length; i++)
+		for (let i=0; i<globals.lights.length; i++)
 		{
 			options.LIGHTS = [];
-			options.LIGHTS.push(WebPage.lights[i].toJSON());
+			options.LIGHTS.push(globals.lights[i].toJSON());
 		}
 		
 		data.options = options;
 
 		API.request('rendering/start', () =>
 		{
-			WebPage.isRendering = true;
-			WebPage._updateRenderingState();
+			globals.isRendering = true;
+			AdminPage._updateRenderingState();
 		}, data);
 	}
 };
 
-WebPage._onCanvasWidthChange = function(val)
+AdminPage._onCanvasWidthChange = function(val)
 {
 	options.CANVAS_WIDTH = Number(val);
 };
 
-WebPage._onCanvasHeightChange = function(val)
+AdminPage._onCanvasHeightChange = function(val)
 {
 	options.CANVAS_HEIGHT = Number(val);
 };
 
-WebPage._onResolutionFactorChange = function(val)
+AdminPage._onResolutionFactorChange = function(val)
 {
 	options.RESOLUTION_FACTOR = Number(val);
 };
 
-WebPage._onBlockWidthChange = function(val)
+AdminPage._onBlockWidthChange = function(val)
 {
 	options.BLOCK_WIDTH = Number(val);
 };
 
-WebPage._onBlockHeightChange = function(val)
+AdminPage._onBlockHeightChange = function(val)
 {
 	options.BLOCK_HEIGHT = Number(val);
 };
 
-WebPage._onOpenOutputClick = function()
+AdminPage._onOpenOutputClick = function()
 {
 	let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
 	let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);

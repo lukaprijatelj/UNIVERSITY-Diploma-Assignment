@@ -7,108 +7,109 @@ var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assig
 var options = null;
 var previousOptions = null;
 
-var WebPage = new namespace.core.WebPage('Client');
+var ClientPage = new namespace.core.WebPage('Client');
+var globals = new namespace.core.Globals();
 
 /**
  * ThreeJS scene.
  */
-WebPage.scene = null;
+globals.scene = null;
 
 /**
  * GLTF loader.
  */
-WebPage.loader = null;
+globals.loader = null;
 
 /**
  * ThreeJS camera in the scene.
  */
-WebPage.camera = null;
+globals.camera = null;
 
 /**
  * Canvas renderer.
  */
-WebPage.renderer = null;
+globals.renderer = null;
 
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-WebPage.cells = new Array();
+globals.cells = new Array();
 
 /**
  * Current renderer type.
  */
-WebPage.rendererType = null;
+globals.rendererType = null;
 
 /**
  * Camera controls affected by mouse movement.
  */
-WebPage.controls = null;
+globals.controls = null;
 
 /**
  * Last rendered time.
  */
-WebPage.lastRenderingTime = 0;
+globals.lastRenderingTime = 0;
 
 
 /**
  * Initializes page.
  */
-WebPage.init = function()
+ClientPage.init = function()
 {
-	WebPage.rendererType = enums.rendererType.RAY_TRACING;
+	globals.rendererType = enums.rendererType.RAY_TRACING;
 
-	WebPage.rendererCanvas = new RendererCanvas();
-	WebPage.rendererCanvas.init();
+	ClientPage.rendererCanvas = new RendererCanvas();
+	ClientPage.rendererCanvas.init();
 	
-	WebPage.onViewLoaded();
+	ClientPage.onViewLoaded();
 
 	API.init(enums.apiClientType.RENDERER);		
-	API.connect(WebPage._onServerConnected, WebPage._onServerDisconnect);
+	API.connect(ClientPage._onServerConnected, ClientPage._onServerDisconnect);
 };
 
 
 /**
  * On server-client connection.
  */
-WebPage._onServerConnected = function()
+ClientPage._onServerConnected = function()
 {
-	console.log('[WebPage] Connected to server!');
+	console.log('[ClientPage] Connected to server!');
 
 	API.isConnected = true;
 
-	API.listen('cells/update', WebPage._onCellUpdate);
-	API.listen('rendering/start', WebPage._onStartRenderingService);	
-	API.listen('rendering/stop', WebPage._onStopRenderingService);	
+	API.listen('cells/update', ClientPage._onCellUpdate);
+	API.listen('rendering/start', ClientPage._onStartRenderingService);	
+	API.listen('rendering/stop', ClientPage._onStopRenderingService);	
 
-	API.request('cells/getAll', WebPage.onGetLayout);
+	API.request('cells/getAll', ClientPage.onGetLayout);
 };	
 
 /**
  * Server started rendering service.
  */
-WebPage._onStartRenderingService = function(data)
+ClientPage._onStartRenderingService = function(data)
 {
-	API.request('cells/getAll', WebPage.onGetLayout);
+	API.request('cells/getAll', ClientPage.onGetLayout);
 };
 
 /**
  * Server stopped rendering service.
  */
-WebPage._onStopRenderingService = function(data)
+ClientPage._onStopRenderingService = function(data)
 {
 	previousOptions = options;
 	options = null;
 
-	WebPage.renderer.stopRendering();
-	WebPage.stopRendererUi();
+	globals.renderer.stopRendering();
+	ClientPage.stopRendererUi();
 };
 
 /**
  * Client has disconnected from server.
  */
-WebPage._onServerDisconnect = function()
+ClientPage._onServerDisconnect = function()
 {
-	console.log('[WebPage] Disconnected from server!');
+	console.log('[ClientPage] Disconnected from server!');
 
 	API.isConnected = false;
 };
@@ -116,7 +117,7 @@ WebPage._onServerDisconnect = function()
 /**
  * Progress was updated.
  */
-WebPage._onCellUpdate = function(data)
+ClientPage._onCellUpdate = function(data)
 {
 	var cells = data.cells;
 	
@@ -124,16 +125,16 @@ WebPage._onCellUpdate = function(data)
 	{
 		var current = cells[i];
 
-		WebPage.tryUpdatingCell(current);
+		ClientPage.tryUpdatingCell(current);
 	}
 };
 
 /**
  * Starts loading GLTF model.
  */
-WebPage.startLoadingGltfModel = function()
+ClientPage.startLoadingGltfModel = function()
 {
-	console.log('[WebPage] Requesting GLTF model');	
+	console.log('[ClientPage] Requesting GLTF model');	
 
 	var onSuccess = (resolve, reject) =>
 	{
@@ -153,11 +154,11 @@ WebPage.startLoadingGltfModel = function()
 /**
  * Initializes scene.
  */
-WebPage._initScene = function()
+ClientPage._initScene = function()
 {
 	var asyncCallback = async function(resolve, reject)
     {
-		WebPage.scene = new THREE.Scene();
+		globals.scene = new THREE.Scene();
 
 		if (options.SKY_CUBE_FILEPATH)
 		{
@@ -171,7 +172,7 @@ WebPage._initScene = function()
 				'negZ.png'
 			];
 				
-			WebPage.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
+			globals.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
 		}	
 		else
 		{
@@ -184,9 +185,9 @@ WebPage._initScene = function()
 /**
  * Intializes camera in the scene.
  */
-WebPage._initCamera = function()
+ClientPage._initCamera = function()
 {
-	console.log('[WebPage] Initializing camera');
+	console.log('[ClientPage] Initializing camera');
 
 	if (!options.CAMERA)
 	{
@@ -195,15 +196,15 @@ WebPage._initCamera = function()
 
 	var loader = new THREE.ObjectLoader();
 
-	WebPage.camera = loader.parse(options.CAMERA);
+	globals.camera = loader.parse(options.CAMERA);
 };
 
 /**
  * Initializes lights.
  */
-WebPage._initLights = function()
+ClientPage._initLights = function()
 {
-	console.log('[WebPage] Initializing lights');
+	console.log('[ClientPage] Initializing lights');
 
 	if (!options.LIGHTS)
 	{
@@ -215,38 +216,38 @@ WebPage._initLights = function()
 	for (let i=0; i<options.LIGHTS.length; i++)
 	{
 		var light = loader.parse(options.LIGHTS[i]);
-		WebPage.scene.add(light);
+		globals.scene.add(light);
 	}
 
 	/*var intensity = 1;
 
 	var light = new THREE.PointLight(0xffaa55, intensity);
 	light.position.set( - 200, 100, 100 );
-	WebPage.scene.add( light );
+	globals.scene.add( light );
 
 	var light = new THREE.PointLight(0x55aaff, intensity);
 	light.position.set( 200, -100, 100 );
-	WebPage.scene.add( light );
+	globals.scene.add( light );
 
 	var light = new THREE.PointLight(0xffffff, intensity);
 	light.position.set( 0, 0, -300 );
-	WebPage.scene.add( light );*/
+	globals.scene.add( light );*/
 };
 
 /**
  * Initializes renderer.
  */
-WebPage._initRenderer = function()
+ClientPage._initRenderer = function()
 {
-	console.log('[WebPage] Initialize renderer of type "' + WebPage.rendererType + '"');
+	console.log('[ClientPage] Initialize renderer of type "' + globals.rendererType + '"');
 
 	var renderer = null;
 	var canvas = document.getElementById('rendering-canvas');
 
-	switch(WebPage.rendererType)
+	switch(globals.rendererType)
 	{
 		case enums.rendererType.RAY_TRACING:
-			renderer = new RaytracingRenderer(canvas, WebPage.scene, WebPage.camera);
+			renderer = new RaytracingRenderer(canvas, globals.scene, globals.camera);
 			break;
 
 		case enums.rendererType.PATH_TRACING:
@@ -255,16 +256,16 @@ WebPage._initRenderer = function()
 			break;
 	}	
 	
-	WebPage.renderer = renderer;
+	globals.renderer = renderer;
 };	
 
 /**
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
  * @async
  */
-WebPage.onGetLayout = function(data)
+ClientPage.onGetLayout = function(data)
 {
-	console.log('[WebPage] Grid layout drawn');
+	console.log('[ClientPage] Grid layout drawn');
 
 
 	// -----------------------------
@@ -287,26 +288,26 @@ WebPage.onGetLayout = function(data)
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	WebPage.rendererCanvas.resizeCanvas();
+	ClientPage.rendererCanvas.resizeCanvas();
 
 
 	// -----------------------------
 	// draw layout
 	// -----------------------------
 
-	WebPage.cells = data.cells;
-	WebPage.rendererCanvas.createLayout(WebPage.cells);
+	globals.cells = data.cells;
+	ClientPage.rendererCanvas.createLayout(globals.cells);
 
 
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
 
-	for (var i=0; i<WebPage.cells.length; i++)
+	for (var i=0; i<globals.cells.length; i++)
 	{
-		var current = WebPage.cells[i];
+		var current = globals.cells[i];
 
-		WebPage.tryUpdatingCell(current);
+		ClientPage.tryUpdatingCell(current);
 
 		current.imageData = null;
 	}
@@ -323,14 +324,14 @@ WebPage.onGetLayout = function(data)
 	}
 	API.isRenderingServiceRunning = data.isRenderingServiceRunning;
 
-	WebPage.onDataLoaded();
+	ClientPage.onDataLoaded();
 };
 
 /**
  * View has done loading.
  * Remove skeleton screens by removing 'loading' class from elements.
  */
-WebPage.onViewLoaded = function()
+ClientPage.onViewLoaded = function()
 {
 	document.body.removeClass('loading');
 };
@@ -338,7 +339,7 @@ WebPage.onViewLoaded = function()
 /**
  * Initial data is loaded.
  */
-WebPage.onDataLoaded = async function()
+ClientPage.onDataLoaded = async function()
 {
 	/**
 	 * gltf.animations; // Array<THREE.AnimationClip>
@@ -347,41 +348,41 @@ WebPage.onDataLoaded = async function()
 	 * gltf.cameras; // Array<THREE.Camera>
 	 * gltf.asset; // Object
 	 */
-	var gltf = await WebPage.startLoadingGltfModel();
+	var gltf = await ClientPage.startLoadingGltfModel();
 
-	await WebPage._initScene();
-	WebPage._initCamera();
-	WebPage._initLights();
+	await ClientPage._initScene();
+	ClientPage._initCamera();
+	ClientPage._initLights();
 	
-	WebPage._initRenderer();
+	ClientPage._initRenderer();
 
-	WebPage.scene.add(gltf.scene);
+	globals.scene.add(gltf.scene);
 	
-	await WebPage.renderer.prepareJsonData();
+	await globals.renderer.prepareJsonData();
 
-	API.request('cells/getWaiting', WebPage.onGetWaitingCells);
+	API.request('cells/getWaiting', ClientPage.onGetWaitingCells);
 };
 
 /**
  * Tries to update canvas with data from this cell.
  */
-WebPage.tryUpdatingCell = function(cell)
+ClientPage.tryUpdatingCell = function(cell)
 {
 	if (!cell.imageData)
 	{
 		return;
 	}
 
-	WebPage.rendererCanvas.updateCell(cell);
+	ClientPage.rendererCanvas.updateCell(cell);
 };
 
 /**
  * Stop rendering UI.
  */
-WebPage.stopRendererUi = function()
+ClientPage.stopRendererUi = function()
 {
 	document.querySelector('interface').removeClass('rendering');
-	WebPage.lastRenderingTime = 0;
+	globals.lastRenderingTime = 0;
 
 	if (previousOptions)
 	{
@@ -395,26 +396,26 @@ WebPage.stopRendererUi = function()
 /**
  * All waiting cells are done rendering.
  */
-WebPage.onRendererDone = function(cells)
+ClientPage.onRendererDone = function(cells)
 {
-	WebPage.lastRenderingTime = window.setTimeout(WebPage.stopRendererUi, 1000);
+	globals.lastRenderingTime = window.setTimeout(ClientPage.stopRendererUi, 1000);
 
 	if (!API.isRenderingServiceRunning)
 	{
 		return;
 	}
 
-	WebPage.updateProgressAsync(cells, 100);
+	ClientPage.updateProgressAsync(cells, 100);
 			
-	API.request('cells/getWaiting', WebPage.onGetWaitingCells);
+	API.request('cells/getWaiting', ClientPage.onGetWaitingCells);
 };
 
 /**
  * Cell waiting to be rendered is received.
  */
-WebPage.onGetWaitingCells = function(cells)
+ClientPage.onGetWaitingCells = function(cells)
 {
-	console.log('[WebPage] Rendering cells received');
+	console.log('[ClientPage] Rendering cells received');
 
 	if (!cells)
 	{
@@ -426,16 +427,16 @@ WebPage.onGetWaitingCells = function(cells)
 		new Exception.ArrayEmpty();
 	}
 
-	if (WebPage.lastRenderingTime > 0)
+	if (globals.lastRenderingTime > 0)
 	{
-		window.clearTimeout(WebPage.lastRenderingTime);
+		window.clearTimeout(globals.lastRenderingTime);
 	}
 
 	var cellsWaiting = new Array();
 
-	for (let i=0; i<WebPage.cells.length; i++)
+	for (let i=0; i<globals.cells.length; i++)
 	{
-		let current = WebPage.cells[i];
+		let current = globals.cells[i];
 
 		for (let j=0; j<cells.length; j++)
 		{
@@ -452,13 +453,13 @@ WebPage.onGetWaitingCells = function(cells)
 
 	// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 	// heavy duty operation
-	WebPage.startRendering(cellsWaiting);
+	ClientPage.startRendering(cellsWaiting);
 };
 
 /**
  * Starts rendering.
  */
-WebPage.startRendering = function(cellsWaiting)
+ClientPage.startRendering = function(cellsWaiting)
 {
 	document.querySelector('interface').addClass('rendering');
 
@@ -471,10 +472,10 @@ WebPage.startRendering = function(cellsWaiting)
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	if (WebPage.rendererType == enums.rendererType.RAY_TRACING)
+	if (globals.rendererType == enums.rendererType.RAY_TRACING)
 	{
 		// start rendering
-		WebPage.renderer.render(cellsWaiting);
+		globals.renderer.render(cellsWaiting);
 	}
 };
 
@@ -482,7 +483,7 @@ WebPage.startRendering = function(cellsWaiting)
  * Notifies server how much has client already rendered.
  * @async
  */
-WebPage.updateProgressAsync = function(cells, progress)
+ClientPage.updateProgressAsync = function(cells, progress)
 {
 	var data = 
 	{

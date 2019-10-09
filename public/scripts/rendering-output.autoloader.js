@@ -59,7 +59,7 @@
 	loadingBlock.push(new AsyncImporter("externals/namespace-core/Timer.js"));
 	loadingBlock.push(new AsyncImporter("externals/namespace-core/Unit.js"));
 	loadingBlock.push(new AsyncImporter("externals/namespace-core/Version.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/WebPage.js"));
+	loadingBlock.push(new AsyncImporter("externals/namespace-core/RenderingOutputPage.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -131,5 +131,5 @@
 	loadingBlock.push(new AsyncImporter('scripts/rendering-output.js'));
 	await Promise.all(loadingBlock);
 	
-	WebPage.init();
+	RenderingOutputPage.init();
 })();

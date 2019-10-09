@@ -1,21 +1,22 @@
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 var options = null;
 
+var RenderingOutputPage = new namespace.core.WebPage('Rendering-output');
+var globals = new namespace.core.Globals();
 
-var WebPage = new namespace.core.WebPage('Rendering-output');
 
 /**
  * Initializes page.
  */
-WebPage.init = function()
+RenderingOutputPage.init = function()
 {		
-	WebPage.rendererCanvas = new RendererCanvas();
-	WebPage.rendererCanvas.init();
+	RenderingOutputPage.rendererCanvas = new RendererCanvas();
+	RenderingOutputPage.rendererCanvas.init();
 	
-	WebPage.onViewLoaded();
+	RenderingOutputPage.onViewLoaded();
 
 	API.init(enums.apiClientType.RENDERING_OUTPUT);		
-	API.connect(WebPage._onServerConnected, WebPage._onServerDisconnect);
+	API.connect(RenderingOutputPage._onServerConnected, RenderingOutputPage._onServerDisconnect);
 };
 
 
@@ -23,25 +24,25 @@ WebPage.init = function()
  * On server-client connection.
  * @private
  */
-WebPage._onServerConnected = function()
+RenderingOutputPage._onServerConnected = function()
 {
-	console.log('[WebPage] Connected to server!');
+	console.log('[RenderingOutputPage] Connected to server!');
 
 	API.isConnected = true;
 
-	API.listen('cells/update', WebPage._onCellUpdate);
-	API.listen('rendering/start', WebPage._onStartRenderingService);	
-	API.listen('rendering/stop', WebPage._onStopRenderingService);	
+	API.listen('cells/update', RenderingOutputPage._onCellUpdate);
+	API.listen('rendering/start', RenderingOutputPage._onStartRenderingService);	
+	API.listen('rendering/stop', RenderingOutputPage._onStopRenderingService);	
 
-	API.request('cells/getAll', WebPage.onGetLayout);
+	API.request('cells/getAll', RenderingOutputPage.onGetLayout);
 };
 
 /**
  * Client has disconnected from server.
  */
-WebPage._onServerDisconnect = function()
+RenderingOutputPage._onServerDisconnect = function()
 {
-	console.log('[WebPage] Disconnected from server!');
+	console.log('[RenderingOutputPage] Disconnected from server!');
 
 	API.isConnected = false;
 };
@@ -49,15 +50,15 @@ WebPage._onServerDisconnect = function()
 /**
  * Server started rendering service.
  */
-WebPage._onStartRenderingService = function(data)
+RenderingOutputPage._onStartRenderingService = function(data)
 {
-	API.request('cells/getAll', WebPage.onGetLayout);
+	API.request('cells/getAll', RenderingOutputPage.onGetLayout);
 };
 
 /**
  * Server stopped rendering service.
  */
-WebPage._onStopRenderingService = function(data)
+RenderingOutputPage._onStopRenderingService = function(data)
 {
 	options = null;
 };
@@ -66,9 +67,9 @@ WebPage._onStopRenderingService = function(data)
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
  * @async
  */
-WebPage.onGetLayout = function(data)
+RenderingOutputPage.onGetLayout = function(data)
 {
-	console.log('[WebPage] Grid layout drawn');
+	console.log('[RenderingOutputPage] Grid layout drawn');
 
 
 	// -----------------------------
@@ -88,26 +89,26 @@ WebPage.onGetLayout = function(data)
 
 	browser.setTitle('Output (' + optionsWidth + ' x ' + optionsHeight + ')');
 
-	WebPage.rendererCanvas.resizeCanvas();
+	RenderingOutputPage.rendererCanvas.resizeCanvas();
 
 
 	// -----------------------------
 	// draw layout
 	// -----------------------------
 
-	WebPage.cells = data.cells;
-	WebPage.rendererCanvas.createLayout(WebPage.cells);
+	globals.cells = data.cells;
+	RenderingOutputPage.rendererCanvas.createLayout(globals.cells);
 
 
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
 
-	for (var i=0; i<WebPage.cells.length; i++)
+	for (var i=0; i<globals.cells.length; i++)
 	{
-		var current = WebPage.cells[i];
+		var current = globals.cells[i];
 
-		WebPage.tryUpdatingCell(current);
+		RenderingOutputPage.tryUpdatingCell(current);
 	}
 };
 
@@ -115,7 +116,7 @@ WebPage.onGetLayout = function(data)
  * Initial data is loaded.
  * Remove skeleton screens by removing 'loading' class from elements.
  */
-WebPage.onViewLoaded = function()
+RenderingOutputPage.onViewLoaded = function()
 {
 	// -----------------------------
 	// remove .loading flag
@@ -127,7 +128,7 @@ WebPage.onViewLoaded = function()
 /**
  * Progress was updated.
  */
-WebPage._onCellUpdate = function(data)
+RenderingOutputPage._onCellUpdate = function(data)
 {
 	var cells = data.cells;
 	
@@ -135,19 +136,19 @@ WebPage._onCellUpdate = function(data)
 	{
 		var current = cells[i];
 
-		WebPage.tryUpdatingCell(current);
+		RenderingOutputPage.tryUpdatingCell(current);
 	}
 };
 
 /**
  * Tries to update canvas with data from this cell.
  */
-WebPage.tryUpdatingCell = function(cell)
+RenderingOutputPage.tryUpdatingCell = function(cell)
 {
 	if (!cell.imageData)
 	{
 		return;
 	}
 
-	WebPage.rendererCanvas.updateCell(cell);
+	RenderingOutputPage.rendererCanvas.updateCell(cell);
 };

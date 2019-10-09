@@ -76,5 +76,5 @@
 	loadingBlock.push(new AsyncImporter('scripts/admin.js'));
 	await Promise.all(loadingBlock);
 	
-	WebPage.init();
+	AdminPage.init();
 })();

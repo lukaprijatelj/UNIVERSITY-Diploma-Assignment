@@ -23,9 +23,7 @@ Build task will be read from scripts property of the package.json file.
 	- dodam v namespace-debug funkcijo, ki se bo sprehodila po funkcijah in dodala datetime.start in datetime.end za računanje hitrosti funkcij. 
 	  Nato bo preko cookiejev zapisala <key>GLOBALS</key><value>.select</value>  izračune. Nato bo en drug window pa to prikazoval in vsakih n milisekund refreshal podatke.
 	- optimiziram admin THREEJS kodo, da bo imela far plane fog oziroma blur. Potem bo mogoče hitreje delalo. 
-	- popravim WebPage v AdminPage
-	- prestavim AdminPage.Scene in AdminPage.Camera v globals.Scene in globals.Camera
-	- dodam preostali 2 zdownloadani 3d sceni
+
 	
 
 # Implementation

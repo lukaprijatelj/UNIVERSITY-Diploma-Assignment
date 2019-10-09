@@ -25,7 +25,7 @@ function init(data)
 			cell: cell,
 			timeMs: timeMs
 		};
-		mainThread.mainFunction('WebPage.renderer.renderCell', data);
+		mainThread.mainFunction('globals.renderer.renderCell', data);
 	}, data.workerIndex);
 	worker.init(data.canvasWidth, data.canvasHeight);
 }

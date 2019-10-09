@@ -67,5 +67,5 @@
 	loadingBlock.push(new AsyncImporter('scripts/client.js'));
 	await Promise.all(loadingBlock);
 	
-	WebPage.init();
+	ClientPage.init();
 })();

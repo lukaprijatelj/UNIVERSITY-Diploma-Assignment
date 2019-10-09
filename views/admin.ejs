@@ -31,7 +31,7 @@
 
 		<!-- dummy input tag, so that file upload dialog is presented to user -->
 		<form id="scene-upload-form" enctype="multipart/form-data" action="/api/uploadScene" method="post" class="hidden">
-			<input id="upload-file-input" name="reserved_word-scene" type="file" webkitdirectory mozdirectory directory multiple onchange="WebPage.onFileUploadChange(event)" />
+			<input id="upload-file-input" name="reserved_word-scene" type="file" webkitdirectory mozdirectory directory multiple onchange="AdminPage.onFileUploadChange(event)" />
 		</form> 
 
 		<!-- Interface -->
@@ -69,16 +69,16 @@
 
 			<layer-resizable id="bars">
 				<flex id="top-bar">
-					<bar-button id="scene-button" class="" onclick="WebPage._onSceneButtonClick(this)">SCENE</bar-button>
-					<bar-button id="options-button" class="" onclick="WebPage._onOptionsButtonClick(this)">OPTIONS</bar-button>
-					<bar-button id="render-button" onclick="WebPage._onStartStopRenderingClick(event)">ENABLE RENDERING</bar-button>
-					<!-- <bar-button id="output-button" class="hidden" onclick="WebPage._onOpenOutputClick()">OPEN OUTPUT</bar-button> -->
-					<bar-button id="new-renderer-button" class="hidden" onclick="WebPage._onNewRendererClick(event)">NEW RENDERER</bar-button>
+					<bar-button id="scene-button" class="" onclick="AdminPage._onSceneButtonClick(this)">SCENE</bar-button>
+					<bar-button id="options-button" class="" onclick="AdminPage._onOptionsButtonClick(this)">OPTIONS</bar-button>
+					<bar-button id="render-button" onclick="AdminPage._onStartStopRenderingClick(event)">ENABLE RENDERING</bar-button>
+					<!-- <bar-button id="output-button" class="hidden" onclick="AdminPage._onOpenOutputClick()">OPEN OUTPUT</bar-button> -->
+					<bar-button id="new-renderer-button" class="hidden" onclick="AdminPage._onNewRendererClick(event)">NEW RENDERER</bar-button>
 					<div style="flex-grow: 2;"></div>
 				</flex>
 			</layer-resizable>
 			
-			<layer id="dropdowns" class="hidden" js-class="" num-of-children="" onclick="WebPage.onDropdownsCurtainClick(event)"></layer>
+			<layer id="dropdowns" class="hidden" js-class="" num-of-children="" onclick="AdminPage.onDropdownsCurtainClick(event)"></layer>
 			
 			<!-- Loading layer must always be on the top of all other layers -->
 			<layer id="loading" class="hidden">
