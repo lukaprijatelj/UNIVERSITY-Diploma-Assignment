@@ -25,6 +25,7 @@ Build task will be read from scripts property of the package.json file.
 	- optimiziram admin THREEJS kodo, da bo imela far plane fog oziroma blur. Potem bo mogoče hitreje delalo. 
 	- popravim WebPage v AdminPage
 	- prestavim AdminPage.Scene in AdminPage.Camera v globals.Scene in globals.Camera
+	- dodam preostali 2 zdownloadani 3d sceni
 	
 
 # Implementation
