@@ -6,9 +6,10 @@ var options =
 	//SCENE_FILEPATH: 'scenes/MetalRoughSpheres/Scene.gltf',
 	//SCENE_FILEPATH: 'scenes/boomBox/Scene.gltf',
 
-	//SKY_CUBE_FILEPATH: 'images/sor_lake1/',
-	//SKY_CUBE_FILEPATH: 'images/skycube_2/',
-	SKY_CUBE_FILEPATH: 'images/black/',
+	//SKY_CUBE_FILEPATH: 'images/skycube_lake/',
+	SKY_CUBE_FILEPATH: 'images/skycube_car/',
+	//SKY_CUBE_FILEPATH: 'images/skycube_black/',
+	//SKY_CUBE_FILEPATH: 'images/skycube_building/',
 
 
 	RESOLUTION_FACTOR: 1,

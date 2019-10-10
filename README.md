@@ -13,6 +13,7 @@ Build task will be read from scripts property of the package.json file.
 	sass stylesheets/_root.scss namespace-html.css --style compressed
 
 
+
 # TODO:
 	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
 	- odstarnim stare branche
@@ -28,6 +29,7 @@ Build task will be read from scripts property of the package.json file.
 
 # Implementation
 I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
+I used browsersLocal storage for saving data received from server.
 
 
 ## Demo verzija (cPanel)
