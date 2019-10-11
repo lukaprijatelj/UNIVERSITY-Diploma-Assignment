@@ -106,8 +106,8 @@ button
 	min-height: 20px;
 }
 
-button.disabled,
-checkbox-button.disabled
+button[disabled],
+checkbox-button[disabled]
 {
 	cursor: default !important;
 }
@@ -129,14 +129,14 @@ checkbox-button.dark
 }
 
 checkbox-button.selected,
-button.light:not(.disabled):hover
+button.light:not([disabled]):hover
 {
 	color: var(--DARK-BLUE-COLOR);
 	background: white;
 }
 
 checkbox-button.selected,
-button.dark:not(.disabled):hover
+button.dark:not([disabled]):hover
 {
 	background: transparent;
 	color: var(--DARK-BLUE-COLOR);
@@ -163,12 +163,12 @@ bar-button
 	padding-right: 15px;
 }
 
-bar-button.disabled
+bar-button[disabled]
 {
 	opacity: 0.2;
 }
 
-bar-button:not(.disabled):hover
+bar-button:not([disabled]):hover
 {
 	background-color: var(--LIGHT-BLACK-COLOR);
 	color: rgba(255, 255, 255, 0.7);
@@ -203,12 +203,12 @@ dropdown .entry
 	padding: 15px 15px 15px 15px;
 }
 
-dropdown .entry.disabled
+dropdown .entry[disabled]
 {
 	opacity: 0.2;
 }
 
-dropdown .entry:not(.disabled):hover
+dropdown .entry:not([disabled]):hover
 {
 	color: rgba(255, 255, 255, 0.7) !important;
 	cursor: pointer;
@@ -254,7 +254,7 @@ input:focus
 	color: var(--DARK-BLUE-COLOR);
 }
 
-input.disabled
+input[disabled]
 {
 	outline: none;
 	border: none !important;

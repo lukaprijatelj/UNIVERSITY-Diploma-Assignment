@@ -186,6 +186,14 @@ AdminPage._initScene = async function()
 };
 
 /**
+ * Sets background for scene.
+ */
+AdminPage._setBackground = async function()
+{
+
+};
+
+/**
  * Intializes camera in the scene.
  */
 AdminPage._initCamera = function(cameras)
@@ -459,41 +467,183 @@ AdminPage._onNewRendererClick = function()
 
 AdminPage._onOptionsButtonClick = async function(button)
 {
-	let ajaxCall = new namespace.core.Ajax('html/options-dropdown.html');
-	ajaxCall.method = 'GET';
-	let xhrCall = await ajaxCall.send();
-
-
 	// -----------------------------
 	// calculate position of the dropdown
 	// -----------------------------
 	
 	let dropdown = new namespace.html.Dropdown();
 	dropdown.setAttribute('id', 'options-dropdown');
-	dropdown.appendChild(xhrCall.responseText);
 	
+	let wrapper = new namespace.html.Wrapper();
+	dropdown.appendChild(wrapper);
+
+
 	// -----------------------------
-	// set default values
+	// camera options
 	// -----------------------------
 
-	dropdown.querySelector('#camera-x-input').value = DEBUG.CAMERA_POSITION_X;
-	dropdown.querySelector('#camera-y-input').value = DEBUG.CAMERA_POSITION_Y;
-	dropdown.querySelector('#camera-z-input').value = DEBUG.CAMERA_POSITION_Z;
+	let cameraSection = new namespace.html.Section();
+	wrapper.appendChild(cameraSection);
 
-	var canvasWidthInput = dropdown.querySelector('#canvas-width-input');
+	let cameraLabel = new namespace.html.Label();
+	cameraLabel.innerHTML = 'CAMERA POSITIONS (x, y, z)';
+	cameraSection.appendChild(cameraLabel);
+
+	cameraSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let cameraFlex = new namespace.html.Flex();
+	cameraSection.appendChild(cameraFlex);
+
+	let cameraXInput = new namespace.html.NumberInput();
+	cameraXInput.id = 'camera-x-input';
+	cameraXInput.value = DEBUG.CAMERA_POSITION_X;
+	cameraXInput.disable();
+	cameraFlex.appendChild(cameraXInput);
+
+	cameraFlex.appendChild('<divider-y-small></divider-y-small>');
+
+	let cameraYInput = new namespace.html.NumberInput();
+	cameraYInput.id = 'camera-y-input';
+	cameraYInput.value = DEBUG.CAMERA_POSITION_Y;
+	cameraYInput.disable();
+	cameraFlex.appendChild(cameraYInput);
+
+	cameraFlex.appendChild('<divider-y-small></divider-y-small>');
+
+	let cameraZInput = new namespace.html.NumberInput();
+	cameraZInput.id = 'camera-z-input';
+	cameraZInput.value = DEBUG.CAMERA_POSITION_Z;
+	cameraZInput.disable();
+	cameraFlex.appendChild(cameraZInput);
+	
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+	// -----------------------------
+	// canvas options
+	// -----------------------------
+
+	let canvasSection = new namespace.html.Section();
+	wrapper.appendChild(canvasSection);
+
+	let canvasLabel = new namespace.html.Label();
+	canvasLabel.innerHTML = 'CANVAS (width, height)';
+	canvasSection.appendChild(canvasLabel);
+
+	canvasSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let canvasFlex = new namespace.html.Flex();
+	canvasSection.appendChild(canvasFlex);
+
+	let canvasWidthInput = new namespace.html.NumberInput();
+	canvasWidthInput.id = 'canvas-width-input';
 	canvasWidthInput.value = options.CANVAS_WIDTH;
+	canvasWidthInput.onchange = () =>
+	{
+		options.CANVAS_WIDTH = Number(canvasWidthInput.value);
+	};
+	canvasFlex.appendChild(canvasWidthInput);
 
-	var canvasHeightInput = dropdown.querySelector('#canvas-height-input');
+	canvasFlex.appendChild('<divider-y-small></divider-y-small>');
+
+	let canvasHeightInput = new namespace.html.NumberInput();
+	canvasHeightInput.id = 'canvas-height-input';
 	canvasHeightInput.value = options.CANVAS_HEIGHT;
+	canvasHeightInput.onchange = () =>
+	{
+		options.CANVAS_HEIGHT = Number(canvasHeightInput.value);
+	};
+	canvasFlex.appendChild(canvasHeightInput);
 
-	var resolutionFactorInput = dropdown.querySelector('#resolution-factor-input');
-	resolutionFactorInput.value = options.RESOLUTION_FACTOR;
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
 
-	var blockWidthV = dropdown.querySelector('#block-width-input');
-	blockWidthV.value = options.BLOCK_WIDTH;
 
-	var blockHeightV = dropdown.querySelector('#block-height-input');
-	blockHeightV.value = options.BLOCK_HEIGHT;
+	// -----------------------------
+	// resolution options
+	// -----------------------------
+
+	let resolutionSection = new namespace.html.Section();
+	wrapper.appendChild(resolutionSection);
+
+	let resolutionLabel = new namespace.html.Label();
+	resolutionLabel.innerHTML = 'RESOLUTION (factor)';
+	resolutionSection.appendChild(resolutionLabel);
+
+	resolutionSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let resolutionInput = new namespace.html.NumberInput();
+	resolutionInput.id = 'resolution-factor-input';
+	resolutionInput.value = options.RESOLUTION_FACTOR;
+	resolutionInput.onchange = () =>
+	{
+		options.RESOLUTION_FACTOR = Number(resolutionInput.value);
+	};
+	resolutionSection.appendChild(resolutionInput);
+
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+	// -----------------------------
+	// antialiasing options
+	// -----------------------------
+
+	let antialiasingSection = new namespace.html.Section();
+	wrapper.appendChild(antialiasingSection);
+
+	let antialiasingLabel = new namespace.html.Label();
+	antialiasingLabel.innerHTML = 'ANTIALIASING (factor)';
+	antialiasingSection.appendChild(antialiasingLabel);
+
+	antialiasingSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let antialiasingInput = new namespace.html.NumberInput();
+	antialiasingInput.id = 'antialiasing-factor-input';
+	antialiasingInput.value = options.ANTIALIASING_FACTOR;
+	antialiasingInput.onchange = () =>
+	{
+		options.ANTIALIASING_FACTOR = Number(antialiasingInput.value);
+	};
+	antialiasingSection.appendChild(antialiasingInput);
+
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+	// -----------------------------
+	// block options
+	// -----------------------------
+
+	let blockSection = new namespace.html.Section();
+	wrapper.appendChild(blockSection);
+
+	let blockLabel = new namespace.html.Label();
+	blockLabel.innerHTML = 'BLOCK SIZE (width, height)';
+	blockSection.appendChild(blockLabel);
+
+	blockSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let blockFlex = new namespace.html.Flex();
+	blockSection.appendChild(blockFlex);
+
+	let blockWidthInput = new namespace.html.NumberInput();
+	blockWidthInput.id = 'block-width-input';
+	blockWidthInput.value = options.BLOCK_WIDTH;
+	blockWidthInput.onchange = () =>
+	{
+		options.BLOCK_WIDTH = Number(blockWidthInput.value);
+	};
+	blockFlex.appendChild(blockWidthInput);
+
+	blockFlex.appendChild('<divider-y-small></divider-y-small>');
+
+	let blockHeightInput = new namespace.html.NumberInput();
+	blockHeightInput.id = 'block-height-input';
+	blockHeightInput.value = options.BLOCK_HEIGHT;
+	blockHeightInput.onchange = () =>
+	{
+		options.BLOCK_HEIGHT = Number(blockHeightInput.value);
+	};
+	blockFlex.appendChild(blockHeightInput);
 
 
 	let anchor = new namespace.html.Anchor(dropdown);
@@ -501,6 +651,7 @@ AdminPage._onOptionsButtonClick = async function(button)
 
 	let top = Unit.add(button.getOuterHeight(), new Unit('1px'));
 	anchor.setCenter(top, new Unit());
+
 
 	// -----------------------------
 	// show dropdown
@@ -632,31 +783,6 @@ AdminPage._onStartStopRenderingClick = function()
 			AdminPage._updateRenderingState();
 		}, data);
 	}
-};
-
-AdminPage._onCanvasWidthChange = function(val)
-{
-	options.CANVAS_WIDTH = Number(val);
-};
-
-AdminPage._onCanvasHeightChange = function(val)
-{
-	options.CANVAS_HEIGHT = Number(val);
-};
-
-AdminPage._onResolutionFactorChange = function(val)
-{
-	options.RESOLUTION_FACTOR = Number(val);
-};
-
-AdminPage._onBlockWidthChange = function(val)
-{
-	options.BLOCK_WIDTH = Number(val);
-};
-
-AdminPage._onBlockHeightChange = function(val)
-{
-	options.BLOCK_HEIGHT = Number(val);
 };
 
 AdminPage._onOpenOutputClick = function()

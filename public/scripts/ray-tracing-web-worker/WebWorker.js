@@ -12,10 +12,13 @@ var canvasWidth = -1;
 var canvasHeight = -1;
 var cell = null;
 
+var options = null;
 var mainThread = new namespace.core.MainThread();
 
 function init(data)
 {
+	options = data.options;
+
 	worker = new RaytracingRendererWorker((workerIndex, buffer, cell, timeMs) =>
 	{
 		let data = 
@@ -27,7 +30,7 @@ function init(data)
 		};
 		mainThread.mainFunction('globals.renderer.renderCell', data);
 	}, data.workerIndex);
-	worker.init(data.canvasWidth, data.canvasHeight);
+	worker.init(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
 }
 
 function setCell(data)

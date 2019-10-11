@@ -21,7 +21,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
-	this.antialiasing = 2;
+	this.antialiasingFactor = 1;
 	this.workerIndex = index;
 
 	this.renderingStartedDate;	
@@ -73,9 +73,12 @@ RaytracingRendererWorker.prototype.setCell = function(cell)
 /**
  * Initializes object.
  */
-RaytracingRendererWorker.prototype.init = function(width, height)
+RaytracingRendererWorker.prototype.init = function(width, height, antialiasingFactor)
 {
 	let _this = this;
+
+	_this.antialiasingFactor = antialiasingFactor;
+
 	_this.setSize(width, height);
 
 	// TODO fix passing maxRecursionDepth as parameter.
@@ -157,8 +160,8 @@ RaytracingRendererWorker.prototype.setSize = function (width, height)
 {
 	let _this = this;
 
-	_this.canvasWidth = width * _this.antialiasing;
-	_this.canvasHeight = height * _this.antialiasing;
+	_this.canvasWidth = width * _this.antialiasingFactor;
+	_this.canvasHeight = height * _this.antialiasingFactor;
 
 	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
 	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
@@ -999,8 +1002,8 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 	
 	let cell = _this.cell;
 
-	let cellAntialiasingHeight = cell.height * _this.antialiasing;
-	let cellAntialiasingWidth = cell.width * _this.antialiasing;
+	let cellAntialiasingHeight = cell.height * _this.antialiasingFactor;
+	let cellAntialiasingWidth = cell.width * _this.antialiasingFactor;
 	
 	let NUM_OF_COLOR_BITS = 4;
 	let data = new Uint8ClampedArray(cellAntialiasingWidth * cellAntialiasingHeight * NUM_OF_COLOR_BITS);
@@ -1011,8 +1014,8 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 	{
 		for (let x = 0; x < cellAntialiasingWidth; x++) 
 		{
-			let xPos = x + cell.startX * _this.antialiasing - _this.canvasWidthHalf;
-			let yPos = - (y + cell.startY * _this.antialiasing - _this.canvasHeightHalf);
+			let xPos = x + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
+			let yPos = - (y + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
 
 			// spawn primary ray at pixel position
 
@@ -1034,7 +1037,7 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 		}
 	}
 
-	let aliasedData = _this.scaleDownImage(data, cellAntialiasingWidth, cellAntialiasingHeight, _this.antialiasing);
+	let aliasedData = _this.scaleDownImage(data, cellAntialiasingWidth, cellAntialiasingHeight, _this.antialiasingFactor);
 
 	_this.onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
@@ -1094,7 +1097,7 @@ RaytracingRendererWorker.prototype.render = function()
 
 	_this.renderingStartedDate = new Date();
 
-	if (_this.antialiasing > 1)
+	if (_this.antialiasingFactor > 1)
 	{
 		_this.renderBlockWithAntialiasing();
 	}

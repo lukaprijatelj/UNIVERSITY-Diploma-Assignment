@@ -67,6 +67,7 @@
 	loadingBlock.push(new AsyncImporter('scripts/classes/EditorCanvas.js'));
 	loadingBlock.push(new AsyncImporter('scripts/classes/GltfLoader.js'));
 	loadingBlock.push(new AsyncImporter('scripts/classes/Dropdown.js'));
+	loadingBlock.push(new AsyncImporter('scripts/classes/Section.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();

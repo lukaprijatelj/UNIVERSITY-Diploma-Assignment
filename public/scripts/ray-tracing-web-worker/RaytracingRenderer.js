@@ -124,7 +124,8 @@ RaytracingRenderer.prototype.setWorkers = function()
 		{
 			workerIndex: i,
 			canvasWidth: _this.canvas.width,
-			canvasHeight: _this.canvas.height		
+			canvasHeight: _this.canvas.height,
+			options: options		
 		};
 
 		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
