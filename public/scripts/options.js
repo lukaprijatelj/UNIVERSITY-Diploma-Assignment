@@ -10,8 +10,17 @@ var options =
 	SKY_CUBE_FILEPATH: 'images/skycube_car/',
 	//SKY_CUBE_FILEPATH: 'images/skycube_black/',
 	//SKY_CUBE_FILEPATH: 'images/skycube_building/',
+	SKY_CUBE_IMAGES: 
+	[
+		'posX.png',
+		'negX.png',
+		'posY.png',
+		'negY.png',
+		'posZ.png',
+		'negZ.png'
+	],
 
-
+	RENDERER_TYPE: 'ray-tracing',
 	RESOLUTION_FACTOR: 1,
 	ANTIALIASING_FACTOR: 2,
 	CANVAS_WIDTH: 1280,

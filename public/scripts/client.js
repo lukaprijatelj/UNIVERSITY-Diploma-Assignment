@@ -36,11 +36,6 @@ globals.renderer = null;
 globals.cells = new Array();
 
 /**
- * Current renderer type.
- */
-globals.rendererType = null;
-
-/**
  * Camera controls affected by mouse movement.
  */
 globals.controls = null;
@@ -50,18 +45,21 @@ globals.controls = null;
  */
 globals.lastRenderingTime = 0;
 
+/**
+ * Rendering canvas.
+ */
+globals.rendererCanvas = null;
+
 
 /**
  * Initializes page.
  */
 ClientPage.init = function()
 {
-	globals.rendererType = enums.rendererType.RAY_TRACING;
-
-	ClientPage.rendererCanvas = new RendererCanvas();
-	ClientPage.rendererCanvas.init();
+	globals.rendererCanvas = new RendererCanvas();
+	globals.rendererCanvas.init();
 	
-	ClientPage.onViewLoaded();
+	document.querySelector('interface').removeClass('loading');
 
 	API.init(enums.apiClientType.RENDERER);		
 	API.connect(ClientPage._onServerConnected, ClientPage._onServerDisconnect);
@@ -153,6 +151,7 @@ ClientPage.startLoadingGltfModel = function()
 
 /**
  * Initializes scene.
+ * @private
  */
 ClientPage._initScene = function()
 {
@@ -161,18 +160,11 @@ ClientPage._initScene = function()
 		globals.scene = new THREE.Scene();
 
 		if (options.SKY_CUBE_FILEPATH)
-		{
-			var skyImages = 
-			[
-				'posX.png',
-				'negX.png',
-				'posY.png',
-				'negY.png',
-				'posZ.png',
-				'negZ.png'
-			];
-				
-			globals.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
+		{				
+			var loader = new THREE.CubeTextureLoader();
+			loader.setPath(options.SKY_CUBE_FILEPATH);
+
+			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, resolve, onProgress, reject);
 		}	
 		else
 		{
@@ -239,20 +231,18 @@ ClientPage._initLights = function()
  */
 ClientPage._initRenderer = function()
 {
-	console.log('[ClientPage] Initialize renderer of type "' + globals.rendererType + '"');
+	console.log('[ClientPage] Initialize renderer of type "' + options.RENDERER_TYPE + '"');
 
 	var renderer = null;
-	var canvas = document.getElementById('rendering-canvas');
 
-	switch(globals.rendererType)
+	switch(options.RENDERER_TYPE)
 	{
 		case enums.rendererType.RAY_TRACING:
-			renderer = new RaytracingRenderer(canvas, globals.scene, globals.camera);
+			renderer = new RaytracingRenderer(globals.scene, globals.camera);
 			break;
 
 		case enums.rendererType.PATH_TRACING:
 			new Exception.NotImplemented();
-			init();
 			break;
 	}	
 	
@@ -288,7 +278,7 @@ ClientPage.onGetLayout = function(data)
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	ClientPage.rendererCanvas.resizeCanvas();
+	globals.rendererCanvas.resizeCanvas();
 
 
 	// -----------------------------
@@ -296,7 +286,7 @@ ClientPage.onGetLayout = function(data)
 	// -----------------------------
 
 	globals.cells = data.cells;
-	ClientPage.rendererCanvas.createLayout(globals.cells);
+	globals.rendererCanvas.createLayout(globals.cells);
 
 
 	// -----------------------------
@@ -325,15 +315,6 @@ ClientPage.onGetLayout = function(data)
 	API.isRenderingServiceRunning = data.isRenderingServiceRunning;
 
 	ClientPage.onDataLoaded();
-};
-
-/**
- * View has done loading.
- * Remove skeleton screens by removing 'loading' class from elements.
- */
-ClientPage.onViewLoaded = function()
-{
-	document.body.removeClass('loading');
 };
 
 /**
@@ -373,7 +354,7 @@ ClientPage.tryUpdatingCell = function(cell)
 		return;
 	}
 
-	ClientPage.rendererCanvas.updateCell(cell);
+	globals.rendererCanvas.updateCell(cell);
 };
 
 /**
@@ -472,7 +453,7 @@ ClientPage.startRendering = function(cellsWaiting)
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	if (globals.rendererType == enums.rendererType.RAY_TRACING)
+	if (options.RENDERER_TYPE == enums.rendererType.RAY_TRACING)
 	{
 		// start rendering
 		globals.renderer.render(cellsWaiting);

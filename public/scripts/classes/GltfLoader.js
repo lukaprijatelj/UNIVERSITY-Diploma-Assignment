@@ -13,19 +13,11 @@ function GltfLoader()
     /**
      * GLTF model successfuly loaded callback.
      */
-    this.onSuccess = Function.empty;
+	this.onSuccess = Function.empty;
+	
+	this.onProgress = Function.empty;
 }
 
-/**
- * @private
- */
-GltfLoader.prototype._loadingProgressUpdate = function(xhr)
-{
-    // occurs when one of the files is done loading
-    var percentage = xhr.loaded / xhr.total * 100;
-
-    console.log('[GltfLoader] Scene is ' + percentage + '% loaded');	
-};
 
 /**
  * @private
@@ -53,5 +45,5 @@ GltfLoader.prototype.start = function()
         new Exception.ValueUndefined();
     }
 
-    this.instance.load(this.path, this.onSuccess, this._loadingProgressUpdate, this._errorOccured);
+    this.instance.load(this.path, this.onSuccess, this.onProgress, this._errorOccured);
 };

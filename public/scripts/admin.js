@@ -44,20 +44,36 @@ globals.editorCanvas = null;
  */
 globals.isRendering = false;
 
+AdminPage.loadingText = null;
+AdminPage.loadingBar = null;
+AdminPage.loadingCounter = null;
 
 /**
  * Initializes page.
  */
 AdminPage.init = function()
 {	
+	globals.editorCanvas = new EditorCanvas();
+	globals.editorCanvas.init();
+
+	let loadingLayer = document.querySelector('layer#loading');
+	let wrapper = loadingLayer.querySelector('.centered-text wrapper_');
+
+	let loadingTextElement = new namespace.html.Div();
+	AdminPage.loadingText = new namespace.html.ObservableString(loadingTextElement);
+	wrapper.appendChild(loadingTextElement);
+
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+	AdminPage.loadingBar = new namespace.html.LoadingBar();
+	AdminPage.loadingCounter = new namespace.core.LoadingCounter(100, AdminPage.loadingBar);
+	wrapper.appendChild(AdminPage.loadingBar);
+	
+	DEBUG.init();
+
 	API.init(enums.apiClientType.ADMIN);	
 
 	API.connect(AdminPage._onServerConnected, AdminPage._onServerDisconnect);
-
-	globals.editorCanvas = new EditorCanvas();
-	globals.editorCanvas.init();
-	
-	DEBUG.init();
 };
 
 /**
@@ -65,29 +81,32 @@ AdminPage.init = function()
  */
 AdminPage.openScene = async function()
 {
-	let loadingLayer = document.querySelector('layer#loading');
-	loadingLayer.querySelector('.centered-text wrapper_').innerHTML = 'Loading...';
-	loadingLayer.show();
+	try
+	{
+		/**
+		 * gltf.animations; // Array<THREE.AnimationClip>
+		 * gltf.scene; // THREE.Scene
+		 * gltf.scenes; // Array<THREE.Scene>
+		 * gltf.cameras; // Array<THREE.Camera>
+		 * gltf.asset; // Object
+		 */
+		var gltf = await AdminPage.startLoadingGltfModel();
 
-	/**
-	 * gltf.animations; // Array<THREE.AnimationClip>
-	 * gltf.scene; // THREE.Scene
-	 * gltf.scenes; // Array<THREE.Scene>
-	 * gltf.cameras; // Array<THREE.Camera>
-	 * gltf.asset; // Object
-	 */
-	var gltf = await AdminPage.startLoadingGltfModel();
+		await AdminPage._initScene();
+		globals.scene.add(gltf.scene);
 
-	await AdminPage._initScene();
-	globals.scene.add(gltf.scene);
+		await AdminPage._initCamera(gltf.cameras);
 
-	AdminPage._initCamera(gltf.cameras);
-	AdminPage._initLights();
+		await AdminPage._initLights();
+		
+		await AdminPage._initRenderer();
+	}
+	catch (err)
+	{
+		console.error(err.message);
+	}	
 	
-	AdminPage._initRenderer();
-	AdminPage._initCameraControls();	
-
-	loadingLayer.hide();
+	AdminPage._initCameraControls();
 				
 	AdminPage.onRenderFrame();
 };
@@ -137,16 +156,33 @@ AdminPage._onCheckRendering = async function(data)
  */
 AdminPage.startLoadingGltfModel = function()
 {
-	console.log('[AdminPage] Requesting GLTF model');	
-
 	var onSuccess = (resolve, reject) =>
 	{
+		console.log('[AdminPage] Requesting GLTF model');	
+
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
+
+		AdminPage.loadingText.setValue('Loading GLTF model ...');
+		AdminPage.loadingCounter.setValue(0);
+
 		var loader = new GltfLoader();
 		loader.path = options.SCENE_FILEPATH;
+		loader.onProgress = function(xhr)
+		{
+			// occurs when one of the files is done loading
+			var percentage = xhr.loaded / xhr.total * 100;
+		
+			console.log('[AdminPage] GLTF model is ' + percentage + '% loaded');	
+
+			AdminPage.loadingCounter.setValue(percentage);
+		};
 		loader.onSuccess = (gltf) =>
 		{
 			console.log('[glTF loader] Scene finished loading');
 		
+			loadingLayer.hide();
+
 			resolve(gltf);
 		};
 		loader.start();	
@@ -161,25 +197,39 @@ AdminPage._initScene = async function()
 {
 	var asyncCallback = async function(resolve, reject)
     {
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
+
+		AdminPage.loadingText.setValue('Loading scene ...');
+		AdminPage.loadingCounter.setValue(0);
+
+		let onProgress = function(xhr)
+		{
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[AdminPage] Scene is ' + percentage + '% loaded');	
+
+			AdminPage.loadingCounter.setValue(percentage);
+		};
+		let onLoad = function()
+		{
+			loadingLayer.hide();
+			resolve();
+		};
+
         globals.scene = new THREE.Scene();
 
 		if (options.SKY_CUBE_FILEPATH)
 		{
-			var skyImages = 
-			[
-				'posX.png',
-				'negX.png',
-				'posY.png',
-				'negY.png',
-				'posZ.png',
-				'negZ.png'
-			];
-				
-			globals.scene.background = new THREE.CubeTextureLoader().setPath(options.SKY_CUBE_FILEPATH).load(skyImages, resolve);
+			var loader = new THREE.CubeTextureLoader();
+			loader.setPath(options.SKY_CUBE_FILEPATH);
+
+			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, onLoad, onProgress, reject);
 		}	
 		else
 		{
-			resolve();
+			onProgress(100);
+			onLoad();
 		}		
     };
 	return new Promise(asyncCallback);
@@ -196,37 +246,52 @@ AdminPage._setBackground = async function()
 /**
  * Intializes camera in the scene.
  */
-AdminPage._initCamera = function(cameras)
+AdminPage._initCamera = async function(cameras)
 {
-	console.log('[AdminPage] Initializing camera');
+	var asyncCallback = function(resolve, reject)
+    {
+		console.log('[AdminPage] Initializing camera');
 
-	let CAMERA_FOV = 75;
-	let CAMERA_ASPECT = 2;  // the canvas default
-	let CAMERA_NEAR = 0.001;
-	let CAMERA_FAR = 10000;
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
 
-	globals.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
+		AdminPage.loadingText.setValue('Loading camera ...');
+		AdminPage.loadingCounter.setValue(0);
 
-	if (cameras && cameras.length)
-	{
-		// model has camera included, so we will use it's position and rotation
+		let CAMERA_FOV = 75;
+		let CAMERA_ASPECT = 2;  // the canvas default
+		let CAMERA_NEAR = 0.001;
+		let CAMERA_FAR = 10000;
 
-		let existingCamera = cameras[0];
-		globals.camera.position.x = existingCamera.parent.position.x;
-		globals.camera.position.y = existingCamera.parent.position.y;
-		globals.camera.position.z = existingCamera.parent.position.z;
+		globals.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
 
-		globals.camera.rotation.x = existingCamera.parent.rotation.x;
-		globals.camera.rotation.y = existingCamera.parent.rotation.y;
-		globals.camera.rotation.z = existingCamera.parent.rotation.z;
-	}
-	else
-	{
-		// set default position and rotation
-		globals.camera.position.x = -1.55877021541765;
-		globals.camera.position.y = 0.6214917314103046;
-		globals.camera.position.z = 0.9543815583821418;
-	}	
+		if (cameras && cameras.length)
+		{
+			// model has camera included, so we will use it's position and rotation
+
+			let existingCamera = cameras[0];
+			globals.camera.position.x = existingCamera.parent.position.x;
+			globals.camera.position.y = existingCamera.parent.position.y;
+			globals.camera.position.z = existingCamera.parent.position.z;
+
+			globals.camera.rotation.x = existingCamera.parent.rotation.x;
+			globals.camera.rotation.y = existingCamera.parent.rotation.y;
+			globals.camera.rotation.z = existingCamera.parent.rotation.z;
+		}
+		else
+		{
+			// set default position and rotation
+			globals.camera.position.x = -1.55877021541765;
+			globals.camera.position.y = 0.6214917314103046;
+			globals.camera.position.z = 0.9543815583821418;
+		}	
+
+		AdminPage.loadingCounter.setValue(100);
+		loadingLayer.hide();
+
+		resolve();
+	};
+	return new Promise(asyncCallback);
 };
 
 /**
@@ -243,47 +308,76 @@ AdminPage._initCameraControls = function()
 /**
  * Initializes lights.
  */
-AdminPage._initLights = function()
+AdminPage._initLights = async function()
 {
-	console.log('[AdminPage] Initializing lights');
+	var asyncCallback = function(resolve, reject)
+    {
+		console.log('[AdminPage] Initializing lights');
 
-	var light = new THREE.AmbientLight(0x404040, 3);
-	globals.scene.add(light);
-	globals.lights.push(light);
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
 
-	/*var intensity = 1;
+		AdminPage.loadingText.setValue('Loading lights ...');
+		AdminPage.loadingCounter.setValue(0);
 
-	var light = new THREE.PointLight(0xffaa55, intensity);
-	light.position.set( - 200, 100, 100 );
-	globals.scene.add( light );
+		var light = new THREE.AmbientLight(0x404040, 3);
+		globals.scene.add(light);
+		globals.lights.push(light);
 
-	var light = new THREE.PointLight(0x55aaff, intensity);
-	light.position.set( 200, -100, 100 );
-	globals.scene.add( light );
+		/*var intensity = 1;
 
-	var light = new THREE.PointLight(0xffffff, intensity);
-	light.position.set( 0, 0, -300 );
-	globals.scene.add( light );*/
+		var light = new THREE.PointLight(0xffaa55, intensity);
+		light.position.set( - 200, 100, 100 );
+		globals.scene.add( light );
+
+		var light = new THREE.PointLight(0x55aaff, intensity);
+		light.position.set( 200, -100, 100 );
+		globals.scene.add( light );
+
+		var light = new THREE.PointLight(0xffffff, intensity);
+		light.position.set( 0, 0, -300 );
+		globals.scene.add( light );*/
+
+		AdminPage.loadingCounter.setValue(100);
+		loadingLayer.hide();
+
+		resolve();
+	};
+	return new Promise(asyncCallback);
 };
 
 /**
  * Initializes renderer.
  */
-AdminPage._initRenderer = function()
+AdminPage._initRenderer = async function()
 {
-	console.log('[AdminPage] Initialize editor renderer');
+	var asyncCallback = function(resolve, reject)
+    {
+		console.log('[AdminPage] Initialize editor renderer');
 
-	var canvas = document.getElementById('editor-canvas');
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
 
-	var options = 
-	{ 
-		canvas: canvas,
-		antialias: true 
+		AdminPage.loadingText.setValue('Loading renderer ...');
+		AdminPage.loadingCounter.setValue(0);
+	
+		var canvas = document.getElementById('editor-canvas');
+		var options = 
+		{ 
+			canvas: canvas,
+			antialias: true 
+		};
+		globals.renderer = new THREE.WebGLRenderer(options);
+		globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+
+		globals.editorCanvas.resizeCanvas();
+
+		AdminPage.loadingCounter.setValue(100);
+		loadingLayer.hide();
+
+		resolve();
 	};
-	globals.renderer = new THREE.WebGLRenderer(options);
-	globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
-
-	globals.editorCanvas.resizeCanvas();
+	return new Promise(asyncCallback);
 };
 
 /**

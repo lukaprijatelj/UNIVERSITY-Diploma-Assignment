@@ -42,14 +42,14 @@ layer#loading>curtain
 layer#loading .centered-text
 {
 	position: absolute;
-	left: 50%;
 	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 layer#loading>.centered-text wrapper_
 {
 	background-color: var(--DARK-GRAY-COLOR);
-	margin-left: -50%;
 	padding: 20px;
 }
 

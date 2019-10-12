@@ -5,12 +5,10 @@
  *
  * @author zz85 / http://github.com/zz85
  */
-var RaytracingRenderer = function(canvas, scene, camera) 
+var RaytracingRenderer = function(scene, camera) 
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
-	this.canvas = canvas;
-	this.domElement = canvas; // do not delete, this is only for referencing
 	this.context = null;
 
 	this.scene = scene;
@@ -45,6 +43,16 @@ var RaytracingRenderer = function(canvas, scene, camera)
 
 Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
 
+
+/**
+ * Initializes object.
+ */
+RaytracingRenderer.prototype.init = function()
+{
+	let _this = this;
+
+	_this.setWorkers();
+};
 
 /**
  * Checks if renderer is done with work.
@@ -123,8 +131,8 @@ RaytracingRenderer.prototype.setWorkers = function()
 		let data = 
 		{
 			workerIndex: i,
-			canvasWidth: _this.canvas.width,
-			canvasHeight: _this.canvas.height,
+			canvasWidth: options.CANVAS_WIDTH,
+			canvasHeight: options.CANVAS_HEIGHT,
 			options: options		
 		};
 
@@ -135,14 +143,18 @@ RaytracingRenderer.prototype.setWorkers = function()
 	}
 };
 
-
+/**
+ * Cell was rendered. It needs to be drawn too.
+ */
 RaytracingRenderer.prototype.renderCell = function(data)
 {
 	let _this = this;
 	_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
 };
 
-
+/**
+ * Stops rendering process.
+ */
 RaytracingRenderer.prototype.stopRendering = function()
 {
 	let _this = this;	
@@ -155,7 +167,7 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 		if (thread.cell)
 		{
-			ClientPage.rendererCanvas.unflagRenderCell(thread.cell);
+			globals.rendererCanvas.unflagRenderCell(thread.cell);
 		}		
 
 		thread.workerFunction('stopRendering');
@@ -163,12 +175,10 @@ RaytracingRenderer.prototype.stopRendering = function()
 	};
 };
 
-
 /**
  * probably to override parent functions
  */
 RaytracingRenderer.prototype.setPixelRatio = Function.empty;
-
 
 /**
  * Starts rendering.
@@ -213,7 +223,6 @@ RaytracingRenderer.prototype.prepareJsonData = function()
 	});				
 };
 
-
 /**
  * Starts rendering.
  */
@@ -231,9 +240,9 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
 	}	
 };
 
-
 /**
  * Starts rendering.
+ * @private
  */
 RaytracingRenderer.prototype._runWorker = function(worker)
 {
@@ -242,21 +251,10 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 	let cellToRender = _this.cellsWaiting.shift();
 
 	worker.cell = cellToRender;
-	ClientPage.rendererCanvas.flagRenderCell(cellToRender);
+	globals.rendererCanvas.flagRenderCell(cellToRender);
 	worker.workerFunction('setCell', { cell: cellToRender });
 	
 	worker.isRendering = true;
 
 	worker.workerFunction('startRendering');
-};
-
-
-/**
- * Initializes object.
- */
-RaytracingRenderer.prototype.init = function()
-{
-	let _this = this;
-
-	_this.setWorkers();
 };

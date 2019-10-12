@@ -352,3 +352,8 @@ layer#dropdowns[num-of-children="0"]
 {
 	display: none !important;
 }
+
+loadingbar > .progress
+{
+	background-color: #3d3d3d;
+}
