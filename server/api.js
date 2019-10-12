@@ -5,7 +5,7 @@ var DATABASE = require('./database.js');
 var options = require('../public/scripts/options.js');
 
 var socketIO = require('socket.io');
-var io = socketIO.listen(SOCKETIO_PORT);
+var io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
 const fsExtra = require('fs-extra');
 
 

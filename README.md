@@ -25,11 +25,20 @@ Build task will be read from scripts property of the package.json file.
 	  Nato bo preko cookiejev zapisala <key>GLOBALS</key><value>.select</value>  izračune. Nato bo en drug window pa to prikazoval in vsakih n milisekund refreshal podatke.
 	- optimiziram admin THREEJS kodo, da bo imela far plane fog oziroma blur. Potem bo mogoče hitreje delalo. 
 
+
 	
 
-# Implementation
+# Notes and development
 I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
 I used browsersLocal storage for saving data received from server.
+
+## PLUS
+	+ 
+
+## MINUS
+	- I tried to use OffscreenCanvas which uses webWorkers for faster rendering, but this canvas type is not well supported by the browsers
+
+
 
 
 ## Demo verzija (cPanel)

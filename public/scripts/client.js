@@ -164,7 +164,7 @@ ClientPage._initScene = function()
 			var loader = new THREE.CubeTextureLoader();
 			loader.setPath(options.SKY_CUBE_FILEPATH);
 
-			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, resolve, onProgress, reject);
+			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, resolve, undefined, reject);
 		}	
 		else
 		{
@@ -238,7 +238,7 @@ ClientPage._initRenderer = function()
 	switch(options.RENDERER_TYPE)
 	{
 		case enums.rendererType.RAY_TRACING:
-			renderer = new RaytracingRenderer(globals.scene, globals.camera);
+			renderer = new RaytracingRenderer();
 			break;
 
 		case enums.rendererType.PATH_TRACING:
@@ -354,7 +354,7 @@ ClientPage.tryUpdatingCell = function(cell)
 		return;
 	}
 
-	globals.rendererCanvas.updateCell(cell);
+	globals.rendererCanvas.updateCellImage(cell);
 };
 
 /**

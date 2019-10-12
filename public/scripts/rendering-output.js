@@ -150,5 +150,5 @@ RenderingOutputPage.tryUpdatingCell = function(cell)
 		return;
 	}
 
-	RenderingOutputPage.rendererCanvas.updateCell(cell);
+	RenderingOutputPage.rendererCanvas.updateCellImage(cell);
 };

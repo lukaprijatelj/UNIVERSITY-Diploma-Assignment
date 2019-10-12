@@ -5,14 +5,11 @@
  *
  * @author zz85 / http://github.com/zz85
  */
-var RaytracingRenderer = function(scene, camera) 
+var RaytracingRenderer = function() 
 {
 	console.log('[RaytracingRenderer] Initializing renderer');
 
 	this.context = null;
-
-	this.scene = scene;
-	this.camera = camera;
 
 	/**
 	 * Cells that will be rendered.
@@ -25,20 +22,23 @@ var RaytracingRenderer = function(scene, camera)
 	this.cellsDone = new Array();
 
 	this.numOfWorkers = 1;
-	this.workers = new StaticArray(this.numOfWorkers);
+	this.workers = null;
+
+	this.scene = null;
+	this.camera = null;
 
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.sceneJSON;
-	this.cameraJSON;
+	this.sceneJSON = null;
+	this.cameraJSON = null;
 
 	/**
 	 * Event handlers.
 	 */
 	this.renderCell = this.renderCell.bind(this);
 
-	this.init();
+	this._init();
 };
 
 Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
@@ -46,10 +46,17 @@ Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
 
 /**
  * Initializes object.
+ * @private
  */
-RaytracingRenderer.prototype.init = function()
+RaytracingRenderer.prototype._init = function()
 {
 	let _this = this;
+
+	_this.scene = globals.scene;
+	_this.camera = globals.camera;
+
+	_this.numOfWorkers = options.NUM_OF_WORKERS;
+	_this.workers = new StaticArray(_this.numOfWorkers);
 
 	_this.setWorkers();
 };
@@ -65,7 +72,7 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 	{
 		let current = _this.workers[i];
 
-		if (current.isRendering)
+		if (current.isRendering == true)
 		{
 			return false;
 		}
@@ -95,6 +102,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
 
 	ClientPage.tryUpdatingCell(cell);
+	globals.rendererCanvas.removeRenderCell(cell);
 
 	_this.cellsDone.push(cell);
 
@@ -103,19 +111,20 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	// continue rendering next cell in queue
 	// -----------------------------
 
-	if (_this.cellsWaiting.isEmpty())
+	if (_this.cellsWaiting.isEmpty() == false)
 	{
-		if (_this.areWorkersDone())
-		{
-			ClientPage.onRendererDone(_this.cellsDone);	
-				
-			_this.cellsDone = new Array();
-		}
-	}
-	else
-	{
+		// work is not yet done
 		_this._runWorker(webWorker);
-	}		
+
+		return;
+	}
+	
+	if (_this.areWorkersDone())
+	{
+		ClientPage.onRendererDone(_this.cellsDone);	
+			
+		_this.cellsDone = new Array();
+	}
 };
 
 
@@ -167,7 +176,7 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 		if (thread.cell)
 		{
-			globals.rendererCanvas.unflagRenderCell(thread.cell);
+			globals.rendererCanvas.removeRenderCell(thread.cell);
 		}		
 
 		thread.workerFunction('stopRendering');
@@ -231,6 +240,11 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
 	let _this = this;
 
 	_this.cellsWaiting = cellsWaiting;	
+
+	for (let i=0; i<cellsWaiting.length; i++)
+	{
+		globals.rendererCanvas.addRenderCell(cellsWaiting[i]);
+	}
 
 	for (let i=0; i<_this.workers.length; i++)
 	{

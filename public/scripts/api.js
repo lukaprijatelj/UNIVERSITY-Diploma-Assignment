@@ -67,6 +67,11 @@ var API =
 	 */
 	connect: function(onConnect, onDisconnect)
 	{
+		let initOptions =
+		{
+			pingTimeout: 1000 * 60
+		};
+
 		socket = io.connect(window.location.hostname + ':' + SOCKETIO_PORT, { query: "clientType=" + API.clientType });
 
 		socket.on('connect', onConnect);

@@ -1,39 +1,61 @@
+/**
+ * Rendering canvas.
+ */
 function RendererCanvas()
 {
 	Interface.inherit(this, IDisposable);
-	this.canvasV = document.getElementById('rendering-canvas');
+
+	this.canvasV = null;
+	this.flagCanvasV = null;
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
+/**
+ * Initializes canvas.
+ */
 RendererCanvas.prototype.init = function()
 {
-	var gridLayout = this;
+	var _this = this;
+
+	_this.canvasV = document.getElementById('rendering-canvas');
+	_this.flagCanvasV = document.getElementById('flag-canvas');
 };
 
+/**
+ * Resizes canvas width and height.
+ */
 RendererCanvas.prototype.resizeCanvas = function()
 {
-	var gridLayout = this;
+	var _this = this;
 
 	/*var interfaceV = document.querySelector('interface');
 	var width = interfaceV.clientWidth;  
 	var height = interfaceV.clientHeight; */
 
-	var canvas = gridLayout.canvasV;
+	var canvas = _this.canvasV;
 	canvas.width = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
 	canvas.height = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
+
+	let flagCanvas = _this.flagCanvasV;
+	flagCanvas.style.width = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR + 'px';
+	flagCanvas.style.height = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR + 'px';
 
 	//var ctx = canvas.getContext('2d');
 	//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.
 };
 
-
+/**
+ * Creates cells layout.
+ */
 RendererCanvas.prototype.createLayout = function(cells)
 {
 	var gridLayout = this;
 };
 
-
-RendererCanvas.prototype.updateCell = function(cell)
+/**
+ * Updates cell image.
+ */
+RendererCanvas.prototype.updateCellImage = function(cell)
 {
 	var gridLayout = this;
 
@@ -56,37 +78,56 @@ RendererCanvas.prototype.updateCell = function(cell)
 	img.src = cell.imageData;
 };
 
-
-RendererCanvas.prototype._createCellBorder = function(cell, color)
+/**
+ * Adds cell to flag-canvas (usually cell that are waiting to be rendered).
+ */
+RendererCanvas.prototype.addRenderCell = function(cell)
 {
-	var _this = this;
+	var _this = this;	
+
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = new namespace.html.Div();
+	div.id = cell._id;
+	div.addClass('flag-cell');
+
 	var borderWidth = 0.3;
 	var posX = cell.startX + borderWidth;
 	var posY = cell.startY + borderWidth;
 	var width = cell.width - borderWidth * 2;
 	var height = cell.height - borderWidth * 2;
 
-	var canvas = _this.canvasV;
-	var ctx = canvas.getContext('2d');
+	let unit = 'px';
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+	div.style.left = posX + unit;
+	div.style.top = posY + unit;
 
-	// draw border
-	ctx.beginPath();
-	ctx.lineWidth = String(borderWidth);
-	ctx.strokeStyle = color;
-	ctx.rect(posX, posY, width, height);
-	ctx.stroke();
+	div.style.borderColor = "rgba(247, 40, 7, 0.1)";
+
+	flagCanvas.appendChild(div);
 };
 
+/**
+ * Flags area where this cell is currently rendering.
+ */
 RendererCanvas.prototype.flagRenderCell = function(cell)
 {
 	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
 	
-	_this._createCellBorder(cell, "red");
+	let div = flagCanvas.querySelector('#' + cell._id);
+	div.style.borderColor = "rgba(247, 40, 7, 0.5)";
 };
 
-RendererCanvas.prototype.unflagRenderCell = function(cell)
+/**
+ * Removes cell from flag-canvas.
+ */
+RendererCanvas.prototype.removeRenderCell = function(cell)
 {
 	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
 	
-	_this._createCellBorder(cell, "white");
+	let div = flagCanvas.querySelector('#' + cell._id);
+	div.remove();
 };
