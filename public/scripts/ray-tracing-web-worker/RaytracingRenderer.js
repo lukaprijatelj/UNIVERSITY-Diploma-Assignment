@@ -168,16 +168,21 @@ RaytracingRenderer.prototype.stopRendering = function()
 {
 	let _this = this;	
 
+	for (let i=0; i<_this.cellsWaiting.length; i++)
+	{
+		globals.rendererCanvas.removeRenderCell(_this.cellsWaiting[i]);
+	}
+
 	for (let i=0; i<_this.numOfWorkers; i++)
 	{
 		let thread = _this.workers[i];
 
-		thread.isRendering = false;
-
 		if (thread.cell)
 		{
 			globals.rendererCanvas.removeRenderCell(thread.cell);
-		}		
+		}
+		
+		thread.isRendering = false;
 
 		thread.workerFunction('stopRendering');
 		thread.terminate();

@@ -7,6 +7,8 @@ function RendererCanvas()
 
 	this.canvasV = null;
 	this.flagCanvasV = null;
+
+	this._onImageLoaded = this._onImageLoaded.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -57,25 +59,32 @@ RendererCanvas.prototype.createLayout = function(cells)
  */
 RendererCanvas.prototype.updateCellImage = function(cell)
 {
-	var gridLayout = this;
+	var _this = this;
 
 	if (!cell || !cell.imageData)
 	{
 		new Exception.ValueUndefined();
 	}
+	
+	var img = new Image();
+	img.onload = _this._onImageLoaded.bind(null, img, cell);
+	img.src = cell.imageData;
+};
+
+/**
+ * Image is loaded and can now be drawn to canvas.
+ */
+RendererCanvas.prototype._onImageLoaded = function(img, cell)
+{
+	var _this = this;
 
 	var posX = cell.startX;
 	var posY = cell.startY;
-	
-	var img = new Image;
-	img.onload = function()
-	{
-		var canvas = gridLayout.canvasV;
-		var ctx = canvas.getContext('2d');
 
-		ctx.drawImage(img, posX, posY); 
-	};
-	img.src = cell.imageData;
+	var canvas = _this.canvasV;
+	var ctx = canvas.getContext('2d');
+
+	ctx.drawImage(img, posX, posY); 
 };
 
 /**
@@ -117,6 +126,13 @@ RendererCanvas.prototype.flagRenderCell = function(cell)
 	let flagCanvas = _this.flagCanvasV;
 	
 	let div = flagCanvas.querySelector('#' + cell._id);
+	
+	if (!div)
+	{
+		new Warning.Other('Rendering cell was not found!');
+		return;
+	}
+
 	div.style.borderColor = "rgba(247, 40, 7, 0.5)";
 };
 
@@ -129,5 +145,12 @@ RendererCanvas.prototype.removeRenderCell = function(cell)
 	let flagCanvas = _this.flagCanvasV;
 	
 	let div = flagCanvas.querySelector('#' + cell._id);
+
+	if (!div)
+	{
+		new Warning.Other('Rendering cell was not found!');
+		return;
+	}
+
 	div.remove();
 };

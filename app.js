@@ -13,8 +13,8 @@ var fs = require('fs');
 // -----------------------------
 // import local packages
 // -----------------------------
-var API = require('./server/api.js');
-var DATABASE = require('./server/database.js');
+global.API = require('./server/api.js');
+global.DATABASE = require('./server/database.js');
 
 
 // -----------------------------

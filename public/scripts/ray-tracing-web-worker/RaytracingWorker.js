@@ -181,12 +181,12 @@ RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY
 	let start = above + (posX * NUM_OF_COLOR_BITS);
 	
 	let MAX_VALUE = 255;
-	let red = texture.pixels[start + 0];
-	let green = texture.pixels[start + 1];
-	let blue = texture.pixels[start + 2];
+	let red = texture.data[start + 0];
+	let green = texture.data[start + 1];
+	let blue = texture.data[start + 2];
 
 	// THREE.Color does not support alpha channel
-	let alpha = texture.pixels[start + 3];
+	let alpha = texture.data[start + 3];
 
 	return new THREE.Color(red / MAX_VALUE, green / MAX_VALUE, blue / MAX_VALUE);
 };

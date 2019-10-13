@@ -531,7 +531,7 @@ AdminPage._onSceneButtonClick = async function(button)
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
 
-	let top = Unit.add(new Unit('1px'), button.getOuterHeight());
+	let top = button.getOuterHeight();
 	anchor.setCenter(top, new Unit());
 
 	let curtain = new namespace.html.Curtain();

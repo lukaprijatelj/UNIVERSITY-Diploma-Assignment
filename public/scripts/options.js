@@ -21,6 +21,7 @@ var options =
 	],
 
 	RENDERER_TYPE: 'ray-tracing',
+	
 	RESOLUTION_FACTOR: 1,
 	ANTIALIASING_FACTOR: 5,
 	CANVAS_WIDTH: 1280,

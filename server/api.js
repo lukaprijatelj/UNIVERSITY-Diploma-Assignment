@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 var upload = require('./upload.js');
-var DATABASE = require('./database.js');
 var options = require('../public/scripts/options.js');
 
-var socketIO = require('socket.io');
+global.socketIO = require('socket.io');
 var io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
+
 const fsExtra = require('fs-extra');
 
 
@@ -215,7 +215,7 @@ var API =
 	/**
 	 * Empties uploads folder before saving files there.
 	 */
-	emptyUploadsFolder: async function middleware1(req, res, next)
+	emptyUploadsFolder: async function(req, res, next)
 	{
 		// perform middleware function e.g. check if user is authenticated
 

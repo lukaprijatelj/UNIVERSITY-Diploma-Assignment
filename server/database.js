@@ -1,8 +1,10 @@
 
 var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
-var database = require('../public/scripts/classes/database.js');
 
+require('../public/scripts/database/BasicCell.js');
+require('../public/scripts/database/Client.js');
+require('../public/scripts/database/RenderingCell.js');
 
 var DATABASE =
 {
@@ -79,7 +81,7 @@ var DATABASE =
 		var table = DATABASE.renderingClientsTable;
 
 		var id = uuidv1();
-        var clientEntry = new database.Client(id, sessionId, ipAddress, false, isAdmin);
+        var clientEntry = new namespace.database.Client(id, sessionId, ipAddress, false, isAdmin);
 		table.rows.push(clientEntry);
 
 		table.save();
@@ -135,7 +137,7 @@ var DATABASE =
 		//var id = uuidv1();
 		var id = 'cell-' + startX + '-' + startY;
 
-        var clientEntry = new database.RenderingCell(id, startX, startY, width, height);
+        var clientEntry = new namespace.database.RenderingCell(id, startX, startY, width, height);
 		table.rows.push(clientEntry);
 
 		table.save();
@@ -177,7 +179,7 @@ var DATABASE =
 
 			current.sessionId = sessionId;
 
-			var basicCurrent = Object.shrink(new database.BasicCell(), current);
+			var basicCurrent = Object.shrink(new namespace.database.BasicCell(), current);
 			freeCells.push(basicCurrent);
 			cellsFound++;
 		}
