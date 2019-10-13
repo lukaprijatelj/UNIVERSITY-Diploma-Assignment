@@ -1,5 +1,6 @@
 importScripts('../constants.js');
 importScripts('../../externals/namespace-core/namespace-core.js');
+importScripts('../../externals/namespace-enums/namespace-enums.js');
 importScripts('../threejs/three.js');
 
 // only accesible in web worker thread
@@ -62,8 +63,6 @@ var RaytracingWebWorker = function()
 	 */
 	this.antialiasingFactor = 1;
 	this.workerIndex = -1;
-
-	this.renderingStartedDate;	
 
 	/**
 	 * Cell that is currently rendering.
@@ -984,78 +983,33 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 	outputVector.add(tmpVec3);
 };
 
-
 /**
- * Renders block.
+ * Renders block with specified antialiasing factor.
  */
 RaytracingWebWorker.prototype.renderBlock = function() 
 {
 	console.log('[RaytracingWebWorker] Rendering specified canvas block');
 
-	let _this = this;	
-
-	let NUM_OF_COLOR_BITS = 4;
-	let cell = _this.cell;
-	let data = new Uint8ClampedArray(cell.width * cell.height * NUM_OF_COLOR_BITS);
-	let pixelColor = new THREE.Color();
-	let index = 0;
-
-	for (let y = 0; y < cell.height; y ++)
-	{
-		let yPos = - (y + cell.startY - _this.canvasHeightHalf);
-
-		for (let x = 0; x < cell.width; x++) 
-		{
-			let xPos = x + cell.startX - _this.canvasWidthHalf;
-			
-			// spawn primary ray at pixel position
-
-			_this.origin.copy(_this.cameraPosition);
-
-			_this.direction.set(xPos, yPos, - _this.perspective );
-			_this.direction.applyMatrix3(_this.cameraNormalMatrix ).normalize();
-
-			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
-
-			// convert from linear to gamma
-
-			data[index + 0] = Math.sqrt(pixelColor.r) * 255;
-			data[index + 1] = Math.sqrt(pixelColor.g) * 255;
-			data[index + 2] = Math.sqrt(pixelColor.b) * 255;
-			data[index + 3] = 255;
-
-			index += NUM_OF_COLOR_BITS;
-		}
-	}
-
-	_this._onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
-};
-
-/**
- * Renders block with specified antialiasing factor.
- */
-RaytracingWebWorker.prototype.renderBlockWithAntialiasing = function() 
-{
-	console.log('[RaytracingWebWorker] Rendering specified canvas block');
-
 	let _this = this;
-	
 	let cell = _this.cell;
 
-	let cellAntialiasingHeight = cell.height * _this.antialiasingFactor;
-	let cellAntialiasingWidth = cell.width * _this.antialiasingFactor;
+	let startTime = new Date();
+	
+	let width = cell.width * _this.antialiasingFactor;
+	let height = cell.height * _this.antialiasingFactor;
 	
 	let NUM_OF_COLOR_BITS = 4;
-	let data = new Uint8ClampedArray(cellAntialiasingWidth * cellAntialiasingHeight * NUM_OF_COLOR_BITS);
+	let image = new namespace.core.RawImage('', width, height);
+
 	let pixelColor = new THREE.Color();
 	let index = 0;
 
-	for (let y = 0; y < cellAntialiasingHeight; y ++)
+	for (let y = 0; y < height; y++)
 	{
-		for (let x = 0; x < cellAntialiasingWidth; x++) 
+		for (let x = 0; x < width; x++) 
 		{
 			let xPos = x + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
-			let yPos = - (y + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+			let yPos = -(y + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
 
 			// spawn primary ray at pixel position
 
@@ -1063,86 +1017,37 @@ RaytracingWebWorker.prototype.renderBlockWithAntialiasing = function()
 
 			_this.direction.set(xPos, yPos, - _this.perspective );
 			_this.direction.applyMatrix3(_this.cameraNormalMatrix ).normalize();
-
+			
 			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
 
 			// convert from linear to gamma
 
-			data[index + 0] = Math.sqrt(pixelColor.r) * 255;
-			data[index + 1] = Math.sqrt(pixelColor.g) * 255;
-			data[index + 2] = Math.sqrt(pixelColor.b) * 255;
-			data[index + 3] = 255;
+			image.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
+			image.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
+			image.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
+			image.data[index + 3] = 255;
 
 			index += NUM_OF_COLOR_BITS;
 		}
 	}
 
-	let aliasedData = _this.scaleDownImage(data, cellAntialiasingWidth, cellAntialiasingHeight, _this.antialiasingFactor);
-
-	_this._onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
-};
-
-RaytracingWebWorker.prototype.scaleDownImage = function(data, dataWidth, dataHeight, scale)
-{
-	let NUM_OF_COLOR_BITS = 4;	
-	let width = dataWidth / scale;
-	let height = dataHeight / scale;
-	let aliasedData = new Uint8ClampedArray(width * height * NUM_OF_COLOR_BITS);
-	let sampleRate = Math.pow(scale, 2);
-
-	for (let j = 0; j < height; j++)
+	if (_this.antialiasingFactor > 1)
 	{
-		for (let i = 0; i < width; i++) 
-		{
-			let above = width * NUM_OF_COLOR_BITS * j;
-			let index = above + (i * NUM_OF_COLOR_BITS);
-
-			let tmpArray = new Array(NUM_OF_COLOR_BITS);
-			tmpArray[0] = 0;
-			tmpArray[1] = 0;
-			tmpArray[2] = 0;
-			tmpArray[3] = 0;
-
-			for (let y = 0; y < scale; y++)
-			{
-				for (let x = 0; x < scale; x++) 
-				{
-					let largerAbove = (width * NUM_OF_COLOR_BITS * scale) * (y + j * scale);
-					let largeIndex = largerAbove + ((x + i * scale) * NUM_OF_COLOR_BITS);
-
-					tmpArray[0] += data[largeIndex + 0]; 
-					tmpArray[1] += data[largeIndex + 1]; 
-					tmpArray[2] += data[largeIndex + 2]; 
-					tmpArray[3] += data[largeIndex + 3]; 
-				}
-			}
-
-			aliasedData[index + 0] = tmpArray[0] / sampleRate;
-			aliasedData[index + 1] = tmpArray[1] / sampleRate;
-			aliasedData[index + 2] = tmpArray[2] / sampleRate;
-			aliasedData[index + 3] = tmpArray[3] / sampleRate;
-		}
+		image.scale(namespace.enums.Direction.DOWN, _this.antialiasingFactor);
 	}
 
-	return aliasedData;
-};
+	let endTime = new Date();
+	let timeElapsed = endTime - startTime;
 
+	_this._onCellRendered(_this.workerIndex, image.data.buffer, _this.cell, timeElapsed);
+};
 
 /**
  * Starts rendering.
  */
 RaytracingWebWorker.prototype.render = function() 
 {
-	let _this = this;
+	let _this = this;	
 
-	_this.renderingStartedDate = new Date();
-
-	if (_this.antialiasingFactor > 1)
-	{
-		_this.renderBlockWithAntialiasing();
-	}
-	else
-	{
-		_this.renderBlock();
-	}
+	_this.renderBlock();
 };
