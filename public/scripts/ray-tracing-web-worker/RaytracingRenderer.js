@@ -127,7 +127,6 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	}
 };
 
-
 /**
  * Sets workers.
  */
@@ -145,9 +144,10 @@ RaytracingRenderer.prototype.setWorkers = function()
 			options: options		
 		};
 
-		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/WebWorker.js');
+		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/RaytracingWebWorker.js');
 		thread.isRendering = false;
 		thread.workerFunction('init', data);	
+
 		_this.workers[i] = thread;
 	}
 };
@@ -173,16 +173,16 @@ RaytracingRenderer.prototype.stopRendering = function()
 		globals.rendererCanvas.removeRenderCell(_this.cellsWaiting[i]);
 	}
 
-	for (let i=0; i<_this.numOfWorkers; i++)
+	for (let i=0; i<_this.workers.length; i++)
 	{
-		let thread = _this.workers[i];
+		let thread = _this.workers[i];		
+		
+		thread.isRendering = false;
 
 		if (thread.cell)
 		{
 			globals.rendererCanvas.removeRenderCell(thread.cell);
 		}
-		
-		thread.isRendering = false;
 
 		thread.workerFunction('stopRendering');
 		thread.terminate();
@@ -271,6 +271,7 @@ RaytracingRenderer.prototype._runWorker = function(worker)
 
 	worker.cell = cellToRender;
 	globals.rendererCanvas.flagRenderCell(cellToRender);
+
 	worker.workerFunction('setCell', { cell: cellToRender });
 	
 	worker.isRendering = true;

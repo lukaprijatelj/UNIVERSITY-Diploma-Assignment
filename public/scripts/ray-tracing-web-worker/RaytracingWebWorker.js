@@ -1,12 +1,51 @@
+importScripts('../constants.js');
+importScripts('../../externals/namespace-core/namespace-core.js');
+importScripts('../threejs/three.js');
+
+// only accesible in web worker thread
+var worker = null;
+var canvasWidth = -1;
+var canvasHeight = -1;
+var cell = null;
+
+var options = null;
+var mainThread = new namespace.core.MainThread();
+
+function init(data)
+{
+	options = data.options;
+
+	worker = new RaytracingWebWorker();
+	worker.workerIndex = data.workerIndex;
+	worker.init(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
+}
+
+function initScene(data)
+{
+	worker.initScene(data.sceneJSON, data.cameraJSON);
+}
+
+function setCell(data)
+{
+	cell = data.cell;
+	worker.setCell(cell);
+}
+
+function startRendering(data)
+{
+	worker.render();
+}
+
+
 /**
  * DOM-less version of Raytracing Renderer
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
  */
-var RaytracingRendererWorker = function(onCellRendered, index) 
+var RaytracingWebWorker = function() 
 {
-	console.log('[RaytracingRendererWorker] Initializing worker');
+	console.log('[RaytracingWebWorker] Initializing worker');
 
 	/**
 	 * Number of times ray bounces from objects. Each time bounce is detected new ray is cast.
@@ -22,7 +61,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
 	this.antialiasingFactor = 1;
-	this.workerIndex = index;
+	this.workerIndex = -1;
 
 	this.renderingStartedDate;	
 
@@ -41,7 +80,7 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.direction = new THREE.Vector3();
 
 	/**
-	 * Ambient light is here in order to render shadowed are more beautifully.
+	 * Ambient light is here in order to render shadowed area more beautifully.
 	 */
 	this.ambientLight = null;
 	this.lights = new Array();
@@ -52,44 +91,44 @@ var RaytracingRendererWorker = function(onCellRendered, index)
 	this.rayLight = this.raycasterLight.ray;
 		
 	this.objects;
-	this.cache = new Object();
-	
-	this.onCellRendered = onCellRendered;		
+	this.cache = new Object();	
 };
 
-Object.assign(RaytracingRendererWorker.prototype, THREE.EventDispatcher.prototype);
+Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 
 
 /**
  * Sets cell that needs to be rendered.
  */
-RaytracingRendererWorker.prototype.setCell = function(cell)
+RaytracingWebWorker.prototype.setCell = function(cell)
 {
 	let _this = this;
 	_this.cell = cell;
 };
 
-
 /**
  * Initializes object.
  */
-RaytracingRendererWorker.prototype.init = function(width, height, antialiasingFactor)
+RaytracingWebWorker.prototype.init = function(width, height, antialiasingFactor)
 {
 	let _this = this;
 
 	_this.antialiasingFactor = antialiasingFactor;
 
-	_this.setSize(width, height);
+	_this.canvasWidth = width * _this.antialiasingFactor;
+	_this.canvasHeight = height * _this.antialiasingFactor;
+
+	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
+	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
 
 	// TODO fix passing maxRecursionDepth as parameter.
 	// if (data.maxRecursionDepth) maxRecursionDepth = data.maxRecursionDepth;
 };
 
-
 /**
  * Initializes scene.
  */
-RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData)
+RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
 {
 	let _this = this;
 
@@ -151,26 +190,27 @@ RaytracingRendererWorker.prototype.initScene = function(sceneData, cameraData)
 	});
 };
 
-
-
 /**
- * Sets canvas size.
+ * Cell is done rendering.
+ * @private
  */
-RaytracingRendererWorker.prototype.setSize = function (width, height) 
+RaytracingWebWorker.prototype._onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
-	let _this = this;
+	let data = 
+	{
+		workerIndex: workerIndex,
+		buffer: buffer,
+		cell: cell,
+		timeMs: timeMs
+	};
 
-	_this.canvasWidth = width * _this.antialiasingFactor;
-	_this.canvasHeight = height * _this.antialiasingFactor;
-
-	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
-	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
+	mainThread.mainFunction('globals.renderer.renderCell', data);
 };
 
 /**
  * Sets canvas size.
  */
-RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY) 
+RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY) 
 {
 	let posX = Math.floor(texture.width * uvX);
 	let posY = Math.floor(texture.height * uvY);
@@ -194,7 +234,7 @@ RaytracingRendererWorker.prototype.getTexturePixel = function (texture, uvX, uvY
 /**
  * Spawns ray for calculating colour.
  */
-RaytracingRendererWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
+RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
 {
 	let _this = this;
 
@@ -682,12 +722,12 @@ function lerp(a,b,w)
 
 
 
-RaytracingRendererWorker.prototype.chiGGX = function(viewVector)
+RaytracingWebWorker.prototype.chiGGX = function(viewVector)
 {
     return viewVector > 0 ? 1 : 0;
 };
 
-RaytracingRendererWorker.prototype.GGX_PartialGeometryTerm = function(viewVector, normal, halfVector, alpha)
+RaytracingWebWorker.prototype.GGX_PartialGeometryTerm = function(viewVector, normal, halfVector, alpha)
 {
     let VoH2 = saturate(viewVector.dot(halfVector));
 	let chi = this.chiGGX( VoH2 / saturate( viewVector.dot(normal)) );
@@ -699,7 +739,7 @@ RaytracingRendererWorker.prototype.GGX_PartialGeometryTerm = function(viewVector
     return (chi * 2) / ( 1 + Math.sqrt( 1 + alpha * alpha * tan2 ) );
 };
 
-RaytracingRendererWorker.prototype.GGX_Specular = function(SpecularEnvmap, normal, viewVector, roughness, F0, kS)
+RaytracingWebWorker.prototype.GGX_Specular = function(SpecularEnvmap, normal, viewVector, roughness, F0, kS)
 {
    // let reflectionVector = viewVector.negate().reflect(normal);
 	let worldFrame = new THREE.Matrix3(); // GenerateFrame(reflectionVector);
@@ -742,7 +782,7 @@ RaytracingRendererWorker.prototype.GGX_Specular = function(SpecularEnvmap, norma
 };
 
 
-RaytracingRendererWorker.prototype.PixelShaderFunction = function(diffuseColor, metalnessColor, viewVector, normal)
+RaytracingWebWorker.prototype.PixelShaderFunction = function(diffuseColor, metalnessColor, viewVector, normal)
 {
 	if (!diffuseColor || !metalnessColor)
 	{
@@ -776,7 +816,7 @@ RaytracingRendererWorker.prototype.PixelShaderFunction = function(diffuseColor, 
 /**
  * Gets F0 (Fresnel Reflectance at 0 degrees).
  */
-RaytracingRendererWorker.prototype.Fresnel_Schlick = function(cosT, F0)
+RaytracingWebWorker.prototype.Fresnel_Schlick = function(cosT, F0)
 {
 	return F0 + (1.0 - F0) * Math.pow((1.0 - cosT), 5.0);
 };
@@ -785,7 +825,7 @@ RaytracingRendererWorker.prototype.Fresnel_Schlick = function(cosT, F0)
 /**
  * Gets pixel color of the skybox environment.
  */
-RaytracingRendererWorker.prototype.texCUBE = function(images, rayDirection)
+RaytracingWebWorker.prototype.texCUBE = function(images, rayDirection)
 {
 	let _this = this;
 
@@ -891,7 +931,7 @@ RaytracingRendererWorker.prototype.texCUBE = function(images, rayDirection)
 /**
  * Computes normal.
  */
-RaytracingRendererWorker.prototype.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
+RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
 {
 	var vA = new THREE.Vector3();
 	var vB = new THREE.Vector3();
@@ -948,9 +988,9 @@ RaytracingRendererWorker.prototype.computePixelNormal = function(outputVector, p
 /**
  * Renders block.
  */
-RaytracingRendererWorker.prototype.renderBlock = function() 
+RaytracingWebWorker.prototype.renderBlock = function() 
 {
-	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
+	console.log('[RaytracingWebWorker] Rendering specified canvas block');
 
 	let _this = this;	
 
@@ -988,15 +1028,15 @@ RaytracingRendererWorker.prototype.renderBlock = function()
 		}
 	}
 
-	_this.onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
+	_this._onCellRendered(_this.workerIndex, data.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
 
 /**
  * Renders block with specified antialiasing factor.
  */
-RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function() 
+RaytracingWebWorker.prototype.renderBlockWithAntialiasing = function() 
 {
-	console.log('[RaytracingRendererWorker] Rendering specified canvas block');
+	console.log('[RaytracingWebWorker] Rendering specified canvas block');
 
 	let _this = this;
 	
@@ -1039,10 +1079,10 @@ RaytracingRendererWorker.prototype.renderBlockWithAntialiasing = function()
 
 	let aliasedData = _this.scaleDownImage(data, cellAntialiasingWidth, cellAntialiasingHeight, _this.antialiasingFactor);
 
-	_this.onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
+	_this._onCellRendered(_this.workerIndex, aliasedData.buffer, _this.cell, new Date() - _this.renderingStartedDate);
 };
 
-RaytracingRendererWorker.prototype.scaleDownImage = function(data, dataWidth, dataHeight, scale)
+RaytracingWebWorker.prototype.scaleDownImage = function(data, dataWidth, dataHeight, scale)
 {
 	let NUM_OF_COLOR_BITS = 4;	
 	let width = dataWidth / scale;
@@ -1091,7 +1131,7 @@ RaytracingRendererWorker.prototype.scaleDownImage = function(data, dataWidth, da
 /**
  * Starts rendering.
  */
-RaytracingRendererWorker.prototype.render = function() 
+RaytracingWebWorker.prototype.render = function() 
 {
 	let _this = this;
 
