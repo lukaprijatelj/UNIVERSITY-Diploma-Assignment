@@ -63,6 +63,7 @@
 
 	loadingBlock = new Array();	
 	loadingBlock.push(new AsyncImporter('scripts/ray-tracing-web-worker/RaytracingRenderer.js'));
+	loadingBlock.push(new AsyncImporter('scripts/ray-tracing-web-worker/RaytracingWebWorker.js'));
 	loadingBlock.push(new AsyncImporter('scripts/client.js'));
 	await Promise.all(loadingBlock);
 	

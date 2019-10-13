@@ -195,15 +195,7 @@ RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
  */
 RaytracingWebWorker.prototype._onCellRendered = function(workerIndex, buffer, cell, timeMs)
 {
-	let data = 
-	{
-		workerIndex: workerIndex,
-		buffer: buffer,
-		cell: cell,
-		timeMs: timeMs
-	};
-
-	mainThread.mainFunction('globals.renderer.renderCell', data);
+	
 };
 
 /**
@@ -370,105 +362,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		outputColor.add(lightContribution);
 	}
 
-	let normalComputed = false;
-
-	for (let i=0; i<_this.lights.length; i++) 
-	{
-		let light = _this.lights[i];
-
-		lightVector.setFromMatrixPosition(light.matrixWorld);
-		lightVector.sub(point);
-
-		_this.rayLight.direction.copy(lightVector).normalize();
-
-		let lightIntersections = _this.raycasterLight.intersectObjects(_this.objects, true);
-		
-		if (lightIntersections.length > 0) 
-		{
-			// point in shadow
-			continue;
-		}
-
-		// point lit
-
-		if (normalComputed === false) 
-		{
-			// the same normal can be reused for all lights
-			// (should be possible to cache even more)
-
-			localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
-			_this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
-			normalVector.applyMatrix3( _object.normalMatrix ).normalize();
-
-			normalComputed = true;
-		}
-
-		lightColor.copyGammaToLinear(light.color);
-
-		// compute attenuation
-
-		lightVector.normalize();
-
-		// compute diffuse
-
-		var dot = Math.max( normalVector.dot( lightVector ), 0 );
-		var diffuseIntensity = dot * light.intensity;
-
-		lightContribution.copy( diffuseColor );
-		lightContribution.multiply( lightColor );
-		lightContribution.multiplyScalar(diffuseIntensity);
-		outputColor.add( lightContribution );
-
-		// compute specular
-
-		if (material.specular || material.shininess) 
-		{
-			let specular;
-			let shininess;
-
-			if (material.specular)
-			{
-				specular = material.specular;
-			}
-
-			if (material.shininess)
-			{
-				shininess = material.shininess;
-			}
-
-			halfVector.addVectors( lightVector, eyeVector ).normalize();
-
-			let dotNormalHalf = Math.max(normalVector.dot(halfVector), 0.0);
-			let specularIntensity = Math.max(Math.pow(dotNormalHalf, shininess), 0.0) * diffuseIntensity;
-
-			let specularNormalization = (shininess + 2.0) / 8.0;
-
-			specularColor.copyGammaToLinear(specular);
-
-			let alpha = Math.pow(Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0);
-
-			schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
-			schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
-			schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
-
-			lightContribution.copy( schlick );
-			lightContribution.multiply( lightColor );
-			lightContribution.multiplyScalar( specularNormalization * specularIntensity);
-
-			outputColor.add( lightContribution );
-		}
-	}
-
-
-	// -----------------------------
-	// reflection / refraction
-	// -----------------------------
-
-	if (recursionDepth >= _this.maxRecursionDepth)
-	{
-		// no need to spawn new ray cast, because we have reached max recursion depth
-		return;
-	}
 
 	let alphaMap = null;
 	let aoMap = null;
@@ -541,6 +434,127 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		}
 	}
 
+	let normalComputed = false;
+
+	for (let i=0; i<_this.lights.length; i++) 
+	{
+		let light = _this.lights[i];
+
+		lightVector.setFromMatrixPosition(light.matrixWorld);
+		lightVector.sub(point);
+
+		_this.rayLight.direction.copy(lightVector).normalize();
+
+		let lightIntersections = _this.raycasterLight.intersectObjects(_this.objects, true);
+		
+		if (lightIntersections.length > 0) 
+		{
+			// point in shadow
+			continue;
+		}
+
+		// point lit
+
+		if (normalComputed === false) 
+		{
+			// the same normal can be reused for all lights
+			// (should be possible to cache even more)
+
+			localPoint.copy( point ).applyMatrix4( _object.inverseMatrix );
+			_this.computePixelNormal( normalVector, localPoint, material.flatShading, face, geometry );
+			normalVector.applyMatrix3( _object.normalMatrix ).normalize();
+
+			normalComputed = true;
+		}
+
+		lightColor.copyGammaToLinear(light.color);
+
+		// compute attenuation
+
+		lightVector.normalize();
+
+		// compute diffuse
+
+		var dot = Math.max( normalVector.dot( lightVector ), 0 );
+		var diffuseIntensity = dot * light.intensity;
+
+		lightContribution.copy( diffuseColor );
+		lightContribution.multiply( lightColor );
+		lightContribution.multiplyScalar(diffuseIntensity);
+		outputColor.add( lightContribution );
+
+		// compute specular
+
+		/*if (material.specular || material.shininess) 
+		{
+			let specular;
+			let shininess;
+
+			if (material.specular)
+			{
+				specular = material.specular;
+			}
+
+			if (material.shininess)
+			{
+				shininess = material.shininess;
+			}
+
+			halfVector.addVectors( lightVector, eyeVector ).normalize();
+
+			let dotNormalHalf = Math.max(normalVector.dot(halfVector), 0.0);
+			let specularIntensity = Math.max(Math.pow(dotNormalHalf, shininess), 0.0) * diffuseIntensity;
+
+			let specularNormalization = (shininess + 2.0) / 8.0;
+
+			specularColor.copyGammaToLinear(specular);
+
+			let alpha = Math.pow(Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0);
+
+			schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
+			schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
+			schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
+
+			lightContribution.copy( schlick );
+			lightContribution.multiply( lightColor );
+			lightContribution.multiplyScalar( specularNormalization * specularIntensity);
+
+			outputColor.add( lightContribution );
+		}
+
+		if (roughnessMap) 
+		{
+			let specular = roughnessMap;
+
+			halfVector.addVectors( lightVector, eyeVector ).normalize();
+			specularColor.copyGammaToLinear(specular);
+
+			let alpha = Math.pow(Math.max( 1.0 - lightVector.dot( halfVector ), 0.0 ), 5.0);
+
+			schlick.r = specularColor.r + ( 1.0 - specularColor.r ) * alpha;
+			schlick.g = specularColor.g + ( 1.0 - specularColor.g ) * alpha;
+			schlick.b = specularColor.b + ( 1.0 - specularColor.b ) * alpha;
+
+			lightContribution.copy( schlick );
+			lightContribution.multiply( lightColor );
+
+			outputColor.add( lightContribution );
+		}*/
+	}
+
+
+	// -----------------------------
+	// reflection / refraction
+	// -----------------------------
+
+	if (recursionDepth >= _this.maxRecursionDepth)
+	{
+		// no need to spawn new ray cast, because we have reached max recursion depth
+		return;
+	}
+
+	
+
 	let tmpColor = new Array();
 
 	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
@@ -548,51 +562,34 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		tmpColor[i] = new THREE.Color();
 	}	
 
-
-	var reflectivity = material.reflectivity;
-
-	if (reflectivity <= 0)
+	if (material.glass) 
 	{
-		// not reflection means we don't need to spawn ray
-		return;
-	}
+		let eta = material.refractionRatio;
 
-	if ( material.mirror || material.glass) 
-	{
-		if ( material.mirror ) 
+		let dotNI = rayDirection.dot( normalVector );
+		let k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
+
+		if ( k < 0.0 ) 
+		{
+			reflectionVector.set( 0, 0, 0 );
+		}
+		else 
 		{
 			reflectionVector.copy( rayDirection );
-			reflectionVector.reflect( normalVector );
-		}
-		else if ( material.glass ) 
-		{
-			var eta = material.refractionRatio;
+			reflectionVector.multiplyScalar( eta );
 
-			var dotNI = rayDirection.dot( normalVector );
-			var k = 1.0 - eta * eta * ( 1.0 - dotNI * dotNI );
-
-			if ( k < 0.0 ) 
-			{
-				reflectionVector.set( 0, 0, 0 );
-			}
-			else 
-			{
-				reflectionVector.copy( rayDirection );
-				reflectionVector.multiplyScalar( eta );
-
-				var alpha = eta * dotNI + Math.sqrt( k );
-				tmpVec.copy( normalVector );
-				tmpVec.multiplyScalar( alpha );
-				reflectionVector.sub( tmpVec );
-			}
+			let alpha = eta * dotNI + Math.sqrt( k );
+			tmpVec.copy( normalVector );
+			tmpVec.multiplyScalar( alpha );
+			reflectionVector.sub( tmpVec );
 		}
 
-		var theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
-		var rf0 = reflectivity;
-		var fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
-		var weight = fresnel;
+		let theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+		let rf0 = reflectivity;
+		let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+		let weight = fresnel;
 
-		var zColor = tmpColor[ recursionDepth ];
+		let zColor = tmpColor[ recursionDepth ];
 
 		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 		
@@ -604,6 +601,48 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		zColor.multiplyScalar( weight );
 		outputColor.multiplyScalar( 1 - weight );
 		outputColor.add( zColor );
+
+		return;
+	}
+
+
+	//var reflectivity = material.reflectivity;
+	var reflectivity = metalnessMap.b;
+
+	if (reflectivity <= 0)
+	{
+		// not reflection means we don't need to spawn ray
+		return;
+	}
+	else
+	{
+		material.mirror = true;
+	}
+
+	if (material.mirror) 
+	{
+		reflectionVector.copy( rayDirection );
+		reflectionVector.reflect( normalVector );
+
+		let theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+		let rf0 = reflectivity;
+		let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+		let weight = fresnel;
+
+		let zColor = tmpColor[ recursionDepth ];
+
+		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
+		
+		if ( material.specular !== undefined ) 
+		{
+			zColor.multiply( material.specular );
+		}
+
+		zColor.multiplyScalar( weight );
+		outputColor.multiplyScalar( 1 - weight );
+		outputColor.add( zColor );
+
+		return;
 	}
 
 	
@@ -670,13 +709,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 	outputColor.add( zColor );*/
 };
 
-
-
-
-
-
-
-
 function saturate(value)
 {
 	if (value < 0)
@@ -721,104 +753,14 @@ function lerp(a,b,w)
 
 
 
-RaytracingWebWorker.prototype.chiGGX = function(viewVector)
-{
-    return viewVector > 0 ? 1 : 0;
-};
-
-RaytracingWebWorker.prototype.GGX_PartialGeometryTerm = function(viewVector, normal, halfVector, alpha)
-{
-    let VoH2 = saturate(viewVector.dot(halfVector));
-	let chi = this.chiGGX( VoH2 / saturate( viewVector.dot(normal)) );
-	
-	VoH2 = VoH2 * VoH2;
-	
-	let tan2 = ( 1 - VoH2 ) / VoH2;
-	
-    return (chi * 2) / ( 1 + Math.sqrt( 1 + alpha * alpha * tan2 ) );
-};
-
-RaytracingWebWorker.prototype.GGX_Specular = function(SpecularEnvmap, normal, viewVector, roughness, F0, kS)
-{
-   // let reflectionVector = viewVector.negate().reflect(normal);
-	let worldFrame = new THREE.Matrix3(); // GenerateFrame(reflectionVector);
-    let radiance = 0;
-	//let NoV = saturate(dot(normal, viewVector));
-	
-	// dunno
-	let SamplesCount = 64;
-
-    for(let i = 0; i < SamplesCount; ++i)
-    {
-        // Generate a sample vector in some local space
-        let sampleVector = new THREE.Vector3();
-        // Convert the vector in world space
-        //sampleVector = sampleVector.multiply(worldFrame).normalize();
-
-        // Calculate the half vector
-        let halfVector = sampleVector.add(viewVector).normalize();
-		//let cosT = saturate(dot(sampleVector, normal));
-      //  let sinT = Math.sqrt( 1 - cosT * cosT);
-
-        // Calculate fresnel
-		let fresnel = this.Fresnel_Schlick( saturate(halfVector.dot(viewVector )), F0 );
-		
-        // Geometry term
-		//let geometry = this.GGX_PartialGeometryTerm(viewVector, normal, halfVector, roughness) * this.GGX_PartialGeometryTerm(sampleVector, normal, halfVector, roughness);
-		
-        // Calculate the Cook-Torrance denominator
-       // let denominator = saturate( 4 * (NoV * saturate(dot(halfVector, normal)) + 0.05) );
-		kS.value += fresnel;
-		
-        // Accumulate the radiance
-        radiance += 0.0;// SpecularEnvmap.SampleLevel( trilinearSampler, sampleVector, ( roughness * mipsCount ) ).rgb * geometry * fresnel * sinT / denominator;
-    }
-
-    // Scale back for the samples count
-	kS.value = saturate( kS.value / SamplesCount );
-	
-    return radiance / SamplesCount;        
-};
 
 
-RaytracingWebWorker.prototype.PixelShaderFunction = function(diffuseColor, metalnessColor, viewVector, normal)
-{
-	if (!diffuseColor || !metalnessColor)
-	{
-		return new Vector4();
-	}
-
-	let EPSILON = 8;
-    let ior = 1 + metalnessColor.r;
-    let roughness = saturate(metalnessColor.g - EPSILON) + EPSILON;
-    let metallic = metalnessColor.b;
-
-    // Calculate colour at normal incidence
-    let F0 = Math.abs((1.0 - ior) / (1.0 + ior));
-    F0 = F0 * F0;
-    F0 = lerp(F0, diffuseColor.r, metallic);
-        
-    // Calculate the specular contribution
-    let ks = { value: 0 };
-    let specular = this.GGX_Specular(undefined, normal, viewVector, roughness, F0, ks );
-	let kd = (1 - ks.value) * (1 - metallic);
-	
-    // Calculate the diffuse contribution
-   // let irradiance = this.texCUBE(diffuseCubemap_Sampler, normal);
-   // let diffuse = materialColour * irradiance;
-   let diffuse = 1;
-
-    return kd * diffuse + specular;     
-};
 
 
-/**
- * Gets F0 (Fresnel Reflectance at 0 degrees).
- */
-RaytracingWebWorker.prototype.Fresnel_Schlick = function(cosT, F0)
-{
-	return F0 + (1.0 - F0) * Math.pow((1.0 - cosT), 5.0);
-};
+
+
+
+
 
 
 /**
@@ -860,7 +802,7 @@ RaytracingWebWorker.prototype.texCUBE = function(images, rayDirection)
 		else
 		{
 			// z is dominant axis.
-			if(rayDirection.z<0)
+			if(rayDirection.z < 0)
 			{
 				// -Z is dominant axis -> front face
 				skyMap = images[5];
@@ -986,9 +928,9 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 /**
  * Renders block with specified antialiasing factor.
  */
-RaytracingWebWorker.prototype.renderBlock = function() 
+RaytracingWebWorker.prototype.renderCell = function() 
 {
-	console.log('[RaytracingWebWorker] Rendering specified canvas block');
+	console.log('[RaytracingWebWorker] Rendering cell');
 
 	let _this = this;
 	let cell = _this.cell;
@@ -1015,8 +957,8 @@ RaytracingWebWorker.prototype.renderBlock = function()
 
 			_this.origin.copy(_this.cameraPosition);
 
-			_this.direction.set(xPos, yPos, - _this.perspective );
-			_this.direction.applyMatrix3(_this.cameraNormalMatrix ).normalize();
+			_this.direction.set(xPos, yPos, - _this.perspective);
+			_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
 			
 			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
 
@@ -1039,7 +981,14 @@ RaytracingWebWorker.prototype.renderBlock = function()
 	let endTime = new Date();
 	let timeElapsed = endTime - startTime;
 
-	_this._onCellRendered(_this.workerIndex, image.data.buffer, _this.cell, timeElapsed);
+	let data = 
+	{
+		workerIndex: _this.workerIndex,
+		buffer: image.data.buffer,
+		cell: _this.cell,
+		timeMs: timeElapsed
+	};
+	mainThread.mainFunction('globals.renderer.renderCell', data);
 };
 
 /**
@@ -1049,5 +998,5 @@ RaytracingWebWorker.prototype.render = function()
 {
 	let _this = this;	
 
-	_this.renderBlock();
+	_this.renderCell();
 };
