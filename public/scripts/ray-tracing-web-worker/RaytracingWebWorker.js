@@ -606,10 +606,19 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 	}
 
 
-	//var reflectivity = material.reflectivity;
-	var reflectivity = metalnessMap.b;
+	var reflectivity;
 
-	if (reflectivity <= 0)
+	if (metalnessMap)
+	{
+		reflectivity = metalnessMap.b;
+	}
+
+	if (material.reflectivity)
+	{
+		reflectivity = material.reflectivity;
+	}
+
+	if (!reflectivity)
 	{
 		// not reflection means we don't need to spawn ray
 		return;
@@ -644,69 +653,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 
 		return;
 	}
-
-	
-
-
-
-	/*reflectionVector.copy( rayDirection );
-	reflectionVector.reflect( normalVector );
-
-	let DistributionGGX = function(N, H, a)
-	{
-		let a2 = a*a;
-		let NdotH  = Math.max(N.dot(H), 0.0);
-		let NdotH2 = NdotH*NdotH;
-		
-		let nom = a2;
-		let denom  = (NdotH2 * (a2 - 1.0) + 1.0);
-		denom = Math.PI * denom * denom;
-		
-		return nom / denom;
-	};
-
-	let GeometrySchlickGGX = function(NdotV, k)
-	{
-		let nom   = NdotV;
-		let denom = NdotV * (1.0 - k) + k;
-		
-		return nom / denom;
-	};
-	
-	let GeometrySmith = function(N, V, L, k)
-	{
-		let NdotV = Math.max(N.dot(V), 0.0);
-		let NdotL = Math.max(N.dot(L), 0.0);
-		let ggx1 = GeometrySchlickGGX(NdotV, k);
-		let ggx2 = GeometrySchlickGGX(NdotL, k);
-		
-		return ggx1 * ggx2;
-	};
-
-	let F0 = new THREE.Vector3(0.04, 0.04, 0.04);
-	F0 = lerp(F0, surfaceColor.rgb, metalnessMap.b);
-	let cosinusTheta = Math.max( eyeVector.dot( normalVector ), 0.0 );
-
-	let fresnelSchlick = function(cosTheta, F0)
-	{
-		return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-	};
-
-	halfVector.addVectors( lightVector, eyeVector ).normalize();
-
-	let D = DistributionGGX(normalVector, halfVector);
-	let F = fresnelSchlick(cosinusTheta, F0);
-	let G = GeometrySmith(normalVector, eyeVector, lightVector, roughnessMap.g);
-
-	let zColor = tmpColor[ recursionDepth ];
-
-	// recursive call
-	_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
-
-
-	zColor.multiplyScalar( weight );
-	outputColor.multiplyScalar( 1 - weight );
-	outputColor.add( zColor );*/
 };
 
 function saturate(value)
@@ -728,10 +674,6 @@ function lerp(a,b,w)
 {
 	return a.add((b.sub(a)).multiplyScalar(w));
 };
-
-
-
-
 
 
 
