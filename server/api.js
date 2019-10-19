@@ -18,11 +18,6 @@ var API =
 	baseUrl: '/api',
 
 	/**
-	 * Admin client session ID.
-	 */
-	adminSessionId: String(),
-
-	/**
 	 * Is rendering service currently running.
 	 */
 	isRenderingServiceRunning: false,
@@ -39,12 +34,41 @@ var API =
 		
 		io.on('connection', API.onConnect);
 	},
+
+	/**
+	 * Disconects user and thus blocks connection.
+	 */
+	blockConnection: function(socket)
+	{
+		console.warn('Blocking connection!');
+		socket.disconnect();
+	},
 	
 	/**
 	 * New client has connected via socket IO.
 	 */
 	onConnect: function(socket)
 	{
+		let index = -1;
+
+		for (let i=0; i<DATABASE.listOfClientIndexes.length; i++)
+		{
+			if (DATABASE.listOfClientIndexes[i] == false)
+			{
+				DATABASE.listOfClientIndexes[i] = true;
+				index = i;
+				break;
+			}
+		}
+
+		if (index == -1)
+		{
+			console.warn('All indexes are already used!');
+
+			API.blockConnection(socket);
+			return;
+		}
+
 		console.log('[Api] New client has connected!');
 
 		var time = new Date();		
@@ -57,21 +81,22 @@ var API =
 		if (data.clientType == "admin")
 		{
 			isAdmin = true;
-			API.adminSessionId = sessionId;	
 			
-			socket.on(API.baseUrl + '/rendering/checkAdmin', API.onAdminCheckRendering); 
+			// admin specific listeners
+			socket.on(API.baseUrl + '/admin/isRenderingServiceRunning', API.onAdminCheckRendering); 
+
+			// rendering specific listeners
 			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
 			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
 		}
 		
-		DATABASE.addRenderClient(sessionId, ipAddress, isAdmin);
+		DATABASE.addRenderClient(sessionId, index, ipAddress, isAdmin);
 				
 		// cells
 		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
 		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
 		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);			
-		
-		
+				
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
 
@@ -80,9 +105,9 @@ var API =
 		// notifies that clients list was updated
 		// -----------------------------
 
-		var result = DATABASE.getClients();
+		var result = DATABASE.getAllClients();
 
-		// emits to all and also to socket that send this call
+		// emits to ALL and also to socket that send this call
 		io.sockets.emit(API.baseUrl + '/clients/updated', result);
 	},
 
@@ -103,9 +128,9 @@ var API =
 		// notifies that clients list was updated
 		// -----------------------------
 
-		var result = DATABASE.getClients();
+		var result = DATABASE.getAllClients();
 
-		// emits to all except socket that send this call
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
 	},
 
@@ -168,7 +193,8 @@ var API =
 		var socket = this;
 		var sessionId = socket.id;
 
-		var freeCells = DATABASE.getFreeCells(sessionId, options.NUM_OF_BLOCKS_IN_CHUNK);
+		var client = DATABASE.findClientBySessionId(sessionId);
+		var freeCells = DATABASE.getFreeCells(client, options.NUM_OF_BLOCKS_IN_CHUNK);
 
 		if (!freeCells)
 		{
@@ -199,11 +225,11 @@ var API =
 			return;
 		}
 
-		console.log("[Api] Progress was updated");
+		console.log("[Api] Cell progress has updated");
 
 		var socket = this;
 
-		DATABASE.updateProgress(data.cells, data.progress, data.imageData);		
+		DATABASE.updateCellsProgress(data.cells, data.progress, data.imageData);		
 
 		if (data.progress == 100)
 		{
@@ -281,7 +307,7 @@ var API =
 				var MAX_X = endX < MAX_WIDTH ? endX : MAX_WIDTH;
 				var MAX_Y = endY < MAX_HEIGHT ? endY : MAX_HEIGHT;
 
-				DATABASE.addRenderingCell(startX, startY, MAX_X - startX, MAX_Y - startY);
+				DATABASE.createSharedCell(startX, startY, MAX_X - startX, MAX_Y - startY);
 
 				startX += options.BLOCK_WIDTH;
 			}

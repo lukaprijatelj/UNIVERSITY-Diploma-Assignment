@@ -3,8 +3,8 @@ var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
 
 require('../public/scripts/database/BasicCell.js');
-require('../public/scripts/database/Client.js');
-require('../public/scripts/database/RenderingCell.js');
+require('../public/scripts/database/SocketIoClient.js');
+require('../public/scripts/database/SharedCell.js');
 
 var DATABASE =
 {
@@ -14,35 +14,60 @@ var DATABASE =
 	root: 'database/',
 
 	/**
-	 * Table for storing connected clients.
-	 * @type {BasicTable}
+	 * List of index ports indicating if they are taken or not.
 	 */
-	renderingClientsTable: null,
+	listOfClientIndexes: null,
 
 	/**
-	 * Table for saving uploaded files.
-	 * @type {BasicTable}
+	 * Database tables.
 	 */
-	uploadedFilesTable: null,
+	tables:
+	{
+		/**
+		 * Table for storing connected clients.
+		 * @type {BasicTable}
+		 */
+		renderingClients: null,
 
-	/**
-	 * Table for saving rendering jobs.
-	 * @type {BasicTable}
-	 */
-	renderingCellsTable: null,
+		/**
+		 * Table for saving uploaded files.
+		 * @type {BasicTable}
+		 */
+		uploadedFiles: null,
+	
+		/**
+		 * Table for saving rendering jobs.
+		 * @type {BasicTable}
+		 */
+		renderingCells: null,
+	},
 
 	
 	init: function()
 	{
 		console.log('[Database] Initializing');
 
+		DATABASE.clearListOfClientIndexes();
+
 		var tablesRoot = DATABASE.root + "tables/";
 		
-		DATABASE.renderingClientsTable = new BasicTable(tablesRoot, 'renderingClients');
-		DATABASE.uploadedFilesTable = new BasicTable(tablesRoot, 'uploadedFiles');
-		DATABASE.renderingCellsTable = new BasicTable(tablesRoot, 'renderingCells');
+		DATABASE.tables.renderingClients = new BasicTable(tablesRoot, 'renderingClients');
+		DATABASE.tables.uploadedFiles = new BasicTable(tablesRoot, 'uploadedFiles');
+		DATABASE.tables.renderingCells = new BasicTable(tablesRoot, 'renderingCells');
 	},
-	
+
+	/**
+	 * Clears list of client indexes.
+	 */
+	clearListOfClientIndexes: function()
+	{
+		DATABASE.listOfClientIndexes = new Array(MAX_SOCKETIO_CLIENTS);
+
+		for (let i=0; i<MAX_SOCKETIO_CLIENTS; i++)
+		{
+			DATABASE.listOfClientIndexes[i] = false;
+		}
+	},
 
 	/**
 	 * Adds uploaded file record to DATABASE.
@@ -56,7 +81,7 @@ var DATABASE =
 			path: path
         };
 
-		var table = DATABASE.uploadedFilesTable;
+		var table = DATABASE.tables.uploadedFiles;
 		table.rows.push(fileEntry);
 		table.save();
     },
@@ -66,22 +91,21 @@ var DATABASE =
 	 */
     getUploadedFiles: function()
     {
-		var table = DATABASE.uploadedFilesTable;
-
+		var table = DATABASE.tables.uploadedFiles;
         return table.rows;
 	},
 	
 	/**
 	 * Adds render client.
 	 */
-	addRenderClient: function(sessionId, ipAddress, isAdmin)
+	addRenderClient: function(sessionId, index, ipAddress, isAdmin)
 	{
 		isAdmin = typeof isAdmin !== 'undefined' ? isAdmin : false;
 		
-		var table = DATABASE.renderingClientsTable;
+		var table = DATABASE.tables.renderingClients;
 
 		var id = uuidv1();
-        var clientEntry = new namespace.database.Client(id, sessionId, ipAddress, false, isAdmin);
+        var clientEntry = new namespace.database.SocketIoClient(id, index, sessionId, ipAddress, false, isAdmin);
 		table.rows.push(clientEntry);
 
 		table.save();
@@ -92,11 +116,18 @@ var DATABASE =
 	 */
 	removeRenderClient: function(sessionId)
 	{
-		var table = DATABASE.renderingClientsTable;
+		let client = DATABASE.findClientBySessionId(sessionId);
+
+		// free index port of the client
+		DATABASE.listOfClientIndexes[client.index] = false;
+
+		var table = DATABASE.tables.renderingClients;
+
+		// remove client from clients list
 		table.rows = table.rows.filter(item => item.sessionId != sessionId);
 
-		// remove client from active cells list
-		var cellsTable = DATABASE.renderingCellsTable;
+		// remove client from rendering cells list
+		var cellsTable = DATABASE.tables.renderingCells;
 
 		for (let i=0; i<cellsTable.rows.length; i++)
 		{
@@ -112,32 +143,51 @@ var DATABASE =
 				continue;
 			}
 
-			cell.sessionId = String();
+			cell.socketIoClient = null;
 		}
 
 		table.save();
 	},
 
 	/**
+	 * Finds socketIO client.
+	 */
+	findClientBySessionId: function(sessionId)
+	{
+		var table = DATABASE.tables.renderingClients;
+
+		for (let i=0; i<table.rows.length; i++)
+		{
+			let socketIoClient = table.rows[i];
+
+			if (socketIoClient.sessionId == sessionId)
+			{
+				return socketIoClient;
+			}	
+		}
+
+		return null;
+	},
+
+	/**
 	 * Removes render client.
 	 */
-	getClients: function()
+	getAllClients: function()
 	{
-		var table = DATABASE.renderingClientsTable;
+		var table = DATABASE.tables.renderingClients;
 		return table.rows;
 	},
 
 	/**
 	 * Adds grid layout.
 	 */
-	addRenderingCell: function(startX, startY, width, height)
+	createSharedCell: function(startX, startY, width, height)
 	{
-		var table = DATABASE.renderingCellsTable;
+		var table = DATABASE.tables.renderingCells;
 
 		//var id = uuidv1();
-		var id = 'cell-' + startX + '-' + startY;
 
-        var clientEntry = new namespace.database.RenderingCell(id, startX, startY, width, height);
+        var clientEntry = new namespace.database.SharedCell(startX, startY, width, height);
 		table.rows.push(clientEntry);
 
 		table.save();
@@ -148,7 +198,7 @@ var DATABASE =
 	 */
 	getRenderingCells: function()
 	{
-		var table = DATABASE.renderingCellsTable;
+		var table = DATABASE.tables.renderingCells;
 		
 		return table.rows;
 	},
@@ -156,18 +206,18 @@ var DATABASE =
 	/**
 	 * Gets free cells.
 	 */
-	getFreeCells: function(sessionId, cellsLength)
+	getFreeCells: function(socketIoClient, cellsLength)
 	{
-		var table = DATABASE.renderingCellsTable;
+		var table = DATABASE.tables.renderingCells;
 
-		var freeCells = [];	
+		var freeCells = new Array();	
 		var cellsFound = 0;
 
 		for (let i=0; i<table.rows.length; i++)
 		{
 			let current = table.rows[i];
 
-			if (current.sessionId != "")
+			if (current.socketIoClient)
 			{
 				continue;
 			}
@@ -177,7 +227,7 @@ var DATABASE =
 				break;
 			}
 
-			current.sessionId = sessionId;
+			current.socketIoClient = socketIoClient;
 
 			var basicCurrent = Object.shrink(new namespace.database.BasicCell(), current);
 			freeCells.push(basicCurrent);
@@ -199,7 +249,7 @@ var DATABASE =
 	 */
 	removeAllCells: function()
 	{
-		var table = DATABASE.renderingCellsTable;
+		var table = DATABASE.tables.renderingCells;
 
 		table.rows = [];
 		table.save();
@@ -208,9 +258,9 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateProgress: function(cells, progress)
+	updateCellsProgress: function(cells, progress)
 	{
-		var table = DATABASE.renderingCellsTable;
+		var table = DATABASE.tables.renderingCells;
 
 		// update rendering progress for specific client
 		for (let i=0; i<table.rows.length; i++)

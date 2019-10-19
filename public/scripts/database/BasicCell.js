@@ -21,11 +21,23 @@ if (typeof _this.namespace.database == 'undefined')
 // -----------------------------
 // Rendering cells
 // -----------------------------
-namespace.database.BasicCell = function(id, startX, startY, width, height)
+namespace.database.BasicCell = (() =>
 {
-	this._id = id;
-	this.width = width;
-	this.height = height;
-	this.startY = startY;
-	this.startX = startX;
-};
+	let BasicCell = function(startX, startY, width, height)
+	{
+		Object.addMetadata(this, 'type', 'namespace.database.BasicCell');
+
+		this._id = BasicCell.generateId(startX, startY);
+		this.width = width;
+		this.height = height;
+		this.startY = startY;
+		this.startX = startX;
+	};
+
+	BasicCell.generateId = function(startX, startY)
+	{
+		return 'basic-cell-' + startX + '-' + startY;
+	};
+
+	return BasicCell;
+})();

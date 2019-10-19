@@ -21,11 +21,13 @@ if (typeof _this.namespace.database == 'undefined')
 // -----------------------------
 // Rendering clients
 // -----------------------------
-namespace.database.Client = function(id, sessionId, ipAddress, active, isAdmin)
+namespace.database.SocketIoClient = function(id, index, sessionId, ipAddress, active, isAdmin)
 {
+	Object.addMetadata(this, 'type', 'namespace.database.SocketIoClient');
 	this._id = id;
+	this.index = index;
 	this.sessionId = sessionId;
 	this.ipAddress = ipAddress;
 	this.active = active;
-	this.admin = isAdmin;
+	this.isAdmin = isAdmin;
 };

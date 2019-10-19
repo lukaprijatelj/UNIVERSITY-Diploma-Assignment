@@ -43,6 +43,7 @@ function startRendering(data)
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
+ * @author lukaprijatelj / http://github.com/lukaprijatelj 
  */
 var RaytracingWebWorker = function() 
 {

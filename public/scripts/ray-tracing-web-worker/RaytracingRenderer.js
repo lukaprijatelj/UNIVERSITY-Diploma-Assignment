@@ -4,6 +4,7 @@
  * The worker compute the pixel values and this renderer simply paints it to the Canvas.
  *
  * @author zz85 / http://github.com/zz85
+ * @author lukaprijatelj / http://github.com/lukaprijatelj 
  */
 var RaytracingRenderer = function() 
 {
@@ -17,12 +18,16 @@ var RaytracingRenderer = function()
 	this.cellsWaiting = new Array();
 	
 	/**
+	 * Cells that will be rendered.
+	 */
+	this.cellsRendering = new Array();
+
+	/**
 	 * Cells that are done rendering.
 	 */
 	this.cellsDone = new Array();
 
-	this.numOfWorkers = 1;
-	this.workers = null;
+	this.threads = null;
 
 	this.scene = null;
 	this.camera = null;
@@ -36,7 +41,7 @@ var RaytracingRenderer = function()
 	/**
 	 * Event handlers.
 	 */
-	this.renderCell = this.renderCell.bind(this);
+	this.renderCell = RaytracingRenderer.renderCell.bind(this);
 
 	this._init();
 };
@@ -55,9 +60,6 @@ RaytracingRenderer.prototype._init = function()
 	_this.scene = globals.scene;
 	_this.camera = globals.camera;
 
-	_this.numOfWorkers = options.NUM_OF_WORKERS;
-	_this.workers = new StaticArray(_this.numOfWorkers);
-
 	_this.setWorkers();
 };
 
@@ -68,9 +70,9 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 {
 	let _this = this;
 
-	for (let i=0; i<_this.workers.length; i++)
+	for (let i=0; i<_this.threads.length; i++)
 	{
-		let current = _this.workers[i];
+		let current = _this.threads[i];
 
 		if (current.isRendering == true)
 		{
@@ -91,7 +93,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 
-	let webWorker = _this.workers[workerIndex];
+	let webWorker = _this.threads[workerIndex];
 	webWorker.isRendering = false;
 	webWorker.cell = null;
 	
@@ -101,9 +103,13 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 
 	cell.imageData = HTMLImageElement.toPNGString(buffer, cell.width, cell.height);
 
+	// update image of the cell on the canvas
 	ClientPage.tryUpdatingCell(cell);
-	globals.rendererCanvas.removeRenderCell(cell);
 
+	// remove rendering flag
+	globals.rendererCanvas.unsetWorkerCell(cell);
+
+	//_this.cellsRendering = Array.remove(_this.cellsRendering, cell);
 	_this.cellsDone.push(cell);
 
 	
@@ -120,6 +126,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	}
 	
 	if (_this.areWorkersDone())
+	//if (Array.isEmpty(_this.cellsRendering))
 	{
 		ClientPage.onRendererDone(_this.cellsDone);	
 			
@@ -128,13 +135,15 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 };
 
 /**
- * Sets workers.
+ * Sets threads.
  */
 RaytracingRenderer.prototype.setWorkers = function() 
 {
 	let _this = this;
 
-	for (let i=0; i<_this.numOfWorkers; i++)
+	_this.threads = new StaticArray(options.NUM_OF_WORKERS);
+
+	for (let i=0; i<_this.threads.length; i++)
 	{
 		let data = 
 		{
@@ -146,16 +155,20 @@ RaytracingRenderer.prototype.setWorkers = function()
 
 		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/RaytracingWebWorker.js');
 		thread.isRendering = false;
+		thread.workerIndex = i;
 		thread.workerFunction('init', data);	
 
-		_this.workers[i] = thread;
+		globals.rendererCanvas.addWorkerCell(i);
+
+		_this.threads[i] = thread;
 	}
 };
 
 /**
  * Cell was rendered. It needs to be drawn too.
+ * @static
  */
-RaytracingRenderer.prototype.renderCell = function(data)
+RaytracingRenderer.renderCell = function(data)
 {
 	let _this = this;
 	_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
@@ -170,22 +183,24 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 	for (let i=0; i<_this.cellsWaiting.length; i++)
 	{
-		globals.rendererCanvas.removeRenderCell(_this.cellsWaiting[i]);
+		let current = _this.cellsWaiting[i];
+
+		globals.rendererCanvas.removeRenderCell(current);
 	}
 
-	for (let i=0; i<_this.workers.length; i++)
+	for (let i=0; i<_this.threads.length; i++)
 	{
-		let thread = _this.workers[i];		
+		let current = _this.threads[i];		
 		
-		thread.isRendering = false;
+		current.isRendering = false;
 
-		if (thread.cell)
+		if (current.cell)
 		{
-			globals.rendererCanvas.removeRenderCell(thread.cell);
+			globals.rendererCanvas.removeRenderCell(current.cell);
 		}
 
-		thread.workerFunction('stopRendering');
-		thread.terminate();
+		current.workerFunction('stopRendering');
+		current.terminate();
 	};
 };
 
@@ -226,11 +241,11 @@ RaytracingRenderer.prototype.prepareJsonData = function()
 			cameraJSON: _this.cameraJSON
 		};
 
-		for (let i=0; i<_this.workers.length; i++)
+		for (let i=0; i<_this.threads.length; i++)
 		{
-			let worker = _this.workers[i];
+			let thread = _this.threads[i];
 			
-			worker.workerFunction('initScene', options);		
+			thread.workerFunction('initScene', options);		
 		}	
 
 		resolve();
@@ -246,16 +261,18 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
 
 	_this.cellsWaiting = cellsWaiting;	
 
-	for (let i=0; i<cellsWaiting.length; i++)
+	for (let i=0; i<_this.cellsWaiting.length; i++)
 	{
-		globals.rendererCanvas.addRenderCell(cellsWaiting[i]);
+		let current = _this.cellsWaiting[i];
+
+		globals.rendererCanvas.addRenderCell(current);
 	}
 
-	for (let i=0; i<_this.workers.length; i++)
+	for (let i=0; i<_this.threads.length; i++)
 	{
-		let worker = _this.workers[i];
+		let current = _this.threads[i];
 	
-		_this._runWorker(worker);
+		_this._runWorker(current);
 	}	
 };
 
@@ -263,18 +280,21 @@ RaytracingRenderer.prototype.render = function(cellsWaiting)
  * Starts rendering.
  * @private
  */
-RaytracingRenderer.prototype._runWorker = function(worker)
+RaytracingRenderer.prototype._runWorker = function(thread)
 {
 	let _this = this;
 
-	let cellToRender = _this.cellsWaiting.shift();
+	let threadCell = _this.cellsWaiting.shift();
 
-	worker.cell = cellToRender;
-	globals.rendererCanvas.flagRenderCell(cellToRender);
+	//_this.cellsRendering.push(threadCell);
 
-	worker.workerFunction('setCell', { cell: cellToRender });
+	threadCell.workerIndex = thread.workerIndex;
+	thread.cell = threadCell;
+	globals.rendererCanvas.setWorkerCell(threadCell);
+
+	thread.workerFunction('setCell', { cell: threadCell });
 	
-	worker.isRendering = true;
+	thread.isRendering = true;
 
-	worker.workerFunction('startRendering');
+	thread.workerFunction('startRendering');
 };

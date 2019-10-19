@@ -49,10 +49,10 @@ function BasicTable(root, name)
 	{
 		var basicTable = this;
 
-		var tableNeedsReading = basicTable._readExistingTable.bind(basicTable);
+		var tableNeedsReading = BasicTable._readExistingTable.bind(basicTable);
 		basicTable._checkIfTableAlreadyExists(tableNeedsReading);
 
-		var intervalCallback = basicTable._checkIfSavingNeeded.bind(basicTable);
+		var intervalCallback = BasicTable._checkIfSavingNeeded.bind(basicTable);
 		setInterval(intervalCallback, basicTable.CHECK_SAVING_INTERVAL);
 	};
 	this.init();
@@ -60,8 +60,9 @@ function BasicTable(root, name)
 
 /**
  * Callback for checking if table needs saving to file.
+ * @static
  */
-BasicTable.prototype._checkIfSavingNeeded = function()
+BasicTable._checkIfSavingNeeded = function()
 {
 	if (this.isSaving == true)
 	{
@@ -142,8 +143,9 @@ BasicTable.prototype._checkIfTableAlreadyExists = function(callback)
 
 /**
  * Reads data from existing table.
+ * @static
  */
-BasicTable.prototype._readExistingTable = function()
+BasicTable._readExistingTable = function()
 {
 	var basicTable = this;
 	var fileUrl = basicTable.getFullPath();

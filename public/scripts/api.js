@@ -32,7 +32,7 @@ var API =
 	 * Ajax request to server.
 	 * @async
 	 */
-	request: function(url, callback, data)
+	request: function(url, data)
 	{
 		if(!socket)
 		{
@@ -44,7 +44,10 @@ var API =
 
 		console.log('[Api] Requesting ' + url);
 
-		socket.emit(url, data, callback);
+		return new Promise((resolve, reject) =>
+		{
+			socket.emit(url, data, resolve);
+		});
 	},
 
 	/**

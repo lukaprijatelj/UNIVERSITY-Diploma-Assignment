@@ -115,7 +115,7 @@ AdminPage.openScene = async function()
  * On server-client connection.
  * @private
  */
-AdminPage._onServerConnected = function(socket, data)
+AdminPage._onServerConnected = async function(socket, data)
 {
 	console.log('[Main] Connected to server!');
 
@@ -123,9 +123,10 @@ AdminPage._onServerConnected = function(socket, data)
 
 	API.listen('clients/updated', AdminPage._onClientsUpdated);
 
-	API.request('rendering/checkAdmin', AdminPage._onCheckRendering);	
+	let ddata = await API.request('admin/isRenderingServiceRunning');
+	AdminPage._onCheckRendering(ddata);
 
-	AdminPage.onLoaded();
+	AdminPage.onLoaded();	
 };
 
 /**
@@ -144,7 +145,8 @@ AdminPage._onCheckRendering = async function(data)
 	globals.isRendering = data.isRenderingServiceRunning;
 
 	options = data.options;
-	globals.editorCanvas.resizeCanvas();
+
+	globals.editorCanvas.resize();
 
 	AdminPage.openScene();
 
@@ -370,7 +372,7 @@ AdminPage._initRenderer = async function()
 		globals.renderer = new THREE.WebGLRenderer(options);
 		globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
 
-		globals.editorCanvas.resizeCanvas();
+		globals.editorCanvas.resize();
 
 		AdminPage.loadingCounter.setValue(100);
 		loadingLayer.hide();
@@ -391,11 +393,8 @@ AdminPage.onRenderFrame = function()
 	// render current frame
 	globals.renderer.render(globals.scene, globals.camera);
 		
-	if (globals.controls)
-	{
-		// update camera
-		globals.controls.update();
-	}
+	// update camera by reading control changes
+	globals.controls.update();
 };
 
 /**
@@ -417,7 +416,7 @@ AdminPage.clearScene = function()
 AdminPage._onClientsUpdated = function(data)
 {
 	var clients = data;
-	var renderingClientsCount = clients.filter(item => item.admin == false).length;
+	var renderingClientsCount = clients.filter(item => item.isAdmin == false).length;
 
 	var clientsConnectedInput = document.querySelector('#num-clients-connected .value');
 	clientsConnectedInput.innerHTML = renderingClientsCount;
@@ -844,7 +843,7 @@ AdminPage.hideLastDropdown = function()
  * Sends request to recalculate grid layout.
  * @private
  */
-AdminPage._onStartStopRenderingClick = function()
+AdminPage._onStartStopRenderingClick = async function()
 {
 	var startRenderingButtonV = document.getElementById('render-button');
 	startRenderingButtonV.disable();
@@ -853,11 +852,9 @@ AdminPage._onStartStopRenderingClick = function()
 
 	if (startRenderingButtonV.hasClass('selected'))
 	{
-		API.request('rendering/stop', () =>
-		{
-			globals.isRendering = false;
-			AdminPage._updateRenderingState();
-		}, data);
+		await API.request('rendering/stop', data);
+
+		globals.isRendering = false;
 	}
 	else
 	{
@@ -871,12 +868,12 @@ AdminPage._onStartStopRenderingClick = function()
 		
 		data.options = options;
 
-		API.request('rendering/start', () =>
-		{
-			globals.isRendering = true;
-			AdminPage._updateRenderingState();
-		}, data);
+		await API.request('rendering/start', data);
+
+		globals.isRendering = true;		
 	}
+
+	AdminPage._updateRenderingState();
 };
 
 AdminPage._onOpenOutputClick = function()

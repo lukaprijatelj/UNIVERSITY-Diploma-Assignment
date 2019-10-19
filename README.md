@@ -25,7 +25,7 @@ Build task will be read from scripts property of the package.json file.
 	  Nato bo preko cookiejev zapisala <key>GLOBALS</key><value>.select</value>  izračune. Nato bo en drug window pa to prikazoval in vsakih n milisekund refreshal podatke.
 	- optimiziram admin THREEJS kodo, da bo imela far plane fog oziroma blur. Potem bo mogoče hitreje delalo. 
 	- naredim pathTracing tako, da razbije camero na več delov in vsakega posebej renderira
-
+	- dodam partially rendered cell update, tako da posodobi samo vrstice celic
 	
 
 # Notes and development

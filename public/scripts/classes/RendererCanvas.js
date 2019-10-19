@@ -8,7 +8,7 @@ function RendererCanvas()
 	this.canvasV = null;
 	this.flagCanvasV = null;
 
-	this._onImageLoaded = this._onImageLoaded.bind(this);
+	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -20,13 +20,13 @@ RendererCanvas.prototype.init = function()
 	var _this = this;
 
 	_this.canvasV = document.getElementById('rendering-canvas');
-	_this.flagCanvasV = document.getElementById('flag-canvas');
+	_this.flagCanvasV = document.getElementById('flag-canvas-this');
 };
 
 /**
  * Resizes canvas width and height.
  */
-RendererCanvas.prototype.resizeCanvas = function()
+RendererCanvas.prototype.resize = function()
 {
 	var _this = this;
 
@@ -51,7 +51,7 @@ RendererCanvas.prototype.resizeCanvas = function()
  */
 RendererCanvas.prototype.createLayout = function(cells)
 {
-	var gridLayout = this;
+	var _this = this;
 };
 
 /**
@@ -74,7 +74,7 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 /**
  * Image is loaded and can now be drawn to canvas.
  */
-RendererCanvas.prototype._onImageLoaded = function(img, cell)
+RendererCanvas._onImageLoaded = function(img, cell)
 {
 	var _this = this;
 
@@ -111,8 +111,36 @@ RendererCanvas.prototype.addRenderCell = function(cell)
 	div.style.height = height + unit;
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
+	div.style.borderWidth = borderWidth + unit;
+
+	flagCanvas.appendChild(div);
+};
+
+/**
+ * Adds cell to flag-canvas (usually cell that are waiting to be rendered).
+ */
+RendererCanvas.prototype.addWorkerCell = function(cell)
+{
+	var _this = this;	
+
+	let flagCanvas = _this.flagCanvasV;
 	
-	div.style.borderColor = "rgba(255, 213, 207, 1)";
+	let div = new namespace.html.Div();
+	div.id = cell._id;
+	div.addClass('flag-cell');
+
+	var borderWidth = 0.3;
+	var posX = cell.startX + borderWidth;
+	var posY = cell.startY + borderWidth;
+	var width = cell.width - borderWidth * 2;
+	var height = cell.height - borderWidth * 2;
+
+	let unit = 'px';
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+	div.style.left = posX + unit;
+	div.style.top = posY + unit;
+	div.style.borderWidth = borderWidth + unit;
 
 	flagCanvas.appendChild(div);
 };
@@ -120,34 +148,68 @@ RendererCanvas.prototype.addRenderCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.flagRenderCell = function(cell)
+RendererCanvas.prototype.addWorkerCell = function(workerIndex)
 {
 	var _this = this;
 	let flagCanvas = _this.flagCanvasV;
 	
-	let div = flagCanvas.querySelector('#' + cell._id);
+	let div = new namespace.html.Div();
+	div.id = 'cell-thread-' + workerIndex;
+	div.hide();
+	div.addClass('flag-cell');
+	div.addClass('active');
+		
+	flagCanvas.appendChild(div);
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.setWorkerCell = function(cell)
+{
+	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = flagCanvas.querySelector('#cell-thread-' + cell.workerIndex);
+	div.show();
 	
 	if (!div)
 	{
-		new Warning.Other('Rendering cell was not found!');
+		new Warning.Other('Thread cell was not found!');
 		return;
 	}
 
-	var borderWidth = 0.8;
+	var borderWidth = 2;
 	var posX = cell.startX - borderWidth;
 	var posY = cell.startY - borderWidth;
-	var width = cell.width + borderWidth * 2;
-	var height = cell.height + borderWidth * 2;
+	var width = cell.width;
+	var height = cell.height;
 
 	let unit = 'px';
 	div.style.width = width + unit;
 	div.style.height = height + unit;
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
-	
-	div.style.zIndex = 10;
+	div.style.borderWidth = borderWidth + unit;
+};
 
-	div.style.borderColor = "rgba(247, 40, 7, 1)";
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.unsetWorkerCell = function(cell)
+{
+	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = flagCanvas.querySelector('#cell-thread-' + cell.workerIndex);
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	div.hide();
 };
 
 /**

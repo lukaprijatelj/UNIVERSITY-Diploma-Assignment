@@ -6,7 +6,7 @@ function EditorCanvas()
 	Interface.inherit(this, IDisposable);
 
 	this.canvasV = document.getElementById('editor-canvas');
-	this.resizeCanvas = EditorCanvas.resizeCanvas.bind(this);
+	this.resize = EditorCanvas.resize.bind(this);
 }
 Interface.inheritPrototype(EditorCanvas, IDisposable);
 
@@ -14,20 +14,23 @@ EditorCanvas.prototype.init = function()
 {
 	var _this = this;
 
-	window.addEventListener('resize', _this.resizeCanvas, false);
+	window.addEventListener('resize', _this.resize, false);
 };
 
+/**
+ * Disposes canvas.
+ */
 EditorCanvas.prototype._dispose = function()
 {
 	var _this = this;
 
-	window.removeEventListener('resize', _this.resizeCanvas);
+	window.removeEventListener('resize', _this.resize);
 };
 
 /**
  * Watches window on resize.
  */
-EditorCanvas.resizeCanvas = function()
+EditorCanvas.resize = function()
 {
 	var _this = this;
 

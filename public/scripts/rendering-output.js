@@ -24,7 +24,7 @@ RenderingOutputPage.init = function()
  * On server-client connection.
  * @private
  */
-RenderingOutputPage._onServerConnected = function()
+RenderingOutputPage._onServerConnected = async function()
 {
 	console.log('[RenderingOutputPage] Connected to server!');
 
@@ -34,7 +34,8 @@ RenderingOutputPage._onServerConnected = function()
 	API.listen('rendering/start', RenderingOutputPage._onStartRenderingService);	
 	API.listen('rendering/stop', RenderingOutputPage._onStopRenderingService);	
 
-	API.request('cells/getAll', RenderingOutputPage.onGetLayout);
+	let data = await API.request('cells/getAll');
+	RenderingOutputPage.onGetLayout(data);
 };
 
 /**
@@ -50,9 +51,10 @@ RenderingOutputPage._onServerDisconnect = function()
 /**
  * Server started rendering service.
  */
-RenderingOutputPage._onStartRenderingService = function(data)
+RenderingOutputPage._onStartRenderingService = async function(data)
 {
-	API.request('cells/getAll', RenderingOutputPage.onGetLayout);
+	let data = await API.request('cells/getAll');
+	RenderingOutputPage.onGetLayout(data);
 };
 
 /**
@@ -89,7 +91,7 @@ RenderingOutputPage.onGetLayout = function(data)
 
 	browser.setTitle('Output (' + optionsWidth + ' x ' + optionsHeight + ')');
 
-	RenderingOutputPage.rendererCanvas.resizeCanvas();
+	RenderingOutputPage.rendererCanvas.resize();
 
 
 	// -----------------------------
