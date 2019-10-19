@@ -532,7 +532,7 @@ AdminPage._onSceneButtonClick = async function(button)
 	anchor.setTarget(button);
 
 	let top = button.getOuterHeight();
-	anchor.setCenter(top, new Unit());
+	anchor.setCenter(top, 0);
 
 	let curtain = new namespace.html.Curtain();
 	curtain.onClick(AdminPage.hideLastDropdown);
@@ -743,8 +743,8 @@ AdminPage._onOptionsButtonClick = async function(button)
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
 
-	let top = Unit.add(button.getOuterHeight(), new Unit('1px'));
-	anchor.setCenter(top, new Unit());
+	let top = Unit.add(button.getOuterHeight(), '1px');
+	anchor.setCenter(top, '0px');
 
 
 	// -----------------------------
