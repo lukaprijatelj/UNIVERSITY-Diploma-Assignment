@@ -112,7 +112,7 @@ RendererCanvas.prototype.addRenderCell = function(cell)
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
 
-	div.style.borderColor = "rgba(247, 40, 7, 0.1)";
+	div.style.borderColor = "rgba(247, 40, 7, 0.3)";
 
 	flagCanvas.appendChild(div);
 };

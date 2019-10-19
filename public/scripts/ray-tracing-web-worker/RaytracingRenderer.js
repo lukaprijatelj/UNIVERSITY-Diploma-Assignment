@@ -99,7 +99,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	// convert buffer data into png image data
 	// -----------------------------
 
-	cell.imageData = Image.toPNGString(buffer, cell.width, cell.height);
+	cell.imageData = HTMLImageElement.toPNGString(buffer, cell.width, cell.height);
 
 	ClientPage.tryUpdatingCell(cell);
 	globals.rendererCanvas.removeRenderCell(cell);
@@ -111,7 +111,7 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	// continue rendering next cell in queue
 	// -----------------------------
 
-	if (_this.cellsWaiting.isEmpty() == false)
+	if (Array.isEmpty(_this.cellsWaiting) == false)
 	{
 		// work is not yet done
 		_this._runWorker(webWorker);
