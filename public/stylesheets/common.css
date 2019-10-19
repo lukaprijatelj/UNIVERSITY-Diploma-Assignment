@@ -330,10 +330,15 @@ interface
 
 	border-width: var(--BORDER-WIDTH);
 }
-	interface.rendering .hide-on-rendering
-	{
-		display: none;
-	}
+interface.rendering .hide-on-rendering
+{
+	display: none;
+}
+
+interface.rendering curtain
+{
+	display: block;
+}
 
 #bottom-row
 {
@@ -341,12 +346,6 @@ interface
 	bottom: 0px;
 	left: 0px;
 }
-
-	interface.rendering curtain
-	{
-		display: block;
-	}
-
 
 layer#dropdowns[num-of-children="0"]
 {

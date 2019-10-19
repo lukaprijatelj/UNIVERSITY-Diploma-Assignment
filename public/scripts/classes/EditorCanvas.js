@@ -1,29 +1,41 @@
+/**
+ * Canvas for admin
+ */
 function EditorCanvas()
 {
 	Interface.inherit(this, IDisposable);
+
 	this.canvasV = document.getElementById('editor-canvas');
+	this.resizeCanvas = EditorCanvas.resizeCanvas.bind(this);
 }
 Interface.inheritPrototype(EditorCanvas, IDisposable);
 
 EditorCanvas.prototype.init = function()
 {
-	var editorCanvas = this;
+	var _this = this;
 
-	window.addEventListener('resize', () =>
-	{
-		editorCanvas.resizeCanvas();
-	}, false);
+	window.addEventListener('resize', _this.resizeCanvas, false);
 };
 
-EditorCanvas.prototype.resizeCanvas = function()
+EditorCanvas.prototype._dispose = function()
 {
-	var editorCanvas = this;
+	var _this = this;
+
+	window.removeEventListener('resize', _this.resizeCanvas);
+};
+
+/**
+ * Watches window on resize.
+ */
+EditorCanvas.resizeCanvas = function()
+{
+	var _this = this;
 
 	var interfaceV = document.querySelector('interface');
 	var width = interfaceV.clientWidth;  
 	var height = interfaceV.clientHeight; 
 
-	var canvas = editorCanvas.canvasV;
+	var canvas = _this.canvasV;
 	canvas.width = width;
 	canvas.height = height;
 
@@ -36,7 +48,7 @@ EditorCanvas.prototype.resizeCanvas = function()
 	if (globals.renderer)
 	{
 		globals.renderer.setSize(width, height);
-		globals.camera.aspect = width/height;
+		globals.camera.aspect = width / height;
 		globals.camera.updateProjectionMatrix();
 	}
 	

@@ -111,8 +111,8 @@ RendererCanvas.prototype.addRenderCell = function(cell)
 	div.style.height = height + unit;
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
-
-	div.style.borderColor = "rgba(247, 40, 7, 0.3)";
+	
+	div.style.borderColor = "rgba(255, 213, 207, 1)";
 
 	flagCanvas.appendChild(div);
 };
@@ -133,7 +133,21 @@ RendererCanvas.prototype.flagRenderCell = function(cell)
 		return;
 	}
 
-	div.style.borderColor = "rgba(247, 40, 7, 0.5)";
+	var borderWidth = 0.8;
+	var posX = cell.startX - borderWidth;
+	var posY = cell.startY - borderWidth;
+	var width = cell.width + borderWidth * 2;
+	var height = cell.height + borderWidth * 2;
+
+	let unit = 'px';
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+	div.style.left = posX + unit;
+	div.style.top = posY + unit;
+	
+	div.style.zIndex = 10;
+
+	div.style.borderColor = "rgba(247, 40, 7, 1)";
 };
 
 /**
