@@ -12,7 +12,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-debug/namespace-debug.js"));;
+	loadingBlock.push(document.loadScript("externals/namespace-debug/namespace-debug.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -21,7 +21,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-core/namespace-core.js"));;
+	loadingBlock.push(document.loadScript("externals/namespace-core/namespace-core.js"));
 	await Promise.all(loadingBlock);
 
 
