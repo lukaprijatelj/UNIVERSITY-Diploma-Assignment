@@ -3,7 +3,7 @@
 	let loadingBlock;
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("scripts/constants.js"));
+	loadingBlock.push(document.loadScript("scripts/constants.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -12,54 +12,54 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Exception.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Warning.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Exception.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Warning.js"));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/interfaces/IDisposable.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/interfaces/IStringify.js"));	
+	loadingBlock.push(document.loadScript("externals/namespace-core/interfaces/IDisposable.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/interfaces/IStringify.js"));	
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Interface.js"));	
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Class.js"));	
+	loadingBlock.push(document.loadScript("externals/namespace-core/Interface.js"));	
+	loadingBlock.push(document.loadScript("externals/namespace-core/Class.js"));	
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Event.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Event.js"));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Mouse.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Keyboard.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/GarbageCollector.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/List.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/StaticArray.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Mouse.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Keyboard.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/GarbageCollector.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/List.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/StaticArray.js"));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Ajax.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Application.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Array.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Browser.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Char.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Color.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/console.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Date.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Enum.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Function.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/LoadingCounter.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Math.js"));  
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Object.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Path.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/RawImage.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/String.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Thread.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Timer.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Unit.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/Version.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/RenderingOutputPage.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Ajax.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Application.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Array.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Browser.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Char.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Color.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/console.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Date.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Enum.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Function.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/LoadingCounter.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Math.js"));  
+	loadingBlock.push(document.loadScript("externals/namespace-core/Object.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Path.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/RawImage.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/String.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Thread.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Timer.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Unit.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/Version.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-core/RenderingOutputPage.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -68,8 +68,8 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-enums/Unit.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-enums/BrowserType.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-enums/Unit.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-enums/BrowserType.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -78,27 +78,27 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Button.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Canvas.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Checkbox.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Div.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/EmbeddedObject.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/FileInput.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Frame.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Icon.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Image.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Input.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Label.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/LoadingBar.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Paragraph.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/ScrollViewer.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Span.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/SpriteIcon.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Table.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/TextArea.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/TextInput.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/Video.js"));
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/HTMLElement.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Button.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Canvas.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Checkbox.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Div.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/EmbeddedObject.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/FileInput.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Frame.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Icon.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Image.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Input.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Label.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/LoadingBar.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Paragraph.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/ScrollViewer.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Span.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/SpriteIcon.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Table.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/TextArea.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/TextInput.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/Video.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/HTMLElement.js"));
 	await Promise.all(loadingBlock);
 
 	
@@ -107,13 +107,13 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/socket.io/socket.io.js'));
-	loadingBlock.push(new AsyncImporter('scripts/threejs/three.js'));
+	loadingBlock.push(document.loadScript('scripts/socket.io/socket.io.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/three.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/threejs/OrbitControls.js'));
-	loadingBlock.push(new AsyncImporter('scripts/threejs/GLTFLoader.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/OrbitControls.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/GLTFLoader.js'));
 	await Promise.all(loadingBlock);
 
 
@@ -122,13 +122,13 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/classes/RendererCanvas.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/EditorCanvas.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/GltfLoader.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/GltfLoader.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/rendering-output.js'));
+	loadingBlock.push(document.loadScript('scripts/rendering-output.js'));
 	await Promise.all(loadingBlock);
 	
 	RenderingOutputPage.init();

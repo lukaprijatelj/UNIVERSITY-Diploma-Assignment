@@ -3,7 +3,7 @@
 	let loadingBlock;
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("scripts/constants.js"));
+	loadingBlock.push(document.loadScript("scripts/constants.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -12,7 +12,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-debug/namespace-debug.js"));;
+	loadingBlock.push(document.loadScript("externals/namespace-debug/namespace-debug.js"));;
 	await Promise.all(loadingBlock);
 
 
@@ -21,7 +21,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-core/namespace-core.js"));;
+	loadingBlock.push(document.loadScript("externals/namespace-core/namespace-core.js"));;
 	await Promise.all(loadingBlock);
 
 
@@ -30,7 +30,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-enums/namespace-enums.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-enums/namespace-enums.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -39,7 +39,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter("externals/namespace-html/namespace-html.js"));
+	loadingBlock.push(document.loadScript("externals/namespace-html/namespace-html.js"));
 	await Promise.all(loadingBlock);
 
 	
@@ -48,13 +48,13 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/socket.io/socket.io.js'));
-	loadingBlock.push(new AsyncImporter('scripts/threejs/three.js'));
+	loadingBlock.push(document.loadScript('scripts/socket.io/socket.io.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/three.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/threejs/OrbitControls.js'));
-	loadingBlock.push(new AsyncImporter('scripts/threejs/GLTFLoader.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/OrbitControls.js'));
+	loadingBlock.push(document.loadScript('scripts/threejs/GLTFLoader.js'));
 	await Promise.all(loadingBlock);
 
 
@@ -63,18 +63,18 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/classes/RendererCanvas.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/EditorCanvas.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/GltfLoader.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/Dropdown.js'));
-	loadingBlock.push(new AsyncImporter('scripts/classes/Section.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/GltfLoader.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/Dropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/Section.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();
-	loadingBlock.push(new AsyncImporter('scripts/enums.js'));
-	loadingBlock.push(new AsyncImporter('scripts/debug.js'));
-	loadingBlock.push(new AsyncImporter('scripts/api.js'));
-	loadingBlock.push(new AsyncImporter('scripts/admin.js'));
+	loadingBlock.push(document.loadScript('scripts/enums.js'));
+	loadingBlock.push(document.loadScript('scripts/debug.js'));
+	loadingBlock.push(document.loadScript('scripts/api.js'));
+	loadingBlock.push(document.loadScript('scripts/admin.js'));
 	await Promise.all(loadingBlock);
 	
 	AdminPage.init();
