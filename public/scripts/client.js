@@ -284,26 +284,19 @@ ClientPage.onGetLayout = function(data)
 
 
 	// -----------------------------
-	// draw layout
-	// -----------------------------
-
-	globals.cells = data.cells;
-	globals.rendererCanvas.createLayout(globals.cells);
-
-
-	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
+	globals.cells = new Array(data.cells.length);
 
-	for (var i=0; i<globals.cells.length; i++)
+	for (let i=0; i<data.cells.length; i++)
 	{
-		var current = globals.cells[i];
-
+		let current = data.cells[i];
 		ClientPage.tryUpdatingCell(current);
 
-		current.imageData = null;
+		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
+		globals.cells[i] = basicCell;
 	}
-	
+
 
 	// -----------------------------
 	// check if rendering service is running on server
@@ -334,17 +327,19 @@ ClientPage.openScene = async function()
 		 * gltf.asset; // Object
 		 */
 		var gltf = await ClientPage.startLoadingGltfModel();
-
-		await ClientPage._initScene();
-		ClientPage._initCamera();
-		ClientPage._initLights();
 		
-		ClientPage._initRenderer();
-
+		await ClientPage._initScene();
 		globals.scene.add(gltf.scene);
 		
-		await globals.renderer.prepareJsonData();
+		ClientPage._initCamera();
+		ClientPage._initLights();		
+		ClientPage._initRenderer();
 
+		globals.renderer.prepareJsonData();
+		globals.renderer.initScene();
+		globals.renderer.initCamera();
+		globals.renderer.initLights();
+		
 		let cells = await API.request('cells/getWaiting');
 		ClientPage.updateWaitingCells(cells);
 	}
@@ -411,12 +406,12 @@ ClientPage.updateWaitingCells = function(cells)
 
 	if (!cells)
 	{
-		new Exception.ValueUndefined();
+		new Exception.ValueUndefined('No waiting cells!');
 	}
 
 	if (!cells.length)
 	{
-		new Exception.ArrayEmpty();
+		new Exception.ArrayEmpty('No waiting cells!');
 	}
 
 	if (globals.lastRenderingTime > 0)
@@ -467,6 +462,7 @@ ClientPage.startRendering = function(cellsWaiting)
 	if (options.RENDERER_TYPE == enums.rendererType.RAY_TRACING)
 	{
 		// start rendering
-		globals.renderer.render(cellsWaiting);
+		globals.renderer.setWaitingCells(cellsWaiting);
+		globals.renderer.startRendering();
 	}
 };

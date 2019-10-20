@@ -16,25 +16,8 @@ function init(data)
 {
 	options = data.options;
 
-	worker = new RaytracingWebWorker();
-	worker.workerIndex = data.workerIndex;
-	worker.init(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
-}
-
-function initScene(data)
-{
-	worker.initScene(data.sceneJSON, data.cameraJSON);
-}
-
-function setCell(data)
-{
-	cell = data.cell;
-	worker.setCell(cell);
-}
-
-function startRendering(data)
-{
-	worker.render();
+	worker = new RaytracingWebWorker(data.threadIndex, options.MAX_RECURSION_DEPTH);
+	worker.initCanvas(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
 }
 
 
@@ -45,53 +28,66 @@ function startRendering(data)
  * @author zz95 / http://github.com/zz85
  * @author lukaprijatelj / http://github.com/lukaprijatelj 
  */
-var RaytracingWebWorker = function() 
+var RaytracingWebWorker = function(threadIndex, maxRecursionDepth) 
 {
 	console.log('[RaytracingWebWorker] Initializing worker');
 
 	/**
 	 * Number of times ray bounces from objects. Each time bounce is detected new ray is cast.
 	 */
-	this.maxRecursionDepth = 2;
+	this.maxRecursionDepth = -1;
 
-	this.canvasWidth;
-	this.canvasHeight;
-	this.canvasWidthHalf;
-	this.canvasHeightHalf;
+	this.canvasWidth = -1;
+	this.canvasHeight = -1;
+	this.canvasWidthHalf = -1;
+	this.canvasHeightHalf = -1;
 
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
-	this.antialiasingFactor = 1;
-	this.workerIndex = -1;
+	this.antialiasingFactor = -1;
+
+	/**
+	 * Index of the thread that this web worker is on.
+	 */
+	this.threadIndex = -1;
 
 	/**
 	 * Cell that is currently rendering.
 	 */
 	this.cell = null;
 
-	this.scene;
+	this.scene = null;
 
-	this.camera;
-	this.cameraPosition = new THREE.Vector3();
-	this.cameraNormalMatrix = new THREE.Matrix3();
+	this.camera = null;
+	this.cameraPosition = null;
+	this.cameraNormalMatrix = null;
 	this.perspective;
-	this.origin = new THREE.Vector3();
-	this.direction = new THREE.Vector3();
+
+	this.origin = null;
+	this.direction = null;
 
 	/**
 	 * Ambient light is here in order to render shadowed area more beautifully.
 	 */
 	this.ambientLight = null;
-	this.lights = new Array();
+	this.lights = null;
 
-	this.raycaster = new THREE.Raycaster(this.origin, this.direction);
-	this.ray = this.raycaster.ray;
-	this.raycasterLight = new THREE.Raycaster(undefined, undefined);
-	this.rayLight = this.raycasterLight.ray;
+	this.raycaster = null;
+	this.ray = null;
+	this.raycasterLight = null;
+	this.rayLight = null;
 		
-	this.objects;
-	this.cache = new Object();	
+	this.objects = null;
+	this.cache = null;	
+
+	this.initScene = RaytracingWebWorker.initScene.bind(this);
+	this.initCamera = RaytracingWebWorker.initCamera.bind(this);
+	this.initLights = RaytracingWebWorker.initLights.bind(this);
+	this.setCell = RaytracingWebWorker.setCell.bind(this);
+	this.startRendering = RaytracingWebWorker.startRendering.bind(this);
+
+	this._init(threadIndex, maxRecursionDepth);
 };
 
 Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
@@ -100,7 +96,7 @@ Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 /**
  * Sets cell that needs to be rendered.
  */
-RaytracingWebWorker.prototype.setCell = function(cell)
+RaytracingWebWorker.setCell = function(cell)
 {
 	let _this = this;
 	_this.cell = cell;
@@ -108,8 +104,42 @@ RaytracingWebWorker.prototype.setCell = function(cell)
 
 /**
  * Initializes object.
+ * @private
  */
-RaytracingWebWorker.prototype.init = function(width, height, antialiasingFactor)
+RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
+{
+	let _this = this;
+
+	if (typeof threadIndex != 'undefined')
+	{
+		_this.threadIndex = threadIndex;
+	}
+	
+	if (typeof maxRecursionDepth != 'undefined')
+	{
+		_this.maxRecursionDepth = maxRecursionDepth;
+	}
+
+	_this.cameraPosition = new THREE.Vector3();
+	_this.cameraNormalMatrix = new THREE.Matrix3();
+
+	_this.origin = new THREE.Vector3();
+	_this.direction = new THREE.Vector3();
+
+	_this.lights = new Array();
+
+	_this.raycaster = new THREE.Raycaster(_this.origin, _this.direction);
+	_this.ray = _this.raycaster.ray;
+	_this.raycasterLight = new THREE.Raycaster(undefined, undefined);
+	_this.rayLight = _this.raycasterLight.ray;
+	
+	_this.cache = new Object();	
+};
+
+/**
+ * Initializes canvas.
+ */
+RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingFactor)
 {
 	let _this = this;
 
@@ -128,7 +158,7 @@ RaytracingWebWorker.prototype.init = function(width, height, antialiasingFactor)
 /**
  * Initializes scene.
  */
-RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
+RaytracingWebWorker.initScene = function(sceneData)
 {
 	let _this = this;
 
@@ -136,8 +166,6 @@ RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
 
 	let loader = new THREE.ObjectLoader();
 	_this.scene = loader.parse(sceneData, images);
-	_this.camera = loader.parse(cameraData, images);
-
 
 	// update scene graph
 
@@ -146,35 +174,12 @@ RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
 		_this.scene.updateMatrixWorld();
 	} 
 
-	// update camera matrices
-
-	if (_this.camera.parent === null)
-	{
-		_this.camera.updateMatrixWorld();
-	}
-
-	_this.cameraPosition.setFromMatrixPosition(_this.camera.matrixWorld);
-	_this.cameraNormalMatrix.getNormalMatrix(_this.camera.matrixWorld);
-
-	_this.perspective = 0.5 / Math.tan(THREE.Math.degToRad(_this.camera.fov * 0.5)) * _this.canvasHeight;
 	_this.objects = _this.scene.children;
 
-	// collect lights and set up object matrices
-
-	_this.lights = new Array();
+	// set up object matrices
 
 	_this.scene.traverse(function(object) 
 	{
-		if (object instanceof THREE.PointLight || object instanceof THREE.SpotLight || object instanceof THREE.DirectionalLight)
-		{
-			_this.lights.push(object);
-		}
-
-		if (object instanceof THREE.AmbientLight)
-		{
-			_this.ambientLight = object;
-		}
-
 		if (_this.cache[object.id] === undefined) 
 		{
 			_this.cache[object.id] = {
@@ -191,10 +196,60 @@ RaytracingWebWorker.prototype.initScene = function(sceneData, cameraData)
 };
 
 /**
+ * Initializes camera.
+ */
+RaytracingWebWorker.initCamera = function(cameraData)
+{
+	let _this = this;
+
+	let images = new Object();
+
+	let loader = new THREE.ObjectLoader();
+	_this.camera = loader.parse(cameraData, images);
+
+	// update camera matrices
+
+	if (_this.camera.parent === null)
+	{
+		_this.camera.updateMatrixWorld();
+	}
+
+	_this.cameraPosition.setFromMatrixPosition(_this.camera.matrixWorld);
+	_this.cameraNormalMatrix.getNormalMatrix(_this.camera.matrixWorld);
+
+	_this.perspective = 0.5 / Math.tan(THREE.Math.degToRad(_this.camera.fov * 0.5)) * _this.canvasHeight;
+};
+
+/**
+ * Initializes lights.
+ */
+RaytracingWebWorker.initLights = function()
+{
+	let _this = this;
+
+	// collect lights and set up object matrices
+
+	_this.lights = new Array();
+
+	_this.scene.traverse(function(object) 
+	{
+		if (object instanceof THREE.PointLight || object instanceof THREE.SpotLight || object instanceof THREE.DirectionalLight)
+		{
+			_this.lights.push(object);
+		}
+
+		if (object instanceof THREE.AmbientLight)
+		{
+			_this.ambientLight = object;
+		}
+	});
+};
+
+/**
  * Cell is done rendering.
  * @private
  */
-RaytracingWebWorker.prototype._onCellRendered = function(workerIndex, buffer, cell, timeMs)
+RaytracingWebWorker.prototype._onCellRendered = function(threadIndex, buffer, cell, timeMs)
 {
 	
 };
@@ -926,7 +981,7 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 	let data = 
 	{
-		workerIndex: _this.workerIndex,
+		threadIndex: _this.threadIndex,
 		buffer: image.data.buffer,
 		cell: _this.cell,
 		timeMs: timeElapsed
@@ -937,7 +992,7 @@ RaytracingWebWorker.prototype.renderCell = function()
 /**
  * Starts rendering.
  */
-RaytracingWebWorker.prototype.render = function() 
+RaytracingWebWorker.startRendering = function() 
 {
 	let _this = this;	
 

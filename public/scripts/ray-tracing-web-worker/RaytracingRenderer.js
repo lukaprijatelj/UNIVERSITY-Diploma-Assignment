@@ -15,27 +15,25 @@ var RaytracingRenderer = function()
 	/**
 	 * Cells that will be rendered.
 	 */
-	this.cellsWaiting = new Array();
+	this.cellsWaiting = null;
 	
-	/**
-	 * Cells that will be rendered.
-	 */
-	this.cellsRendering = new Array();
-
 	/**
 	 * Cells that are done rendering.
 	 */
-	this.cellsDone = new Array();
+	this.cellsDone = null;
 
-	this.threads = null;
-
-	this.scene = null;
-	this.camera = null;
+	this.threads = null;	
 
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
+	this.scene = null;
 	this.sceneJSON = null;
+
+	/**
+	 * Additional properties that were not serialize automatically
+	 */
+	this.camera = null;
 	this.cameraJSON = null;
 
 	/**
@@ -87,30 +85,32 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell, timeMs)
+RaytracingRenderer.prototype.onCellRendered = function(threadIndex, buffer, basicCell, timeMs)
 {
 	let _this = this;
 
 	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
 
-	let webWorker = _this.threads[workerIndex];
-	webWorker.isRendering = false;
-	webWorker.cell = null;
+	let thread = _this.threads[threadIndex];
+	thread.isRendering = false;
 	
+	// remove rendering flag
+	globals.rendererCanvas.hideThreadCell(thread.cell);
+
+
 	// -----------------------------
-	// convert buffer data into png image data
+	// prepare SharedCell for sending to server
 	// -----------------------------
 
-	cell.imageData = HTMLImageElement.toPNGString(buffer, cell.width, cell.height);
+	let sharedCell = new namespace.database.SharedCell(basicCell.startX, basicCell.startY, basicCell.width, basicCell.height);
+
+	// convert buffer data into PNG image data
+	sharedCell.imageData = HTMLImageElement.toPNGString(buffer, basicCell.width, basicCell.height);
 
 	// update image of the cell on the canvas
-	ClientPage.tryUpdatingCell(cell);
+	ClientPage.tryUpdatingCell(sharedCell);
 
-	// remove rendering flag
-	globals.rendererCanvas.unsetWorkerCell(cell);
-
-	//_this.cellsRendering = Array.remove(_this.cellsRendering, cell);
-	_this.cellsDone.push(cell);
+	_this.cellsDone.push(sharedCell);
 
 	
 	// -----------------------------
@@ -120,17 +120,14 @@ RaytracingRenderer.prototype.onCellRendered = function(workerIndex, buffer, cell
 	if (Array.isEmpty(_this.cellsWaiting) == false)
 	{
 		// work is not yet done
-		_this._runWorker(webWorker);
+		_this._runThread(thread);
 
 		return;
 	}
 	
 	if (_this.areWorkersDone())
-	//if (Array.isEmpty(_this.cellsRendering))
 	{
 		ClientPage.onRendererDone(_this.cellsDone);	
-			
-		_this.cellsDone = new Array();
 	}
 };
 
@@ -141,26 +138,33 @@ RaytracingRenderer.prototype.setWorkers = function()
 {
 	let _this = this;
 
-	_this.threads = new StaticArray(options.NUM_OF_WORKERS);
+	if (options.MAX_THREADS < 1)
+	{
+		new Exception.ValueInvalid('Max threads option must be larger than 0!');
+	}
+
+	_this.threads = new StaticArray(options.MAX_THREADS);
 
 	for (let i=0; i<_this.threads.length; i++)
 	{
 		let data = 
 		{
-			workerIndex: i,
+			threadIndex: i,
 			canvasWidth: options.CANVAS_WIDTH,
 			canvasHeight: options.CANVAS_HEIGHT,
 			options: options		
 		};
 
 		let thread = new namespace.core.Thread('./scripts/ray-tracing-web-worker/RaytracingWebWorker.js');
-		thread.isRendering = false;
-		thread.workerIndex = i;
-		thread.workerFunction('init', data);	
-
-		globals.rendererCanvas.addWorkerCell(i);
-
 		_this.threads[i] = thread;
+
+		thread.index = i;
+		thread.isRendering = false;		
+
+		thread.cell = new namespace.database.ThreadCell(thread.index);
+		globals.rendererCanvas.addThreadCell(i);
+
+		thread.workerFunction('init', data);			
 	}
 };
 
@@ -171,37 +175,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 RaytracingRenderer.renderCell = function(data)
 {
 	let _this = this;
-	_this.onCellRendered(data.workerIndex, data.buffer, data.cell, data.timeMs);
-};
-
-/**
- * Stops rendering process.
- */
-RaytracingRenderer.prototype.stopRendering = function()
-{
-	let _this = this;	
-
-	for (let i=0; i<_this.cellsWaiting.length; i++)
-	{
-		let current = _this.cellsWaiting[i];
-
-		globals.rendererCanvas.removeRenderCell(current);
-	}
-
-	for (let i=0; i<_this.threads.length; i++)
-	{
-		let current = _this.threads[i];		
-		
-		current.isRendering = false;
-
-		if (current.cell)
-		{
-			globals.rendererCanvas.removeRenderCell(current.cell);
-		}
-
-		current.workerFunction('stopRendering');
-		current.terminate();
-	};
+	_this.onCellRendered(data.threadIndex, data.buffer, data.cell, data.timeMs);
 };
 
 /**
@@ -214,87 +188,200 @@ RaytracingRenderer.prototype.setPixelRatio = Function.empty;
  */
 RaytracingRenderer.prototype.prepareJsonData = function() 
 {
-	return new Promise((resolve, reject) =>
-	{	
-		let _this = this;
+	let _this = this;
 
-		// update scene graph
+	// update scene graph
 
-		if (_this.scene.autoUpdate === true) 
-		{
-			_this.scene.updateMatrixWorld();
-		}
+	if (_this.scene.autoUpdate === true) 
+	{
+		_this.scene.updateMatrixWorld();
+	}
 
-		// update camera matrices
+	// update camera matrices
 
-		if (_this.camera.parent === null) 
-		{
-			_this.camera.updateMatrixWorld();
-		}
+	if (_this.camera.parent === null) 
+	{
+		_this.camera.updateMatrixWorld();
+	}
 
-		_this.sceneJSON = _this.scene.toJSON();
-		_this.cameraJSON = _this.camera.toJSON();	
+	_this.sceneJSON = _this.scene.toJSON();
+	_this.cameraJSON = _this.camera.toJSON();			
+};
 
-		let options = 
-		{
-			sceneJSON: _this.sceneJSON,
-			cameraJSON: _this.cameraJSON
-		};
+/**
+ * Initializes scene.
+ */
+RaytracingRenderer.prototype.initScene = function()
+{
+	let _this = this;
 
-		for (let i=0; i<_this.threads.length; i++)
-		{
-			let thread = _this.threads[i];
-			
-			thread.workerFunction('initScene', options);		
-		}	
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let thread = _this.threads[i];
+		
+		thread.workerFunction('worker.initScene', _this.sceneJSON);		
+	}	
+};
 
-		resolve();
-	});				
+/**
+ * Initializes scene.
+ */
+RaytracingRenderer.prototype.initCamera = function()
+{
+	let _this = this;
+
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let thread = _this.threads[i];
+		
+		thread.workerFunction('worker.initCamera', _this.cameraJSON);		
+	}	
+};
+
+/**
+ * Initializes scene.
+ */
+RaytracingRenderer.prototype.initLights = function()
+{
+	let _this = this;
+
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let thread = _this.threads[i];
+		
+		thread.workerFunction('worker.initLights');
+	}	
 };
 
 /**
  * Starts rendering.
  */
-RaytracingRenderer.prototype.render = function(cellsWaiting) 
+RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting) 
 {
 	let _this = this;
 
+	if (!cellsWaiting)
+	{
+		new Exception.ValueUndefined('Waiting cells must be defined!');
+	}
+
+	if (Array.isEmpty(cellsWaiting))
+	{
+		new Exception.ArrayEmpty('There is cells waiting to be rendered!');
+	}
+
 	_this.cellsWaiting = cellsWaiting;	
+	_this.cellsDone = new Array();
 
 	for (let i=0; i<_this.cellsWaiting.length; i++)
 	{
 		let current = _this.cellsWaiting[i];
 
-		globals.rendererCanvas.addRenderCell(current);
+		globals.rendererCanvas.addWaitingCell(current);
+	}
+};
+
+/**
+ * Stops rendering process.
+ */
+RaytracingRenderer.prototype.clearWaitingCells = function()
+{
+	let _this = this;	
+
+	if (!_this.cellsWaiting)
+	{
+		return;
+	}
+
+	for (let i=0; i<_this.cellsWaiting.length; i++)
+	{
+		let current = _this.cellsWaiting[i];
+
+		globals.rendererCanvas.removeWaitingCell(current);
+	}
+
+	_this.cellsWaiting = null;
+};
+
+/**
+ * Starts rendering.
+ */
+RaytracingRenderer.prototype.startRendering = function() 
+{
+	let _this = this;
+
+	if (!_this.threads)
+	{
+		new Exception.ValueUndefined('There is no threads to run!');
+	}
+
+	if (Array.isEmpty(_this.threads))
+	{
+		new Exception.ArrayEmpty('There is no threads to run!');
 	}
 
 	for (let i=0; i<_this.threads.length; i++)
 	{
 		let current = _this.threads[i];
 	
-		_this._runWorker(current);
+		_this._runThread(current);
 	}	
+};
+
+/**
+ * Stops rendering process.
+ */
+RaytracingRenderer.prototype.stopRendering = function()
+{
+	let _this = this;	
+
+	_this.clearWaitingCells();
+
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let current = _this.threads[i];		
+		
+		current.isRendering = false;
+
+		if (current.cell)
+		{
+			globals.rendererCanvas.hideThreadCell(current.cell);
+		}
+
+		current.workerFunction('stopRendering');
+		current.terminate();
+	};
 };
 
 /**
  * Starts rendering.
  * @private
  */
-RaytracingRenderer.prototype._runWorker = function(thread)
+RaytracingRenderer.prototype._runThread = function(thread)
 {
 	let _this = this;
 
-	let threadCell = _this.cellsWaiting.shift();
+	if (!_this.cellsWaiting)
+	{
+		new Exception.ValueUndefined('Waiting cells must be defined!');
+	}
 
-	//_this.cellsRendering.push(threadCell);
+	if (Array.isEmpty(_this.cellsWaiting))
+	{
+		new Exception.ArrayEmpty('There is no cells waiting to be rendered!');
+	}
 
-	threadCell.workerIndex = thread.workerIndex;
-	thread.cell = threadCell;
-	globals.rendererCanvas.setWorkerCell(threadCell);
+	let basicCell = _this.cellsWaiting.shift();
+	globals.rendererCanvas.removeWaitingCell(basicCell);
 
-	thread.workerFunction('setCell', { cell: threadCell });
+	let threadCell = thread.cell;
+	threadCell.startX = basicCell.startX;
+	threadCell.startY = basicCell.startY;
+	threadCell.width = basicCell.width;
+	threadCell.height = basicCell.height;
+	thread.workerFunction('worker.setCell', threadCell);
+	globals.rendererCanvas.showThreadCell(threadCell);	
 	
 	thread.isRendering = true;
-
-	thread.workerFunction('startRendering');
+	thread.workerFunction('worker.startRendering');
 };

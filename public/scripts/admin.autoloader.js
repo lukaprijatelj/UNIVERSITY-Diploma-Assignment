@@ -41,6 +41,17 @@
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("externals/namespace-html/namespace-html.js"));
 	await Promise.all(loadingBlock);
+	
+
+	// -----------------------------
+	// namespace-database
+	// -----------------------------
+
+	loadingBlock = new Array();
+	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
+	loadingBlock.push(document.loadScript('scripts/database/ThreadCell.js'));
+	loadingBlock.push(document.loadScript('scripts/database/SharedCell.js'));
+	await Promise.all(loadingBlock);
 
 	
 	// -----------------------------

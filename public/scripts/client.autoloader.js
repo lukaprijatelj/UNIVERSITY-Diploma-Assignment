@@ -33,6 +33,17 @@
 	loadingBlock.push(document.loadScript("externals/namespace-html/namespace-html.js"));
 	await Promise.all(loadingBlock);
 
+
+	// -----------------------------
+	// namespace-database
+	// -----------------------------
+
+	loadingBlock = new Array();
+	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
+	loadingBlock.push(document.loadScript('scripts/database/ThreadCell.js'));
+	loadingBlock.push(document.loadScript('scripts/database/SharedCell.js'));
+	await Promise.all(loadingBlock);
+
 	
 	// -----------------------------
 	// ThreeJS
@@ -57,8 +68,6 @@
 	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/GltfLoader.js'));
-	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
-	loadingBlock.push(document.loadScript('scripts/database/ThreadCell.js'));
 	loadingBlock.push(document.loadScript('scripts/enums.js'));
 	loadingBlock.push(document.loadScript('scripts/api.js'));
 	await Promise.all(loadingBlock);

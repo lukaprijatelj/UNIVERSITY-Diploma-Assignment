@@ -47,14 +47,6 @@ RendererCanvas.prototype.resize = function()
 };
 
 /**
- * Creates cells layout.
- */
-RendererCanvas.prototype.createLayout = function(cells)
-{
-	var _this = this;
-};
-
-/**
  * Updates cell image.
  */
 RendererCanvas.prototype.updateCellImage = function(cell)
@@ -63,7 +55,7 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 
 	if (!cell || !cell.imageData)
 	{
-		new Exception.ValueUndefined();
+		new Exception.ValueUndefined('Image to be updated on canvas is undefined!');
 	}
 	
 	var img = new Image();
@@ -90,7 +82,7 @@ RendererCanvas._onImageLoaded = function(img, cell)
 /**
  * Adds cell to flag-canvas (usually cell that are waiting to be rendered).
  */
-RendererCanvas.prototype.addRenderCell = function(cell)
+RendererCanvas.prototype.addWaitingCell = function(cell)
 {
 	var _this = this;	
 
@@ -114,108 +106,12 @@ RendererCanvas.prototype.addRenderCell = function(cell)
 	div.style.borderWidth = borderWidth + unit;
 
 	flagCanvas.appendChild(div);
-};
-
-/**
- * Adds cell to flag-canvas (usually cell that are waiting to be rendered).
- */
-RendererCanvas.prototype.addWorkerCell = function(cell)
-{
-	var _this = this;	
-
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = new namespace.html.Div();
-	div.id = cell._id;
-	div.addClass('flag-cell');
-
-	var borderWidth = 0.3;
-	var posX = cell.startX + borderWidth;
-	var posY = cell.startY + borderWidth;
-	var width = cell.width - borderWidth * 2;
-	var height = cell.height - borderWidth * 2;
-
-	let unit = 'px';
-	div.style.width = width + unit;
-	div.style.height = height + unit;
-	div.style.left = posX + unit;
-	div.style.top = posY + unit;
-	div.style.borderWidth = borderWidth + unit;
-
-	flagCanvas.appendChild(div);
-};
-
-/**
- * Flags area where this cell is currently rendering.
- */
-RendererCanvas.prototype.addWorkerCell = function(workerIndex)
-{
-	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = new namespace.html.Div();
-	div.id = 'cell-thread-' + workerIndex;
-	div.hide();
-	div.addClass('flag-cell');
-	div.addClass('active');
-		
-	flagCanvas.appendChild(div);
-};
-
-/**
- * Flags area where this cell is currently rendering.
- */
-RendererCanvas.prototype.setWorkerCell = function(cell)
-{
-	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = flagCanvas.querySelector('#cell-thread-' + cell.workerIndex);
-	div.show();
-	
-	if (!div)
-	{
-		new Warning.Other('Thread cell was not found!');
-		return;
-	}
-
-	var borderWidth = 2;
-	var posX = cell.startX - borderWidth;
-	var posY = cell.startY - borderWidth;
-	var width = cell.width;
-	var height = cell.height;
-
-	let unit = 'px';
-	div.style.width = width + unit;
-	div.style.height = height + unit;
-	div.style.left = posX + unit;
-	div.style.top = posY + unit;
-	div.style.borderWidth = borderWidth + unit;
-};
-
-/**
- * Flags area where this cell is currently rendering.
- */
-RendererCanvas.prototype.unsetWorkerCell = function(cell)
-{
-	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = flagCanvas.querySelector('#cell-thread-' + cell.workerIndex);
-	
-	if (!div)
-	{
-		new Warning.Other('Thread cell was not found!');
-		return;
-	}
-
-	div.hide();
 };
 
 /**
  * Removes cell from flag-canvas.
  */
-RendererCanvas.prototype.removeRenderCell = function(cell)
+RendererCanvas.prototype.removeWaitingCell = function(cell)
 {
 	var _this = this;
 	let flagCanvas = _this.flagCanvasV;
@@ -224,9 +120,84 @@ RendererCanvas.prototype.removeRenderCell = function(cell)
 
 	if (!div)
 	{
-		new Warning.Other('Rendering cell was not found!');
+		new Warning.Other('Waiting cell was not found!');
 		return;
 	}
 
 	div.remove();
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.addThreadCell = function(threadIndex)
+{
+	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = new namespace.html.Div();
+	div.id = 'thread-cell-' + threadIndex;
+	div.hide();
+	div.addClass('thread-cell');
+
+	let label = new namespace.html.Div();
+	label.addClass('label');
+	div.appendChild(label);
+		
+	flagCanvas.appendChild(div);
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.showThreadCell = function(cell)
+{
+	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = flagCanvas.querySelector('#thread-cell-' + cell.threadIndex);
+	div.show();
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	let label = div.children[0];
+
+	var borderWidth = 2;
+	var posX = cell.startX - borderWidth;
+	var posY = cell.startY - borderWidth;
+	var width = cell.width;
+	var height = cell.height;
+	let unit = 'px';
+
+	label.innerHTML = cell.threadIndex;
+	label.style.marginTop = height + unit; 
+
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+	div.style.left = posX + unit;
+	div.style.top = posY + unit;
+	div.style.borderWidth = borderWidth + unit;
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.hideThreadCell = function(cell)
+{
+	var _this = this;
+	let flagCanvas = _this.flagCanvasV;
+	
+	let div = flagCanvas.querySelector('#thread-cell-' + cell.threadIndex);
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	div.hide();
 };

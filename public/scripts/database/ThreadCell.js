@@ -20,21 +20,20 @@ if (typeof _this.namespace.database == 'undefined')
 
 namespace.database.ThreadCell = (() =>
 {
-	let ThreadCell = function(threadIndex, startX, startY, width, height)
+	let ThreadCell = function(threadIndex)
 	{
-		var basicCell = new namespace.database.BasicCell(startX, startY, width, height);
+		var basicCell = new namespace.database.BasicCell();
 		Object.cloneData(this, basicCell);
-		
 		Object.addMetadata(this, 'type', 'namespace.database.ThreadCell');
 
-		this._id = ThreadCell.generateId(threadIndex, startX, startY);
+		this._id = ThreadCell.generateId(threadIndex);
 
 		this.threadIndex = threadIndex;
 	};
 
-	ThreadCell.generateId = function(threadIndex, startX, startY)
+	ThreadCell.generateId = function(threadIndex)
 	{
-		return 'thread-' + threadIndex + '-cell-' + startX + '-' + startY;
+		return 'thread-' + threadIndex + '-cell';
 	};
 
 	return ThreadCell;

@@ -99,7 +99,6 @@ RenderingOutputPage.onGetLayout = function(data)
 	// -----------------------------
 
 	globals.cells = data.cells;
-	RenderingOutputPage.rendererCanvas.createLayout(globals.cells);
 
 
 	// -----------------------------

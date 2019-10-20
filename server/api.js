@@ -40,7 +40,7 @@ var API =
 	 */
 	blockConnection: function(socket)
 	{
-		console.warn('Blocking connection!');
+		new Warning.Other('Blocking connection!');
 		socket.disconnect();
 	},
 	
@@ -63,7 +63,7 @@ var API =
 
 		if (index == -1)
 		{
-			console.warn('All indexes are already used!');
+			new Warning.Other('All indexes are already used!');
 
 			API.blockConnection(socket);
 			return;
@@ -211,7 +211,6 @@ var API =
 	onListScenes: function(request, response)
 	{
 		var results = fs.readdirSync('./public/scenes');
-
 		response.send(results);
 	},
 
@@ -229,7 +228,7 @@ var API =
 
 		var socket = this;
 
-		DATABASE.updateCellsProgress(data.cells, data.progress, data.imageData);		
+		DATABASE.updateCellsProgress(data.cells, data.progress);		
 
 		if (data.progress == 100)
 		{

@@ -229,8 +229,9 @@ var DATABASE =
 
 			current.socketIoClient = socketIoClient;
 
-			var basicCurrent = Object.shrink(new namespace.database.BasicCell(), current);
+			let basicCurrent = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
 			freeCells.push(basicCurrent);
+
 			cellsFound++;
 		}
 
@@ -251,7 +252,7 @@ var DATABASE =
 	{
 		var table = DATABASE.tables.renderingCells;
 
-		table.rows = [];
+		table.rows = new Array();
 		table.save();
 	},
 

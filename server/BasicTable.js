@@ -22,7 +22,7 @@ function BasicTable(root, name)
 	 * Array of rows.
 	 * @type {Array<Object>}
 	 */
-	this.rows = [];
+	this.rows = new Array();
 
 	/**
 	 * Number of requests to save file.

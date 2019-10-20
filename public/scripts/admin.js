@@ -703,6 +703,31 @@ AdminPage._onOptionsButtonClick = async function(button)
 
 
 	// -----------------------------
+	// threads options
+	// -----------------------------
+
+	let threadsSection = new namespace.html.Section();
+	wrapper.appendChild(threadsSection);
+
+	let threadsLabel = new namespace.html.Label();
+	threadsLabel.innerHTML = 'THREADS (max number)';
+	threadsSection.appendChild(threadsLabel);
+
+	threadsSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let threadsInput = new namespace.html.NumberInput();
+	threadsInput.id = 'threads-max-number-input';
+	threadsInput.value = options.MAX_THREADS;
+	threadsInput.onchange = () =>
+	{
+		options.MAX_THREADS = Number(threadsInput.value);
+	};
+	threadsSection.appendChild(threadsInput);
+
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+	// -----------------------------
 	// block options
 	// -----------------------------
 
@@ -738,6 +763,35 @@ AdminPage._onOptionsButtonClick = async function(button)
 	};
 	blockFlex.appendChild(blockHeightInput);
 
+	wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+	// -----------------------------
+	// blocks options
+	// -----------------------------
+
+	let numBlocksSection = new namespace.html.Section();
+	wrapper.appendChild(numBlocksSection);
+
+	let numBlockLabel = new namespace.html.Label();
+	numBlockLabel.innerHTML = 'NUMBER OF BLOCKS';
+	numBlocksSection.appendChild(numBlockLabel);
+
+	numBlocksSection.appendChild('<divider-x-small></divider-x-small>');
+
+	let numBlocksInput = new namespace.html.NumberInput();
+	numBlocksInput.id = 'antialiasing-factor-input';
+	numBlocksInput.value = options.NUM_OF_BLOCKS_IN_CHUNK;
+	numBlocksInput.onchange = () =>
+	{
+		options.NUM_OF_BLOCKS_IN_CHUNK = Number(numBlocksInput.value);
+	};
+	numBlocksSection.appendChild(numBlocksInput);	
+
+
+	// -----------------------------
+	// set position of the dropdown
+	// -----------------------------
 
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
