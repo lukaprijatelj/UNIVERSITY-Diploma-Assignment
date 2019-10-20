@@ -409,57 +409,56 @@ AdminPage._onClientsUpdated = function(data)
  */
 AdminPage._updateRenderingState = function()
 {
-	var startRenderingButtonV = document.getElementById('render-button');
+	let startRenderingButtonV = document.getElementById('start-rendering-button');
+	let stopRenderingButtonV = document.getElementById('stop-rendering-button');
+	let pauseRenderingButtonV = document.getElementById('pause-rendering-button');
+	var resumeRenderingButtonV = document.getElementById('resume-rendering-button');
+	let interfaceV = document.querySelector('interface');
+	let canvasV = document.getElementById('editor-canvas');
+	let sceneButton = document.getElementById('scene-button');
+	let optionsButton = document.getElementById('options-button');
+	let newRendererButton = document.getElementById('new-renderer-button');
 
 	if (globals.renderingServiceState == 'running')
 	{
-		var interfaceV = document.querySelector('interface');
 		interfaceV.addClass('rendering');
-
-		var canvasV = document.getElementById('editor-canvas');
 		canvasV.disable();
-
-		let sceneButton = document.getElementById('scene-button');
 		sceneButton.disable();
-
-		let optionsButton = document.getElementById('options-button');
 		optionsButton.disable();
 
 		//let outputButton = document.getElementById('output-button');
 		//outputButton.show();
-
-		let newRendererButton = document.getElementById('new-renderer-button');
-		newRendererButton.show();
 			
-		startRenderingButtonV.addClass('selected');
-		startRenderingButtonV.innerHTML = 'DISABLE RENDERING';
+		startRenderingButtonV.hide();
+		resumeRenderingButtonV.hide();
 
-		startRenderingButtonV.enable();
+		newRendererButton.show();
+		stopRenderingButtonV.show();
+		pauseRenderingButtonV.show();
 	}
-	else if (globals.renderingServiceState == 'idle')
+	else if (globals.renderingServiceState == 'pause')
+	{		
+		resumeRenderingButtonV.show();
+		stopRenderingButtonV.show();
+		pauseRenderingButtonV.hide();
+		startRenderingButtonV.hide();
+	}
+	else
 	{
-		var interfaceV = document.querySelector('interface');
 		interfaceV.removeClass('rendering');
-
-		var canvasV = document.getElementById('editor-canvas');
 		canvasV.enable();
-
-		let sceneButton = document.getElementById('scene-button');
 		sceneButton.enable();
-
-		let optionsButton = document.getElementById('options-button');
 		optionsButton.enable();
 
 		//let outputButton = document.getElementById('output-button');
 		//outputButton.hide();
 
-		let newRendererButton = document.getElementById('new-renderer-button');
 		newRendererButton.hide();
 
-		startRenderingButtonV.removeClass('selected');
-		startRenderingButtonV.innerHTML = 'ENABLE RENDERING';
-
-		startRenderingButtonV.enable();
+		startRenderingButtonV.show();
+		stopRenderingButtonV.hide();
+		pauseRenderingButtonV.hide();
+		resumeRenderingButtonV.hide();
 	}
 };
 
@@ -879,18 +878,31 @@ AdminPage.hideLastDropdown = function()
  * Sends request to recalculate grid layout.
  * @private
  */
-AdminPage._onStartStopRenderingClick = async function()
+AdminPage._onStartStopRenderingClick = async function(type)
 {
-	var startRenderingButtonV = document.getElementById('render-button');
+	var stopRenderingButtonV = document.getElementById('stop-rendering-button');
+	var pauseRenderingButtonV = document.getElementById('pause-rendering-button');
+	var startRenderingButtonV = document.getElementById('start-rendering-button');
+	var resumeRenderingButtonV = document.getElementById('resume-rendering-button');
+	
 	startRenderingButtonV.disable();
+	pauseRenderingButtonV.disable();
+	stopRenderingButtonV.disable();
+	resumeRenderingButtonV.disable();
 
-	var data = new Object();
+	let data;
 
-	if (startRenderingButtonV.hasClass('selected'))
+	if (type == 'stop')
 	{
-		await API.request('rendering/stop', data);
-
-		globals.renderingServiceState = 'idle';
+		data = await API.request('rendering/stop');	
+	}
+	else if (type == 'pause')
+	{
+		data = await API.request('rendering/pause');
+	}
+	else if (type == 'resume')
+	{
+		data = await API.request('rendering/resume');	
 	}
 	else
 	{
@@ -902,12 +914,17 @@ AdminPage._onStartStopRenderingClick = async function()
 			options.LIGHTS.push(globals.lights[i].toJSON());
 		}
 		
-		data.options = options;
+		await API.request('rendering/setOptions', options);
 
-		await API.request('rendering/start', data);
-
-		globals.renderingServiceState = 'running';		
+		data = await API.request('rendering/start');				
 	}
+
+	globals.renderingServiceState = data;
+	
+	startRenderingButtonV.enable();
+	pauseRenderingButtonV.enable();
+	stopRenderingButtonV.enable();
+	resumeRenderingButtonV.enable();
 
 	AdminPage._updateRenderingState();
 };

@@ -86,8 +86,10 @@ var API =
 			socket.on(API.baseUrl + '/admin/getRenderingServiceState', API.onAdminCheckRendering); 
 
 			// rendering specific listeners
+			socket.on(API.baseUrl + '/rendering/setOptions', API.onSetOptions);	
 			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
 			socket.on(API.baseUrl + '/rendering/pause', API.onPauseRendering);	
+			socket.on(API.baseUrl + '/rendering/resume', API.onResumeRendering);				
 			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
 		}
 		
@@ -270,9 +272,9 @@ var API =
 	},
 
 	/**
-	 * Recalculates layout cells.
+	 * Sets rendering options.
 	 */
-	onStartRendering: function(data, callback)
+	onSetOptions: function(data, callback)
 	{
 		if (!callback)
 		{
@@ -282,7 +284,7 @@ var API =
 		var socket = this;
 
 		// update rendering options
-		options = data.options;
+		options = data;
 		
 
 		// -----------------------------
@@ -315,24 +317,36 @@ var API =
 			startY += options.BLOCK_HEIGHT;
 		}
 
-		API.renderingServiceState = 'running';
-
-
 		callback();
-
-
-		// -----------------------------
-		// notifies that server started rendering service (clients can now start or continue rendering)
-		// -----------------------------
-
-		var startData = 
-		{
-			options: options
-		};
-		socket.broadcast.emit(API.baseUrl + '/rendering/start', startData);
 	},
 
-	onPauseRendering: function()
+	/**
+	 * Recalculates layout cells.
+	 */
+	onStartRendering: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+
+		API.renderingServiceState = 'running';
+	
+		// -----------------------------
+		// notifies that server STARTED rendering service (clients can now start or continue rendering)
+		// -----------------------------
+
+		socket.broadcast.emit(API.baseUrl + '/rendering/start');
+
+		callback(API.renderingServiceState);
+	},
+
+	/**
+	 * Pause rendering.
+	 */
+	onPauseRendering: function(data, callback)
 	{
 		if (!callback)
 		{
@@ -342,16 +356,37 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'pause';
-
-		callback();
-
-
+	
 		// -----------------------------
-		// notifies that server stopped rendering service (clients must stop rendering)
+		// notifies that server PAUSED rendering service (clients must stop rendering)
 		// -----------------------------
 
-		var stopData = new Object();
-		socket.broadcast.emit(API.baseUrl + '/rendering/stop', stopData);
+		socket.broadcast.emit(API.baseUrl + '/rendering/pause');
+
+		callback(API.renderingServiceState);
+	},
+
+	/**
+	 * Resume rendering.
+	 */
+	onResumeRendering: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+
+		API.renderingServiceState = 'running';
+
+		// -----------------------------
+		// notifies that server RESUME rendering service (clients must stop rendering)
+		// -----------------------------
+
+		socket.broadcast.emit(API.baseUrl + '/rendering/resume');
+
+		callback(API.renderingServiceState);
 	},
 
 	/**
@@ -367,16 +402,14 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'idle';
-
-		callback();
-
-
+	
 		// -----------------------------
-		// notifies that server stopped rendering service (clients must stop rendering)
+		// notifies that server STOPPED rendering service (clients must stop rendering)
 		// -----------------------------
 
-		var stopData = new Object();
-		socket.broadcast.emit(API.baseUrl + '/rendering/stop', stopData);
+		socket.broadcast.emit(API.baseUrl + '/rendering/stop');
+
+		callback(API.renderingServiceState);
 	}
 };
 

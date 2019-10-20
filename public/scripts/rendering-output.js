@@ -51,7 +51,7 @@ RenderingOutputPage._onServerDisconnect = function()
 /**
  * Server started rendering service.
  */
-RenderingOutputPage._onStartRenderingService = async function(data)
+RenderingOutputPage._onStartRenderingService = async function()
 {
 	let data = await API.request('cells/getAll');
 	RenderingOutputPage.onGetLayout(data);

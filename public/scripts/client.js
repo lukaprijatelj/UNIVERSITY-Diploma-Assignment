@@ -78,6 +78,8 @@ ClientPage._onServerConnected = async function()
 	API.listen('cells/update', ClientPage._onCellUpdate);
 	API.listen('rendering/start', ClientPage._onStartRenderingService);	
 	API.listen('rendering/stop', ClientPage._onStopRenderingService);	
+	API.listen('rendering/pause', ClientPage._onPauseRenderingService);	
+	API.listen('rendering/resume', ClientPage._onResumeRenderingService);	
 
 	let data = await API.request('cells/getAll');
 	ClientPage.onGetLayout(data);
@@ -86,7 +88,7 @@ ClientPage._onServerConnected = async function()
 /**
  * Server started rendering service.
  */
-ClientPage._onStartRenderingService = async function(data)
+ClientPage._onStartRenderingService = async function()
 {
 	let layoutData = await API.request('cells/getAll');
 	ClientPage.onGetLayout(layoutData);
@@ -102,6 +104,22 @@ ClientPage._onStopRenderingService = function(data)
 
 	globals.renderer.stopRendering();
 	ClientPage.stopRendererUi();
+};
+
+/**
+ * Server stopped rendering service.
+ */
+ClientPage._onPauseRenderingService = function(data)
+{
+	new Exception.NotImplemented();
+};
+
+/**
+ * Server stopped rendering service.
+ */
+ClientPage._onResumeRenderingService = function(data)
+{
+	new Exception.NotImplemented();
 };
 
 /**
@@ -351,15 +369,15 @@ ClientPage.openScene = async function()
 		globals.renderer.prepareJsonData();
 		globals.renderer.initScene();
 		globals.renderer.initCamera();
-		globals.renderer.initLights();
-		
-		let cells = await API.request('cells/getWaiting');
-		ClientPage.updateWaitingCells(cells);
+		globals.renderer.initLights();		
 	}
 	catch (err)
 	{
 		console.error(err.message);
 	}	
+
+	let cells = await API.request('cells/getWaiting');
+	ClientPage.updateWaitingCells(cells);
 };
 
 /**
