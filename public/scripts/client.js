@@ -132,84 +132,97 @@ ClientPage._onCellUpdate = function(data)
 /**
  * Starts loading GLTF model.
  */
-ClientPage.startLoadingGltfModel = function()
+ClientPage.loadGltfModel = function()
 {
 	console.log('[ClientPage] Requesting GLTF model');	
 
 	var onSuccess = (resolve, reject) =>
 	{
-		var loader = new GltfLoader();
-		loader.path = options.SCENE_FILEPATH;
-		loader.onSuccess = (gltf) =>
+		let onProgress = function(xhr)
 		{
-			console.log('[glTF loader] Scene finished loading');
+			// occurs when one of the files is done loading
+			var percentage = xhr.loaded / xhr.total * 100;
 		
+			console.log('[ClientPage] GLTF model is ' + percentage + '% loaded');	
+		};
+		let onSuccess = (gltf) =>
+		{
+			console.log('[ClientPage] Scene finished loading');
+
 			resolve(gltf);
 		};
-		loader.start();	
+
+		var loader = new THREE.GLTFLoader();
+		loader.load(options.SCENE_FILEPATH, onSuccess, onProgress, reject);
 	};
 	return new Promise(onSuccess);
 };
 
 /**
  * Initializes scene.
- * @private
  */
-ClientPage._initScene = function()
+ClientPage._initScene = function(gltfScene)
 {
-	var asyncCallback = async function(resolve, reject)
-    {
-		globals.scene = new THREE.Scene();
+	globals.scene = new THREE.Scene();
+	globals.scene.add(gltfScene);
+};
 
-		if (options.SKY_CUBE_FILEPATH)
-		{				
+/**
+ * Sets background for scene.
+ */
+ClientPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
+{
+	return new Promise((resolve, reject) =>
+	{
+		if (skyCubeFilePath)
+		{
 			var loader = new THREE.CubeTextureLoader();
-			loader.setPath(options.SKY_CUBE_FILEPATH);
+			loader.setPath(skyCubeFilePath);
 
-			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, resolve, undefined, reject);
+			globals.scene.background = loader.load(skyCubeImages, resolve, undefined, reject);
 		}	
 		else
 		{
-			resolve();
-		}		
-    };
-	return new Promise(asyncCallback);
+			onProgress(100);
+			onLoad();
+		}	
+	});
 };
 
 /**
  * Intializes camera in the scene.
  */
-ClientPage._initCamera = function()
+ClientPage._initCamera = function(gltfCamera)
 {
 	console.log('[ClientPage] Initializing camera');
 
-	if (!options.CAMERA)
+	if (!gltfCamera)
 	{
 		return;
 	}
 
 	var loader = new THREE.ObjectLoader();
 
-	globals.camera = loader.parse(options.CAMERA);
+	globals.camera = loader.parse(gltfCamera);
 };
 
 /**
  * Initializes lights.
  */
-ClientPage._initLights = function()
+ClientPage._initLights = function(gltfLights)
 {
 	console.log('[ClientPage] Initializing lights');
 
-	if (!options.LIGHTS)
+	if (!gltfLights)
 	{
 		return;
 	}
 
 	var loader = new THREE.ObjectLoader();
 	
-	for (let i=0; i<options.LIGHTS.length; i++)
+	for (let i=0; i<gltfLights.length; i++)
 	{
-		var light = loader.parse(options.LIGHTS[i]);
+		var light = loader.parse(gltfLights[i]);
 		globals.scene.add(light);
 	}
 
@@ -302,12 +315,12 @@ ClientPage.onGetLayout = function(data)
 	// check if rendering service is running on server
 	// -----------------------------
 	
-	if (!data.isRenderingServiceRunning)
+	if (data.renderingServiceState == 'idle')
 	{
 		// nothing to render
 		return;
 	}
-	API.isRenderingServiceRunning = data.isRenderingServiceRunning;
+	API.renderingServiceState = data.renderingServiceState;
 
 	ClientPage.openScene();
 };
@@ -326,13 +339,13 @@ ClientPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await ClientPage.startLoadingGltfModel();
+		var gltf = await ClientPage.loadGltfModel();
 		
-		await ClientPage._initScene();
-		globals.scene.add(gltf.scene);
+		await ClientPage._initScene(gltf.scene);
+		await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
 		
-		ClientPage._initCamera();
-		ClientPage._initLights();		
+		ClientPage._initCamera(options.CAMERA);
+		ClientPage._initLights(options.LIGHTS);		
 		ClientPage._initRenderer();
 
 		globals.renderer.prepareJsonData();
@@ -386,7 +399,7 @@ ClientPage.onRendererDone = async function(cells)
 {
 	globals.lastRenderingTime = window.setTimeout(ClientPage.stopRendererUi, 1000);
 
-	if (!API.isRenderingServiceRunning)
+	if (API.renderingServiceState == 'idle')
 	{
 		return;
 	}

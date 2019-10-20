@@ -237,6 +237,7 @@ var DATABASE =
 
 		if (!freeCells.length)
 		{
+			// all cells are already rendered
 			return null;
 		}
 		

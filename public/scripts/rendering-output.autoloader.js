@@ -124,7 +124,6 @@
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/GltfLoader.js'));
 	await Promise.all(loadingBlock);
 
 	loadingBlock = new Array();

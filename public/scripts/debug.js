@@ -31,7 +31,7 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		if (globals.isRendering == true)
+		if (globals.renderingServiceState == 'running')
 		{
 			// no need to update values if rendering is enabled
 			return;

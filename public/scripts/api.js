@@ -26,7 +26,7 @@ var API =
 	 * Is rendering service running on server.
 	 * @type {boolean}
 	 */
-	isRenderingServiceRunning: false,
+	renderingServiceState: 'idle',
 
 	/**
 	 * Ajax request to server.

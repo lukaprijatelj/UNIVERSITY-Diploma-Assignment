@@ -42,7 +42,7 @@ globals.editorCanvas = null;
 /**
  * Is rendering service running.
  */
-globals.isRendering = false;
+globals.renderingServiceState = 'idle';
 
 AdminPage.loadingText = null;
 AdminPage.loadingBar = null;
@@ -90,24 +90,21 @@ AdminPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await AdminPage.startLoadingGltfModel();
+		var gltf = await AdminPage.loadGltfModel();
 
-		await AdminPage._initScene();
-		globals.scene.add(gltf.scene);
+		await AdminPage._initScene(gltf.scene);
+		await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
 
-		await AdminPage._initCamera(gltf.cameras);
-
-		await AdminPage._initLights();
-		
-		await AdminPage._initRenderer();
+		AdminPage._initCamera(gltf.cameras);
+		AdminPage._initLights();
+		AdminPage._initRenderer();
+		AdminPage._initCameraControls();		
 	}
 	catch (err)
 	{
 		console.error(err.message);
-	}	
+	}		
 	
-	AdminPage._initCameraControls();
-				
 	AdminPage.onRenderFrame();
 };
 
@@ -115,7 +112,7 @@ AdminPage.openScene = async function()
  * On server-client connection.
  * @private
  */
-AdminPage._onServerConnected = async function(socket, data)
+AdminPage._onServerConnected = async function(socket)
 {
 	console.log('[Main] Connected to server!');
 
@@ -123,8 +120,8 @@ AdminPage._onServerConnected = async function(socket, data)
 
 	API.listen('clients/updated', AdminPage._onClientsUpdated);
 
-	let ddata = await API.request('admin/isRenderingServiceRunning');
-	AdminPage._onCheckRendering(ddata);
+	let data = await API.request('admin/getRenderingServiceState');
+	AdminPage._onCheckRendering(data);
 
 	AdminPage.onLoaded();	
 };
@@ -142,7 +139,7 @@ AdminPage._onServerDisconnect = function()
  */
 AdminPage._onCheckRendering = async function(data)
 {
-	globals.isRendering = data.isRenderingServiceRunning;
+	globals.renderingServiceState = data.renderingServiceState;
 
 	options = data.options;
 
@@ -156,7 +153,7 @@ AdminPage._onCheckRendering = async function(data)
 /**
  * Starts loading GLTF model.
  */
-AdminPage.startLoadingGltfModel = function()
+AdminPage.loadGltfModel = function()
 {
 	var onSuccess = (resolve, reject) =>
 	{
@@ -167,10 +164,8 @@ AdminPage.startLoadingGltfModel = function()
 
 		AdminPage.loadingText.setValue('Loading GLTF model ...');
 		AdminPage.loadingCounter.setValue(0);
-
-		var loader = new GltfLoader();
-		loader.path = options.SCENE_FILEPATH;
-		loader.onProgress = function(xhr)
+		
+		let onProgress = function(xhr)
 		{
 			// occurs when one of the files is done loading
 			var percentage = xhr.loaded / xhr.total * 100;
@@ -179,15 +174,17 @@ AdminPage.startLoadingGltfModel = function()
 
 			AdminPage.loadingCounter.setValue(percentage);
 		};
-		loader.onSuccess = (gltf) =>
+		let onSuccess = (gltf) =>
 		{
-			console.log('[glTF loader] Scene finished loading');
+			console.log('[AdminPage] Scene finished loading');
 		
 			loadingLayer.hide();
 
 			resolve(gltf);
 		};
-		loader.start();	
+
+		var loader = new THREE.GLTFLoader();
+		loader.load(options.SCENE_FILEPATH, onSuccess, onProgress, reject);
 	};
 	return new Promise(onSuccess);
 };
@@ -195,105 +192,99 @@ AdminPage.startLoadingGltfModel = function()
 /**
  * Initializes scene.
  */
-AdminPage._initScene = async function()
+AdminPage._initScene = function(gltfScene)
 {
-	var asyncCallback = async function(resolve, reject)
-    {
-		let loadingLayer = document.querySelector('layer#loading');
-		loadingLayer.show();
+	let loadingLayer = document.querySelector('layer#loading');
+	loadingLayer.show();
 
-		AdminPage.loadingText.setValue('Loading scene ...');
-		AdminPage.loadingCounter.setValue(0);
+	AdminPage.loadingText.setValue('Loading scene ...');
+	AdminPage.loadingCounter.setValue(0);
 
-		let onProgress = function(xhr)
-		{
-			var percentage = xhr.loaded / xhr.total * 100;
-
-			console.log('[AdminPage] Scene is ' + percentage + '% loaded');	
-
-			AdminPage.loadingCounter.setValue(percentage);
-		};
-		let onLoad = function()
-		{
-			loadingLayer.hide();
-			resolve();
-		};
-
-        globals.scene = new THREE.Scene();
-
-		if (options.SKY_CUBE_FILEPATH)
-		{
-			var loader = new THREE.CubeTextureLoader();
-			loader.setPath(options.SKY_CUBE_FILEPATH);
-
-			globals.scene.background = loader.load(options.SKY_CUBE_IMAGES, onLoad, onProgress, reject);
-		}	
-		else
-		{
-			onProgress(100);
-			onLoad();
-		}		
-    };
-	return new Promise(asyncCallback);
+	globals.scene = new THREE.Scene();
+	globals.scene.add(gltfScene);
 };
 
 /**
  * Sets background for scene.
  */
-AdminPage._setBackground = async function()
+AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 {
+	return new Promise((resolve, reject) =>
+	{
+		let loadingLayer = document.querySelector('layer#loading');
 
+		let onProgress = function(xhr)
+		{
+			var percentage = xhr.loaded / xhr.total * 100;
+
+			console.log('[AdminPage] Scene background is ' + percentage + '% loaded');	
+
+			AdminPage.loadingCounter.setValue(percentage);
+		};
+		let onLoad = function()
+		{
+			console.log('[AdminPage] Scene background finished loading');	
+
+			loadingLayer.hide();
+			resolve();
+		};
+
+		if (skyCubeFilePath)
+		{
+			var loader = new THREE.CubeTextureLoader();
+			loader.setPath(skyCubeFilePath);
+
+			globals.scene.background = loader.load(skyCubeImages, onLoad, onProgress, reject);
+		}	
+		else
+		{
+			onProgress(100);
+			onLoad();
+		}	
+	});
 };
 
 /**
  * Intializes camera in the scene.
  */
-AdminPage._initCamera = async function(cameras)
+AdminPage._initCamera = function(cameras)
 {
-	var asyncCallback = function(resolve, reject)
-    {
-		console.log('[AdminPage] Initializing camera');
+	let loadingLayer = document.querySelector('layer#loading');
+	loadingLayer.show();
 
-		let loadingLayer = document.querySelector('layer#loading');
-		loadingLayer.show();
+	AdminPage.loadingText.setValue('Loading camera ...');
+	AdminPage.loadingCounter.setValue(0);
 
-		AdminPage.loadingText.setValue('Loading camera ...');
-		AdminPage.loadingCounter.setValue(0);
+	let CAMERA_FOV = 75;
+	let CAMERA_ASPECT = 2;  // the canvas default
+	let CAMERA_NEAR = 0.001;
+	let CAMERA_FAR = 10000;
 
-		let CAMERA_FOV = 75;
-		let CAMERA_ASPECT = 2;  // the canvas default
-		let CAMERA_NEAR = 0.001;
-		let CAMERA_FAR = 10000;
+	globals.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
 
-		globals.camera = new THREE.PerspectiveCamera(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR);
+	if (cameras && cameras.length)
+	{
+		// model has camera included, so we will use it's position and rotation
 
-		if (cameras && cameras.length)
-		{
-			// model has camera included, so we will use it's position and rotation
+		let existingCamera = cameras[0];
+		globals.camera.position.x = existingCamera.parent.position.x;
+		globals.camera.position.y = existingCamera.parent.position.y;
+		globals.camera.position.z = existingCamera.parent.position.z;
 
-			let existingCamera = cameras[0];
-			globals.camera.position.x = existingCamera.parent.position.x;
-			globals.camera.position.y = existingCamera.parent.position.y;
-			globals.camera.position.z = existingCamera.parent.position.z;
+		globals.camera.rotation.x = existingCamera.parent.rotation.x;
+		globals.camera.rotation.y = existingCamera.parent.rotation.y;
+		globals.camera.rotation.z = existingCamera.parent.rotation.z;
+	}
+	else
+	{
+		// set default position and rotation
+		globals.camera.position.x = -1.55877021541765;
+		globals.camera.position.y = 0.6214917314103046;
+		globals.camera.position.z = 0.9543815583821418;
+	}	
 
-			globals.camera.rotation.x = existingCamera.parent.rotation.x;
-			globals.camera.rotation.y = existingCamera.parent.rotation.y;
-			globals.camera.rotation.z = existingCamera.parent.rotation.z;
-		}
-		else
-		{
-			// set default position and rotation
-			globals.camera.position.x = -1.55877021541765;
-			globals.camera.position.y = 0.6214917314103046;
-			globals.camera.position.z = 0.9543815583821418;
-		}	
-
-		AdminPage.loadingCounter.setValue(100);
-		loadingLayer.hide();
-
-		resolve();
-	};
-	return new Promise(asyncCallback);
+	AdminPage.loadingCounter.setValue(100);
+	loadingLayer.hide();
 };
 
 /**
@@ -310,42 +301,39 @@ AdminPage._initCameraControls = function()
 /**
  * Initializes lights.
  */
-AdminPage._initLights = async function()
+AdminPage._initLights = function()
 {
-	var asyncCallback = function(resolve, reject)
-    {
-		console.log('[AdminPage] Initializing lights');
+	console.log('[AdminPage] Initializing lights');
 
-		let loadingLayer = document.querySelector('layer#loading');
-		loadingLayer.show();
+	let loadingLayer = document.querySelector('layer#loading');
+	loadingLayer.show();
 
-		AdminPage.loadingText.setValue('Loading lights ...');
-		AdminPage.loadingCounter.setValue(0);
+	AdminPage.loadingText.setValue('Loading lights ...');
+	AdminPage.loadingCounter.setValue(0);
 
-		var light = new THREE.AmbientLight(0x404040, 3);
-		globals.scene.add(light);
-		globals.lights.push(light);
+	var light = new THREE.AmbientLight(0x404040, 3);
+	globals.scene.add(light);
+	globals.lights.push(light);
 
-		/*var intensity = 1;
+	/*var intensity = 1;
 
-		var light = new THREE.PointLight(0xffaa55, intensity);
-		light.position.set( - 200, 100, 100 );
-		globals.scene.add( light );
+	var light = new THREE.PointLight(0xffaa55, intensity);
+	light.position.set( - 200, 100, 100 );
+	globals.scene.add( light );
+	globals.lights.push(light);
 
-		var light = new THREE.PointLight(0x55aaff, intensity);
-		light.position.set( 200, -100, 100 );
-		globals.scene.add( light );
+	var light = new THREE.PointLight(0x55aaff, intensity);
+	light.position.set( 200, -100, 100 );
+	globals.scene.add( light );
+	globals.lights.push(light);
 
-		var light = new THREE.PointLight(0xffffff, intensity);
-		light.position.set( 0, 0, -300 );
-		globals.scene.add( light );*/
+	var light = new THREE.PointLight(0xffffff, intensity);
+	light.position.set( 0, 0, -300 );
+	globals.scene.add( light );
+	globals.lights.push(light);*/
 
-		AdminPage.loadingCounter.setValue(100);
-		loadingLayer.hide();
-
-		resolve();
-	};
-	return new Promise(asyncCallback);
+	AdminPage.loadingCounter.setValue(100);
+	loadingLayer.hide();
 };
 
 /**
@@ -353,33 +341,27 @@ AdminPage._initLights = async function()
  */
 AdminPage._initRenderer = async function()
 {
-	var asyncCallback = function(resolve, reject)
-    {
-		console.log('[AdminPage] Initialize editor renderer');
+	console.log('[AdminPage] Initialize editor renderer');
 
-		let loadingLayer = document.querySelector('layer#loading');
-		loadingLayer.show();
+	let loadingLayer = document.querySelector('layer#loading');
+	loadingLayer.show();
 
-		AdminPage.loadingText.setValue('Loading renderer ...');
-		AdminPage.loadingCounter.setValue(0);
-	
-		var canvas = document.getElementById('editor-canvas');
-		var options = 
-		{ 
-			canvas: canvas,
-			antialias: true 
-		};
-		globals.renderer = new THREE.WebGLRenderer(options);
-		globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+	AdminPage.loadingText.setValue('Loading renderer ...');
+	AdminPage.loadingCounter.setValue(0);
 
-		globals.editorCanvas.resize();
-
-		AdminPage.loadingCounter.setValue(100);
-		loadingLayer.hide();
-
-		resolve();
+	var canvas = document.getElementById('editor-canvas');
+	var options = 
+	{ 
+		canvas: canvas,
+		antialias: true 
 	};
-	return new Promise(asyncCallback);
+	globals.renderer = new THREE.WebGLRenderer(options);
+	globals.renderer.setSize(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+
+	globals.editorCanvas.resize();
+
+	AdminPage.loadingCounter.setValue(100);
+	loadingLayer.hide();
 };
 
 /**
@@ -429,7 +411,7 @@ AdminPage._updateRenderingState = function()
 {
 	var startRenderingButtonV = document.getElementById('render-button');
 
-	if (globals.isRendering == true)
+	if (globals.renderingServiceState == 'running')
 	{
 		var interfaceV = document.querySelector('interface');
 		interfaceV.addClass('rendering');
@@ -454,7 +436,7 @@ AdminPage._updateRenderingState = function()
 
 		startRenderingButtonV.enable();
 	}
-	else
+	else if (globals.renderingServiceState == 'idle')
 	{
 		var interfaceV = document.querySelector('interface');
 		interfaceV.removeClass('rendering');
@@ -908,7 +890,7 @@ AdminPage._onStartStopRenderingClick = async function()
 	{
 		await API.request('rendering/stop', data);
 
-		globals.isRendering = false;
+		globals.renderingServiceState = 'idle';
 	}
 	else
 	{
@@ -924,7 +906,7 @@ AdminPage._onStartStopRenderingClick = async function()
 
 		await API.request('rendering/start', data);
 
-		globals.isRendering = true;		
+		globals.renderingServiceState = 'running';		
 	}
 
 	AdminPage._updateRenderingState();

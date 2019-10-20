@@ -20,7 +20,7 @@ var API =
 	/**
 	 * Is rendering service currently running.
 	 */
-	isRenderingServiceRunning: false,
+	renderingServiceState: 'idle',
 
 
     init: function(app)
@@ -83,10 +83,11 @@ var API =
 			isAdmin = true;
 			
 			// admin specific listeners
-			socket.on(API.baseUrl + '/admin/isRenderingServiceRunning', API.onAdminCheckRendering); 
+			socket.on(API.baseUrl + '/admin/getRenderingServiceState', API.onAdminCheckRendering); 
 
 			// rendering specific listeners
 			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
+			socket.on(API.baseUrl + '/rendering/pause', API.onPauseRendering);	
 			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
 		}
 		
@@ -147,7 +148,7 @@ var API =
 		var socket = this;
 		var result = 
 		{ 
-			isRenderingServiceRunning: API.isRenderingServiceRunning,
+			renderingServiceState: API.renderingServiceState,
 			options: options
 		};
 
@@ -169,7 +170,7 @@ var API =
 		{
 			cells: DATABASE.getRenderingCells(),
 			options: options,
-			isRenderingServiceRunning: API.isRenderingServiceRunning
+			renderingServiceState: API.renderingServiceState
 		}
 
 		callback(result);
@@ -180,7 +181,7 @@ var API =
 	 */
 	onGetWaitingCells: function(data, callback)
 	{
-		if (API.isRenderingServiceRunning == false)
+		if (API.renderingServiceState == 'idle')
 		{
 			return;
 		}
@@ -219,7 +220,7 @@ var API =
 	 */
 	onUpdateCell: function(data)
 	{
-		if (API.isRenderingServiceRunning == false)
+		if (API.renderingServiceState == 'idle')
 		{
 			return;
 		}
@@ -314,7 +315,7 @@ var API =
 			startY += options.BLOCK_HEIGHT;
 		}
 
-		API.isRenderingServiceRunning = true;
+		API.renderingServiceState = 'running';
 
 
 		callback();
@@ -331,6 +332,28 @@ var API =
 		socket.broadcast.emit(API.baseUrl + '/rendering/start', startData);
 	},
 
+	onPauseRendering: function()
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+
+		API.renderingServiceState = 'pause';
+
+		callback();
+
+
+		// -----------------------------
+		// notifies that server stopped rendering service (clients must stop rendering)
+		// -----------------------------
+
+		var stopData = new Object();
+		socket.broadcast.emit(API.baseUrl + '/rendering/stop', stopData);
+	},
+
 	/**
 	 * Stops rendering
 	 */
@@ -343,7 +366,7 @@ var API =
 
 		var socket = this;
 
-		API.isRenderingServiceRunning = false;
+		API.renderingServiceState = 'idle';
 
 		callback();
 
