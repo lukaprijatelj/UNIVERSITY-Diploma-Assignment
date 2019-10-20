@@ -333,14 +333,16 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'running';
+
+		let responseData = API.renderingServiceState;
 	
 		// -----------------------------
 		// notifies that server STARTED rendering service (clients can now start or continue rendering)
 		// -----------------------------
 
-		socket.broadcast.emit(API.baseUrl + '/rendering/start');
+		socket.broadcast.emit(API.baseUrl + '/rendering/start', responseData);
 
-		callback(API.renderingServiceState);
+		callback(responseData);
 	},
 
 	/**
@@ -356,14 +358,16 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'pause';
+
+		let responseData = API.renderingServiceState;
 	
 		// -----------------------------
 		// notifies that server PAUSED rendering service (clients must stop rendering)
 		// -----------------------------
 
-		socket.broadcast.emit(API.baseUrl + '/rendering/pause');
+		socket.broadcast.emit(API.baseUrl + '/rendering/pause', responseData);
 
-		callback(API.renderingServiceState);
+		callback(responseData);
 	},
 
 	/**
@@ -380,13 +384,15 @@ var API =
 
 		API.renderingServiceState = 'running';
 
+		let responseData = API.renderingServiceState;
+
 		// -----------------------------
 		// notifies that server RESUME rendering service (clients must stop rendering)
 		// -----------------------------
 
-		socket.broadcast.emit(API.baseUrl + '/rendering/resume');
+		socket.broadcast.emit(API.baseUrl + '/rendering/resume', responseData);
 
-		callback(API.renderingServiceState);
+		callback(responseData);
 	},
 
 	/**
@@ -402,14 +408,16 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'idle';
+
+		let responseData = API.renderingServiceState;
 	
 		// -----------------------------
 		// notifies that server STOPPED rendering service (clients must stop rendering)
 		// -----------------------------
 
-		socket.broadcast.emit(API.baseUrl + '/rendering/stop');
+		socket.broadcast.emit(API.baseUrl + '/rendering/stop', responseData);
 
-		callback(API.renderingServiceState);
+		callback(responseData);
 	}
 };
 

@@ -102,6 +102,7 @@ ClientPage._onStopRenderingService = function(data)
 	previousOptions = options;
 	options = null;
 
+	API.renderingServiceState = data;
 	globals.renderer.stopRendering();
 	ClientPage.stopRendererUi();
 };
@@ -111,7 +112,8 @@ ClientPage._onStopRenderingService = function(data)
  */
 ClientPage._onPauseRenderingService = function(data)
 {
-	new Exception.NotImplemented();
+	API.renderingServiceState = data;
+	globals.renderer.pauseRendering();
 };
 
 /**
@@ -119,7 +121,8 @@ ClientPage._onPauseRenderingService = function(data)
  */
 ClientPage._onResumeRenderingService = function(data)
 {
-	new Exception.NotImplemented();
+	API.renderingServiceState = data;
+	globals.renderer.resumeRendering();
 };
 
 /**
@@ -130,6 +133,8 @@ ClientPage._onServerDisconnect = function()
 	console.log('[ClientPage] Disconnected from server!');
 
 	API.isConnected = false;
+
+	ClientPage._onStopRenderingService();
 };
 
 /**

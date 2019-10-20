@@ -93,9 +93,11 @@ RaytracingRenderer.prototype.onCellRendered = function(threadIndex, buffer, basi
 
 	let thread = _this.threads[threadIndex];
 	thread.isRendering = false;
+
+	let threadCell = thread.cell;
 	
 	// remove rendering flag
-	globals.rendererCanvas.hideThreadCell(thread.cell);
+	globals.rendererCanvas.hideThreadCell(threadCell);
 
 
 	// -----------------------------
@@ -106,6 +108,8 @@ RaytracingRenderer.prototype.onCellRendered = function(threadIndex, buffer, basi
 
 	// convert buffer data into PNG image data
 	sharedCell.imageData = HTMLImageElement.toPNGString(buffer, basicCell.width, basicCell.height);
+
+	sharedCell.progress = threadCell.progress;
 
 	// update image of the cell on the canvas
 	ClientPage.tryUpdatingCell(sharedCell);
@@ -348,8 +352,39 @@ RaytracingRenderer.prototype.stopRendering = function()
 			globals.rendererCanvas.hideThreadCell(current.cell);
 		}
 
-		current.workerFunction('stopRendering');
 		current.terminate();
+	};
+};
+
+/**
+ * Stops rendering process.
+ */
+RaytracingRenderer.prototype.pauseRendering = function()
+{
+	let _this = this;	
+
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let current = _this.threads[i];		
+		
+		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
+		current.isRendering = false;
+	};
+};
+
+/**
+ * Stops rendering process.
+ */
+RaytracingRenderer.prototype.resumeRendering = function()
+{
+	let _this = this;	
+
+	for (let i=0; i<_this.threads.length; i++)
+	{
+		let current = _this.threads[i];		
+		
+		current.isRendering = true;
+		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
 	};
 };
 
@@ -379,9 +414,11 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	threadCell.startY = basicCell.startY;
 	threadCell.width = basicCell.width;
 	threadCell.height = basicCell.height;
+	threadCell.progress = 0;
 	thread.workerFunction('worker.setCell', threadCell);
 	globals.rendererCanvas.showThreadCell(threadCell);	
 	
 	thread.isRendering = true;
+	thread.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
 	thread.workerFunction('worker.startRendering');
 };

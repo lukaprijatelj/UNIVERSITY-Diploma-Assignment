@@ -133,15 +133,21 @@ var DATABASE =
 		{
 			let cell = cellsTable.rows[i];
 
-			if (cell.sessionId != sessionId)
+			if (!cell.socketIoClient)
+			{
+				continue;
+			}
+
+			if (cell.socketIoClient.sessionId != sessionId)
 			{
 				continue;
 			}	
 			
-			if (cell.progress == 100)
+			// todo: not sure why i need this
+			/*if (cell.progress == 100)
 			{
 				continue;
-			}
+			}*/
 
 			cell.socketIoClient = null;
 		}
@@ -218,6 +224,11 @@ var DATABASE =
 			let current = table.rows[i];
 
 			if (current.socketIoClient)
+			{
+				continue;
+			}
+
+			if (current.progress == 100)
 			{
 				continue;
 			}

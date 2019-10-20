@@ -29,6 +29,11 @@ namespace.database.ThreadCell = (() =>
 		this._id = ThreadCell.generateId(threadIndex);
 
 		this.threadIndex = threadIndex;
+
+		/**
+		 * Progress of how much image has already rendered.
+		 */
+		this.progress = 0;
 	};
 
 	ThreadCell.generateId = function(threadIndex)
