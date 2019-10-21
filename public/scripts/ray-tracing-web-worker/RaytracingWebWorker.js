@@ -1049,10 +1049,5 @@ RaytracingWebWorker.startRendering = function()
 {
 	let _this = this;	
 
-	let cell = _this.cell;
-
-	let width = cell.width * _this.antialiasingFactor;
-	let height = cell.height * _this.antialiasingFactor;
-
 	_this.renderCell();
 };

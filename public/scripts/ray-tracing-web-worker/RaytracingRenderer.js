@@ -271,7 +271,7 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 
 	if (Array.isEmpty(cellsWaiting))
 	{
-		new Exception.ArrayEmpty('There is cells waiting to be rendered!');
+		new Exception.ArrayEmpty('There is no cells waiting to be rendered!');
 	}
 
 	_this.cellsWaiting = cellsWaiting;	
@@ -368,7 +368,6 @@ RaytracingRenderer.prototype.pauseRendering = function()
 		let current = _this.threads[i];		
 		
 		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
-		current.isRendering = false;
 	};
 };
 
@@ -382,8 +381,7 @@ RaytracingRenderer.prototype.resumeRendering = function()
 	for (let i=0; i<_this.threads.length; i++)
 	{
 		let current = _this.threads[i];		
-		
-		current.isRendering = true;
+
 		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
 	};
 };
