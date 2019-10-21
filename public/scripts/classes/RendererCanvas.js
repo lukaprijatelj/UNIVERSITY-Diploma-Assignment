@@ -9,6 +9,7 @@ function RendererCanvas()
 	this.flagCanvasV = null;
 
 	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
+	this.updateCellRow = RendererCanvas.updateCellRow.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -66,6 +67,19 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 	var img = new Image();
 	img.onload = _this._onImageLoaded.bind(null, img, cell);
 	img.src = cell.imageData;
+};
+
+/**
+ * Updates cell image.
+ */
+RendererCanvas.updateCellRow = function(data)
+{
+	var _this = this;
+
+	var canvas = _this.canvasV;
+	var ctx = canvas.getContext('2d');
+
+	ctx.putImageData(data.imageData, data.posX, data.posY); 
 };
 
 /**

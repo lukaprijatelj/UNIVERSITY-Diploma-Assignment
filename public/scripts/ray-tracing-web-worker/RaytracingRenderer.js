@@ -103,7 +103,7 @@ RaytracingRenderer.onCellRendered = function(threadCell)
 	sharedCell.progress = threadCell.progress;
 
 	// update image of the cell on the canvas
-	ClientPage.tryUpdatingCell(sharedCell);
+	//ClientPage.tryUpdatingCell(sharedCell);
 
 	_this.cellsDone.push(sharedCell);
 

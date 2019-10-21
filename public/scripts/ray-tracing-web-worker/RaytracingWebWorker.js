@@ -923,6 +923,15 @@ RaytracingWebWorker.prototype.renderCell = function()
 {
 	let _this = this;
 
+	if (_this.renderingServiceState == 'pause')
+	{
+		_this.internalState = 'pause';
+
+		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
+		return;
+	}
+
+
 	let cell = _this.cell;
 	let width = cell.width * _this.antialiasingFactor;
 	let height = cell.height * _this.antialiasingFactor;
@@ -931,24 +940,12 @@ RaytracingWebWorker.prototype.renderCell = function()
 	
 	let pixelColor = new THREE.Color();
 
-	let posX;
-	let posY;
-	let image;
-	let index;
+	let posX = 0;
+	let posY = 0;
+	let index = 0;
 
-	if (_this.internalState == 'pause')
-	{
-		posX = _this.cachedX;
-		posY = _this.cachedY;
-		index = _this.cachedIndex;
-	}
-	else
-	{
-		posX = 0;
-		posY = 0;
-		cell.rawImage = new namespace.core.RawImage('', width, height);
-		index = 0;
-	}
+	cell.rawImage = new namespace.core.RawImage('', width, height);
+	let imageRowData = new ImageData(width, 1);
 
 	_this.internalState = 'running';
 
@@ -956,18 +953,13 @@ RaytracingWebWorker.prototype.renderCell = function()
 	
 	while (posY < height)
 	{
+		let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let columnIndex = 0;
+
 		while (posX < width) 
-		{
-			if (_this.renderingServiceState == 'pause')
-			{
-				// let's pause current progrress
-				_this.cachedX = posX;
-				break;
-			}
-
+		{			
 			let xPos = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
-			let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
-
+			
 			// spawn primary ray at pixel position
 
 			_this.origin.copy(_this.cameraPosition);
@@ -984,18 +976,19 @@ RaytracingWebWorker.prototype.renderCell = function()
 			cell.rawImage.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
 			cell.rawImage.data[index + 3] = 255;
 
+			imageRowData.data[columnIndex + 0] = cell.rawImage.data[index + 0];
+			imageRowData.data[columnIndex + 1] = cell.rawImage.data[index + 1];
+			imageRowData.data[columnIndex + 2] = cell.rawImage.data[index + 2];
+			imageRowData.data[columnIndex + 3] = cell.rawImage.data[index + 3];
+
 			index += NUM_OF_COLOR_BITS;
+			columnIndex += NUM_OF_COLOR_BITS;
 
 			cell.progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
 			posX++;
 		}
 
-		if (_this.renderingServiceState == 'pause')
-		{
-			// let's pause current progrress
-			_this.cachedY = posY;
-			break;
-		}		
+		mainThread.invoke('globals.rendererCanvas.updateCellRow', { posX: cell.startX, posY:cell.startY + posY, imageData: imageRowData } );
 
 		posX = 0;
 		posY++;
@@ -1003,15 +996,6 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 	let endTime = new Date();
 	_this.cell.timeRendering += endTime - startTime;
-
-	if (_this.renderingServiceState == 'pause')
-	{
-		_this.internalState = 'pause';
-		_this.cachedIndex = index;
-
-		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
-		return;
-	}
 
 	_this.internalState = 'idle';	
 
