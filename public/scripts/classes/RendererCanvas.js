@@ -53,7 +53,12 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 {
 	var _this = this;
 
-	if (!cell || !cell.imageData)
+	if (!cell)
+	{
+		new Exception.ValueUndefined('Image to be updated on canvas is undefined!');
+	}
+
+	if (!cell.imageData)
 	{
 		new Exception.ValueUndefined('Image to be updated on canvas is undefined!');
 	}
@@ -86,8 +91,6 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 {
 	var _this = this;	
 
-	let flagCanvas = _this.flagCanvasV;
-	
 	let div = new namespace.html.Div();
 	div.id = cell._id;
 	div.addClass('flag-cell');
@@ -105,7 +108,7 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 	div.style.top = posY + unit;
 	div.style.borderWidth = borderWidth + unit;
 
-	flagCanvas.appendChild(div);
+	_this.flagCanvasV.appendChild(div);
 };
 
 /**
@@ -114,9 +117,8 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 RendererCanvas.prototype.removeWaitingCell = function(cell)
 {
 	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = flagCanvas.querySelector('#' + cell._id);
+
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 
 	if (!div)
 	{
@@ -133,8 +135,7 @@ RendererCanvas.prototype.removeWaitingCell = function(cell)
 RendererCanvas.prototype.addThreadCell = function(threadIndex)
 {
 	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
+
 	let div = new namespace.html.Div();
 	div.id = 'thread-cell-' + threadIndex;
 	div.hide();
@@ -144,7 +145,25 @@ RendererCanvas.prototype.addThreadCell = function(threadIndex)
 	label.addClass('label');
 	div.appendChild(label);
 		
-	flagCanvas.appendChild(div);
+	_this.flagCanvasV.appendChild(div);
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
+RendererCanvas.prototype.removeThreadCell = function(cell)
+{
+	var _this = this;
+
+	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	div.remove();
 };
 
 /**
@@ -153,9 +172,8 @@ RendererCanvas.prototype.addThreadCell = function(threadIndex)
 RendererCanvas.prototype.showThreadCell = function(cell)
 {
 	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = flagCanvas.querySelector('#thread-cell-' + cell.threadIndex);
+
+	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
 	div.show();
 	
 	if (!div)
@@ -189,9 +207,8 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 RendererCanvas.prototype.hideThreadCell = function(cell)
 {
 	var _this = this;
-	let flagCanvas = _this.flagCanvasV;
-	
-	let div = flagCanvas.querySelector('#thread-cell-' + cell.threadIndex);
+
+	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
 	
 	if (!div)
 	{
@@ -200,4 +217,40 @@ RendererCanvas.prototype.hideThreadCell = function(cell)
 	}
 
 	div.hide();
+};
+
+/**
+ * Flags thread cell as paused.
+ */
+RendererCanvas.prototype.pauseThreadCell = function(cell)
+{
+	var _this = this;
+
+	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	div.addClass('paused');
+};
+
+/**
+ * Unflags thread cell as paused.
+ */
+RendererCanvas.prototype.resumeThreadCell = function(cell)
+{
+	var _this = this;
+
+	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	div.removeClass('paused');
 };

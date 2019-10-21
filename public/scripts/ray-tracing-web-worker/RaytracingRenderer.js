@@ -36,10 +36,7 @@ var RaytracingRenderer = function()
 	this.camera = null;
 	this.cameraJSON = null;
 
-	/**
-	 * Event handlers.
-	 */
-	this.renderCell = RaytracingRenderer.renderCell.bind(this);
+	this.onCellRendered = RaytracingRenderer.onCellRendered.bind(this);
 
 	this._init();
 };
@@ -81,33 +78,27 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 	return true;
 };
 
-
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(threadIndex, buffer, basicCell, timeMs)
+RaytracingRenderer.onCellRendered = function(threadCell)
 {
 	let _this = this;
 
-	console.log('[RaytracingRenderer] Block done rendering (' + timeMs + ' ms)!');
-
-	let thread = _this.threads[threadIndex];
+	let thread = _this.threads[threadCell.threadIndex];
 	thread.isRendering = false;
 
-	let threadCell = thread.cell;
-	
 	// remove rendering flag
 	globals.rendererCanvas.hideThreadCell(threadCell);
-
 
 	// -----------------------------
 	// prepare SharedCell for sending to server
 	// -----------------------------
 
-	let sharedCell = new namespace.database.SharedCell(basicCell.startX, basicCell.startY, basicCell.width, basicCell.height);
+	let sharedCell = new namespace.database.SharedCell(threadCell.startX, threadCell.startY, threadCell.width, threadCell.height);
 
 	// convert buffer data into PNG image data
-	sharedCell.imageData = HTMLImageElement.toPNGString(buffer, basicCell.width, basicCell.height);
+	sharedCell.imageData = HTMLImageElement.toPNGString(threadCell.rawImage.data.buffer, threadCell.width, threadCell.height);
 
 	sharedCell.progress = threadCell.progress;
 
@@ -116,14 +107,10 @@ RaytracingRenderer.prototype.onCellRendered = function(threadIndex, buffer, basi
 
 	_this.cellsDone.push(sharedCell);
 
-	
-	// -----------------------------
-	// continue rendering next cell in queue
-	// -----------------------------
 
 	if (Array.isEmpty(_this.cellsWaiting) == false)
 	{
-		// work is not yet done
+		// work is not yet done - continue rendering next cell in queue
 		_this._runThread(thread);
 
 		return;
@@ -168,18 +155,8 @@ RaytracingRenderer.prototype.setWorkers = function()
 		thread.cell = new namespace.database.ThreadCell(thread.index);
 		globals.rendererCanvas.addThreadCell(i);
 
-		thread.workerFunction('init', data);			
+		thread.invoke('init', data);			
 	}
-};
-
-/**
- * Cell was rendered. It needs to be drawn too.
- * @static
- */
-RaytracingRenderer.renderCell = function(data)
-{
-	let _this = this;
-	_this.onCellRendered(data.threadIndex, data.buffer, data.cell, data.timeMs);
 };
 
 /**
@@ -223,7 +200,7 @@ RaytracingRenderer.prototype.initScene = function()
 	{
 		let thread = _this.threads[i];
 		
-		thread.workerFunction('worker.initScene', _this.sceneJSON);		
+		thread.invoke('worker.initScene', _this.sceneJSON);		
 	}	
 };
 
@@ -238,7 +215,7 @@ RaytracingRenderer.prototype.initCamera = function()
 	{
 		let thread = _this.threads[i];
 		
-		thread.workerFunction('worker.initCamera', _this.cameraJSON);		
+		thread.invoke('worker.initCamera', _this.cameraJSON);		
 	}	
 };
 
@@ -253,7 +230,7 @@ RaytracingRenderer.prototype.initLights = function()
 	{
 		let thread = _this.threads[i];
 		
-		thread.workerFunction('worker.initLights');
+		thread.invoke('worker.initLights');
 	}	
 };
 
@@ -349,7 +326,7 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 		if (current.cell)
 		{
-			globals.rendererCanvas.hideThreadCell(current.cell);
+			globals.rendererCanvas.removeThreadCell(current.cell);
 		}
 
 		current.terminate();
@@ -367,7 +344,12 @@ RaytracingRenderer.prototype.pauseRendering = function()
 	{
 		let current = _this.threads[i];		
 		
-		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
+		if (current.cell)
+		{
+			globals.rendererCanvas.pauseThreadCell(current.cell);
+		}
+
+		current.invoke('worker.setRenderingServiceState', API.renderingServiceState);
 	};
 };
 
@@ -380,9 +362,14 @@ RaytracingRenderer.prototype.resumeRendering = function()
 
 	for (let i=0; i<_this.threads.length; i++)
 	{
-		let current = _this.threads[i];		
+		let current = _this.threads[i];	
+		
+		if (current.cell)
+		{
+			globals.rendererCanvas.resumeThreadCell(current.cell);
+		}
 
-		current.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
+		current.invoke('worker.setRenderingServiceState', API.renderingServiceState);
 	};
 };
 
@@ -413,10 +400,11 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	threadCell.width = basicCell.width;
 	threadCell.height = basicCell.height;
 	threadCell.progress = 0;
-	thread.workerFunction('worker.setCell', threadCell);
+	threadCell.rawImage = null;
+	thread.invoke('worker.setCell', threadCell);
 	globals.rendererCanvas.showThreadCell(threadCell);	
 	
 	thread.isRendering = true;
-	thread.workerFunction('worker.setRenderingServiceState', API.renderingServiceState);
-	thread.workerFunction('worker.startRendering');
+	thread.invoke('worker.setRenderingServiceState', API.renderingServiceState);
+	thread.invoke('worker.startRendering');
 };

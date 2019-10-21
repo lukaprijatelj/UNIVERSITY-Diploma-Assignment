@@ -39,6 +39,8 @@ namespace.database.SharedCell = (() =>
 		 */
 		this.progress = 0;
 
+		this.timeRendering = 0;
+
 		/**
 		 * Image data can either be PNG format or raw pixels.
 		 */
