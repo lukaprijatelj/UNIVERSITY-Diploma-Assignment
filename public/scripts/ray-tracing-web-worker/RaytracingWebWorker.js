@@ -956,8 +956,8 @@ RaytracingWebWorker.prototype.renderCell = function()
 	}
 	else
 	{
-		cachedX = _this.cachedX;
-		cachedY = _this.cachedY;
+		cachedX = 0;
+		cachedY = 0;
 		image = new namespace.core.RawImage('', width, height);
 		index = 0;
 		elapsedTime = 0;
