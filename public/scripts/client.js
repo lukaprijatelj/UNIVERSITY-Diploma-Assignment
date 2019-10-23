@@ -8,6 +8,7 @@ var options = null;
 var previousOptions = null;
 
 var ClientPage = new namespace.core.WebPage('Client');
+
 var globals = new namespace.core.Globals();
 
 /**
@@ -31,11 +32,6 @@ globals.camera = null;
 globals.renderer = null;
 
 /**
- * Grid layout of cells that are rendered or are waiting for rendering.
- */
-globals.cells = new Array();
-
-/**
  * Camera controls affected by mouse movement.
  */
 globals.controls = null;
@@ -49,6 +45,18 @@ globals.lastRenderingTime = 0;
  * Rendering canvas.
  */
 globals.rendererCanvas = null;
+
+
+
+
+var Cache = new namespace.core.Cache();
+
+/**
+ * Grid layout of cells that are rendered or are waiting for rendering.
+ */
+Cache.cells = new Array();
+
+
 
 
 /**
@@ -322,7 +330,7 @@ ClientPage.onGetLayout = function(data)
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
-	globals.cells = new Array(data.cells.length);
+	Cache.cells = new Array(data.cells.length);
 
 	for (let i=0; i<data.cells.length; i++)
 	{
@@ -330,7 +338,7 @@ ClientPage.onGetLayout = function(data)
 		ClientPage.tryUpdatingCell(current);
 
 		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
-		globals.cells[i] = basicCell;
+		Cache.cells[i] = basicCell;
 	}
 
 
@@ -457,9 +465,9 @@ ClientPage.updateWaitingCells = function(cells)
 
 	var cellsWaiting = new Array();
 
-	for (let i=0; i<globals.cells.length; i++)
+	for (let i=0; i<Cache.cells.length; i++)
 	{
-		let current = globals.cells[i];
+		let current = Cache.cells[i];
 
 		for (let j=0; j<cells.length; j++)
 		{

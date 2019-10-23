@@ -7,7 +7,7 @@ var globals = new namespace.core.Globals();
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-globals.cells = new List();
+Cache.cells = new List();
 
 /**
  * ThreeJS scene.
