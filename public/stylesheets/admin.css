@@ -87,12 +87,8 @@ debug.right-side
 /* ----------------------------- */
 /* Dropdown */
 /* ----------------------------- */
-dropdown>wrapper_
-{
-	display: block;	
-}
-
-dropdown#options-dropdown>wrapper_
+dropdown#options-dropdown>wrapper_,
+dropdown#background-dropdown>wrapper_
 {
 	max-width: 210px;
 	padding: 15px;
@@ -160,4 +156,20 @@ interface:not(.rendering) #editor-curtain
 #top-bar
 {
 	position: absolute;
+}
+
+
+
+#background-dropdown img
+{
+	border-style: solid;
+	border-width: 1px;
+	border-color: rgba(255,255,255, 0.2);
+}
+
+#background-dropdown input
+{
+	margin-right: 10px;
+	margin-top: 50px;
+	vertical-align: top;
 }

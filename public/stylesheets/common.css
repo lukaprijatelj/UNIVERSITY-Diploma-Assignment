@@ -221,31 +221,21 @@ dropdown .entry:not([disabled]):hover
 /* ----------------------------- */
 /* Inputs */
 /* ----------------------------- */
-input
+input[type="text"],
+input[type="number"],
+input[type="password"]
 {
 	font-family: 'Muli', sans-serif;
-	border-style: solid;
-	border-color: rgba(255, 255, 255, 0.2);
-	vertical-align: bottom;
+
 	color: var(--TEXT-COLOR);
 	background: rgba(255, 255, 255, 0.05);
 
 	--DEFAULT-CONTROL-HEIGHT: 20px;
 	--INPUT-HIDDEN-PADDING: 4px;
 
-	display: block;
 	max-width: 300px;
-	width: 100%;
 	min-height: calc(var(--DEFAULT-CONTROL-HEIGHT) - var(--INPUT-HIDDEN-PADDING));
 	font-size: var(--FONT-SIZE);
-	border-width: 1px;
-	padding: 5px 5px;
-	outline: none; 
-
-	/** Needed because padding changes width uncontrollably if this is missing */
-	-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
-    box-sizing: border-box;         /* Opera/IE 8+ */
 }
 
 input:focus
