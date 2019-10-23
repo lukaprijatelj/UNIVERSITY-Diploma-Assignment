@@ -25,7 +25,7 @@ namespace.database.SharedCell = (() =>
 		var basicCell = new namespace.database.BasicCell(startX, startY, width, height);
 		Object.cloneData(this, basicCell);
 
-		Object.addMetadata(this, 'type', 'namespace.database.SharedCell');
+		Object.setMetadata(this, 'type', 'namespace.database.SharedCell');
 
 		this._id = SharedCell.generateId(startX, startY);
 

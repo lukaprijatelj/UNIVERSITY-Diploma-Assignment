@@ -349,7 +349,7 @@ RaytracingRenderer.prototype.pauseRendering = function()
 			globals.rendererCanvas.pauseThreadCell(current.cell);
 		}
 
-		current.invoke('worker.setRenderingServiceState', API.renderingServiceState);
+		current.terminate();		
 	};
 };
 

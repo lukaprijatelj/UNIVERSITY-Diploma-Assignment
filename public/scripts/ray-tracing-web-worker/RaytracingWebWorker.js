@@ -157,6 +157,14 @@ RaytracingWebWorker.setRenderingServiceState = function(data)
 
 	_this.renderingServiceState = data;
 
+	if (_this.renderingServiceState == 'pause')
+	{
+		_this.internalState = 'pause';
+
+		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
+		return;
+	}
+
 	if (_this.internalState == 'pause')
 	{
 		if (_this.renderingServiceState == 'running')
@@ -922,15 +930,6 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 RaytracingWebWorker.prototype.renderCell = function() 
 {
 	let _this = this;
-
-	if (_this.renderingServiceState == 'pause')
-	{
-		_this.internalState = 'pause';
-
-		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
-		return;
-	}
-
 
 	let cell = _this.cell;
 	let width = cell.width * _this.antialiasingFactor;
