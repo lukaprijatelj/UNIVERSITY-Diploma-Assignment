@@ -703,9 +703,10 @@ AdminPage._onStartStopRenderingClick = async function(type)
 	{
 		options.CAMERA = globals.camera.toJSON();
 	
+		options.LIGHTS = [];
+
 		for (let i=0; i<globals.lights.length; i++)
-		{
-			options.LIGHTS = [];
+		{			
 			options.LIGHTS.push(globals.lights[i].toJSON());
 		}
 		

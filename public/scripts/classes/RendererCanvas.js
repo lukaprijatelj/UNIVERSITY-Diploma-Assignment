@@ -109,11 +109,11 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 	div.id = cell._id;
 	div.addClass('flag-cell');
 
-	var borderWidth = 0.3;
-	var posX = cell.startX + borderWidth;
-	var posY = cell.startY + borderWidth;
-	var width = cell.width - borderWidth * 2;
-	var height = cell.height - borderWidth * 2;
+	var borderWidth = 0.5;
+	var posX = cell.startX;
+	var posY = cell.startY;
+	var width = cell.width;
+	var height = cell.height;
 
 	let unit = 'px';
 	div.style.width = width + unit;
