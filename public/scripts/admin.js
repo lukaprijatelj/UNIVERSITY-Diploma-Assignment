@@ -1,13 +1,10 @@
+'use strict';
+
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 var options = null;
 
-var AdminPage = new namespace.core.WebPage('Admin');
-var globals = new namespace.core.Globals();
 
-/**
- * Grid layout of cells that are rendered or are waiting for rendering.
- */
-Cache.cells = new List();
+var globals = new namespace.core.Globals();
 
 /**
  * ThreeJS scene.
@@ -44,8 +41,24 @@ globals.editorCanvas = null;
  */
 globals.renderingServiceState = 'idle';
 
+
+
+var cache = new namespace.core.Cache();
+
+/**
+ * Grid layout of cells that are rendered or are waiting for rendering.
+ */
+cache.cells = new List();
+
+
+
+
+var AdminPage = new namespace.core.WebPage('Admin');
+
 AdminPage.loadingText = null;
+
 AdminPage.loadingBar = null;
+
 AdminPage.loadingCounter = null;
 
 /**
@@ -417,6 +430,7 @@ AdminPage._updateRenderingState = function()
 	let canvasV = document.getElementById('editor-canvas');
 	let sceneButton = document.getElementById('scene-button');
 	let optionsButton = document.getElementById('options-button');
+	let backgroundButton = document.getElementById('background-button');
 	let newRendererButton = document.getElementById('new-renderer-button');
 
 	if (globals.renderingServiceState == 'running')
@@ -425,6 +439,7 @@ AdminPage._updateRenderingState = function()
 		canvasV.disable();
 		sceneButton.disable();
 		optionsButton.disable();
+		backgroundButton.disable();
 
 		//let outputButton = document.getElementById('output-button');
 		//outputButton.show();
@@ -438,6 +453,13 @@ AdminPage._updateRenderingState = function()
 	}
 	else if (globals.renderingServiceState == 'pause')
 	{		
+		interfaceV.addClass('rendering');
+		canvasV.disable();
+		sceneButton.disable();
+		optionsButton.disable();
+		backgroundButton.disable();
+
+		newRendererButton.show();
 		resumeRenderingButtonV.show();
 		stopRenderingButtonV.show();
 		pauseRenderingButtonV.hide();
@@ -449,12 +471,12 @@ AdminPage._updateRenderingState = function()
 		canvasV.enable();
 		sceneButton.enable();
 		optionsButton.enable();
+		backgroundButton.enable();
 
 		//let outputButton = document.getElementById('output-button');
 		//outputButton.hide();
 
 		newRendererButton.hide();
-
 		startRenderingButtonV.show();
 		stopRenderingButtonV.hide();
 		pauseRenderingButtonV.hide();

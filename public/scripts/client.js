@@ -1,3 +1,5 @@
+'use strict';
+
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 
 /** ----- NOTES: ----- */ 
@@ -47,12 +49,12 @@ globals.rendererCanvas = null;
 
 
 
-var Cache = new namespace.core.Cache();
+var cache = new namespace.core.Cache();
 
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-Cache.cells = new Array();
+cache.cells = new Array();
 
 
 
@@ -121,7 +123,6 @@ ClientPage._onStopRenderingService = function(data)
 ClientPage._onPauseRenderingService = function(data)
 {
 	API.renderingServiceState = data;
-	globals.renderer.pauseRendering();
 };
 
 /**
@@ -330,7 +331,7 @@ ClientPage.onGetLayout = function(data)
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
-	Cache.cells = new Array(data.cells.length);
+	cache.cells = new Array(data.cells.length);
 
 	for (let i=0; i<data.cells.length; i++)
 	{
@@ -338,7 +339,7 @@ ClientPage.onGetLayout = function(data)
 		ClientPage.tryUpdatingCell(current);
 
 		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
-		Cache.cells[i] = basicCell;
+		cache.cells[i] = basicCell;
 	}
 
 
@@ -465,9 +466,9 @@ ClientPage.updateWaitingCells = function(cells)
 
 	var cellsWaiting = new Array();
 
-	for (let i=0; i<Cache.cells.length; i++)
+	for (let i=0; i<cache.cells.length; i++)
 	{
-		let current = Cache.cells[i];
+		let current = cache.cells[i];
 
 		for (let j=0; j<cells.length; j++)
 		{

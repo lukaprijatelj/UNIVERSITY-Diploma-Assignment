@@ -12,7 +12,7 @@ var cell = null;
 var options = null;
 var mainThread = namespace.core.MainThread;
 
-function init(data)
+function init(thread, data)
 {
 	options = data.options;
 
@@ -67,8 +67,6 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	this.origin = null;
 	this.direction = null;
 
-	this.renderingServiceState = '';
-	this.internalState = '';
 
 	/**
 	 * Ambient light is here in order to render shadowed area more beautifully.
@@ -94,7 +92,7 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	this.initLights = RaytracingWebWorker.initLights.bind(this);
 	this.setCell = RaytracingWebWorker.setCell.bind(this);
 	this.startRendering = RaytracingWebWorker.startRendering.bind(this);
-	this.setRenderingServiceState = RaytracingWebWorker.setRenderingServiceState.bind(this);
+
 
 	this._init(threadIndex, maxRecursionDepth);
 };
@@ -105,7 +103,7 @@ Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 /**
  * Sets cell that needs to be rendered.
  */
-RaytracingWebWorker.setCell = function(cell)
+RaytracingWebWorker.setCell = function(thread, cell)
 {
 	let _this = this;
 	_this.cell = cell;
@@ -129,9 +127,6 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 		_this.maxRecursionDepth = maxRecursionDepth;
 	}
 
-	_this.renderingServiceState = 'idle';
-	_this.internalState = 'idle';
-
 	_this.cameraPosition = new THREE.Vector3();
 	_this.cameraNormalMatrix = new THREE.Matrix3();
 
@@ -146,33 +141,6 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 	_this.rayLight = _this.raycasterLight.ray;
 	
 	_this.cache = new Object();	
-};
-
-/**
- * Changes renderer service state.
- */
-RaytracingWebWorker.setRenderingServiceState = function(data)
-{
-	let _this = this;
-
-	_this.renderingServiceState = data;
-
-	if (_this.renderingServiceState == 'pause')
-	{
-		_this.internalState = 'pause';
-
-		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
-		return;
-	}
-
-	if (_this.internalState == 'pause')
-	{
-		if (_this.renderingServiceState == 'running')
-		{
-			console.log('[RaytracingWebWorker] Resuming thread ' + _this.threadIndex);
-			_this.renderCell();
-		}
-	}	
 };
 
 /**
@@ -197,7 +165,7 @@ RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingF
 /**
  * Initializes scene.
  */
-RaytracingWebWorker.initScene = function(sceneData)
+RaytracingWebWorker.initScene = function(thread, sceneData)
 {
 	let _this = this;
 
@@ -237,7 +205,7 @@ RaytracingWebWorker.initScene = function(sceneData)
 /**
  * Initializes camera.
  */
-RaytracingWebWorker.initCamera = function(cameraData)
+RaytracingWebWorker.initCamera = function(thread, cameraData)
 {
 	let _this = this;
 
@@ -924,7 +892,7 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 /**
  * Renders block with specified antialiasing factor.
  */
-RaytracingWebWorker.prototype.renderCell = function() 
+RaytracingWebWorker.prototype.renderCell = async function() 
 {
 	let _this = this;
 
@@ -943,8 +911,6 @@ RaytracingWebWorker.prototype.renderCell = function()
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 	let imageRowData = new ImageData(width, 1);
 
-	_this.internalState = 'running';
-
 	let startTime = new Date();
 	
 	while (posY < height)
@@ -953,7 +919,9 @@ RaytracingWebWorker.prototype.renderCell = function()
 		let columnIndex = 0;
 
 		while (posX < width) 
-		{			
+		{		
+			await mainThread.invokeRequest('globals.renderer.checkRenderingState');	
+
 			let xPos = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
 			
 			// spawn primary ray at pixel position
@@ -992,8 +960,6 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 	let endTime = new Date();
 	_this.cell.timeRendering += endTime - startTime;
-
-	_this.internalState = 'idle';	
 
 	_this._onCellRendered();
 };

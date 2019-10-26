@@ -43,7 +43,13 @@ I used browsersLocal storage for saving data received from server.
 	PBR		-	Physically Based Renderer
 
 
-
+## Connect with android
+- Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type:
+	// start program
+	adb.exe
+	// and then
+ 	adb start-server (or "adb kill-server")
+- Connect phone and browse to about:inspect in Chrome on desktop, ensuring a Chrome browser is open on your device
 
 
 ## Demo verzija (cPanel)

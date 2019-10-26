@@ -16,8 +16,6 @@ interface
 	border-color: var(--LIGHT-BLACK-COLOR);
 
 	position: fixed;
-	width: calc(100% - var(--BORDER-WIDTH) * 2);
-    height: calc(100% - var(--BORDER-WIDTH) * 2);
 }
 
 interface.rendering
