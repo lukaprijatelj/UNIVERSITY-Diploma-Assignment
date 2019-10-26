@@ -77,6 +77,8 @@
 	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/Dropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/OptionsDropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/classes/BackgroundDropdown.js'));
 	loadingBlock.push(document.loadScript('scripts/classes/Section.js'));
 	await Promise.all(loadingBlock);
 
@@ -85,6 +87,20 @@
 	loadingBlock.push(document.loadScript('scripts/debug.js'));
 	loadingBlock.push(document.loadScript('scripts/api.js'));
 	loadingBlock.push(document.loadScript('scripts/admin.js'));
+	await Promise.all(loadingBlock);
+
+	
+	// -----------------------------
+	// preload background images
+	// -----------------------------
+
+	loadingBlock = new Array();
+
+	for (let i=0; i<LIST_OF_BACKGROUND_IMAGES.length; i++)
+	{
+		loadingBlock.push(Image.preload(LIST_OF_BACKGROUND_IMAGES[i] + 'negX.png'));
+	}
+
 	await Promise.all(loadingBlock);
 	
 	AdminPage.init();

@@ -1,3 +1,5 @@
+'use strict';
+
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 
 /** ----- NOTES: ----- */ 
@@ -7,7 +9,6 @@ var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assig
 var options = null;
 var previousOptions = null;
 
-var ClientPage = new namespace.core.WebPage('Client');
 var globals = new namespace.core.Globals();
 
 /**
@@ -31,11 +32,6 @@ globals.camera = null;
 globals.renderer = null;
 
 /**
- * Grid layout of cells that are rendered or are waiting for rendering.
- */
-globals.cells = new Array();
-
-/**
  * Camera controls affected by mouse movement.
  */
 globals.controls = null;
@@ -50,6 +46,20 @@ globals.lastRenderingTime = 0;
  */
 globals.rendererCanvas = null;
 
+
+
+
+var cache = new namespace.core.Cache();
+
+/**
+ * Grid layout of cells that are rendered or are waiting for rendering.
+ */
+cache.cells = new Array();
+
+
+
+
+var ClientPage = new namespace.core.WebPage('Client');
 
 /**
  * Initializes page.
@@ -113,7 +123,6 @@ ClientPage._onStopRenderingService = function(data)
 ClientPage._onPauseRenderingService = function(data)
 {
 	API.renderingServiceState = data;
-	globals.renderer.pauseRendering();
 };
 
 /**
@@ -322,7 +331,7 @@ ClientPage.onGetLayout = function(data)
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
-	globals.cells = new Array(data.cells.length);
+	cache.cells = new Array(data.cells.length);
 
 	for (let i=0; i<data.cells.length; i++)
 	{
@@ -330,7 +339,7 @@ ClientPage.onGetLayout = function(data)
 		ClientPage.tryUpdatingCell(current);
 
 		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
-		globals.cells[i] = basicCell;
+		cache.cells[i] = basicCell;
 	}
 
 
@@ -457,9 +466,9 @@ ClientPage.updateWaitingCells = function(cells)
 
 	var cellsWaiting = new Array();
 
-	for (let i=0; i<globals.cells.length; i++)
+	for (let i=0; i<cache.cells.length; i++)
 	{
-		let current = globals.cells[i];
+		let current = cache.cells[i];
 
 		for (let j=0; j<cells.length; j++)
 		{

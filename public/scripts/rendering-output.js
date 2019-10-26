@@ -98,16 +98,16 @@ RenderingOutputPage.onGetLayout = function(data)
 	// draw layout
 	// -----------------------------
 
-	globals.cells = data.cells;
+	cache.cells = data.cells;
 
 
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
 
-	for (var i=0; i<globals.cells.length; i++)
+	for (var i=0; i<cache.cells.length; i++)
 	{
-		var current = globals.cells[i];
+		var current = cache.cells[i];
 
 		RenderingOutputPage.tryUpdatingCell(current);
 	}

@@ -9,6 +9,7 @@ function RendererCanvas()
 	this.flagCanvasV = null;
 
 	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
+	this.updateCellRow = RendererCanvas.updateCellRow.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -66,6 +67,19 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 	var img = new Image();
 	img.onload = _this._onImageLoaded.bind(null, img, cell);
 	img.src = cell.imageData;
+};
+
+/**
+ * Updates cell image.
+ */
+RendererCanvas.updateCellRow = function(thread, data)
+{
+	var _this = this;
+
+	var canvas = _this.canvasV;
+	var ctx = canvas.getContext('2d');
+
+	ctx.putImageData(data.imageData, data.posX, data.posY); 
 };
 
 /**
@@ -187,12 +201,12 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 	var borderWidth = 2;
 	var posX = cell.startX - borderWidth;
 	var posY = cell.startY - borderWidth;
-	var width = cell.width;
-	var height = cell.height;
+	var width = cell.width + borderWidth * 2;
+	var height = cell.height + borderWidth * 2;
 	let unit = 'px';
 
 	label.innerHTML = cell.threadIndex;
-	label.style.marginTop = height + unit; 
+	label.style.marginTop = cell.height + unit; 
 
 	div.style.width = width + unit;
 	div.style.height = height + unit;

@@ -10,9 +10,9 @@ var canvasHeight = -1;
 var cell = null;
 
 var options = null;
-var mainThread = new namespace.core.MainThread();
+var mainThread = namespace.core.MainThread;
 
-function init(data)
+function init(thread, data)
 {
 	options = data.options;
 
@@ -67,8 +67,6 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	this.origin = null;
 	this.direction = null;
 
-	this.renderingServiceState = '';
-	this.internalState = '';
 
 	/**
 	 * Ambient light is here in order to render shadowed area more beautifully.
@@ -94,7 +92,7 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	this.initLights = RaytracingWebWorker.initLights.bind(this);
 	this.setCell = RaytracingWebWorker.setCell.bind(this);
 	this.startRendering = RaytracingWebWorker.startRendering.bind(this);
-	this.setRenderingServiceState = RaytracingWebWorker.setRenderingServiceState.bind(this);
+
 
 	this._init(threadIndex, maxRecursionDepth);
 };
@@ -105,7 +103,7 @@ Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 /**
  * Sets cell that needs to be rendered.
  */
-RaytracingWebWorker.setCell = function(cell)
+RaytracingWebWorker.setCell = function(thread, cell)
 {
 	let _this = this;
 	_this.cell = cell;
@@ -129,9 +127,6 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 		_this.maxRecursionDepth = maxRecursionDepth;
 	}
 
-	_this.renderingServiceState = 'idle';
-	_this.internalState = 'idle';
-
 	_this.cameraPosition = new THREE.Vector3();
 	_this.cameraNormalMatrix = new THREE.Matrix3();
 
@@ -146,25 +141,6 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 	_this.rayLight = _this.raycasterLight.ray;
 	
 	_this.cache = new Object();	
-};
-
-/**
- * Changes renderer service state.
- */
-RaytracingWebWorker.setRenderingServiceState = function(data)
-{
-	let _this = this;
-
-	_this.renderingServiceState = data;
-
-	if (_this.internalState == 'pause')
-	{
-		if (_this.renderingServiceState == 'running')
-		{
-			console.log('[RaytracingWebWorker] Resuming thread ' + _this.threadIndex);
-			_this.renderCell();
-		}
-	}	
 };
 
 /**
@@ -189,7 +165,7 @@ RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingF
 /**
  * Initializes scene.
  */
-RaytracingWebWorker.initScene = function(sceneData)
+RaytracingWebWorker.initScene = function(thread, sceneData)
 {
 	let _this = this;
 
@@ -229,7 +205,7 @@ RaytracingWebWorker.initScene = function(sceneData)
 /**
  * Initializes camera.
  */
-RaytracingWebWorker.initCamera = function(cameraData)
+RaytracingWebWorker.initCamera = function(thread, cameraData)
 {
 	let _this = this;
 
@@ -281,21 +257,18 @@ RaytracingWebWorker.initLights = function()
  */
 RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY) 
 {
-	let posX = Math.floor(texture.width * uvX);
-	let posY = Math.floor(texture.height * uvY);
+	let posX = Math.floor(texture.imageData.width * uvX);
+	let posY = Math.floor(texture.imageData.height * uvY);
 
-	// r, g, b, a bits
-	let NUM_OF_COLOR_BITS = 4;
-	let above = posY * (texture.width * NUM_OF_COLOR_BITS);
-	let start = above + (posX * NUM_OF_COLOR_BITS);
-	
+	let pixel = texture.imageData.getPixel(posX, posY);
+
 	let MAX_VALUE = 255;
-	let red = texture.data[start + 0];
-	let green = texture.data[start + 1];
-	let blue = texture.data[start + 2];
+	let red = pixel.red;
+	let green = pixel.green;
+	let blue = pixel.blue;
 
 	// THREE.Color does not support alpha channel
-	let alpha = texture.data[start + 3];
+	let alpha = pixel.alpha;
 
 	return new THREE.Color(red / MAX_VALUE, green / MAX_VALUE, blue / MAX_VALUE);
 };
@@ -919,7 +892,7 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 /**
  * Renders block with specified antialiasing factor.
  */
-RaytracingWebWorker.prototype.renderCell = function() 
+RaytracingWebWorker.prototype.renderCell = async function() 
 {
 	let _this = this;
 
@@ -931,43 +904,26 @@ RaytracingWebWorker.prototype.renderCell = function()
 	
 	let pixelColor = new THREE.Color();
 
-	let posX;
-	let posY;
-	let image;
-	let index;
+	let posX = 0;
+	let posY = 0;
+	let index = 0;
 
-	if (_this.internalState == 'pause')
-	{
-		posX = _this.cachedX;
-		posY = _this.cachedY;
-		index = _this.cachedIndex;
-	}
-	else
-	{
-		posX = 0;
-		posY = 0;
-		cell.rawImage = new namespace.core.RawImage('', width, height);
-		index = 0;
-	}
-
-	_this.internalState = 'running';
+	cell.rawImage = new namespace.core.RawImage('', width, height);
+	let imageRowData = new ImageData(width, 1);
 
 	let startTime = new Date();
 	
 	while (posY < height)
 	{
+		let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let columnIndex = 0;
+
 		while (posX < width) 
-		{
-			if (_this.renderingServiceState == 'pause')
-			{
-				// let's pause current progrress
-				_this.cachedX = posX;
-				break;
-			}
+		{		
+			await mainThread.invokeRequest('globals.renderer.checkRenderingState');	
 
 			let xPos = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
-			let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
-
+			
 			// spawn primary ray at pixel position
 
 			_this.origin.copy(_this.cameraPosition);
@@ -979,23 +935,24 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 			// convert from linear to gamma
 
-			cell.rawImage.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
-			cell.rawImage.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
-			cell.rawImage.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
-			cell.rawImage.data[index + 3] = 255;
+			cell.rawImage.imageData.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
+			cell.rawImage.imageData.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
+			cell.rawImage.imageData.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
+			cell.rawImage.imageData.data[index + 3] = 255;
+
+			imageRowData.data[columnIndex + 0] = cell.rawImage.imageData.data[index + 0];
+			imageRowData.data[columnIndex + 1] = cell.rawImage.imageData.data[index + 1];
+			imageRowData.data[columnIndex + 2] = cell.rawImage.imageData.data[index + 2];
+			imageRowData.data[columnIndex + 3] = cell.rawImage.imageData.data[index + 3];
 
 			index += NUM_OF_COLOR_BITS;
+			columnIndex += NUM_OF_COLOR_BITS;
 
 			cell.progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
 			posX++;
 		}
 
-		if (_this.renderingServiceState == 'pause')
-		{
-			// let's pause current progrress
-			_this.cachedY = posY;
-			break;
-		}		
+		mainThread.invoke('globals.rendererCanvas.updateCellRow', { posX: cell.startX, posY:cell.startY + posY, imageData: imageRowData } );
 
 		posX = 0;
 		posY++;
@@ -1003,17 +960,6 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 	let endTime = new Date();
 	_this.cell.timeRendering += endTime - startTime;
-
-	if (_this.renderingServiceState == 'pause')
-	{
-		_this.internalState = 'pause';
-		_this.cachedIndex = index;
-
-		console.log('[RaytracingWebWorker] Pausing thread ' + _this.threadIndex);
-		return;
-	}
-
-	_this.internalState = 'idle';	
 
 	_this._onCellRendered();
 };
