@@ -9,7 +9,7 @@ function RendererCanvas()
 	this.flagCanvasV = null;
 
 	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
-	this.updateCellRow = RendererCanvas.updateCellRow.bind(this);
+	this.updateCellPixel = RendererCanvas.updateCellPixel.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -72,7 +72,7 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 /**
  * Updates cell image.
  */
-RendererCanvas.updateCellRow = function(thread, data)
+RendererCanvas.updateCellPixel = function(thread, data)
 {
 	var _this = this;
 

@@ -39,7 +39,7 @@ var RaytracingRenderer = function()
 	this.cameraJSON = null;
 
 	this.onCellRendered = RaytracingRenderer.onCellRendered.bind(this);
-	this.checkRenderingState = RaytracingRenderer.checkRenderingState.bind(this);
+	this.updatePixel = RaytracingRenderer.updatePixel.bind(this);
 
 	this._init();
 };
@@ -362,8 +362,10 @@ RaytracingRenderer.prototype.resumeRendering = function()
 /**
  * Stops rendering process.
  */
-RaytracingRenderer.checkRenderingState = function(thread, data, resolve, reject)
+RaytracingRenderer.updatePixel = function(thread, data, resolve, reject)
 {
+	globals.rendererCanvas.updateCellPixel(thread, data);
+
 	if (API.renderingServiceState == 'pause')
 	{
 		thread.resolve = resolve;

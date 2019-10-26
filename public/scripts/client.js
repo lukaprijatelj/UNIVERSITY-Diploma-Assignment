@@ -75,7 +75,6 @@ ClientPage.init = function()
 	API.connect(ClientPage._onServerConnected, ClientPage._onServerDisconnect);
 };
 
-
 /**
  * On server-client connection.
  */

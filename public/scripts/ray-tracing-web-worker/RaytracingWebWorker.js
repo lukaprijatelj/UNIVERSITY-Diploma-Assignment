@@ -909,19 +909,16 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	let index = 0;
 
 	cell.rawImage = new namespace.core.RawImage('', width, height);
-	let imageRowData = new ImageData(width, 1);
+	let imagePixelData = new ImageData(1, 1);
 
 	let startTime = new Date();
 	
 	while (posY < height)
 	{
 		let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
-		let columnIndex = 0;
 
 		while (posX < width) 
 		{		
-			await mainThread.invokeRequest('globals.renderer.checkRenderingState');	
-
 			let xPos = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
 			
 			// spawn primary ray at pixel position
@@ -940,19 +937,18 @@ RaytracingWebWorker.prototype.renderCell = async function()
 			cell.rawImage.imageData.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
 			cell.rawImage.imageData.data[index + 3] = 255;
 
-			imageRowData.data[columnIndex + 0] = cell.rawImage.imageData.data[index + 0];
-			imageRowData.data[columnIndex + 1] = cell.rawImage.imageData.data[index + 1];
-			imageRowData.data[columnIndex + 2] = cell.rawImage.imageData.data[index + 2];
-			imageRowData.data[columnIndex + 3] = cell.rawImage.imageData.data[index + 3];
-
-			index += NUM_OF_COLOR_BITS;
-			columnIndex += NUM_OF_COLOR_BITS;
+			imagePixelData.data[0] = cell.rawImage.imageData.data[index + 0];
+			imagePixelData.data[1] = cell.rawImage.imageData.data[index + 1];
+			imagePixelData.data[2] = cell.rawImage.imageData.data[index + 2];
+			imagePixelData.data[3] = cell.rawImage.imageData.data[index + 3];
 
 			cell.progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
+
+			await mainThread.invokeRequest('globals.renderer.updatePixel', { posX: cell.startX + posX, posY:cell.startY + posY, imageData: imagePixelData });
+
+			index += NUM_OF_COLOR_BITS;
 			posX++;
 		}
-
-		mainThread.invoke('globals.rendererCanvas.updateCellRow', { posX: cell.startX, posY:cell.startY + posY, imageData: imageRowData } );
 
 		posX = 0;
 		posY++;
