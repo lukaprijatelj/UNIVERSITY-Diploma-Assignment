@@ -303,7 +303,9 @@ RaytracingRenderer.prototype.startRendering = function()
 		new Exception.ArrayEmpty('There is no threads to run!');
 	}
 
-	for (let i=0; i<_this.threads.length; i++)
+	let minLength = Math.min(_this.threads.length, _this.cellsWaiting.length);
+
+	for (let i=0; i<minLength; i++)
 	{
 		let current = _this.threads[i];
 	
@@ -354,7 +356,9 @@ RaytracingRenderer.prototype.resumeRendering = function()
 		if (current.resolve)
 		{
 			current.resolve();
+
 			current.resolve = null;
+			current.reject = null;
 		}		
 	};
 };
