@@ -39,7 +39,7 @@ var RaytracingRenderer = function()
 	this.cameraJSON = null;
 
 	this.onCellRendered = RaytracingRenderer.onCellRendered.bind(this);
-	this.updatePixel = RaytracingRenderer.updatePixel.bind(this);
+	this.updatePixels = RaytracingRenderer.updatePixels.bind(this);
 
 	this._init();
 };
@@ -103,9 +103,6 @@ RaytracingRenderer.onCellRendered = function(thread, threadCell)
 	sharedCell.imageData = Image.toPNGString(threadCell.rawImage.imageData.data.buffer, threadCell.width, threadCell.height);
 
 	sharedCell.progress = threadCell.progress;
-
-	// update image of the cell on the canvas
-	//ClientPage.tryUpdatingCell(sharedCell);
 
 	_this.cellsDone.push(sharedCell);
 
@@ -372,9 +369,29 @@ RaytracingRenderer.prototype.resumeRendering = function()
 /**
  * Stops rendering process.
  */
-RaytracingRenderer.updatePixel = function(thread, data, resolve, reject)
+RaytracingRenderer.updatePixels = function(thread, data, resolve, reject)
 {
-	globals.rendererCanvas.updateCellPixel(thread, data);
+	globals.rendererCanvas.updateCellPixels(thread, data);
+
+	if (API.renderingServiceState == 'pause')
+	{
+		thread.resolve = resolve;
+		thread.reject = reject;
+
+		globals.rendererCanvas.pauseThreadCell(thread.cell);
+	}
+	else
+	{
+		resolve();
+	}
+};
+
+/**
+ * Stops rendering process.
+ */
+RaytracingRenderer.updateThreadCellImage = function(thread, data, resolve, reject)
+{
+	globals.rendererCanvas.updateCellPixels(thread, data);
 
 	if (API.renderingServiceState == 'pause')
 	{

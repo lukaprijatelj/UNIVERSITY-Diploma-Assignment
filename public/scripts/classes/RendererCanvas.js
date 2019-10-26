@@ -9,7 +9,8 @@ function RendererCanvas()
 	this.flagCanvasV = null;
 
 	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
-	this.updateCellPixel = RendererCanvas.updateCellPixel.bind(this);
+	this.updateCellPixels = RendererCanvas.updateCellPixels.bind(this);
+	this.updateThreadCellImage = RendererCanvas.updateThreadCellImage.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -47,10 +48,35 @@ RendererCanvas.prototype.resize = function()
 	//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.
 };
 
+RendererCanvas.updateThreadCellImage = function(thread, cell, resolve, reject)
+{
+	let _this = this;
+
+	var posX = cell.startX;
+	var posY = cell.startY;
+
+	var canvas = _this.canvasV;
+	var ctx = canvas.getContext('2d');
+	
+	ctx.putImageData(cell.rawImage.imageData, posX, posY);
+
+	if (API.renderingServiceState == 'pause')
+	{
+		thread.resolve = resolve;
+		thread.reject = reject;
+
+		_this.pauseThreadCell(thread.cell);
+	}
+	else
+	{
+		resolve();
+	}
+};
+
 /**
  * Updates cell image.
  */
-RendererCanvas.prototype.updateCellImage = function(cell)
+RendererCanvas.updateCellImage = function(cell)
 {
 	var _this = this;
 
@@ -72,7 +98,7 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 /**
  * Updates cell image.
  */
-RendererCanvas.updateCellPixel = function(thread, data)
+RendererCanvas.updateCellPixels = function(thread, data)
 {
 	var _this = this;
 

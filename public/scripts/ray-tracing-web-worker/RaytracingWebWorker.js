@@ -897,66 +897,66 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	let _this = this;
 
 	let cell = _this.cell;
+
 	let width = cell.width * _this.antialiasingFactor;
 	let height = cell.height * _this.antialiasingFactor;
-	
-	let NUM_OF_COLOR_BITS = 4;
-	
-	let pixelColor = new THREE.Color();
-
-	let posX = 0;
-	let posY = 0;
-	let index = 0;
-
 	cell.rawImage = new namespace.core.RawImage('', width, height);
-	let imagePixelData = new ImageData(1, 1);
 
-	let startTime = new Date();
-	
-	while (posY < height)
+	let updatePixelsArgs =
+	{ 
+		posX: 0, 
+		posY: 0,
+		imageData: new ImageData(1, 1) 
+	};
+
+	let startRenderingTime = Date.nowInNanoseconds();
+		
+	for (let posY=0; posY < height; posY++)
 	{
-		let yPos = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let rayPosY = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let canvasY = cell.startY + posY;
 
-		while (posX < width) 
+		for (let posX=0; posX < width; posX++) 
 		{		
-			let xPos = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
-			
-			// spawn primary ray at pixel position
-
+			let rayPosX = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
+			let canvasX = cell.startX + posX;
+						
+			// spawn ray at pixel position
+			let pixelColor = new THREE.Color();
 			_this.origin.copy(_this.cameraPosition);
-
-			_this.direction.set(xPos, yPos, -_this.perspective);
+			_this.direction.set(rayPosX, rayPosY, -_this.perspective);
 			_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
-			
 			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
 
 			// convert from linear to gamma
-
-			cell.rawImage.imageData.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
-			cell.rawImage.imageData.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
-			cell.rawImage.imageData.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
-			cell.rawImage.imageData.data[index + 3] = 255;
-
-			imagePixelData.data[0] = cell.rawImage.imageData.data[index + 0];
-			imagePixelData.data[1] = cell.rawImage.imageData.data[index + 1];
-			imagePixelData.data[2] = cell.rawImage.imageData.data[index + 2];
-			imagePixelData.data[3] = cell.rawImage.imageData.data[index + 3];
+			let renderedColor = new Color();
+			renderedColor.red = Math.sqrt(pixelColor.r) * 255;
+			renderedColor.green = Math.sqrt(pixelColor.g) * 255;
+			renderedColor.blue = Math.sqrt(pixelColor.b) * 255;
+			renderedColor.alpha = 255;
+			cell.rawImage.imageData.setPixel(posX, posY, renderedColor);
 
 			cell.progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
 
-			await mainThread.invokeRequest('globals.renderer.updatePixel', { posX: cell.startX + posX, posY:cell.startY + posY, imageData: imagePixelData });
+			updatePixelsArgs.posX = canvasX;
+			updatePixelsArgs.posY = canvasY;
+			updatePixelsArgs.imageData.setPixel(0, 0, renderedColor);
 
-			index += NUM_OF_COLOR_BITS;
-			posX++;
+			if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == true)
+			{
+				await mainThread.invokeRequest('globals.renderer.updatePixels', updatePixelsArgs);
+			}
 		}
-
-		posX = 0;
-		posY++;
 	}
 
-	let endTime = new Date();
-	_this.cell.timeRendering += endTime - startTime;
+	let endRenderingTime = Date.nowInNanoseconds();
+	_this.cell.timeRendering = endRenderingTime - startRenderingTime;
 
+	if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == false)
+	{
+		await mainThread.invokeRequest('globals.rendererCanvas.updateThreadCellImage', cell);
+	}
+	
 	_this._onCellRendered();
 };
 

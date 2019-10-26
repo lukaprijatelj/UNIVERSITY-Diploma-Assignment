@@ -35,7 +35,9 @@ var options =
 
 	CAMERA: null,
 
-	LIGHTS: []
+	LIGHTS: [],
+
+	DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS: false
 };
 
 
