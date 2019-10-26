@@ -303,7 +303,13 @@ RaytracingRenderer.prototype.startRendering = function()
 		new Exception.ArrayEmpty('There is no threads to run!');
 	}
 
-	let minLength = Math.min(_this.threads.length, _this.cellsWaiting.length);
+	let minLength = _this.threads.length;
+
+	if (_this.cellsWaiting.length < _this.threads.length)
+	{
+		new Warning.Other('Max threads larger than number of waiting cells! Setting num of threads to be same as num of waiting cells.');
+		minLength = _this.cellsWaiting.length;
+	}
 
 	for (let i=0; i<minLength; i++)
 	{
