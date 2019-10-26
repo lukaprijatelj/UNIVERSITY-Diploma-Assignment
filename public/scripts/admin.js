@@ -572,7 +572,7 @@ AdminPage._onOptionsButtonClick = async function(button)
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
 
-	let top = Unit.add(button.getOuterHeight(), '1px');
+	let top = button.getOuterHeight();
 	anchor.setCenter(top, '0px');
 
 
@@ -753,7 +753,7 @@ AdminPage._onBackgroundButtonClick = function(button)
 	let anchor = new namespace.html.Anchor(dropdown);
 	anchor.setTarget(button);
 
-	let top = Unit.add(button.getOuterHeight(), '1px');
+	let top = button.getOuterHeight();
 	anchor.setCenter(top, '0px');
 
 
