@@ -7,8 +7,6 @@ var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assig
 var options = null;
 var previousOptions = null;
 
-var ClientPage = new namespace.core.WebPage('Client');
-
 var globals = new namespace.core.Globals();
 
 /**
@@ -58,6 +56,8 @@ Cache.cells = new Array();
 
 
 
+
+var ClientPage = new namespace.core.WebPage('Client');
 
 /**
  * Initializes page.

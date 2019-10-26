@@ -10,7 +10,7 @@ var canvasHeight = -1;
 var cell = null;
 
 var options = null;
-var mainThread = new namespace.core.MainThread();
+var mainThread = namespace.core.MainThread;
 
 function init(data)
 {
@@ -289,21 +289,18 @@ RaytracingWebWorker.initLights = function()
  */
 RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY) 
 {
-	let posX = Math.floor(texture.width * uvX);
-	let posY = Math.floor(texture.height * uvY);
+	let posX = Math.floor(texture.imageData.width * uvX);
+	let posY = Math.floor(texture.imageData.height * uvY);
 
-	// r, g, b, a bits
-	let NUM_OF_COLOR_BITS = 4;
-	let above = posY * (texture.width * NUM_OF_COLOR_BITS);
-	let start = above + (posX * NUM_OF_COLOR_BITS);
-	
+	let pixel = texture.imageData.getPixel(posX, posY);
+
 	let MAX_VALUE = 255;
-	let red = texture.data[start + 0];
-	let green = texture.data[start + 1];
-	let blue = texture.data[start + 2];
+	let red = pixel.red;
+	let green = pixel.green;
+	let blue = pixel.blue;
 
 	// THREE.Color does not support alpha channel
-	let alpha = texture.data[start + 3];
+	let alpha = pixel.alpha;
 
 	return new THREE.Color(red / MAX_VALUE, green / MAX_VALUE, blue / MAX_VALUE);
 };
@@ -970,15 +967,15 @@ RaytracingWebWorker.prototype.renderCell = function()
 
 			// convert from linear to gamma
 
-			cell.rawImage.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
-			cell.rawImage.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
-			cell.rawImage.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
-			cell.rawImage.data[index + 3] = 255;
+			cell.rawImage.imageData.data[index + 0] = Math.sqrt(pixelColor.r) * 255;
+			cell.rawImage.imageData.data[index + 1] = Math.sqrt(pixelColor.g) * 255;
+			cell.rawImage.imageData.data[index + 2] = Math.sqrt(pixelColor.b) * 255;
+			cell.rawImage.imageData.data[index + 3] = 255;
 
-			imageRowData.data[columnIndex + 0] = cell.rawImage.data[index + 0];
-			imageRowData.data[columnIndex + 1] = cell.rawImage.data[index + 1];
-			imageRowData.data[columnIndex + 2] = cell.rawImage.data[index + 2];
-			imageRowData.data[columnIndex + 3] = cell.rawImage.data[index + 3];
+			imageRowData.data[columnIndex + 0] = cell.rawImage.imageData.data[index + 0];
+			imageRowData.data[columnIndex + 1] = cell.rawImage.imageData.data[index + 1];
+			imageRowData.data[columnIndex + 2] = cell.rawImage.imageData.data[index + 2];
+			imageRowData.data[columnIndex + 3] = cell.rawImage.imageData.data[index + 3];
 
 			index += NUM_OF_COLOR_BITS;
 			columnIndex += NUM_OF_COLOR_BITS;

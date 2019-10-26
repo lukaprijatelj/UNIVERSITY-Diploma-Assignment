@@ -98,7 +98,7 @@ RaytracingRenderer.onCellRendered = function(threadCell)
 	let sharedCell = new namespace.database.SharedCell(threadCell.startX, threadCell.startY, threadCell.width, threadCell.height);
 
 	// convert buffer data into PNG image data
-	sharedCell.imageData = HTMLImageElement.toPNGString(threadCell.rawImage.data.buffer, threadCell.width, threadCell.height);
+	sharedCell.imageData = Image.toPNGString(threadCell.rawImage.imageData.data.buffer, threadCell.width, threadCell.height);
 
 	sharedCell.progress = threadCell.progress;
 
