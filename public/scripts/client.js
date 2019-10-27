@@ -66,6 +66,13 @@ var ClientPage = new namespace.core.WebPage('Client');
  */
 ClientPage.init = function()
 {
+	if (navigator.hardwareConcurrency < 2)
+	{
+		// 1 thread needed for socketIO
+		// at least 1 thread needed for rendering
+		new Exception.Other('Client does not have enough cores/threads to work properly!');
+	}
+
 	let interfaceHtml = new namespace.html.ScrollViewer(document.querySelector('interface'));
 	interfaceHtml.removeClass('loading');
 	
