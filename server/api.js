@@ -80,9 +80,6 @@ var API =
 		{
 			isAdmin = true;
 			
-			// admin specific listeners
-			socket.on(API.baseUrl + '/admin/getRenderingServiceState', API.onAdminCheckRendering); 
-
 			// rendering specific listeners
 			socket.on(API.baseUrl + '/rendering/setOptions', API.onSetOptions);	
 			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
@@ -92,7 +89,11 @@ var API =
 		}
 		
 		DATABASE.addRenderClient(sessionId, index, ipAddress, isAdmin);
-				
+		
+		// rendering
+		socket.on(API.baseUrl + '/rendering/getOptions', API.onGetOptions);
+		socket.on(API.baseUrl + '/rendering/getState', API.onGetRenderingServiceState);
+
 		// cells
 		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
 		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
@@ -138,26 +139,6 @@ var API =
 	/**
 	 * Responds with list of rendering cells.
 	 */
-	onAdminCheckRendering: function(data, callback)
-	{
-		if (!callback)
-		{
-			new Exception.ValueUndefined();
-		}
-
-		var socket = this;
-		var result = 
-		{ 
-			renderingServiceState: API.renderingServiceState,
-			options: options
-		};
-
-		callback(result);
-	},
-
-	/**
-	 * Responds with list of rendering cells.
-	 */
 	onGetAllCells: function(data, callback)
 	{
 		if (!callback)
@@ -166,14 +147,33 @@ var API =
 		}
 
 		var socket = this;
-		var result = 
+
+		var cells = DATABASE.getRenderingCells();
+		callback(cells);
+	},
+
+	onGetOptions: function(data, callback)
+	{
+		if (!callback)
 		{
-			cells: DATABASE.getRenderingCells(),
-			options: options,
-			renderingServiceState: API.renderingServiceState
+			new Exception.ValueUndefined();
 		}
 
-		callback(result);
+		var socket = this;
+
+		callback(options);
+	},
+
+	onGetRenderingServiceState: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+
+		callback(API.renderingServiceState);
 	},
 
 	/**
@@ -196,9 +196,6 @@ var API =
 
 		var client = DATABASE.findClientBySessionId(sessionId);
 		var freeCells = DATABASE.getFreeCells(client, options.NUM_OF_BLOCKS_IN_CHUNK);
-
-		// emits to ALL EXCEPT socket that send this call
-		socket.broadcast.emit(API.baseUrl + '/cells/taken', freeCells);
 
 		if (!freeCells)
 		{

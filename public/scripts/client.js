@@ -113,17 +113,37 @@ ClientPage._onServerConnected = async function()
 	API.listen('rendering/pause', ClientPage._onPauseRenderingService);	
 	API.listen('rendering/resume', ClientPage._onResumeRenderingService);	
 
-	let data = await API.request('cells/getAll');
-	ClientPage.onGetLayout(data);
+	ClientPage._startRenderingService();
 };	
+
+ClientPage._startRenderingService = async function()
+{
+	let data;
+	
+	data = await API.request('rendering/getOptions');
+	ClientPage.updateOptions(data);
+
+	data = await API.request('cells/getAll');
+	ClientPage.updateBasicCells(data);
+
+	data = await API.request('rendering/getState');
+	ClientPage.updateRenderingServiceState(data);
+
+	if (API.renderingServiceState == 'idle')
+	{
+		// nothing to render
+		return;
+	}
+
+	ClientPage.openScene();
+};
 
 /**
  * Server started rendering service.
  */
-ClientPage._onStartRenderingService = async function()
+ClientPage._onStartRenderingService = function()
 {
-	let layoutData = await API.request('cells/getAll');
-	ClientPage.onGetLayout(layoutData);
+	ClientPage._startRenderingService();
 };
 
 /**
@@ -318,26 +338,17 @@ ClientPage._initRenderer = function()
 	globals.renderer = renderer;
 };	
 
-/**
- * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
- * @async
- */
-ClientPage.onGetLayout = function(data)
+ClientPage.updateOptions = function(dataOptions)
 {
-	console.log('[ClientPage] Grid layout drawn');
+	console.log('[ClientPage] Updating options');
 
-
-	// -----------------------------
-	// update options
-	// -----------------------------
-
-	if (!data.options)
+	if (!dataOptions)
 	{
 		return;
 	}
 
 	previousOptions = options;
-	options = data.options;	
+	options = dataOptions;	
 
 	if (previousOptions)
 	{
@@ -348,35 +359,36 @@ ClientPage.onGetLayout = function(data)
 	}
 
 	globals.rendererCanvas.resize();
+};
 
+ClientPage.updateRenderingServiceState = function(renderingServiceState)
+{
+	console.log('[ClientPage] Updating rendering service state');
+
+	API.renderingServiceState = renderingServiceState;	
+};
+
+/**
+ * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
+ * @async
+ */
+ClientPage.updateBasicCells = function(cells)
+{
+	console.log('[ClientPage] Updating basic cells');
 
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
-	cache.cells = new Array(data.cells.length);
+	cache.cells = new Array(cells.length);
 
-	for (let i=0; i<data.cells.length; i++)
+	for (let i=0; i<cells.length; i++)
 	{
-		let current = data.cells[i];
+		let current = cells[i];
 		ClientPage.tryUpdatingCell(current);
 
 		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
 		cache.cells[i] = basicCell;
-	}
-
-
-	// -----------------------------
-	// check if rendering service is running on server
-	// -----------------------------
-	
-	if (data.renderingServiceState == 'idle')
-	{
-		// nothing to render
-		return;
-	}
-	API.renderingServiceState = data.renderingServiceState;
-
-	ClientPage.openScene();
+	}	
 };
 
 /**

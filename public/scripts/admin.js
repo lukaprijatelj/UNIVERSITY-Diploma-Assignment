@@ -127,14 +127,23 @@ AdminPage.openScene = async function()
  */
 AdminPage._onServerConnected = async function(socket)
 {
-	console.log('[Main] Connected to server!');
+	console.log('[AdminPage] Connected to server!');
 
 	API.isConnected = true;
 
 	API.listen('clients/updated', AdminPage._onClientsUpdated);
 
-	let data = await API.request('admin/getRenderingServiceState');
-	AdminPage._onCheckRendering(data);
+	let data;
+
+	data = await API.request('rendering/getOptions');
+	AdminPage._updateOptions(data);
+
+	data = await API.request('rendering/getState');
+	AdminPage._updateRenderingServiceState(data);
+
+	AdminPage.openScene();
+
+	AdminPage._updateRenderingState();
 
 	AdminPage.onLoaded();	
 };
@@ -144,23 +153,25 @@ AdminPage._onServerConnected = async function(socket)
  */
 AdminPage._onServerDisconnect = function()
 {
+	console.log('[AdminPage] Disconnected from server');
+
 	API.isConnected = false;
 };
 
-/**
- * Check is server rendering service is running.
- */
-AdminPage._onCheckRendering = async function(data)
+AdminPage._updateOptions = function(dataOptions)
 {
-	globals.renderingServiceState = data.renderingServiceState;
+	console.log('[AdminPage] Updating options');
 
-	options = data.options;
+	options = dataOptions;
 
 	globals.editorCanvas.resize();
+};
 
-	AdminPage.openScene();
+AdminPage._updateRenderingServiceState = function(renderingServiceState)
+{
+	console.log('[AdminPage] Updating rendering service state');
 
-	AdminPage._updateRenderingState();
+	globals.renderingServiceState = renderingServiceState;
 };
 
 /**
