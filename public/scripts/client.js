@@ -66,11 +66,27 @@ var ClientPage = new namespace.core.WebPage('Client');
  */
 ClientPage.init = function()
 {
+	let interfaceHtml = new namespace.html.ScrollViewer(document.querySelector('interface'));
+	interfaceHtml.removeClass('loading');
+	
+	let rendererCanvas = new namespace.html.Canvas();	
+	rendererCanvas.id = 'rendering-canvas';
+	rendererCanvas.width = 0;
+	rendererCanvas.height = 0;
+	interfaceHtml.appendChild(rendererCanvas);
+
+	let flagCanvasOther = new namespace.html.Div();
+	flagCanvasOther.id = 'flag-canvas-others';
+	flagCanvasOther.hide();
+	interfaceHtml.appendChild(flagCanvasOther);
+
+	let flagCanvasThis = new namespace.html.Div();
+	flagCanvasThis.id = 'flag-canvas-this';
+	interfaceHtml.appendChild(flagCanvasThis);
+
 	globals.rendererCanvas = new RendererCanvas();
 	globals.rendererCanvas.init();
 	
-	document.querySelector('interface').removeClass('loading');
-
 	API.init(enums.apiClientType.RENDERER);		
 	API.connect(ClientPage._onServerConnected, ClientPage._onServerDisconnect);
 };

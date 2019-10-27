@@ -422,7 +422,7 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	if (Array.isEmpty(_this.cellsWaiting))
 	{
 		new Exception.ArrayEmpty('There is no cells waiting to be rendered!');
-	}
+	}	
 
 	let basicCell = _this.cellsWaiting.shift();
 	globals.rendererCanvas.removeWaitingCell(basicCell);
@@ -435,7 +435,13 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	threadCell.progress = 0;
 	threadCell.rawImage = null;
 	thread.invoke('worker.setCell', threadCell);
+	
 	globals.rendererCanvas.showThreadCell(threadCell);	
+
+	if (thread.index == 0 && options.AUTO_SCROLL_TO_RENDERING_AREA == true)
+	{
+		globals.rendererCanvas.scrollToCell(threadCell);	
+	}
 	
 	thread.isRendering = true;
 	thread.invoke('worker.startRendering');

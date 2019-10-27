@@ -3,7 +3,8 @@
 /* ----------------------------- */
 interface
 {
-    position: absolute;
+	position: absolute;
+	overflow: auto;
 }
 
 

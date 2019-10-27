@@ -76,7 +76,7 @@ RendererCanvas.updateThreadCellImage = function(thread, cell, resolve, reject)
 /**
  * Updates cell image.
  */
-RendererCanvas.updateCellImage = function(cell)
+RendererCanvas.prototype.updateCellImage = function(cell)
 {
 	var _this = this;
 
@@ -177,7 +177,7 @@ RendererCanvas.prototype.addThreadCell = function(threadIndex)
 	var _this = this;
 
 	let div = new namespace.html.Div();
-	div.id = 'thread-cell-' + threadIndex;
+	div.id = 'thread-' + threadIndex + '-cell';
 	div.hide();
 	div.addClass('thread-cell');
 
@@ -195,7 +195,7 @@ RendererCanvas.prototype.removeThreadCell = function(cell)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 	
 	if (!div)
 	{
@@ -213,7 +213,7 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 	div.show();
 	
 	if (!div)
@@ -244,11 +244,31 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
+RendererCanvas.prototype.scrollToCell = function(cell)
+{
+	var _this = this;
+
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	div.show();
+	
+	if (!div)
+	{
+		new Warning.Other('Thread cell was not found!');
+		return;
+	}
+
+	let interfaceHtml = document.querySelector('interface');
+	interfaceHtml.scrollIntoView(div);
+};
+
+/**
+ * Flags area where this cell is currently rendering.
+ */
 RendererCanvas.prototype.hideThreadCell = function(cell)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 	
 	if (!div)
 	{
@@ -266,7 +286,7 @@ RendererCanvas.prototype.pauseThreadCell = function(cell)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 	
 	if (!div)
 	{
@@ -284,7 +304,7 @@ RendererCanvas.prototype.resumeThreadCell = function(cell)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#thread-cell-' + cell.threadIndex);
+	let div = _this.flagCanvasV.querySelector('#' + cell._id);
 	
 	if (!div)
 	{
