@@ -56,6 +56,10 @@ var cache = new namespace.core.Cache();
  */
 cache.cells = new Array();
 
+/**
+ * List of clients connected to server.
+ */
+cache.clients = new Array();
 
 
 
@@ -108,26 +112,22 @@ ClientPage._onServerConnected = async function()
 	API.isConnected = true;
 
 	API.listen('cells/update', ClientPage._onCellUpdate);
+
 	API.listen('rendering/start', ClientPage._onStartRenderingService);	
 	API.listen('rendering/stop', ClientPage._onStopRenderingService);	
 	API.listen('rendering/pause', ClientPage._onPauseRenderingService);	
 	API.listen('rendering/resume', ClientPage._onResumeRenderingService);	
 
-	ClientPage._startRenderingService();
-};	
+	API.listen('clients/add', ClientPage._onClientAdd);
+	API.listen('clients/remove', ClientPage._onClientRemove);
 
-ClientPage._startRenderingService = async function()
-{
 	let data;
-	
-	data = await API.request('rendering/getOptions');
-	ClientPage.updateOptions(data);
 
-	data = await API.request('cells/getAll');
-	ClientPage.updateBasicCells(data);
+	data = await API.request('clients/getAll');
+	ClientPage._updateClients(data);
 
 	data = await API.request('rendering/getState');
-	ClientPage.updateRenderingServiceState(data);
+	ClientPage._updateRenderingServiceState(data);
 
 	if (API.renderingServiceState == 'idle')
 	{
@@ -135,26 +135,84 @@ ClientPage._startRenderingService = async function()
 		return;
 	}
 
+	ClientPage._startRenderingService();
+};	
+
+/**
+ * Updates clients list.
+ */
+ClientPage._updateClients = function(data)
+{
+	console.log('[ClientPage] Updating clients list');
+
+	cache.clients = data;
+};
+
+/**
+ * Server has notified us that clients were updated.
+ */
+ClientPage._onClientAdd = function(client)
+{
+	console.log('[ClientPage] Detected that new client has connected');
+
+	cache.clients.push(client);
+};
+
+/**
+ * Client has removed.
+ */
+ClientPage._onClientRemove = function(sessionId)
+{
+	console.log('[ClientPage] Detected that client has disconnected');
+
+	for (let i=0; i<cache.clients.length; i++)
+	{
+		let current = cache.clients[i];
+
+		if (current.sessionId == sessionId)
+		{
+			Array.removeAtIndex(cache.clients, i);
+			break;
+		}
+	}
+};
+
+/**
+ * Starts rendering procedure.
+ */
+ClientPage._startRenderingService = async function()
+{
+	let data;
+	
+	data = await API.request('rendering/getOptions');
+	ClientPage._updateOptions(data);
+
+	data = await API.request('cells/getAll');
+	ClientPage._updateBasicCells(data);
+
 	ClientPage.openScene();
 };
 
 /**
  * Server started rendering service.
  */
-ClientPage._onStartRenderingService = function()
+ClientPage._onStartRenderingService = function(renderingServiceState)
 {
+	API.renderingServiceState = renderingServiceState;
+
 	ClientPage._startRenderingService();
 };
 
 /**
  * Server stopped rendering service.
  */
-ClientPage._onStopRenderingService = function(data)
+ClientPage._onStopRenderingService = function(renderingServiceState)
 {
-	previousOptions = options;
-	options = null;
+	API.renderingServiceState = renderingServiceState;
 
-	API.renderingServiceState = data;
+	previousOptions = options;
+	options = null;	
+
 	globals.renderer.stopRendering();
 	ClientPage.stopRendererUi();
 };
@@ -162,17 +220,18 @@ ClientPage._onStopRenderingService = function(data)
 /**
  * Server stopped rendering service.
  */
-ClientPage._onPauseRenderingService = function(data)
+ClientPage._onPauseRenderingService = function(renderingServiceState)
 {
-	API.renderingServiceState = data;
+	API.renderingServiceState = renderingServiceState;
 };
 
 /**
  * Server stopped rendering service.
  */
-ClientPage._onResumeRenderingService = function(data)
+ClientPage._onResumeRenderingService = function(renderingServiceState)
 {
-	API.renderingServiceState = data;
+	API.renderingServiceState = renderingServiceState;
+
 	globals.renderer.resumeRendering();
 };
 
@@ -338,7 +397,10 @@ ClientPage._initRenderer = function()
 	globals.renderer = renderer;
 };	
 
-ClientPage.updateOptions = function(dataOptions)
+/**
+ * Updates options.
+ */
+ClientPage._updateOptions = function(dataOptions)
 {
 	console.log('[ClientPage] Updating options');
 
@@ -361,7 +423,10 @@ ClientPage.updateOptions = function(dataOptions)
 	globals.rendererCanvas.resize();
 };
 
-ClientPage.updateRenderingServiceState = function(renderingServiceState)
+/**
+ * Updates rendering service state from server.
+ */
+ClientPage._updateRenderingServiceState = function(renderingServiceState)
 {
 	console.log('[ClientPage] Updating rendering service state');
 
@@ -370,9 +435,8 @@ ClientPage.updateRenderingServiceState = function(renderingServiceState)
 
 /**
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
- * @async
  */
-ClientPage.updateBasicCells = function(cells)
+ClientPage._updateBasicCells = function(cells)
 {
 	console.log('[ClientPage] Updating basic cells');
 
@@ -425,7 +489,7 @@ ClientPage.openScene = async function()
 	}	
 
 	let cells = await API.request('cells/getWaiting');
-	ClientPage.updateWaitingCells(cells);
+	ClientPage._updateWaitingCells(cells);
 };
 
 /**
@@ -473,13 +537,13 @@ ClientPage.onRendererDone = async function(cells)
 	API.request('cells/update', { cells: cells, progress: 100 });
 			
 	let waitingCells = await API.request('cells/getWaiting');
-	ClientPage.updateWaitingCells(waitingCells);
+	ClientPage._updateWaitingCells(waitingCells);
 };
 
 /**
  * Cell waiting to be rendered is received.
  */
-ClientPage.updateWaitingCells = function(cells)
+ClientPage._updateWaitingCells = function(cells)
 {
 	console.log('[ClientPage] Rendering cells received');
 

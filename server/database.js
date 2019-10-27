@@ -109,6 +109,8 @@ var DATABASE =
 		table.rows.push(clientEntry);
 
 		table.save();
+
+		return clientEntry;
 	},
 
 	/**

@@ -48,8 +48,12 @@ var cache = new namespace.core.Cache();
 /**
  * Grid layout of cells that are rendered or are waiting for rendering.
  */
-cache.cells = new List();
+cache.cells = new Array();
 
+/**
+ * List of clients connected to server.
+ */
+cache.clients = new Array();
 
 
 
@@ -131,9 +135,13 @@ AdminPage._onServerConnected = async function(socket)
 
 	API.isConnected = true;
 
-	API.listen('clients/updated', AdminPage._onClientsUpdated);
+	API.listen('clients/add', AdminPage._onClientAdd);
+	API.listen('clients/remove', AdminPage._onClientRemove);
 
 	let data;
+
+	data = await API.request('clients/getAll');
+	AdminPage._updateClients(data);
 
 	data = await API.request('rendering/getOptions');
 	AdminPage._updateOptions(data);
@@ -154,6 +162,65 @@ AdminPage._onServerDisconnect = function()
 	API.isConnected = false;
 };
 
+/**
+ * Updates clients list.
+ */
+AdminPage._updateClients = function(data)
+{
+	console.log('[AdminPage] Updating clients list');
+
+	cache.clients = data;
+
+	AdminPage._updateClientsLabel();
+};
+
+/**
+ * Server has notified us that clients were updated.
+ */
+AdminPage._onClientAdd = function(client)
+{
+	console.log('[AdminPage] Detected that new client has connected');
+
+	cache.clients.push(client);
+	
+	AdminPage._updateClientsLabel();
+};
+
+/**
+ * Client has removed.
+ */
+AdminPage._onClientRemove = function(sessionId)
+{
+	console.log('[AdminPage] Detected that client has disconnected');
+
+	for (let i=0; i<cache.clients.length; i++)
+	{
+		let current = cache.clients[i];
+
+		if (current.sessionId == sessionId)
+		{
+			Array.removeAtIndex(cache.clients, i);
+			break;
+		}
+	}
+
+	AdminPage._updateClientsLabel();
+};
+
+/**
+ * Updated bottom left label for number of connected clients.
+ */
+AdminPage._updateClientsLabel = function(data)
+{
+	var renderingClientsCount = cache.clients.filter(item => item.isAdmin == false).length;
+
+	var clientsConnectedInput = document.querySelector('#num-clients-connected .value');
+	clientsConnectedInput.innerHTML = renderingClientsCount;
+};
+
+/**
+ * Updates options.
+ */
 AdminPage._updateOptions = function(dataOptions)
 {
 	console.log('[AdminPage] Updating options');
@@ -163,6 +230,9 @@ AdminPage._updateOptions = function(dataOptions)
 	globals.editorCanvas.resize();
 };
 
+/**
+ * Updates rendering service state.
+ */
 AdminPage._updateRenderingServiceState = function(renderingServiceState)
 {
 	console.log('[AdminPage] Updating rendering service state');
@@ -412,18 +482,6 @@ AdminPage.clearScene = function()
 	{ 
 		scene.remove(scene.children[0]); 
 	}
-};
-
-/**
- * Server has notified us that clients were updated.
- */
-AdminPage._onClientsUpdated = function(data)
-{
-	var clients = data;
-	var renderingClientsCount = clients.filter(item => item.isAdmin == false).length;
-
-	var clientsConnectedInput = document.querySelector('#num-clients-connected .value');
-	clientsConnectedInput.innerHTML = renderingClientsCount;
 };
 
 /**

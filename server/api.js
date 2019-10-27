@@ -88,7 +88,7 @@ var API =
 			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
 		}
 		
-		DATABASE.addRenderClient(sessionId, index, ipAddress, isAdmin);
+		let clientEntry = DATABASE.addRenderClient(sessionId, index, ipAddress, isAdmin);
 		
 		// rendering
 		socket.on(API.baseUrl + '/rendering/getOptions', API.onGetOptions);
@@ -107,13 +107,11 @@ var API =
 
 		
 		// -----------------------------
-		// notifies that clients list was updated
+		// notifies that new client was added
 		// -----------------------------
 
-		var result = DATABASE.getAllClients();
-
 		// emits to ALL and also to socket that send this call
-		io.sockets.emit(API.baseUrl + '/clients/updated', result);
+		socket.broadcast.emit(API.baseUrl + '/clients/add', clientEntry);
 	},
 
 	/**
@@ -130,13 +128,11 @@ var API =
 
 
 		// -----------------------------
-		// notifies that clients list was updated
+		// notifies that client was removed
 		// -----------------------------
 
-		var result = DATABASE.getAllClients();
-
 		// emits to ALL EXCEPT socket that send this call
-		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
+		socket.broadcast.emit(API.baseUrl + '/clients/remove', sessionId);
 	},
 
 	onGetAllClients: function(data, callback)
