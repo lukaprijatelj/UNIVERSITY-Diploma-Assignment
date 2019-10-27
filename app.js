@@ -29,7 +29,6 @@ require('./public/externals/namespace-core/namespace-core.js');
 var indexRouter = require('./routes/index');
 var clientRendererRouter = require('./routes/client');
 var clientAdminRouter = require('./routes/admin');
-var renderingOutputRouter = require('./routes/rendering-output');
 
 
 // -----------------------------
@@ -68,7 +67,6 @@ var EXPRESS_APP =
 		res.render('error');
 	},
 
-
 	/**
 	 * Start initializing.
 	 */
@@ -94,7 +92,6 @@ var EXPRESS_APP =
 		app.use('/', indexRouter);
 		app.use('/client', clientRendererRouter);
 		app.use('/admin', clientAdminRouter);
-		app.use('/renderingOutput', renderingOutputRouter);
 		
 		
 

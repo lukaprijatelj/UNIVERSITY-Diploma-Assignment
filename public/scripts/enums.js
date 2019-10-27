@@ -20,8 +20,6 @@ enums.layoutType = new Enum(
 
 enums.apiClientType = new Enum(
 {
-	RENDERING_OUTPUT: 'rendering-output',
-	
 	RENDERER: 'renderer',
 
 	ADMIN: 'admin'

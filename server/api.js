@@ -71,8 +71,6 @@ var API =
 
 		console.log('[Api] New client has connected!');
 
-		var time = new Date();		
-
 		var sessionId = socket.id;
 		var ipAddress = socket.handshake.address;
 		var isAdmin = false;
@@ -198,6 +196,9 @@ var API =
 
 		var client = DATABASE.findClientBySessionId(sessionId);
 		var freeCells = DATABASE.getFreeCells(client, options.NUM_OF_BLOCKS_IN_CHUNK);
+
+		// emits to ALL EXCEPT socket that send this call
+		socket.broadcast.emit(API.baseUrl + '/cells/taken', freeCells);
 
 		if (!freeCells)
 		{

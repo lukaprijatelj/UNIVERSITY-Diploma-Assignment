@@ -441,9 +441,6 @@ AdminPage._updateRenderingState = function()
 		optionsButton.disable();
 		backgroundButton.disable();
 
-		//let outputButton = document.getElementById('output-button');
-		//outputButton.show();
-			
 		startRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
 
@@ -472,9 +469,6 @@ AdminPage._updateRenderingState = function()
 		sceneButton.enable();
 		optionsButton.enable();
 		backgroundButton.enable();
-
-		//let outputButton = document.getElementById('output-button');
-		//outputButton.hide();
 
 		newRendererButton.hide();
 		startRenderingButtonV.show();
@@ -723,15 +717,6 @@ AdminPage._onStartStopRenderingClick = async function(type)
 	resumeRenderingButtonV.enable();
 
 	AdminPage._updateRenderingState();
-};
-
-AdminPage._onOpenOutputClick = function()
-{
-	let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
-	let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
-
-	// open rendering output window
-	window.open("/renderingOutput", "", "width=" + width + ",height=" + height);
 };
 
 AdminPage._onBackgroundButtonClick = function(button)

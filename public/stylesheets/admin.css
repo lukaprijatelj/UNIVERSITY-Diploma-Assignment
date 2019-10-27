@@ -139,7 +139,6 @@ interface:not(.rendering) #editor-curtain
 	background-image: url('../images/Resume_icon.png');
 }
 
-#output-button,
 #new-renderer-button
 {
 	background-color: var(--DARK-BLUE-COLOR);
