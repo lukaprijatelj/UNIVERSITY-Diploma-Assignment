@@ -543,12 +543,20 @@ AdminPage._onNewRendererClick = function()
 	a.setAttribute('target', '_blank');
 	var evt = document.createEvent("MouseEvents");   
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, true, false, false, false, 0, null);    
-	a.dispatchEvent(evt);*/
+	a.dispatchEvent(evt);*/	
 
-	let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
-	let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+	if (options.OPEN_NEW_RENDERER_IN_WINDOW == true)
+	{
+		let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
+		let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
 
-	window.open("/client", "", "width=" + width + ",height=" + height);
+		window.open("/client", "", "width=" + width + ",height=" + height);
+	}
+	else
+	{
+		// opens in tab
+		window.open("/client", "");
+	}	
 };
 
 AdminPage._onOptionsButtonClick = async function(button)

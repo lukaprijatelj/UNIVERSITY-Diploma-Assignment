@@ -97,7 +97,10 @@ var API =
 		// cells
 		socket.on(API.baseUrl + '/cells/getAll', API.onGetAllCells);
 		socket.on(API.baseUrl + '/cells/getWaiting', API.onGetWaitingCells);
-		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);			
+		socket.on(API.baseUrl + '/cells/update', API.onUpdateCell);
+		
+		// clients
+		socket.on(API.baseUrl + '/clients/getAll', API.onGetAllClients);
 				
 		// when client closes tab
 		socket.on('disconnect', API.onDisconnect);		
@@ -134,6 +137,19 @@ var API =
 
 		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/clients/updated', result);
+	},
+
+	onGetAllClients: function(data, callback)
+	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
+		var socket = this;
+
+		var cells = DATABASE.getAllClients();
+		callback(cells);
 	},
 
 	/**
