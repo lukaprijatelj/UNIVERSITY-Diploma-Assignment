@@ -142,10 +142,6 @@ AdminPage._onServerConnected = async function(socket)
 	AdminPage._updateRenderingServiceState(data);
 
 	AdminPage.openScene();
-
-	AdminPage._updateRenderingState();
-
-	AdminPage.onLoaded();	
 };
 
 /**
@@ -172,6 +168,8 @@ AdminPage._updateRenderingServiceState = function(renderingServiceState)
 	console.log('[AdminPage] Updating rendering service state');
 
 	globals.renderingServiceState = renderingServiceState;
+
+	AdminPage._updateRenderingState();
 };
 
 /**
@@ -487,19 +485,6 @@ AdminPage._updateRenderingState = function()
 		pauseRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
 	}
-};
-
-/**
- * Initial data is loaded.
- * Remove skeleton screens by removing 'loading' class from elements.
- */
-AdminPage.onLoaded = function()
-{
-	// -----------------------------
-	// remove .loading flag
-	// -----------------------------
-
-	document.querySelector('interface').removeClass('loading');
 };
 
 /**
