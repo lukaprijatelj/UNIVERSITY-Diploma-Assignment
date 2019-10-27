@@ -225,27 +225,31 @@ var DATABASE =
 		{
 			let current = table.rows[i];
 
-			if (current.socketIoClient)
-			{
-				continue;
-			}
-
 			if (current.progress == 100)
 			{
+				// cell is already rendered
 				continue;
 			}
 
-			if (cellsFound >= cellsLength)
+			if (current.socketIoClient)
 			{
-				break;
+				if (current.socketIoClient != socketIoClient)
+				{
+					// some other client is already rendering cell
+					continue;
+				}
 			}
 
 			current.socketIoClient = socketIoClient;
 
 			let basicCurrent = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
 			freeCells.push(basicCurrent);
-
 			cellsFound++;
+
+			if (cellsFound >= cellsLength)
+			{
+				break;
+			}
 		}
 
 		if (!freeCells.length)
@@ -273,7 +277,7 @@ var DATABASE =
 	/**
 	 * Updates render progress of the client entry.
 	 */
-	updateCellsProgress: function(cells, progress)
+	updateCellsProgress: function(cells)
 	{
 		var table = DATABASE.tables.renderingCells;
 
@@ -291,7 +295,7 @@ var DATABASE =
 					continue;
 				}
 	
-				element.progress = progress;
+				element.progress = cell.progress;
 	
 				if (typeof cell.imageData !== 'undefined')
 				{

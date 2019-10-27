@@ -230,8 +230,13 @@ var API =
 	/**
 	 * Updates render progress of certain client.
 	 */
-	onUpdateCell: function(data)
+	onUpdateCell: function(cells, callback)
 	{
+		if (!callback)
+		{
+			new Exception.ValueUndefined();
+		}
+
 		if (API.renderingServiceState == 'idle')
 		{
 			return;
@@ -241,13 +246,12 @@ var API =
 
 		var socket = this;
 
-		DATABASE.updateCellsProgress(data.cells, data.progress);		
+		DATABASE.updateCellsProgress(cells);		
 
-		if (data.progress == 100)
-		{
-			// notifies ALL clients that are currently connected
-			socket.broadcast.emit(API.baseUrl + '/cells/update', data);
-		}
+		// notifies ALL clients that are currently connected
+		socket.broadcast.emit(API.baseUrl + '/cells/update', cells);
+
+		callback();
 	},
 
 	/**
@@ -278,7 +282,7 @@ var API =
 		
 		DATABASE.addUploadedFile(filename, path);*/
 	
-		response.sendStatus(200)
+		response.sendStatus(200);
 	},
 
 	/**

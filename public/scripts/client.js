@@ -250,10 +250,8 @@ ClientPage._onServerDisconnect = function()
 /**
  * Progress was updated.
  */
-ClientPage._onCellUpdate = function(data)
-{
-	var cells = data.cells;
-	
+ClientPage._onCellUpdate = function(cells)
+{	
 	for (var i=0; i<cells.length; i++)
 	{
 		var current = cells[i];
@@ -534,7 +532,7 @@ ClientPage.onRendererDone = async function(cells)
 		return;
 	}
 
-	API.request('cells/update', { cells: cells, progress: 100 });
+	await API.request('cells/update', cells);
 			
 	let waitingCells = await API.request('cells/getWaiting');
 	ClientPage._updateWaitingCells(waitingCells);
