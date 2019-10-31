@@ -1,17 +1,12 @@
 var DEBUG =
 {
-	timer: new namespace.core.Timer(1000),
+	timer: new Timer(1000),
 
 	interface: document.querySelector('interface'),
 
 	mouse: document.querySelector('#mouse-position .value'),
 
 	canvas: document.querySelector('#canvas-size .value'),
-
-	camera: 
-	{
-		
-	},
 
 	CAMERA_POSITION_X:0,
 	CAMERA_POSITION_Y:0,
@@ -24,7 +19,7 @@ var DEBUG =
 	init: function()
 	{
 		DEBUG.timer.callback = DEBUG.onRefresh;
-		DEBUG.timer.enableLooping();
+		DEBUG.timer.loop = true;
 		DEBUG.timer.start();
 	},
 

@@ -20,7 +20,7 @@ EditorCanvas.prototype.init = function()
 /**
  * Disposes canvas.
  */
-EditorCanvas.prototype._dispose = function()
+EditorCanvas.prototype.dispose = function()
 {
 	var _this = this;
 
