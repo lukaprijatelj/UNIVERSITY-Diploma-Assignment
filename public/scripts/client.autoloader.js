@@ -50,7 +50,6 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/socket.io/socket.io.js'));
 	loadingBlock.push(document.loadScript('scripts/threejs/three.js'));
 	await Promise.all(loadingBlock);
 

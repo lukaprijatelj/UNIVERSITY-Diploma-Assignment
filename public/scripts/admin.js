@@ -133,10 +133,8 @@ AdminPage._onServerConnected = async function(socket)
 {
 	console.log('[AdminPage] Connected to server!');
 
-	API.isConnected = true;
-
-	API.listen('clients/add', AdminPage._onClientAdd);
-	API.listen('clients/remove', AdminPage._onClientRemove);
+	API.listen('clients/add', 'AdminPage._onClientAdd');
+	API.listen('clients/remove', 'AdminPage._onClientRemove');
 
 	let data;
 
@@ -158,8 +156,6 @@ AdminPage._onServerConnected = async function(socket)
 AdminPage._onServerDisconnect = function()
 {
 	console.log('[AdminPage] Disconnected from server');
-
-	API.isConnected = false;
 };
 
 /**
@@ -177,11 +173,11 @@ AdminPage._updateClients = function(data)
 /**
  * Server has notified us that clients were updated.
  */
-AdminPage._onClientAdd = function(client)
+AdminPage._onClientAdd = function(thread, data, resolve, reject)
 {
 	console.log('[AdminPage] Detected that new client has connected');
 
-	cache.clients.push(client);
+	cache.clients.push(data);
 	
 	AdminPage._updateClientsLabel();
 };
@@ -189,9 +185,11 @@ AdminPage._onClientAdd = function(client)
 /**
  * Client has removed.
  */
-AdminPage._onClientRemove = function(sessionId)
+AdminPage._onClientRemove = function(thread, data, resolve, reject)
 {
 	console.log('[AdminPage] Detected that client has disconnected');
+
+	let sessionId = data;
 
 	for (let i=0; i<cache.clients.length; i++)
 	{

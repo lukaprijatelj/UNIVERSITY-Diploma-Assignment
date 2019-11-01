@@ -109,17 +109,15 @@ ClientPage._onServerConnected = async function()
 {
 	console.log('[ClientPage] Connected to server!');
 
-	API.isConnected = true;
+	API.listen('cells/update', 'ClientPage._onCellUpdate');
 
-	API.listen('cells/update', ClientPage._onCellUpdate);
+	API.listen('rendering/start', 'ClientPage._onStartRenderingService');	
+	API.listen('rendering/stop', 'ClientPage._onStopRenderingService');	
+	API.listen('rendering/pause', 'ClientPage._onPauseRenderingService');	
+	API.listen('rendering/resume', 'ClientPage._onResumeRenderingService');	
 
-	API.listen('rendering/start', ClientPage._onStartRenderingService);	
-	API.listen('rendering/stop', ClientPage._onStopRenderingService);	
-	API.listen('rendering/pause', ClientPage._onPauseRenderingService);	
-	API.listen('rendering/resume', ClientPage._onResumeRenderingService);	
-
-	API.listen('clients/add', ClientPage._onClientAdd);
-	API.listen('clients/remove', ClientPage._onClientRemove);
+	API.listen('clients/add', 'ClientPage._onClientAdd');
+	API.listen('clients/remove', 'ClientPage._onClientRemove');
 
 	let data;
 
@@ -151,19 +149,21 @@ ClientPage._updateClients = function(data)
 /**
  * Server has notified us that clients were updated.
  */
-ClientPage._onClientAdd = function(client)
+ClientPage._onClientAdd = function(thread, data, resolve, reject)
 {
 	console.log('[ClientPage] Detected that new client has connected');
 
-	cache.clients.push(client);
+	cache.clients.push(data);
 };
 
 /**
  * Client has removed.
  */
-ClientPage._onClientRemove = function(sessionId)
+ClientPage._onClientRemove = function(thread, data, resolve, reject)
 {
 	console.log('[ClientPage] Detected that client has disconnected');
+
+	let sessionId = data;
 
 	for (let i=0; i<cache.clients.length; i++)
 	{
@@ -196,9 +196,9 @@ ClientPage._startRenderingService = async function()
 /**
  * Server started rendering service.
  */
-ClientPage._onStartRenderingService = function(renderingServiceState)
+ClientPage._onStartRenderingService = function(thread, data, resolve, reject)
 {
-	API.renderingServiceState = renderingServiceState;
+	API.renderingServiceState = data;
 
 	ClientPage._startRenderingService();
 };
@@ -206,9 +206,9 @@ ClientPage._onStartRenderingService = function(renderingServiceState)
 /**
  * Server stopped rendering service.
  */
-ClientPage._onStopRenderingService = function(renderingServiceState)
+ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 {
-	API.renderingServiceState = renderingServiceState;
+	API.renderingServiceState = data;
 
 	previousOptions = options;
 	options = null;	
@@ -220,17 +220,21 @@ ClientPage._onStopRenderingService = function(renderingServiceState)
 /**
  * Server stopped rendering service.
  */
-ClientPage._onPauseRenderingService = function(renderingServiceState)
+ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 {
-	API.renderingServiceState = renderingServiceState;
+	console.log('[ClientPage] Pausing rendering service!');
+
+	API.renderingServiceState = data;
 };
 
 /**
  * Server stopped rendering service.
  */
-ClientPage._onResumeRenderingService = function(renderingServiceState)
+ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 {
-	API.renderingServiceState = renderingServiceState;
+	console.log('[ClientPage] Resuming rendering service!');
+
+	API.renderingServiceState = data;
 
 	globals.renderer.resumeRendering();
 };
@@ -242,15 +246,13 @@ ClientPage._onServerDisconnect = function()
 {
 	console.log('[ClientPage] Disconnected from server!');
 
-	API.isConnected = false;
-
 	ClientPage._onStopRenderingService();
 };
 
 /**
  * Progress was updated.
  */
-ClientPage._onCellUpdate = function(cells)
+ClientPage._onCellUpdate = function(thread, cells, resolve, reject)
 {	
 	for (var i=0; i<cells.length; i++)
 	{
@@ -409,6 +411,9 @@ ClientPage._updateOptions = function(dataOptions)
 
 	previousOptions = options;
 	options = dataOptions;	
+
+	// adjust MAX threads to the capabilities of the client
+	options.MAX_THREADS = Math.min(options.MAX_THREADS, navigator.hardwareConcurrency - 1);
 
 	if (previousOptions)
 	{
