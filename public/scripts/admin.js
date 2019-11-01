@@ -286,12 +286,6 @@ AdminPage.loadGltfModel = function()
  */
 AdminPage._initScene = function(gltfScene)
 {
-	let loadingLayer = document.querySelector('layer#loading');
-	loadingLayer.show();
-
-	AdminPage.loadingText.setValue('Loading scene ...');
-	AdminPage.loadingCounter.setValue(0);
-
 	globals.scene = new THREE.Scene();
 	globals.scene.add(gltfScene);
 };
@@ -304,6 +298,10 @@ AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 	return new Promise((resolve, reject) =>
 	{
 		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.show();
+
+		AdminPage.loadingText.setValue('Loading scene background ...');
+		AdminPage.loadingCounter.setValue(0);
 
 		let onProgress = function(xhr)
 		{

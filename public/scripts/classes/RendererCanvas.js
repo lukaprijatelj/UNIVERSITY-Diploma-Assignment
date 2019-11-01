@@ -56,8 +56,8 @@ RendererCanvas.updateThreadCellImage = function(thread, cell, resolve, reject)
 	var posY = cell.startY;
 
 	var canvas = _this.canvasV;
+
 	var ctx = canvas.getContext('2d');
-	
 	ctx.putImageData(cell.rawImage.imageData, posX, posY);
 
 	if (API.renderingServiceState == 'pause')
@@ -144,11 +144,9 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 	let unit = 'px';
 	div.style.width = width + unit;
 	div.style.height = height + unit;
-	div.style.left = posX + unit;
-	div.style.top = posY + unit;
 	div.style.borderWidth = borderWidth + unit;
 
-	_this.flagCanvasV.appendChild(div);
+	_this.flagCanvasV.appendChild(div, posX, posY);
 };
 
 /**
@@ -178,8 +176,8 @@ RendererCanvas.prototype.addThreadCell = function(threadIndex)
 
 	let div = new namespace.html.Div();
 	div.id = 'thread-' + threadIndex + '-cell';
-	div.hide();
 	div.addClass('thread-cell');
+	div.hide();	
 
 	let label = new namespace.html.Div();
 	label.addClass('label');
