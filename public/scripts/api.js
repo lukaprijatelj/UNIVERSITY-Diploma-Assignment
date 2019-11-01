@@ -1,15 +1,5 @@
-// -----------------------------
-// import SocketIO
-// -----------------------------
-var socket = null;
-
 var API =
-{
-	/**
-	 * Base url API access.
-	 */
-	apiUrl: '/api',
-	
+{	
 	/**
 	 * Is SocketIO currently connected to server.
 	 * @type {boolean}
@@ -17,10 +7,9 @@ var API =
 	isConnected: false,
 
 	/**
-	 * Type of the client.
-	 * @type {string}
+	 * Webworker thread instance.
 	 */
-	clientType: String(),
+	thread: null,
 
 	/**
 	 * Is rendering service running on server.
@@ -34,35 +23,25 @@ var API =
 	 */
 	request: function(url, data)
 	{
-		if(!socket)
+		let args =
 		{
-			new Exception.ValueUndefined();
-		}
-
-		data = data ? data : null;
-		url = API.apiUrl + '/' + url;
-
-		console.log('[Api] Requesting ' + url);
-
-		return new Promise((resolve, reject) =>
-		{
-			socket.emit(url, data, resolve);
-		});
+			url: url,
+			data: data
+		};
+		return API.thread.invokeRequest('request', args);
 	},
 
 	/**
 	 * Ajax response from server.
 	 */
-	listen: function(url, callback)
+	listen: function(url, callbackUrl)
 	{
-		if(!socket)
+		let data =
 		{
-			new Exception.ValueUndefined();
-		}
-
-		url = API.apiUrl + '/' + url;
-
-		socket.on(url, callback);
+			url: url,
+			callbackUrl: callbackUrl
+		};
+		API.thread.invoke('listen', data);
 	},
 
 	/**
@@ -70,15 +49,21 @@ var API =
 	 */
 	connect: function(onConnect, onDisconnect)
 	{
-		let initOptions =
+		API.isConnected = true;
+
+		API.onConnect = () =>
 		{
-			pingTimeout: 1000 * 60
+			API.isConnected = true;
+			onConnect();
 		};
 
-		socket = io.connect(window.location.hostname + ':' + SOCKETIO_PORT, { query: "clientType=" + API.clientType });
+		API.onDisconnect = () =>
+		{
+			API.isConnected = false;
+			onDisconnect();
+		};
 
-		socket.on('connect', onConnect);
-		socket.on('disconnect', onDisconnect);
+		API.thread.invoke('connect', window.location.hostname);
 	},
 
 	/**
@@ -86,7 +71,7 @@ var API =
 	 */
 	disconnect: function()
 	{
-		socket.disconnect();
+		API.thread.invoke('disconnect');
 	},
 	
 	/**
@@ -94,6 +79,11 @@ var API =
 	 */
 	init: function(clientType)
 	{
-		API.clientType = clientType;		
+		console.log('[API] Api thread initialized');
+
+		let thread = new namespace.core.Thread('./scripts/classes/ApiWebWorker.js');
+		API.thread = thread;
+
+		thread.invoke('init', clientType);
 	}
 };
