@@ -38,8 +38,9 @@ var RaytracingRenderer = function()
 	this.camera = null;
 	this.cameraJSON = null;
 
-	this.onCellRendered = RaytracingRenderer.onCellRendered.bind(this);
-	this.updatePixels = RaytracingRenderer.updatePixels.bind(this);
+	this.onCellRendered = this.onCellRendered.bind(this);
+	this.updatePixels = this.updatePixels.bind(this);
+	this.checkRenderingState = this.checkRenderingState.bind(this);
 
 	this._init();
 };
@@ -84,7 +85,7 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.onCellRendered = function(thread, threadCell)
+RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
 {
 	let _this = this;
 
@@ -118,6 +119,23 @@ RaytracingRenderer.onCellRendered = function(thread, threadCell)
 	if (_this.areWorkersDone())
 	{
 		ClientPage.onRendererDone(_this.cellsDone);	
+	}
+};
+
+RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolve, reject)
+{
+	let _this = this;
+
+	if (API.renderingServiceState == 'pause')
+	{
+		thread.resolve = resolve;
+		thread.reject = reject;
+
+		globals.rendererCanvas.pauseThreadCell(thread.cell);
+	}
+	else
+	{
+		resolve();
 	}
 };
 
@@ -369,41 +387,9 @@ RaytracingRenderer.prototype.resumeRendering = function()
 /**
  * Stops rendering process.
  */
-RaytracingRenderer.updatePixels = function(thread, data, resolve, reject)
+RaytracingRenderer.prototype.updatePixels = function(thread, data, resolve, reject)
 {
 	globals.rendererCanvas.updateCellPixels(thread, data);
-
-	if (API.renderingServiceState == 'pause')
-	{
-		thread.resolve = resolve;
-		thread.reject = reject;
-
-		globals.rendererCanvas.pauseThreadCell(thread.cell);
-	}
-	else
-	{
-		resolve();
-	}
-};
-
-/**
- * Stops rendering process.
- */
-RaytracingRenderer.updateThreadCellImage = function(thread, data, resolve, reject)
-{
-	globals.rendererCanvas.updateCellPixels(thread, data);
-
-	if (API.renderingServiceState == 'pause')
-	{
-		thread.resolve = resolve;
-		thread.reject = reject;
-
-		globals.rendererCanvas.pauseThreadCell(thread.cell);
-	}
-	else
-	{
-		resolve();
-	}
 };
 
 /**

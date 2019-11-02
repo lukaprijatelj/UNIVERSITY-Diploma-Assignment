@@ -1,46 +1,51 @@
-var options = 
-{
-	//SCENE_FILEPATH: 'scenes/Castle/Scene.gltf',
-	SCENE_FILEPATH: 'scenes/Textured-box/Scene.gltf',
-	//SCENE_FILEPATH: 'scenes/Buggy/Scene.gltf',
-	//SCENE_FILEPATH: 'scenes/MetalRoughSpheres/Scene.gltf',
-	//SCENE_FILEPATH: 'scenes/boomBox/Scene.gltf',
+var options = { };
 
-	//SKY_CUBE_FILEPATH: 'images/skycube_lake/',
-	SKY_CUBE_FILEPATH: 'images/skycube_car/',
-	//SKY_CUBE_FILEPATH: 'images/skycube_black/',
-	//SKY_CUBE_FILEPATH: 'images/skycube_building/',
-	SKY_CUBE_IMAGES: 
-	[
-		'posX.png', 'negX.png',
-		'posY.png', 'negY.png',
-		'posZ.png', 'negZ.png'
-	],
+//options.SCENE_FILEPATH = 'scenes/Castle/Scene.gltf';
+options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
+//options.SCENE_FILEPATH = 'scenes/Buggy/Scene.gltf';
+//options.SCENE_FILEPATH = 'scenes/MetalRoughSpheres/Scene.gltf';
+//options.SCENE_FILEPATH = 'scenes/boomBox/Scene.gltf';
 
-	RENDERER_TYPE: 'ray-tracing',
-	
-	RESOLUTION_FACTOR: 1,
-	
-	ANTIALIASING_FACTOR: 1,
+//options.SKY_CUBE_FILEPATH = 'images/skycube_lake/';
+options.SKY_CUBE_FILEPATH = 'images/skycube_car/';
+//options.SKY_CUBE_FILEPATH = 'images/skycube_black/';
+//options.SKY_CUBE_FILEPATH = 'images/skycube_building/';
+options.SKY_CUBE_IMAGES = 
+[
+	'posX.png', 'negX.png',
+	'posY.png', 'negY.png',
+	'posZ.png', 'negZ.png'
+];
 
-	CANVAS_WIDTH: 1280,
-	CANVAS_HEIGHT: 720,
+options.RENDERER_TYPE = 'ray-tracing';
 
-	BLOCK_WIDTH: 25,
-	BLOCK_HEIGHT: 25,
-	NUM_OF_BLOCKS_IN_CHUNK: 10,
+options.RESOLUTION_FACTOR = 1;
+options.ANTIALIASING_FACTOR = 1;
 
-	MAX_RECURSION_DEPTH: 2,
-	MAX_THREADS: 2,
+options.CANVAS_WIDTH = 1280;
+options.CANVAS_HEIGHT = 720;
 
-	CAMERA: null,
+options.BLOCK_WIDTH = 25;
+options.BLOCK_HEIGHT = 25;
+options.NUM_OF_BLOCKS_IN_CHUNK = 10;
 
-	LIGHTS: [],
+options.MAX_RECURSION_DEPTH = 2;
+options.MAX_THREADS = 2;
 
-	DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS: false,
-	AUTO_SCROLL_TO_RENDERING_AREA: false,
-	OPEN_NEW_RENDERER_IN_WINDOW: true 
-};
+options.CAMERA = null;
+
+options.LIGHTS = [];
+
+options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS = false;
+
+// should client autoscroll to current rendering area
+options.AUTO_SCROLL_TO_RENDERING_AREA = false;
+
+// should clicking on "new client" button open client in new window or tab
+options.OPEN_NEW_RENDERER_IN_WINDOW = true;
+
+// check every 500ms if rendering-service is still running on server
+options.CHECK_RENDERING_SERVICE_STATE = 500;
 
 
 if (typeof module !== 'undefined' && module.exports)

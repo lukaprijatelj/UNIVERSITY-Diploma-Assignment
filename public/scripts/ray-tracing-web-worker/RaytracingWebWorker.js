@@ -910,14 +910,24 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	};
 
 	let startRenderingTime = Date.nowInNanoseconds();
-		
+
+	let stateStartTime = 0;
+	let progress = 0;
+
 	for (let posY=0; posY < height; posY++)
 	{
 		let rayPosY = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
 		let canvasY = cell.startY + posY;
 
 		for (let posX=0; posX < width; posX++) 
-		{		
+		{	
+			if ((Date.nowInMiliseconds() - stateStartTime) > options.CHECK_RENDERING_SERVICE_STATE)
+			{
+				// time check is needed because we don't want to slow down rendering too much with synchronization
+				await mainThread.invokeRequest('globals.renderer.checkRenderingState', progress);
+				stateStartTime = Date.nowInMiliseconds();
+			}
+						
 			let rayPosX = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
 			let canvasX = cell.startX + posX;
 						
@@ -936,7 +946,8 @@ RaytracingWebWorker.prototype.renderCell = async function()
 			renderedColor.alpha = 255;
 			cell.rawImage.imageData.setPixel(posX, posY, renderedColor);
 
-			cell.progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
+			progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
+			cell.progress = progress; 
 
 			updatePixelsArgs.posX = canvasX;
 			updatePixelsArgs.posY = canvasY;
@@ -945,7 +956,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 			if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == true)
 			{
 				await mainThread.invokeRequest('globals.renderer.updatePixels', updatePixelsArgs);
-			}
+			}			
 		}
 	}
 
@@ -954,7 +965,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 	if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == false)
 	{
-		await mainThread.invokeRequest('globals.rendererCanvas.updateThreadCellImage', cell);
+		await mainThread.invoke('globals.rendererCanvas.updateThreadCellImage', cell);
 	}
 	
 	_this._onCellRendered();

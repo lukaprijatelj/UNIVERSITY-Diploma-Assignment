@@ -59,18 +59,6 @@ RendererCanvas.updateThreadCellImage = function(thread, cell, resolve, reject)
 
 	var ctx = canvas.getContext('2d');
 	ctx.putImageData(cell.rawImage.imageData, posX, posY);
-
-	if (API.renderingServiceState == 'pause')
-	{
-		thread.resolve = resolve;
-		thread.reject = reject;
-
-		_this.pauseThreadCell(thread.cell);
-	}
-	else
-	{
-		resolve();
-	}
 };
 
 /**
@@ -220,23 +208,24 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 		return;
 	}
 
-	let label = div.children[0];
+	let label = Array.getFirst(div.children);
 
-	var borderWidth = 2;
-	var posX = cell.startX - borderWidth;
-	var posY = cell.startY - borderWidth;
-	var width = cell.width + borderWidth * 2;
-	var height = cell.height + borderWidth * 2;
+	var posX = cell.startX;
+	var posY = cell.startY;
+	var width = cell.width;
+	var height = cell.height;
 	let unit = 'px';
 
 	label.innerHTML = cell.threadIndex;
-	label.style.marginTop = cell.height + unit; 
+	
+	let fontSize = Math.floor(height / 2);
+	label.style.lineHeight = height + unit; 
+	label.style.fontSize = fontSize + unit;
 
 	div.style.width = width + unit;
 	div.style.height = height + unit;
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
-	div.style.borderWidth = borderWidth + unit;
 };
 
 /**

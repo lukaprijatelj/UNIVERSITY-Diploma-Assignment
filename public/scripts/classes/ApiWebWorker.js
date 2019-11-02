@@ -31,12 +31,6 @@ var isConnected = false;
 var clientType = '';
 
 /**
- * Is rendering service running on server.
- * @type {boolean}
- */
-var renderingServiceState = 'idle';
-
-/**
  * Ajax request to server.
  * @async
  */

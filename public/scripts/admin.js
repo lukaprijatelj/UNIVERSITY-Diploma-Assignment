@@ -354,7 +354,7 @@ AdminPage._initCamera = function(cameras)
 	{
 		// model has camera included, so we will use it's position and rotation
 
-		let existingCamera = cameras[0];
+		let existingCamera = Array.getFirst(cameras);
 		globals.camera.position.x = existingCamera.parent.position.x;
 		globals.camera.position.y = existingCamera.parent.position.y;
 		globals.camera.position.z = existingCamera.parent.position.z;
@@ -777,6 +777,9 @@ AdminPage._onStartStopRenderingClick = async function(type)
 	AdminPage._updateRenderingState();
 };
 
+/**
+ * Background button was clicked.
+ */
 AdminPage._onBackgroundButtonClick = function(button)
 {
 	let onSelect = function()
