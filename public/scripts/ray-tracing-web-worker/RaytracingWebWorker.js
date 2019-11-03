@@ -87,11 +87,11 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	this.cachedImage = null;
 	this.cachedIndex = -1;
 
-	this.initScene = RaytracingWebWorker.initScene.bind(this);
-	this.initCamera = RaytracingWebWorker.initCamera.bind(this);
-	this.initLights = RaytracingWebWorker.initLights.bind(this);
-	this.setCell = RaytracingWebWorker.setCell.bind(this);
-	this.startRendering = RaytracingWebWorker.startRendering.bind(this);
+	this.initScene = this.initScene.bind(this);
+	this.initCamera = this.initCamera.bind(this);
+	this.initLights = this.initLights.bind(this);
+	this.setCell = this.setCell.bind(this);
+	this.startRendering = this.startRendering.bind(this);
 
 
 	this._init(threadIndex, maxRecursionDepth);
@@ -103,7 +103,7 @@ Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 /**
  * Sets cell that needs to be rendered.
  */
-RaytracingWebWorker.setCell = function(thread, cell)
+RaytracingWebWorker.prototype.setCell = function(thread, cell)
 {
 	let _this = this;
 	_this.cell = cell;
@@ -165,7 +165,7 @@ RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingF
 /**
  * Initializes scene.
  */
-RaytracingWebWorker.initScene = function(thread, sceneData)
+RaytracingWebWorker.prototype.initScene = function(thread, sceneData)
 {
 	let _this = this;
 
@@ -205,7 +205,7 @@ RaytracingWebWorker.initScene = function(thread, sceneData)
 /**
  * Initializes camera.
  */
-RaytracingWebWorker.initCamera = function(thread, cameraData)
+RaytracingWebWorker.prototype.initCamera = function(thread, cameraData)
 {
 	let _this = this;
 
@@ -230,7 +230,7 @@ RaytracingWebWorker.initCamera = function(thread, cameraData)
 /**
  * Initializes lights.
  */
-RaytracingWebWorker.initLights = function()
+RaytracingWebWorker.prototype.initLights = function()
 {
 	let _this = this;
 
@@ -902,17 +902,8 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	let height = cell.height * _this.antialiasingFactor;
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 
-	let updatePixelsArgs =
-	{ 
-		posX: 0, 
-		posY: 0,
-		imageData: new ImageData(1, 1) 
-	};
-
 	let startRenderingTime = Date.nowInNanoseconds();
-
 	let stateStartTime = 0;
-	let progress = 0;
 
 	for (let posY=0; posY < height; posY++)
 	{
@@ -921,10 +912,12 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 		for (let posX=0; posX < width; posX++) 
 		{	
-			if ((Date.nowInMiliseconds() - stateStartTime) > options.CHECK_RENDERING_SERVICE_STATE)
+			let elapsedTime = Date.nowInMiliseconds() - stateStartTime;
+
+			if (elapsedTime > options.CHECK_RENDERING_SERVICE_STATE)
 			{
 				// time check is needed because we don't want to slow down rendering too much with synchronization
-				await mainThread.invokeRequest('globals.renderer.checkRenderingState', progress);
+				await mainThread.invokeRequest('globals.renderer.checkRenderingState', cell);
 				stateStartTime = Date.nowInMiliseconds();
 			}
 						
@@ -946,27 +939,16 @@ RaytracingWebWorker.prototype.renderCell = async function()
 			renderedColor.alpha = 255;
 			cell.rawImage.imageData.setPixel(posX, posY, renderedColor);
 
-			progress = Math.min(Math.toPercentage((posY + 1) * (posX + 1), height * width), 100);
+			let progress = Math.round(Math.toPercentage((posY + 1) * (posX + 1), height * width));
+			progress = Math.min(progress, 100);
 			cell.progress = progress; 
-
-			updatePixelsArgs.posX = canvasX;
-			updatePixelsArgs.posY = canvasY;
-			updatePixelsArgs.imageData.setPixel(0, 0, renderedColor);
-
-			if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == true)
-			{
-				await mainThread.invokeRequest('globals.renderer.updatePixels', updatePixelsArgs);
-			}			
 		}
 	}
 
 	let endRenderingTime = Date.nowInNanoseconds();
 	_this.cell.timeRendering = endRenderingTime - startRenderingTime;
 
-	if (options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS == false)
-	{
-		await mainThread.invoke('globals.rendererCanvas.updateThreadCellImage', cell);
-	}
+	await mainThread.invokeRequest('globals.renderer.checkRenderingState', cell);
 	
 	_this._onCellRendered();
 };
@@ -994,7 +976,7 @@ RaytracingWebWorker.prototype._onCellRendered = function()
 /**
  * Starts rendering.
  */
-RaytracingWebWorker.startRendering = function() 
+RaytracingWebWorker.prototype.startRendering = function() 
 {
 	let _this = this;	
 

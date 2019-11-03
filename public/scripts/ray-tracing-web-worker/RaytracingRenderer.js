@@ -39,7 +39,6 @@ var RaytracingRenderer = function()
 	this.cameraJSON = null;
 
 	this.onCellRendered = this.onCellRendered.bind(this);
-	this.updatePixels = this.updatePixels.bind(this);
 	this.checkRenderingState = this.checkRenderingState.bind(this);
 
 	this._init();
@@ -122,9 +121,14 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
 	}
 };
 
+/**
+ * Checks if rendering state is running or paused.
+ */
 RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolve, reject)
 {
 	let _this = this;
+
+	globals.rendererCanvas.updateThreadCellImage(data);
 
 	if (API.renderingServiceState == 'pause')
 	{
@@ -282,6 +286,31 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 /**
  * Stops rendering process.
  */
+RaytracingRenderer.prototype.clearOthersCells = function()
+{
+	let _this = this;	
+
+	for (let i=0; i<cache.cells.length; i++)
+	{
+		let current = cache.cells[i];
+
+		if (!current.socketIoClient)
+		{
+			continue;
+		}
+		
+		if (current.progress == 100)
+		{
+			continue;
+		}
+		
+		globals.rendererCanvas.removeOthersCell(current);
+	}
+};
+
+/**
+ * Stops rendering process.
+ */
 RaytracingRenderer.prototype.clearWaitingCells = function()
 {
 	let _this = this;	
@@ -343,6 +372,8 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 	_this.clearWaitingCells();
 
+	_this.clearOthersCells();
+
 	for (let i=0; i<_this.threads.length; i++)
 	{
 		let current = _this.threads[i];		
@@ -382,14 +413,6 @@ RaytracingRenderer.prototype.resumeRendering = function()
 			current.reject = null;
 		}		
 	};
-};
-
-/**
- * Stops rendering process.
- */
-RaytracingRenderer.prototype.updatePixels = function(thread, data, resolve, reject)
-{
-	globals.rendererCanvas.updateCellPixels(thread, data);
 };
 
 /**

@@ -7,10 +7,10 @@ function RendererCanvas()
 
 	this.canvasV = null;
 	this.flagCanvasV = null;
+	this.flagCanvasOthersV = null;
 
-	this._onImageLoaded = RendererCanvas._onImageLoaded.bind(this);
-	this.updateCellPixels = RendererCanvas.updateCellPixels.bind(this);
-	this.updateThreadCellImage = RendererCanvas.updateThreadCellImage.bind(this);
+	this._onImageLoaded = this._onImageLoaded.bind(this);
+	this.updateThreadCellImage = this.updateThreadCellImage.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
 
@@ -23,6 +23,7 @@ RendererCanvas.prototype.init = function()
 
 	_this.canvasV = document.getElementById('rendering-canvas');
 	_this.flagCanvasV = document.getElementById('flag-canvas-this');
+	_this.flagCanvasOthersV = document.getElementById('flag-canvas-others');
 };
 
 /**
@@ -48,7 +49,10 @@ RendererCanvas.prototype.resize = function()
 	//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.
 };
 
-RendererCanvas.updateThreadCellImage = function(thread, cell, resolve, reject)
+/**
+ * Updates thread cell image.
+ */
+RendererCanvas.prototype.updateThreadCellImage = function(cell)
 {
 	let _this = this;
 
@@ -84,22 +88,9 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 };
 
 /**
- * Updates cell image.
- */
-RendererCanvas.updateCellPixels = function(thread, data)
-{
-	var _this = this;
-
-	var canvas = _this.canvasV;
-	var ctx = canvas.getContext('2d');
-
-	ctx.putImageData(data.imageData, data.posX, data.posY); 
-};
-
-/**
  * Image is loaded and can now be drawn to canvas.
  */
-RendererCanvas._onImageLoaded = function(img, cell)
+RendererCanvas.prototype._onImageLoaded = function(img, cell)
 {
 	var _this = this;
 
@@ -121,7 +112,7 @@ RendererCanvas.prototype.addWaitingCell = function(cell)
 
 	let div = new namespace.html.Div();
 	div.id = cell._id;
-	div.addClass('flag-cell');
+	div.addClass('waiting-cell');
 
 	var borderWidth = 0.5;
 	var posX = cell.startX;
@@ -210,13 +201,15 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 
 	let label = Array.getFirst(div.children);
 
-	var posX = cell.startX;
-	var posY = cell.startY;
-	var width = cell.width;
-	var height = cell.height;
+	/*let borderWidth = 2;
+	var posX = cell.startX - borderWidth;
+	var posY = cell.startY - borderWidth;
+	var width = cell.width + borderWidth * 2;
+	var height = cell.height + borderWidth * 2;
 	let unit = 'px';
 
 	label.innerHTML = cell.threadIndex;
+	label.style.marginTop = height + unit;
 	
 	let fontSize = Math.floor(height / 2);
 	label.style.lineHeight = height + unit; 
@@ -226,6 +219,23 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 	div.style.height = height + unit;
 	div.style.left = posX + unit;
 	div.style.top = posY + unit;
+	div.style.borderWidth = borderWidth;*/
+
+	var borderWidth = 2;
+	var posX = cell.startX - borderWidth;
+	var posY = cell.startY - borderWidth;
+	var width = cell.width + borderWidth * 2;
+	var height = cell.height + borderWidth * 2;
+	let unit = 'px';
+
+	label.innerHTML = cell.threadIndex;
+	label.style.marginTop = cell.height + unit; 
+
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+	div.style.left = posX + unit;
+	div.style.top = posY + unit;
+	div.style.borderWidth = borderWidth + unit;
 };
 
 /**
@@ -300,4 +310,46 @@ RendererCanvas.prototype.resumeThreadCell = function(cell)
 	}
 
 	div.removeClass('paused');
+};
+
+
+/**
+ * Adds cell to flag-canvas (usually cell that are waiting to be rendered).
+ */
+RendererCanvas.prototype.addOthersCell = function(cell)
+{
+	var _this = this;	
+
+	let div = new namespace.html.Div();
+	div.id = cell._id;
+	div.addClass('others-cell');
+
+	var posX = cell.startX;
+	var posY = cell.startY;
+	var width = cell.width;
+	var height = cell.height;
+
+	let unit = 'px';
+	div.style.width = width + unit;
+	div.style.height = height + unit;
+
+	_this.flagCanvasOthersV.appendChild(div, posX, posY);
+};
+
+/**
+ * Removes others cell.
+ */
+RendererCanvas.prototype.removeOthersCell = function(cell)
+{
+	var _this = this;
+
+	let div = _this.flagCanvasOthersV.querySelector('#' + cell._id);
+	
+	if (!div)
+	{
+		new Warning.Other('Others cell was not found!');
+		return;
+	}
+
+	div.remove();
 };

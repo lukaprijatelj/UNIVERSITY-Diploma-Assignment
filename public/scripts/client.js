@@ -70,6 +70,8 @@ var ClientPage = new namespace.core.WebPage('Client');
  */
 ClientPage.init = function()
 {
+	console.log('[ClientPage] Initializing!');
+
 	if (navigator.hardwareConcurrency < 2)
 	{
 		// 1 thread needed for socketIO
@@ -88,7 +90,6 @@ ClientPage.init = function()
 
 	let flagCanvasOther = new namespace.html.DOMCanvas();
 	flagCanvasOther.id = 'flag-canvas-others';
-	flagCanvasOther.hide();
 	interfaceHtml.appendChild(flagCanvasOther);
 
 	let flagCanvasThis = new namespace.html.DOMCanvas();
@@ -109,7 +110,7 @@ ClientPage._onServerConnected = async function()
 {
 	console.log('[ClientPage] Connected to server!');
 
-	API.listen('cells/update', 'ClientPage._onCellUpdate');
+	API.listen('cells/update', 'ClientPage._onCellsUpdate');
 
 	API.listen('rendering/start', 'ClientPage._onStartRenderingService');	
 	API.listen('rendering/stop', 'ClientPage._onStopRenderingService');	
@@ -175,6 +176,30 @@ ClientPage._onClientRemove = function(thread, data, resolve, reject)
 			break;
 		}
 	}
+
+
+	// -----------------------------
+	// remove cells that were flaged to removed client
+	// -----------------------------
+
+	for (let i=0; i<cache.cells.length; i++)
+	{
+		let current = cache.cells[i];
+
+		if (!current.socketIoClient)
+		{
+			continue;
+		}
+
+		if (current.socketIoClient.sessionId != sessionId)
+		{
+			continue;
+		}
+
+		globals.rendererCanvas.removeOthersCell(current);
+
+		current.socketIoClient = null;
+	}
 };
 
 /**
@@ -188,7 +213,7 @@ ClientPage._startRenderingService = async function()
 	ClientPage._updateOptions(data);
 
 	data = await API.request('cells/getAll');
-	ClientPage._updateBasicCells(data);
+	ClientPage._updateCells(data);
 
 	ClientPage.openScene();
 };
@@ -252,20 +277,51 @@ ClientPage._onServerDisconnect = function()
 /**
  * Progress was updated.
  */
-ClientPage._onCellUpdate = function(thread, cells, resolve, reject)
+ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 {	
-	for (var i=0; i<cells.length; i++)
-	{
-		var current = cells[i];
+	let cells = data;
+	let j = 0;
 
-		ClientPage.tryUpdatingCell(current);
+	for (let i=0; i<cache.cells.length; i++)
+	{
+		let current = cache.cells[i];
+		let newCell = cells[j];
+
+		if (current._id != newCell._id)
+		{
+			continue;
+		}
+
+		// swap old cell with new cell
+		cache.cells[i] = newCell;
+		j++;
+
+		if (j == cells.length)
+		{
+			break;
+		}
+	}
+
+	for (let i=0; i<cells.length; i++)
+	{
+		let current = cells[i];
+
+		if (current.progress == 100)
+		{
+			globals.rendererCanvas.updateCellImage(current);
+			globals.rendererCanvas.removeOthersCell(current);
+		}
+		else
+		{
+			globals.rendererCanvas.addOthersCell(current);
+		}		
 	}
 };
 
 /**
  * Starts loading GLTF model.
  */
-ClientPage.loadGltfModel = function()
+ClientPage._loadGltfModel = function()
 {
 	console.log('[ClientPage] Requesting GLTF model');	
 
@@ -439,9 +495,9 @@ ClientPage._updateRenderingServiceState = function(renderingServiceState)
 /**
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
  */
-ClientPage._updateBasicCells = function(cells)
+ClientPage._updateCells = function(cells)
 {
-	console.log('[ClientPage] Updating basic cells');
+	console.log('[ClientPage] Updating cells');
 
 	// -----------------------------
 	// draw all already rendered cells
@@ -451,10 +507,17 @@ ClientPage._updateBasicCells = function(cells)
 	for (let i=0; i<cells.length; i++)
 	{
 		let current = cells[i];
-		ClientPage.tryUpdatingCell(current);
 
-		let basicCell = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
-		cache.cells[i] = basicCell;
+		if (current.progress == 100)
+		{
+			globals.rendererCanvas.updateCellImage(cell);
+		}
+		else if (current.socketIoClient)
+		{
+			globals.rendererCanvas.addOthersCell(current);
+		}
+
+		cache.cells[i] = current;
 	}	
 };
 
@@ -472,7 +535,7 @@ ClientPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await ClientPage.loadGltfModel();
+		var gltf = await ClientPage._loadGltfModel();
 		
 		await ClientPage._initScene(gltf.scene);
 		await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
@@ -493,19 +556,6 @@ ClientPage.openScene = async function()
 
 	let cells = await API.request('cells/getWaiting');
 	ClientPage._updateWaitingCells(cells);
-};
-
-/**
- * Tries to update canvas with data from this cell.
- */
-ClientPage.tryUpdatingCell = function(cell)
-{
-	if (!cell.imageData)
-	{
-		return;
-	}
-
-	globals.rendererCanvas.updateCellImage(cell);
 };
 
 /**

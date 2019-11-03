@@ -15,17 +15,12 @@ Build task will be read from scripts property of the package.json file.
 
 
 # TODO:
-	- popravil bom canvas.toPNG64 logiko, da bo pošiljala kar celoten blob,zato ker ne rabim več slike
 	- odstarnim stare branche
 	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
-	- spremenim Event.prototype.invoke v Event.invoke() statično funkcijo, saj potem lahko preverim ali je typeof Event ali typeof function in tako invokam funkcijo ali pa event
-	- dodam background color oziroma skybox v options dropdown
 	- dodam v namespace-debug funkcijo, ki se bo sprehodila po funkcijah in dodala datetime.start in datetime.end za računanje hitrosti funkcij. 
 	  Nato bo preko cookiejev zapisala <key>GLOBALS</key><value>.select</value>  izračune. Nato bo en drug window pa to prikazoval in vsakih n milisekund refreshal podatke.
-	- optimiziram admin THREEJS kodo, da bo imela far plane fog oziroma blur. Potem bo mogoče hitreje delalo. 
 	- naredim pathTracing tako, da razbije camero na več delov in vsakega posebej renderira
-	- dodam partially rendered cell update, tako da posodobi samo vrstice celic
 	
 
 # Notes and development

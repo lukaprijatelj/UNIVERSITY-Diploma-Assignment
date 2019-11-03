@@ -98,7 +98,7 @@ namespace.html.OptionsDropdown = (() =>
 		// resolution options
 		// -----------------------------
 
-		let resolutionSection = new namespace.html.Section();
+		/*let resolutionSection = new namespace.html.Section();
 		wrapper.appendChild(resolutionSection);
 
 		let resolutionLabel = new namespace.html.Label();
@@ -116,7 +116,7 @@ namespace.html.OptionsDropdown = (() =>
 		};
 		resolutionSection.appendChild(resolutionInput);
 
-		wrapper.appendChild('<divider-x-small></divider-x-small>');
+		wrapper.appendChild('<divider-x-small></divider-x-small>');*/
 
 
 		// -----------------------------

@@ -126,7 +126,7 @@ var API =
 
 		DATABASE.removeRenderClient(sessionId);		
 
-
+	
 		// -----------------------------
 		// notifies that client was removed
 		// -----------------------------
@@ -135,6 +135,9 @@ var API =
 		socket.broadcast.emit(API.baseUrl + '/clients/remove', sessionId);
 	},
 
+	/**
+	 * Gets list of all clients.
+	 */
 	onGetAllClients: function(data, callback)
 	{
 		if (!callback)
@@ -164,6 +167,9 @@ var API =
 		callback(cells);
 	},
 
+	/**
+	 * Gets current rendering job options (width, height, camera, lights, scene, etc).
+	 */
 	onGetOptions: function(data, callback)
 	{
 		if (!callback)
@@ -176,6 +182,9 @@ var API =
 		callback(options);
 	},
 
+	/**
+	 * Gets current rendering service state (idle, running, pause).
+	 */
 	onGetRenderingServiceState: function(data, callback)
 	{
 		if (!callback)
@@ -214,6 +223,9 @@ var API =
 			console.log("[Api] All cells are already rendered! (aborting)");
 			return;
 		}
+
+		// emits to ALL EXCEPT socket that send this call
+		socket.broadcast.emit(API.baseUrl + '/cells/update', freeCells);
 
 		callback(freeCells);
 	},

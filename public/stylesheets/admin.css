@@ -47,7 +47,7 @@ layer#loading .centered-text
 
 layer#loading>.centered-text wrapper_
 {
-	background-color: var(--DARK-GRAY-COLOR);
+	background-color: var(--DARK-BLUE-COLOR);
 	padding: 20px;
 }
 

@@ -242,8 +242,7 @@ var DATABASE =
 
 			current.socketIoClient = socketIoClient;
 
-			let basicCurrent = new namespace.database.BasicCell(current.startX, current.startY, current.width, current.height);
-			freeCells.push(basicCurrent);
+			freeCells.push(current);
 			cellsFound++;
 
 			if (cellsFound >= cellsLength)

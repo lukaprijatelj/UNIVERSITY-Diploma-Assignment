@@ -27,7 +27,7 @@ options.CANVAS_HEIGHT = 720;
 
 options.BLOCK_WIDTH = 25;
 options.BLOCK_HEIGHT = 25;
-options.NUM_OF_BLOCKS_IN_CHUNK = 10;
+options.NUM_OF_BLOCKS_IN_CHUNK = 3;
 
 options.MAX_RECURSION_DEPTH = 2;
 options.MAX_THREADS = 2;
@@ -35,8 +35,6 @@ options.MAX_THREADS = 2;
 options.CAMERA = null;
 
 options.LIGHTS = [];
-
-options.DRAW_PROGRESS_OF_INDIVIDUAL_PIXELS = false;
 
 // should client autoscroll to current rendering area
 options.AUTO_SCROLL_TO_RENDERING_AREA = false;

@@ -107,7 +107,7 @@ AdminPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await AdminPage.loadGltfModel();
+		var gltf = await AdminPage._loadGltfModel();
 
 		await AdminPage._initScene(gltf.scene);
 		await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
@@ -243,7 +243,7 @@ AdminPage._updateRenderingServiceState = function(renderingServiceState)
 /**
  * Starts loading GLTF model.
  */
-AdminPage.loadGltfModel = function()
+AdminPage._loadGltfModel = function()
 {
 	var onSuccess = (resolve, reject) =>
 	{
