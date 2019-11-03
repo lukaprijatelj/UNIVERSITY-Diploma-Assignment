@@ -23,7 +23,7 @@ if (typeof _this.namespace.database == 'undefined')
 // -----------------------------
 namespace.database.SocketIoClient = function(id, index, sessionId, ipAddress, active, isAdmin)
 {
-	Object.setMetadata(this, 'type', 'namespace.database.SocketIoClient');
+	Object.setMetadata(this, 'constructor', 'namespace.database.SocketIoClient');
 	this._id = id;
 	this.index = index;
 	this.sessionId = sessionId;

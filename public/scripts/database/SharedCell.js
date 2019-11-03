@@ -22,10 +22,8 @@ namespace.database.SharedCell = (() =>
 {
 	var SharedCell = function(index, startX, startY, width, height)
 	{
-		var basicCell = new namespace.database.BasicCell(index, startX, startY, width, height);
-		Object.cloneData(this, basicCell);
-		
-		Object.setMetadata(this, 'type', 'namespace.database.SharedCell');
+		Object.cloneData(this, new namespace.database.BasicCell(index, startX, startY, width, height));
+		Object.setMetadata(this, 'constructor', 'namespace.database.SharedCell');
 
 		this._id = SharedCell.generateId(startX, startY);
 
@@ -49,6 +47,23 @@ namespace.database.SharedCell = (() =>
 		 * Image data can either be PNG format or raw pixels.
 		 */
 		this.imageData = null;
+	};
+
+	SharedCell.parse = function(obj)
+	{
+		let originalImageData = obj.imageData;
+		obj.imageData = new ImageData(originalImageData.data, originalImageData.width, originalImageData.height);
+	};
+
+	SharedCell.toJson = function(obj)
+	{
+		let originalImageData = obj.imageData;
+		obj.imageData = 
+		{
+			data: originalImageData.data, 
+			width: originalImageData.width, 
+			height: originalImageData.height
+		};
 	};
 
 	SharedCell.generateId = function(startX, startY)

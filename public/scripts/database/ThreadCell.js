@@ -24,7 +24,7 @@ namespace.database.ThreadCell = (() =>
 	{
 		var basicCell = new namespace.database.BasicCell();
 		Object.cloneData(this, basicCell);
-		Object.setMetadata(this, 'type', 'namespace.database.ThreadCell');
+		Object.setMetadata(this, 'constructor', 'namespace.database.ThreadCell');
 
 		this._id = ThreadCell.generateId(threadIndex);
 

@@ -25,7 +25,7 @@ namespace.database.BasicCell = (() =>
 {
 	let BasicCell = function(index, startX, startY, width, height)
 	{
-		Object.setMetadata(this, 'type', 'namespace.database.BasicCell');
+		Object.setMetadata(this, 'constructor', 'namespace.database.BasicCell');
 
 		this._id = BasicCell.generateId(startX, startY);
 		this.index = index;

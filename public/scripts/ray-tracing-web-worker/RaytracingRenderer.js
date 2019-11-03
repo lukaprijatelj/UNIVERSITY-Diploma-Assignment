@@ -286,7 +286,7 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 	}
 
 	_this.cellsWaiting = cellsWaiting;	
-	_this.cellsDone = new Array(cellsWaiting.length);
+	_this.cellsDone = new Array();
 
 	for (let i=0; i<_this.cellsWaiting.length; i++)
 	{
