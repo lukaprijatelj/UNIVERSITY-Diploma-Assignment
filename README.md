@@ -15,7 +15,6 @@ Build task will be read from scripts property of the package.json file.
 
 
 # TODO:
-	- odstarnim stare branche
 	- dodam v namespace-debug logiko za računanje velikosti programa Object.calculateMB() - calculates size of objects in MB
 	  dodam logiko za računanje hitrosti posamezne funkcije IOComplexity - loop through object properies and find function, then add time before and time after and you will calculate speed of execution.
 	- dodam v namespace-debug funkcijo, ki se bo sprehodila po funkcijah in dodala datetime.start in datetime.end za računanje hitrosti funkcij. 
@@ -36,6 +35,12 @@ I used browsersLocal storage for saving data received from server.
 ## Abbreviations
 	SRGB	-	Standard Red Green Blue
 	PBR		-	Physically Based Renderer
+	RGBA
+	CSS
+	HTML
+	CPU
+	GPE
+
 
 
 ## Connect with android

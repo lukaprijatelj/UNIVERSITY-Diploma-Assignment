@@ -23,11 +23,12 @@ if (typeof _this.namespace.database == 'undefined')
 // -----------------------------
 namespace.database.BasicCell = (() =>
 {
-	let BasicCell = function(startX, startY, width, height)
+	let BasicCell = function(index, startX, startY, width, height)
 	{
 		Object.setMetadata(this, 'type', 'namespace.database.BasicCell');
 
 		this._id = BasicCell.generateId(startX, startY);
+		this.index = index;
 		this.width = width;
 		this.height = height;
 		this.startY = startY;

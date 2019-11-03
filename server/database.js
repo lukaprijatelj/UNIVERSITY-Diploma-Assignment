@@ -189,13 +189,13 @@ var DATABASE =
 	/**
 	 * Adds grid layout.
 	 */
-	createSharedCell: function(startX, startY, width, height)
+	createSharedCell: function(index, startX, startY, width, height)
 	{
 		var table = DATABASE.tables.renderingCells;
 
 		//var id = uuidv1();
 
-        var clientEntry = new namespace.database.SharedCell(startX, startY, width, height);
+        var clientEntry = new namespace.database.SharedCell(index, startX, startY, width, height);
 		table.rows.push(clientEntry);
 
 		table.save();
@@ -279,28 +279,27 @@ var DATABASE =
 	updateCellsProgress: function(cells)
 	{
 		var table = DATABASE.tables.renderingCells;
+		let j = 0;
 
 		// update rendering progress for specific client
 		for (let i=0; i<table.rows.length; i++)
 		{
 			let element = table.rows[i];
+			let newCell = cells[j];
 
-			for (let j=0; j<cells.length; j++)
+			if(element._id != newCell._id)
 			{
-				let cell = cells[j];
+				continue;
+			}
 
-				if(element._id != cell._id)
-				{
-					continue;
-				}
-	
-				element.progress = cell.progress;
-	
-				if (typeof cell.imageData !== 'undefined')
-				{
-					element.imageData = cell.imageData;
-				}	
-			}				
+			// swap old cell with new cell
+			table.rows[i] = newCell;
+			j++;
+
+			if (j == cells.length)
+			{
+				break;
+			}
 		}
 
         table.save();

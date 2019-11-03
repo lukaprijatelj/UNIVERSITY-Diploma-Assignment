@@ -510,7 +510,7 @@ ClientPage._updateCells = function(cells)
 
 		if (current.progress == 100)
 		{
-			globals.rendererCanvas.updateCellImage(cell);
+			globals.rendererCanvas.updateCellImage(current);
 		}
 		else if (current.socketIoClient)
 		{
@@ -579,7 +579,7 @@ ClientPage.stopRendererUi = function()
  * All waiting cells are done rendering.
  */
 ClientPage.onRendererDone = async function(cells)
-{
+{	
 	globals.lastRenderingTime = window.setTimeout(ClientPage.stopRendererUi, 1000);
 
 	if (API.renderingServiceState == 'idle')

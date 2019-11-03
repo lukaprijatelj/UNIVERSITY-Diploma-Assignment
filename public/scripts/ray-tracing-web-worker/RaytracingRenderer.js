@@ -97,7 +97,7 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
 	// prepare SharedCell for sending to server
 	// -----------------------------
 
-	let sharedCell = new namespace.database.SharedCell(threadCell.startX, threadCell.startY, threadCell.width, threadCell.height);
+	let sharedCell = new namespace.database.SharedCell(threadCell.index, threadCell.startX, threadCell.startY, threadCell.width, threadCell.height);
 
 	// convert buffer data into PNG image data
 	sharedCell.imageData = Image.toPNGString(threadCell.rawImage.imageData.data.buffer, threadCell.width, threadCell.height);
@@ -117,6 +117,19 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
 	
 	if (_this.areWorkersDone())
 	{
+		_this.cellsDone.sort((a, b) =>
+		{
+			if ( a.index < b.index )
+			{
+			  return -1;
+			}
+			if ( a.index > b.index )
+			{
+			  return 1;
+			}
+			return 0;
+		});
+
 		ClientPage.onRendererDone(_this.cellsDone);	
 	}
 };
@@ -273,7 +286,7 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 	}
 
 	_this.cellsWaiting = cellsWaiting;	
-	_this.cellsDone = new Array();
+	_this.cellsDone = new Array(cellsWaiting.length);
 
 	for (let i=0; i<_this.cellsWaiting.length; i++)
 	{
@@ -433,14 +446,15 @@ RaytracingRenderer.prototype._runThread = function(thread)
 		new Exception.ArrayEmpty('There is no cells waiting to be rendered!');
 	}	
 
-	let basicCell = _this.cellsWaiting.shift();
-	globals.rendererCanvas.removeWaitingCell(basicCell);
+	let sharedCell = _this.cellsWaiting.shift();
+	globals.rendererCanvas.removeWaitingCell(sharedCell);
 
 	let threadCell = thread.cell;
-	threadCell.startX = basicCell.startX;
-	threadCell.startY = basicCell.startY;
-	threadCell.width = basicCell.width;
-	threadCell.height = basicCell.height;
+	threadCell.index = sharedCell.index;
+	threadCell.startX = sharedCell.startX;
+	threadCell.startY = sharedCell.startY;
+	threadCell.width = sharedCell.width;
+	threadCell.height = sharedCell.height;
 	threadCell.progress = 0;
 	threadCell.rawImage = null;
 	thread.invoke('worker.setCell', threadCell);

@@ -224,6 +224,13 @@ var API =
 			return;
 		}
 
+		for (let i=0; i<freeCells.length; i++)
+		{
+			let current = freeCells[i];
+
+			current.startTimestampSending = Date.nowInMiliseconds();
+		}
+		
 		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/cells/update', freeCells);
 
@@ -257,6 +264,17 @@ var API =
 		console.log("[Api] Cell progress has updated");
 
 		var socket = this;
+
+		for (let i=0; i<cells.length; i++)
+		{
+			let current = cells[i];
+
+			if (current.progress == 100)
+			{
+				current.endTimestampSending = Date.nowInMiliseconds();
+				current.fullTime = current.endTimestampSending - current.startTimestampSending;
+			}			
+		}
 
 		DATABASE.updateCellsProgress(cells);		
 
@@ -323,6 +341,8 @@ var API =
 		var MAX_WIDTH = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
 		var MAX_HEIGHT = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
 
+		let index = 0;
+
 		while(startY < MAX_HEIGHT)
 		{
 			var startX = 0;
@@ -335,7 +355,8 @@ var API =
 				var MAX_X = endX < MAX_WIDTH ? endX : MAX_WIDTH;
 				var MAX_Y = endY < MAX_HEIGHT ? endY : MAX_HEIGHT;
 
-				DATABASE.createSharedCell(startX, startY, MAX_X - startX, MAX_Y - startY);
+				DATABASE.createSharedCell(index, startX, startY, MAX_X - startX, MAX_Y - startY);
+				index++;
 
 				startX += options.BLOCK_WIDTH;
 			}

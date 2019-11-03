@@ -20,11 +20,11 @@ if (typeof _this.namespace.database == 'undefined')
 
 namespace.database.SharedCell = (() => 
 {
-	var SharedCell = function(startX, startY, width, height)
+	var SharedCell = function(index, startX, startY, width, height)
 	{
-		var basicCell = new namespace.database.BasicCell(startX, startY, width, height);
+		var basicCell = new namespace.database.BasicCell(index, startX, startY, width, height);
 		Object.cloneData(this, basicCell);
-
+		
 		Object.setMetadata(this, 'type', 'namespace.database.SharedCell');
 
 		this._id = SharedCell.generateId(startX, startY);
@@ -40,6 +40,10 @@ namespace.database.SharedCell = (() =>
 		this.progress = 0;
 
 		this.timeRendering = 0;
+
+		this.startTimestampSending = 0;
+		this.endTimestampSending = 0;
+		this.fullTime = 0;
 
 		/**
 		 * Image data can either be PNG format or raw pixels.
