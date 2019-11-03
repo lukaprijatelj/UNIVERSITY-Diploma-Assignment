@@ -84,25 +84,18 @@ RaytracingRenderer.prototype.areWorkersDone = function()
 /**
  * Cell was calculated and now can be drawn on canvas.
  */
-RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
+RaytracingRenderer.prototype.onCellRendered = function(thread, sharedCell)
 {
 	let _this = this;
 
 	thread.isRendering = false;
 
 	// remove rendering flag
-	globals.rendererCanvas.hideThreadCell(threadCell);
+	globals.rendererCanvas.hideThreadCell(thread);
 
 	// -----------------------------
 	// prepare SharedCell for sending to server
 	// -----------------------------
-
-	let sharedCell = new namespace.database.SharedCell(threadCell.index, threadCell.startX, threadCell.startY, threadCell.width, threadCell.height);
-
-	// convert buffer data into PNG image data
-	sharedCell.imageData = Image.toPNGString(threadCell.rawImage.imageData.data.buffer, threadCell.width, threadCell.height);
-
-	sharedCell.progress = threadCell.progress;
 
 	_this.cellsDone.push(sharedCell);
 
@@ -119,11 +112,11 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, threadCell)
 	{
 		_this.cellsDone.sort((a, b) =>
 		{
-			if ( a.index < b.index )
+			if (a.index < b.index)
 			{
 			  return -1;
 			}
-			if ( a.index > b.index )
+			else if (a.index > b.index)
 			{
 			  return 1;
 			}
@@ -148,7 +141,7 @@ RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolv
 		thread.resolve = resolve;
 		thread.reject = reject;
 
-		globals.rendererCanvas.pauseThreadCell(thread.cell);
+		globals.rendererCanvas.pauseThreadCell(thread);
 	}
 	else
 	{
@@ -184,10 +177,11 @@ RaytracingRenderer.prototype.setWorkers = function()
 		_this.threads[i] = thread;
 
 		thread.index = i;
+		thread.cellId = 'thread-' + i + '-cell';
 		thread.isRendering = false;		
+		thread.cell = null;
 
-		thread.cell = new namespace.database.ThreadCell(thread.index);
-		globals.rendererCanvas.addThreadCell(i);
+		globals.rendererCanvas.addThreadCell(thread);
 
 		thread.invoke('init', data);			
 	}
@@ -393,10 +387,7 @@ RaytracingRenderer.prototype.stopRendering = function()
 		
 		current.isRendering = false;
 
-		if (current.cell)
-		{
-			globals.rendererCanvas.removeThreadCell(current.cell);
-		}
+		globals.rendererCanvas.removeThreadCell(current);
 
 		current.terminate();
 	};
@@ -413,10 +404,7 @@ RaytracingRenderer.prototype.resumeRendering = function()
 	{
 		let current = _this.threads[i];	
 		
-		if (current.cell)
-		{
-			globals.rendererCanvas.resumeThreadCell(current.cell);
-		}
+		globals.rendererCanvas.resumeThreadCell(current);
 
 		if (current.resolve)
 		{
@@ -449,21 +437,14 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	let sharedCell = _this.cellsWaiting.shift();
 	globals.rendererCanvas.removeWaitingCell(sharedCell);
 
-	let threadCell = thread.cell;
-	threadCell.index = sharedCell.index;
-	threadCell.startX = sharedCell.startX;
-	threadCell.startY = sharedCell.startY;
-	threadCell.width = sharedCell.width;
-	threadCell.height = sharedCell.height;
-	threadCell.progress = 0;
-	threadCell.rawImage = null;
-	thread.invoke('worker.setCell', threadCell);
+	thread.cell = sharedCell;
+	thread.invoke('worker.setCell', thread.cell);
 	
-	globals.rendererCanvas.showThreadCell(threadCell);	
+	globals.rendererCanvas.showThreadCell(thread);	
 
 	if (thread.index == 0 && options.AUTO_SCROLL_TO_RENDERING_AREA == true)
 	{
-		globals.rendererCanvas.scrollToCell(threadCell);	
+		globals.rendererCanvas.scrollToCell(thread);	
 	}
 	
 	thread.isRendering = true;

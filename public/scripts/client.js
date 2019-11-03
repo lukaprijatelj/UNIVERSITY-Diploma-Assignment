@@ -280,6 +280,13 @@ ClientPage._onServerDisconnect = function()
 ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 {	
 	let cells = data;
+
+	for (let i=0; i<cells.length; i++)
+	{
+		let current = cells[i];
+		Object.parse(current);
+	}
+
 	let j = 0;
 
 	for (let i=0; i<cache.cells.length; i++)
@@ -499,6 +506,12 @@ ClientPage._updateCells = function(cells)
 {
 	console.log('[ClientPage] Updating cells');
 
+	for (let i=0; i<cells.length; i++)
+	{
+		let current = cells[i];
+		Object.parse(current);
+	}
+
 	// -----------------------------
 	// draw all already rendered cells
 	// -----------------------------
@@ -587,6 +600,13 @@ ClientPage.onRendererDone = async function(cells)
 		return;
 	}
 
+	for (let i=0; i<cells.length; i++)
+	{
+		let current = cells[i];
+
+		Object.toJson(current);
+	}
+
 	await API.request('cells/update', cells);
 			
 	let waitingCells = await API.request('cells/getWaiting');
@@ -608,6 +628,12 @@ ClientPage._updateWaitingCells = function(cells)
 	if (!cells.length)
 	{
 		new Exception.ArrayEmpty('No waiting cells!');
+	}
+
+	for (let i=0; i<cells.length; i++)
+	{
+		let current = cells[i];
+		Object.parse(current);
 	}
 
 	if (globals.lastRenderingTime > 0)

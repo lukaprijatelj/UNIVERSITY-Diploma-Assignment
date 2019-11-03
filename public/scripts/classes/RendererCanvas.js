@@ -9,7 +9,6 @@ function RendererCanvas()
 	this.flagCanvasV = null;
 	this.flagCanvasOthersV = null;
 
-	this._onImageLoaded = this._onImageLoaded.bind(this);
 	this.updateThreadCellImage = this.updateThreadCellImage.bind(this);
 };
 Interface.inheritPrototype(RendererCanvas, IDisposable);
@@ -77,30 +76,17 @@ RendererCanvas.prototype.updateCellImage = function(cell)
 		new Exception.ValueUndefined('Image to be updated on canvas is undefined!');
 	}
 
-	if (!cell.imageData)
+	if (!cell.rawImage)
 	{
 		new Exception.ValueUndefined('Image to be updated on canvas is undefined!');
 	}
-	
-	var img = new Image();
-	img.onload = _this._onImageLoaded.bind(null, img, cell);
-	img.src = cell.imageData;
-};
-
-/**
- * Image is loaded and can now be drawn to canvas.
- */
-RendererCanvas.prototype._onImageLoaded = function(img, cell)
-{
-	var _this = this;
 
 	var posX = cell.startX;
 	var posY = cell.startY;
-
 	var canvas = _this.canvasV;
-	var ctx = canvas.getContext('2d');
 
-	ctx.drawImage(img, posX, posY); 
+	var ctx = canvas.getContext('2d');
+	ctx.putImageData(cell.rawImage.imageData, posX, posY);
 };
 
 /**
@@ -149,12 +135,12 @@ RendererCanvas.prototype.removeWaitingCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.addThreadCell = function(threadIndex)
+RendererCanvas.prototype.addThreadCell = function(thread)
 {
 	var _this = this;
 
 	let div = new namespace.html.Div();
-	div.id = 'thread-' + threadIndex + '-cell';
+	div.id = thread.cellId;
 	div.addClass('thread-cell');
 	div.hide();	
 
@@ -168,11 +154,11 @@ RendererCanvas.prototype.addThreadCell = function(threadIndex)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.removeThreadCell = function(cell)
+RendererCanvas.prototype.removeThreadCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	
 	if (!div)
 	{
@@ -186,11 +172,11 @@ RendererCanvas.prototype.removeThreadCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.showThreadCell = function(cell)
+RendererCanvas.prototype.showThreadCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	div.show();
 	
 	if (!div)
@@ -201,26 +187,7 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 
 	let label = Array.getFirst(div.children);
 
-	/*let borderWidth = 2;
-	var posX = cell.startX - borderWidth;
-	var posY = cell.startY - borderWidth;
-	var width = cell.width + borderWidth * 2;
-	var height = cell.height + borderWidth * 2;
-	let unit = 'px';
-
-	label.innerHTML = cell.threadIndex;
-	label.style.marginTop = height + unit;
-	
-	let fontSize = Math.floor(height / 2);
-	label.style.lineHeight = height + unit; 
-	label.style.fontSize = fontSize + unit;
-
-	div.style.width = width + unit;
-	div.style.height = height + unit;
-	div.style.left = posX + unit;
-	div.style.top = posY + unit;
-	div.style.borderWidth = borderWidth;*/
-
+	let cell = thread.cell;
 	var borderWidth = 2;
 	var posX = cell.startX - borderWidth;
 	var posY = cell.startY - borderWidth;
@@ -228,7 +195,7 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 	var height = cell.height + borderWidth * 2;
 	let unit = 'px';
 
-	label.innerHTML = cell.threadIndex;
+	label.innerHTML = thread.index;
 	label.style.marginTop = cell.height + unit; 
 
 	div.style.width = width + unit;
@@ -241,11 +208,11 @@ RendererCanvas.prototype.showThreadCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.scrollToCell = function(cell)
+RendererCanvas.prototype.scrollToCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	div.show();
 	
 	if (!div)
@@ -261,11 +228,11 @@ RendererCanvas.prototype.scrollToCell = function(cell)
 /**
  * Flags area where this cell is currently rendering.
  */
-RendererCanvas.prototype.hideThreadCell = function(cell)
+RendererCanvas.prototype.hideThreadCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	
 	if (!div)
 	{
@@ -279,11 +246,11 @@ RendererCanvas.prototype.hideThreadCell = function(cell)
 /**
  * Flags thread cell as paused.
  */
-RendererCanvas.prototype.pauseThreadCell = function(cell)
+RendererCanvas.prototype.pauseThreadCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	
 	if (!div)
 	{
@@ -297,11 +264,11 @@ RendererCanvas.prototype.pauseThreadCell = function(cell)
 /**
  * Unflags thread cell as paused.
  */
-RendererCanvas.prototype.resumeThreadCell = function(cell)
+RendererCanvas.prototype.resumeThreadCell = function(thread)
 {
 	var _this = this;
 
-	let div = _this.flagCanvasV.querySelector('#' + cell._id);
+	let div = _this.flagCanvasV.querySelector('#' + thread.cellId);
 	
 	if (!div)
 	{

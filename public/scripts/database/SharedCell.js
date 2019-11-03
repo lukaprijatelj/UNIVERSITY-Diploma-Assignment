@@ -46,24 +46,41 @@ namespace.database.SharedCell = (() =>
 		/**
 		 * Image data can either be PNG format or raw pixels.
 		 */
-		this.imageData = null;
+		this.rawImage = null;
 	};
 
 	SharedCell.parse = function(obj)
 	{
-		let originalImageData = obj.imageData;
-		obj.imageData = new ImageData(originalImageData.data, originalImageData.width, originalImageData.height);
+		if (obj.rawImage && obj.rawImage.imageData)
+		{
+			let originalImageData = obj.rawImage.imageData;
+
+			let newImageData = new ImageData(originalImageData.width, originalImageData.height);
+			
+			for (let i=0; i<originalImageData.data.length; i++)
+			{
+				newImageData.data[i] = originalImageData.data[i];
+			}
+
+			obj.rawImage.imageData = newImageData;
+		}
 	};
 
 	SharedCell.toJson = function(obj)
 	{
-		let originalImageData = obj.imageData;
-		obj.imageData = 
+		if (obj.rawImage && obj.rawImage.imageData)
 		{
-			data: originalImageData.data, 
-			width: originalImageData.width, 
-			height: originalImageData.height
-		};
+			let originalImageData = obj.rawImage.imageData;
+
+			var data = Array.prototype.slice.call(originalImageData.data);
+
+			obj.rawImage.imageData = 
+			{
+				data: data, 
+				width: originalImageData.width, 
+				height: originalImageData.height
+			};
+		}
 	};
 
 	SharedCell.generateId = function(startX, startY)

@@ -40,7 +40,6 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
-	loadingBlock.push(document.loadScript('scripts/database/ThreadCell.js'));
 	loadingBlock.push(document.loadScript('scripts/database/SharedCell.js'));
 	await Promise.all(loadingBlock);
 
