@@ -630,39 +630,42 @@ ClientPage._updateWaitingCells = function(cells)
 		new Exception.ArrayEmpty('No waiting cells!');
 	}
 
+	if (globals.lastRenderingTime > 0)
+	{
+		window.clearTimeout(globals.lastRenderingTime);
+	}
+
 	for (let i=0; i<cells.length; i++)
 	{
 		let current = cells[i];
 		Object.parse(current);
 	}
 
-	if (globals.lastRenderingTime > 0)
-	{
-		window.clearTimeout(globals.lastRenderingTime);
-	}
-
-	var cellsWaiting = new Array();
+	let j = 0;
 
 	for (let i=0; i<cache.cells.length; i++)
 	{
 		let current = cache.cells[i];
+		let newCell = cells[j];
 
-		for (let j=0; j<cells.length; j++)
+		if (current._id != newCell._id)
 		{
-			let waitingCurrent = cells[j];
+			continue;
+		}
 
-			if (current._id != waitingCurrent._id)
-			{
-				continue;
-			}
+		// swap old cell with new cell
+		cache.cells[i] = newCell;
+		j++;
 
-			cellsWaiting.push(current);
+		if (j == cells.length)
+		{
+			break;
 		}
 	}
 
 	// must start new thread because socketIO will retry call if function is not finished in X num of miliseconds
 	// heavy duty operation
-	ClientPage.startRendering(cellsWaiting);
+	ClientPage.startRendering(cells);
 };
 
 /**

@@ -224,11 +224,13 @@ var API =
 			return;
 		}
 
+		let startTimestampSending = Date.nowInMiliseconds();
+
 		for (let i=0; i<freeCells.length; i++)
 		{
 			let current = freeCells[i];
 
-			current.startTimestampSending = Date.nowInMiliseconds();
+			current.startTimestampSending = startTimestampSending;
 		}
 		
 		// emits to ALL EXCEPT socket that send this call
@@ -265,13 +267,15 @@ var API =
 
 		var socket = this;
 
+		let endTimestampSending = Date.nowInMiliseconds();
+
 		for (let i=0; i<cells.length; i++)
 		{
 			let current = cells[i];
 
 			if (current.progress == 100)
 			{
-				current.endTimestampSending = Date.nowInMiliseconds();
+				current.endTimestampSending = endTimestampSending;
 				current.fullTime = current.endTimestampSending - current.startTimestampSending;
 			}			
 		}

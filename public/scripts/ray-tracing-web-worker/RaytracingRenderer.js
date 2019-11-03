@@ -108,23 +108,27 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, sharedCell)
 		return;
 	}
 	
-	if (_this.areWorkersDone())
+	if (_this.areWorkersDone() == false)
 	{
-		_this.cellsDone.sort((a, b) =>
-		{
-			if (a.index < b.index)
-			{
-			  return -1;
-			}
-			else if (a.index > b.index)
-			{
-			  return 1;
-			}
-			return 0;
-		});
-
-		ClientPage.onRendererDone(_this.cellsDone);	
+		return;
 	}
+
+	// last thread has finished rendering
+
+	_this.cellsDone.sort((a, b) =>
+	{
+		if (a.index < b.index)
+		{
+			return -1;
+		}
+		else if (a.index > b.index)
+		{
+			return 1;
+		}
+		return 0;
+	});
+
+	ClientPage.onRendererDone(_this.cellsDone);	
 };
 
 /**
