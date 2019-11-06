@@ -1,6 +1,6 @@
 importScripts('../constants.js');
-importScripts('../../externals/namespace-core/namespace-core.js');
-importScripts('../../externals/namespace-enums/namespace-enums.js');
+importScripts('../../scripts/namespace-core/namespace-core.js');
+importScripts('../../scripts/namespace-enums/namespace-enums.js');
 importScripts('../threejs/three.js');
 
 // only accesible in web worker thread

@@ -1,7 +1,7 @@
 importScripts('../socket.io/socket.io.js');
 importScripts('../constants.js');
-importScripts('../../externals/namespace-core/namespace-core.js');
-importScripts('../../externals/namespace-enums/namespace-enums.js');
+importScripts('../../scripts/namespace-core/namespace-core.js');
+importScripts('../../scripts/namespace-enums/namespace-enums.js');
 
 // -----------------------------
 // import SocketIO

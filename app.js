@@ -20,7 +20,7 @@ global.DATABASE = require('./server/database.js');
 // -----------------------------
 // import namespace-core
 // -----------------------------
-require('./public/externals/namespace-core/namespace-core.js');
+require('./public/scripts/namespace-core/namespace-core.js');
 
 
 // -----------------------------

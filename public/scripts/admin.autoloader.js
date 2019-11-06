@@ -12,7 +12,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-debug/namespace-debug.js"));
+	loadingBlock.push(document.loadScript("scripts/namespace-debug/namespace-debug.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -21,7 +21,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-core/namespace-core.js"));
+	loadingBlock.push(document.loadScript("scripts/namespace-core/namespace-core.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -30,7 +30,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-enums/namespace-enums.js"));
+	loadingBlock.push(document.loadScript("scripts/namespace-enums/namespace-enums.js"));
 	await Promise.all(loadingBlock);
 
 
@@ -39,7 +39,7 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("externals/namespace-html/namespace-html.js"));
+	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.js"));
 	await Promise.all(loadingBlock);
 	
 
