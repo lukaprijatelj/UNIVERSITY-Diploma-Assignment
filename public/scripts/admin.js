@@ -136,6 +136,8 @@ AdminPage._onServerConnected = async function(socket)
 	API.listen('clients/add', 'AdminPage._onClientAdd');
 	API.listen('clients/remove', 'AdminPage._onClientRemove');
 
+	API.listen('rendering/finished', 'AdminPage._onRenderingFinished');
+
 	let data;
 
 	data = await API.request('clients/getAll');
@@ -156,6 +158,15 @@ AdminPage._onServerConnected = async function(socket)
 AdminPage._onServerDisconnect = function()
 {
 	console.log('[AdminPage] Disconnected from server');
+};
+
+/**
+ * Rendering has finished.
+ */
+AdminPage._onRenderingFinished = function()
+{
+	console.log('[AdminPage] Rendering has finished successfully');
+	AdminPage._changeRenderingState('stop');
 };
 
 /**
@@ -721,11 +732,16 @@ AdminPage.hideLastDropdown = function()
 	popup.remove();
 };
 
+AdminPage._onStartStopRenderingClick = function(type)
+{
+	AdminPage._changeRenderingState(type);
+};
+
 /**
  * Sends request to recalculate grid layout.
  * @private
  */
-AdminPage._onStartStopRenderingClick = async function(type)
+AdminPage._changeRenderingState = async function(type)
 {
 	var stopRenderingButtonV = document.getElementById('stop-rendering-button');
 	var pauseRenderingButtonV = document.getElementById('pause-rendering-button');

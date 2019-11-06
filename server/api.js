@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-var upload = require('./upload.js');
-var options = require('../public/scripts/options.js');
-
-global.socketIO = require('socket.io');
-var io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
-
+const upload = require('./upload.js');
 const fsExtra = require('fs-extra');
 
+global.socketIO = require('socket.io');
+const io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
+
+var initialOptions = require('../public/scripts/options.js');
+var options;
 
 
 var API =
@@ -21,6 +21,11 @@ var API =
 	 * Is rendering service currently running.
 	 */
 	renderingServiceState: 'idle',
+
+	/**
+	 * Have users been notified that rendering has finished.
+	 */
+	hasNotifiedFinish: false,
 
 
     init: function(app)
@@ -85,7 +90,7 @@ var API =
 			socket.on(API.baseUrl + '/rendering/start', API.onStartRendering);	
 			socket.on(API.baseUrl + '/rendering/pause', API.onPauseRendering);	
 			socket.on(API.baseUrl + '/rendering/resume', API.onResumeRendering);				
-			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);
+			socket.on(API.baseUrl + '/rendering/stop', API.onStopRendering);	
 		}
 		
 		let clientEntry = DATABASE.addRenderClient(sessionId, index, ipAddress, isAdmin);
@@ -110,7 +115,7 @@ var API =
 		// notifies that new client was added
 		// -----------------------------
 
-		// emits to ALL and also to socket that send this call
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/clients/add', clientEntry);
 	},
 
@@ -178,7 +183,19 @@ var API =
 		}
 
 		var socket = this;
+		var sessionId = socket.id;
 
+		if (!options)
+		{
+			var client = DATABASE.findClientBySessionId(sessionId);
+
+			if (client.isAdmin == true)
+			{
+				callback(initialOptions);
+				return;
+			}
+		}
+		
 		callback(options);
 	},
 
@@ -195,6 +212,17 @@ var API =
 		var socket = this;
 
 		callback(API.renderingServiceState);
+	},
+
+	/**
+	 * Notifies users that rendering has finished.
+	 */
+	notifyFinished: function()
+	{
+		let responseData = new Object();
+
+		// emits to ALL sockets
+		io.sockets.emit(API.baseUrl + '/rendering/finished', responseData);
 	},
 
 	/**
@@ -221,6 +249,13 @@ var API =
 		if (!freeCells)
 		{
 			console.log("[Api] All cells are already rendered! (aborting)");
+
+			if (API.hasNotifiedFinish == false)
+			{
+				API.hasNotifiedFinish = true;
+				API.notifyFinished();
+			}
+
 			return;
 		}
 
@@ -282,7 +317,7 @@ var API =
 
 		DATABASE.updateCellsProgress(cells);		
 
-		// notifies ALL clients that are currently connected
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/cells/update', cells);
 
 		callback();
@@ -384,6 +419,7 @@ var API =
 		var socket = this;
 
 		API.renderingServiceState = 'running';
+		API.hasNotifiedFinish = false;
 
 		let responseData = API.renderingServiceState;
 	
@@ -391,6 +427,7 @@ var API =
 		// notifies that server STARTED rendering service (clients can now start or continue rendering)
 		// -----------------------------
 
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/rendering/start', responseData);
 
 		callback(responseData);
@@ -416,6 +453,7 @@ var API =
 		// notifies that server PAUSED rendering service (clients must stop rendering)
 		// -----------------------------
 
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/rendering/pause', responseData);
 
 		callback(responseData);
@@ -441,6 +479,7 @@ var API =
 		// notifies that server RESUME rendering service (clients must stop rendering)
 		// -----------------------------
 
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/rendering/resume', responseData);
 
 		callback(responseData);
@@ -466,6 +505,7 @@ var API =
 		// notifies that server STOPPED rendering service (clients must stop rendering)
 		// -----------------------------
 
+		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/rendering/stop', responseData);
 
 		callback(responseData);
