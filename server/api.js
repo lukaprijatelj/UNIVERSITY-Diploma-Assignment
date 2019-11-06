@@ -3,6 +3,8 @@ const path = require('path');
 const upload = require('./upload.js');
 const fsExtra = require('fs-extra');
 
+require('../public/scripts/namespace-enums/types.js');
+
 global.socketIO = require('socket.io');
 const io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
 
@@ -20,7 +22,7 @@ var API =
 	/**
 	 * Is rendering service currently running.
 	 */
-	renderingServiceState: 'idle',
+	renderingServiceState: namespace.enums.renderingServiceState.IDLE,
 
 	/**
 	 * Have users been notified that rendering has finished.
@@ -230,7 +232,7 @@ var API =
 	 */
 	onGetWaitingCells: function(data, callback)
 	{
-		if (API.renderingServiceState == 'idle')
+		if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 		{
 			return;
 		}
@@ -293,7 +295,7 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		if (API.renderingServiceState == 'idle')
+		if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 		{
 			return;
 		}
@@ -433,7 +435,7 @@ var API =
 
 		var socket = this;
 
-		API.renderingServiceState = 'running';
+		API.renderingServiceState = namespace.enums.renderingServiceState.RUNNING;
 		API.hasNotifiedFinish = false;
 		DATABASE.finishedCells = 0;
 
@@ -461,7 +463,7 @@ var API =
 
 		var socket = this;
 
-		API.renderingServiceState = 'pause';
+		API.renderingServiceState = namespace.enums.renderingServiceState.PAUSED;
 
 		let responseData = API.renderingServiceState;
 	
@@ -487,7 +489,7 @@ var API =
 
 		var socket = this;
 
-		API.renderingServiceState = 'running';
+		API.renderingServiceState = namespace.enums.renderingServiceState.RUNNING;
 
 		let responseData = API.renderingServiceState;
 
@@ -513,7 +515,7 @@ var API =
 
 		var socket = this;
 
-		API.renderingServiceState = 'idle';
+		API.renderingServiceState = namespace.enums.renderingServiceState.IDLE;
 
 		let responseData = API.renderingServiceState;
 	

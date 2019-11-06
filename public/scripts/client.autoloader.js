@@ -71,6 +71,7 @@
 	loadingBlock = new Array();	
 	loadingBlock.push(document.loadScript('scripts/ray-tracing-web-worker/RaytracingRenderer.js'));
 	loadingBlock.push(document.loadScript('scripts/ray-tracing-web-worker/RaytracingWebWorker.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/PathtracingRenderer.js'));
 	loadingBlock.push(document.loadScript('scripts/client.js'));
 	await Promise.all(loadingBlock);
 	

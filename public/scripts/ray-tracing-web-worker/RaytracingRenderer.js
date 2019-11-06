@@ -141,7 +141,7 @@ RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolv
 
 	globals.rendererCanvas.updateThreadCellImage(data);
 
-	if (API.renderingServiceState == 'pause')
+	if (API.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
 	{
 		thread.resolve = resolve;
 		thread.reject = reject;

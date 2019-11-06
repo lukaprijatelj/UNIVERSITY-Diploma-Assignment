@@ -26,7 +26,7 @@ var DEBUG =
 	
 	onRefresh: function()
 	{
-		if (globals.renderingServiceState == 'running')
+		if (globals.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 		{
 			// no need to update values if rendering is enabled
 			return;

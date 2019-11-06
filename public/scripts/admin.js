@@ -39,7 +39,7 @@ globals.editorCanvas = null;
 /**
  * Is rendering service running.
  */
-globals.renderingServiceState = 'idle';
+globals.renderingServiceState = namespace.enums.renderingServiceState.IDLE;
 
 
 
@@ -520,7 +520,7 @@ AdminPage._updateRenderingState = function()
 	let backgroundButton = document.getElementById('background-button');
 	let newRendererButton = document.getElementById('new-renderer-button');
 
-	if (globals.renderingServiceState == 'running')
+	if (globals.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 	{
 		interfaceV.addClass('rendering');
 		canvasV.disable();
@@ -535,7 +535,7 @@ AdminPage._updateRenderingState = function()
 		stopRenderingButtonV.show();
 		pauseRenderingButtonV.show();
 	}
-	else if (globals.renderingServiceState == 'pause')
+	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
 	{		
 		interfaceV.addClass('rendering');
 		canvasV.disable();

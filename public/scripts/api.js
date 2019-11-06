@@ -20,7 +20,7 @@ var API =
 	 * Is rendering service running on server.
 	 * @type {boolean}
 	 */
-	renderingServiceState: 'idle',
+	renderingServiceState: namespace.enums.renderingServiceState.IDLE,
 
 	/**
 	 * Ajax request to server.

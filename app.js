@@ -11,16 +11,17 @@ var fs = require('fs');
 
 
 // -----------------------------
+// import namespace-core
+// -----------------------------
+require('./public/scripts/namespace-core/namespace-core.js');
+require('./public/scripts/namespace-enums/namespace-enums.js');
+
+
+// -----------------------------
 // import local packages
 // -----------------------------
 global.API = require('./server/api.js');
 global.DATABASE = require('./server/database.js');
-
-
-// -----------------------------
-// import namespace-core
-// -----------------------------
-require('./public/scripts/namespace-core/namespace-core.js');
 
 
 // -----------------------------

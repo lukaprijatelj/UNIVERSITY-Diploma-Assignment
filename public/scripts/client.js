@@ -214,7 +214,7 @@ ClientPage._startRenderingService = async function()
 	data = await API.request('cells/getAll');
 	ClientPage._updateCells(data);
 
-	if (API.renderingServiceState == 'idle')
+	if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 	{
 		// nothing to render
 		return;
@@ -458,7 +458,7 @@ ClientPage._initRenderer = function()
 			break;
 
 		case namespace.enums.rendererType.PATH_TRACING:
-			new Exception.NotImplemented();
+			renderer = new PathtracingRenderer();
 			break;
 	}	
 	
@@ -566,14 +566,14 @@ ClientPage.openScene = async function()
 		globals.renderer.initScene();
 		globals.renderer.initCamera();
 		globals.renderer.initLights();		
+
+		let cells = await API.request('cells/getWaiting');
+		ClientPage._updateWaitingCells(cells);
 	}
 	catch (err)
 	{
 		console.error(err.message);
-	}	
-
-	let cells = await API.request('cells/getWaiting');
-	ClientPage._updateWaitingCells(cells);
+	}		
 };
 
 /**
@@ -600,7 +600,7 @@ ClientPage.onRendererDone = async function(cells)
 {	
 	globals.lastRenderingTime = window.setTimeout(ClientPage.stopRendererUi, 1000);
 
-	if (API.renderingServiceState == 'idle')
+	if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 	{
 		return;
 	}
