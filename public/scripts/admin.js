@@ -88,7 +88,7 @@ AdminPage.init = function()
 	
 	DEBUG.init();
 
-	API.init(enums.apiClientType.ADMIN);	
+	API.init(namespace.enums.apiClientType.ADMIN);	
 
 	API.connect(AdminPage._onServerConnected, AdminPage._onServerDisconnect);
 };

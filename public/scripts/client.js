@@ -99,7 +99,7 @@ ClientPage.init = function()
 	globals.rendererCanvas = new namespace.html.RendererCanvas();
 	globals.rendererCanvas.init();
 	
-	API.init(enums.apiClientType.RENDERER);		
+	API.init(namespace.enums.apiClientType.RENDERER);		
 	API.connect(ClientPage._onServerConnected, ClientPage._onServerDisconnect);
 };
 
@@ -127,12 +127,6 @@ ClientPage._onServerConnected = async function()
 
 	data = await API.request('rendering/getState');
 	ClientPage._updateRenderingServiceState(data);
-
-	if (API.renderingServiceState == 'idle')
-	{
-		// nothing to render
-		return;
-	}
 
 	ClientPage._startRenderingService();
 };	
@@ -214,6 +208,12 @@ ClientPage._startRenderingService = async function()
 
 	data = await API.request('cells/getAll');
 	ClientPage._updateCells(data);
+
+	if (API.renderingServiceState == 'idle')
+	{
+		// nothing to render
+		return;
+	}
 
 	ClientPage.openScene();
 };
@@ -448,11 +448,11 @@ ClientPage._initRenderer = function()
 
 	switch(options.RENDERER_TYPE)
 	{
-		case enums.rendererType.RAY_TRACING:
+		case namespace.enums.rendererType.RAY_TRACING:
 			renderer = new RaytracingRenderer();
 			break;
 
-		case enums.rendererType.PATH_TRACING:
+		case namespace.enums.rendererType.PATH_TRACING:
 			new Exception.NotImplemented();
 			break;
 	}	
@@ -684,7 +684,7 @@ ClientPage.startRendering = function(cellsWaiting)
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	if (options.RENDERER_TYPE == enums.rendererType.RAY_TRACING)
+	if (options.RENDERER_TYPE == namespace.enums.rendererType.RAY_TRACING)
 	{
 		// start rendering
 		globals.renderer.setWaitingCells(cellsWaiting);

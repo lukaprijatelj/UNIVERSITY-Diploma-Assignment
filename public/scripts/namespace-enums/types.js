@@ -1,13 +1,11 @@
-var enums = new Object();
-
-enums.rendererType = new Enum(
+namespace.enums.rendererType = new Enum(
 {
 	RAY_TRACING: 'ray-tracing',
 
 	PATH_TRACING: 'path-tracing'
 });
 
-enums.layoutType = new Enum(
+namespace.enums.layoutType = new Enum(
 {
 	NONE: 'none',
 	
@@ -16,7 +14,7 @@ enums.layoutType = new Enum(
 	CANVAS: 'canvas'
 });
 
-enums.apiClientType = new Enum(
+namespace.enums.apiClientType = new Enum(
 {
 	RENDERER: 'renderer',
 

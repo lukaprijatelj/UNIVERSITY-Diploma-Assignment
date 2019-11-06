@@ -97,6 +97,7 @@ RaytracingRenderer.prototype.onCellRendered = function(thread, sharedCell)
 	// prepare SharedCell for sending to server
 	// -----------------------------
 
+	cache.cells[sharedCell.index] = sharedCell;
 	_this.cellsDone.push(sharedCell);
 
 
