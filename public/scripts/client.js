@@ -96,7 +96,7 @@ ClientPage.init = function()
 	flagCanvasThis.id = 'flag-canvas-this';
 	interfaceHtml.appendChild(flagCanvasThis);
 
-	globals.rendererCanvas = new RendererCanvas();
+	globals.rendererCanvas = new namespace.html.RendererCanvas();
 	globals.rendererCanvas.init();
 	
 	API.init(enums.apiClientType.RENDERER);		

@@ -22,6 +22,7 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-enums/namespace-enums.js"));
+	loadingBlock.push(document.loadScript('scripts/namespace-enums/types.js'));
 	await Promise.all(loadingBlock);
 
 
@@ -31,6 +32,7 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.js"));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/RendererCanvas.js'));
 	await Promise.all(loadingBlock);
 
 
@@ -39,8 +41,8 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
-	loadingBlock.push(document.loadScript('scripts/database/SharedCell.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-database/BasicCell.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-database/SharedCell.js'));
 	await Promise.all(loadingBlock);
 
 	
@@ -63,9 +65,6 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
-	loadingBlock.push(document.loadScript('scripts/enums.js'));
 	loadingBlock.push(document.loadScript('scripts/api.js'));
 	await Promise.all(loadingBlock);
 

@@ -2,9 +2,9 @@
 var BasicTable = require('./BasicTable.js');
 var uuidv1 = require('uuid/v1');
 
-require('../public/scripts/database/BasicCell.js');
-require('../public/scripts/database/SocketIoClient.js');
-require('../public/scripts/database/SharedCell.js');
+require('../public/scripts/namespace-database/BasicCell.js');
+require('../public/scripts/namespace-database/SocketIoClient.js');
+require('../public/scripts/namespace-database/SharedCell.js');
 
 var DATABASE =
 {

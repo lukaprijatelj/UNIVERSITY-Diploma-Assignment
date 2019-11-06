@@ -31,6 +31,7 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-enums/namespace-enums.js"));
+	loadingBlock.push(document.loadScript('scripts/namespace-enums/types.js'));
 	await Promise.all(loadingBlock);
 
 
@@ -40,6 +41,11 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.js"));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/Dropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/OptionsDropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/BackgroundDropdown.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/Section.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-html/EditorCanvas.js'));
 	await Promise.all(loadingBlock);
 	
 
@@ -48,8 +54,8 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/database/BasicCell.js'));
-	loadingBlock.push(document.loadScript('scripts/database/SharedCell.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-database/BasicCell.js'));
+	loadingBlock.push(document.loadScript('scripts/namespace-database/SharedCell.js'));
 	await Promise.all(loadingBlock);
 
 	
@@ -73,16 +79,6 @@
 	// -----------------------------
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/classes/RendererCanvas.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/EditorCanvas.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/Dropdown.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/OptionsDropdown.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/BackgroundDropdown.js'));
-	loadingBlock.push(document.loadScript('scripts/classes/Section.js'));
-	await Promise.all(loadingBlock);
-
-	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript('scripts/enums.js'));
 	loadingBlock.push(document.loadScript('scripts/debug.js'));
 	loadingBlock.push(document.loadScript('scripts/api.js'));
 	loadingBlock.push(document.loadScript('scripts/admin.js'));

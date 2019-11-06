@@ -70,7 +70,7 @@ AdminPage.loadingCounter = null;
  */
 AdminPage.init = function()
 {	
-	globals.editorCanvas = new EditorCanvas();
+	globals.editorCanvas = new namespace.html.EditorCanvas();
 	globals.editorCanvas.init();
 
 	let loadingLayer = document.querySelector('layer#loading');

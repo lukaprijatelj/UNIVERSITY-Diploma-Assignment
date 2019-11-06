@@ -1,3 +1,15 @@
+var _this = this;
+
+if (typeof _this.namespace == 'undefined')
+{
+    _this.namespace = new Object();
+}
+
+if (typeof namespace.html == 'undefined')
+{
+    namespace.html = new Object();
+}
+
 namespace.html.BackgroundDropdown = (() =>
 {
 	var BackgroundDropdown = function(images, onSelect)
