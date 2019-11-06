@@ -7,6 +7,11 @@ var API =
 	isConnected: false,
 
 	/**
+	 * Are SocketIO listeners attached flag.
+	 */
+	areListenersAttached: false,
+
+	/**
 	 * Webworker thread instance.
 	 */
 	thread: null,

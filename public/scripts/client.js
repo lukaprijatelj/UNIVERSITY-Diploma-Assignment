@@ -110,16 +110,21 @@ ClientPage._onServerConnected = async function()
 {
 	console.log('[ClientPage] Connected to server!');
 
-	API.listen('cells/update', 'ClientPage._onCellsUpdate');
+	if (API.areListenersAttached == false)
+	{
+		API.areListenersAttached = true;
 
-	API.listen('rendering/start', 'ClientPage._onStartRenderingService');	
-	API.listen('rendering/stop', 'ClientPage._onStopRenderingService');	
-	API.listen('rendering/pause', 'ClientPage._onPauseRenderingService');	
-	API.listen('rendering/resume', 'ClientPage._onResumeRenderingService');	
+		API.listen('cells/update', 'ClientPage._onCellsUpdate');
 
-	API.listen('clients/add', 'ClientPage._onClientAdd');
-	API.listen('clients/remove', 'ClientPage._onClientRemove');
+		API.listen('rendering/start', 'ClientPage._onStartRenderingService');	
+		API.listen('rendering/stop', 'ClientPage._onStopRenderingService');	
+		API.listen('rendering/pause', 'ClientPage._onPauseRenderingService');	
+		API.listen('rendering/resume', 'ClientPage._onResumeRenderingService');	
 
+		API.listen('clients/add', 'ClientPage._onClientAdd');
+		API.listen('clients/remove', 'ClientPage._onClientRemove');
+	}
+	
 	let data;
 
 	data = await API.request('clients/getAll');

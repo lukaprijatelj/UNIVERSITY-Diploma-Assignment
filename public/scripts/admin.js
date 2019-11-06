@@ -133,10 +133,16 @@ AdminPage._onServerConnected = async function(socket)
 {
 	console.log('[AdminPage] Connected to server!');
 
-	API.listen('clients/add', 'AdminPage._onClientAdd');
-	API.listen('clients/remove', 'AdminPage._onClientRemove');
+	if (API.areListenersAttached == false)
+	{
+		API.areListenersAttached = true;
 
-	API.listen('rendering/finished', 'AdminPage._onRenderingFinished');
+		API.listen('clients/add', 'AdminPage._onClientAdd');
+		API.listen('clients/remove', 'AdminPage._onClientRemove');
+
+		API.listen('rendering/finished', 'AdminPage._onRenderingFinished');
+		API.listen('rendering/progress', 'AdminPage._onRenderingProgress');
+	}
 
 	let data;
 
@@ -167,6 +173,13 @@ AdminPage._onRenderingFinished = function()
 {
 	console.log('[AdminPage] Rendering has finished successfully');
 	AdminPage._changeRenderingState('stop');
+};
+
+AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
+{
+	let progress = data;
+
+	console.log('[AdminPage] Rendering progress "' + progress + '%" updated');	
 };
 
 /**

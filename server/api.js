@@ -310,6 +310,8 @@ var API =
 
 			if (current.progress == 100)
 			{
+				DATABASE.finishedCells++;
+
 				current.endTimestampSending = endTimestampSending;
 				current.fullTime = current.endTimestampSending - current.startTimestampSending;
 			}			
@@ -320,7 +322,20 @@ var API =
 		// emits to ALL EXCEPT socket that send this call
 		socket.broadcast.emit(API.baseUrl + '/cells/update', cells);
 
+		API.notifyProgress();
+		
 		callback();
+	},
+
+	notifyProgress: function()
+	{
+		let cellsTable = DATABASE.tables.renderingCells;
+		let progress = Math.toPercentage(DATABASE.finishedCells, cellsTable.rows.length);
+
+		progress = progress.toFixed(2);
+
+		// emits to ALL sockets
+		io.sockets.emit(API.baseUrl + '/rendering/progress', progress);
 	},
 
 	/**
@@ -420,6 +435,7 @@ var API =
 
 		API.renderingServiceState = 'running';
 		API.hasNotifiedFinish = false;
+		DATABASE.finishedCells = 0;
 
 		let responseData = API.renderingServiceState;
 	

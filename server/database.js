@@ -42,6 +42,10 @@ var DATABASE =
 		renderingCells: null,
 	},
 
+	/**
+	 * Number of cells that are already finished rendering.
+	 */
+	finishedCells: 0,
 	
 	init: function()
 	{
