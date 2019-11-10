@@ -563,7 +563,7 @@ ClientPage.openScene = async function()
 		ClientPage._initCamera(options.CAMERA);
 		ClientPage._initLights(options.LIGHTS);		
 
-		return;
+
 		ClientPage._initRenderer();
 
 return;

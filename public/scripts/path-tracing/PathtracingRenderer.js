@@ -48,6 +48,8 @@ const PI_2 = Math.PI / 2; // used in animation method
 //const samplesSpanEl = document.querySelector("#samples span");
 //const loadingSpinner = document.querySelector("#loadingSpinner");
 
+var fileLoader = new THREE.FileLoader();
+
 var PathtracingRenderer = function()
 {
 	console.log('[PathtracingRenderer] Initializing renderer');
@@ -58,7 +60,9 @@ var PathtracingRenderer = function()
 	// Model setup //
 	/////////////////
 	let modelPaths = [
-		"scenes/Textured-box/Scene.gltf"
+		//"scenes/Textured-box/Scene.gltf"
+		"scenes/DamagedHelmet/Scene.gltf"
+		//"scenes/Sea_keep_lonely_watcher/Scene.gltf"
 		//"scripts/path-tracing/00_001_011.gltf"
 	]
 	let modelScale = 10.0;
@@ -66,7 +70,7 @@ var PathtracingRenderer = function()
 	let modelPositionOffset = new THREE.Vector3(0, 0, 0);
 
 	var gltfLoader = new THREE.GLTFLoader();
-	var fileLoader = new THREE.FileLoader();
+	
 
 	// Based on source from: https://blackthread.io/blog/promisifying-threejs-loaders/
 	function gltfPromiseLoader(url, onProgress) {
@@ -130,18 +134,17 @@ var PathtracingRenderer = function()
 		}
 	}
 
-	function MaterialObject(material, pathTracingMaterialList) {
+	function MaterialObject() {
 		// a list of material types and their corresponding numbers are found in the 'pathTracingCommon.js' file
-		this.type = material.opacity < 1 ? 2 : 1; // default is 1 = diffuse opaque, 2 = glossy transparent, 4 = glossy opaque;
-		this.albedoTextureID = -1; // which diffuse map to use for model's color, '-1' = no textures are used
-		this.color = material.color ? material.color.copy(material.color) : new THREE.Color(1.0, 1.0, 1.0); // takes on different meanings, depending on 'type' above
-		this.roughness = material.roughness || 0.0; // 0.0 to 1.0 range, perfectly smooth to extremely rough
-		this.metalness = material.metalness || 0.0; // 0.0 to 1.0 range, usually either 0 or 1, either non-metal or metal
-		this.opacity = material.opacity || 1.0; // 0.0 to 1.0 range, fully transparent to fully opaque
-		// this seems to be unused
-		// this.refractiveIndex = this.type === 4 ? 1.0 : 1.5; // 1.0=air, 1.33=water, 1.4=clearCoat, 1.5=glass, etc.
-		pathTracingMaterialList.push(this);
-	}
+				this.type = 1; // default is '1': diffuse type 		
+				this.albedoTextureID = -1; // which diffuse map to use for model's color / '-1' = no textures are used
+				this.color = new THREE.Color(1.0, 1.0, 1.0); // takes on different meanings, depending on 'type' above
+				this.roughness = 0.0; // 0.0 to 1.0 range, perfectly smooth to extremely rough
+				this.metalness = 0.0; // 0.0 to 1.0 range, usually either 0 or 1, either non-metal or metal
+				this.opacity = 1.0;   // 0.0 to 1.0 range, fully transparent to fully opaque
+				this.refractiveIndex = 1.0; // 1.0=air, 1.33=water, 1.4=clearCoat, 1.5=glass, etc.
+		}
+		
 
 	async function loadModels(modelPaths) {
 		pathTracingMaterialList = [];
@@ -153,9 +156,95 @@ var PathtracingRenderer = function()
 			let modelPath = modelPaths[i];
 			console.log(`Loading model ${modelPath}`);
 
-			let promiseLoader = await gltfPromiseLoader(modelPath)
+		/*	let promiseLoader = await gltfPromiseLoader(modelPath)
 					.then(loadedObject => traverseModel(loadedObject, pathTracingMaterialList, triangleMaterialMarkers))
 					.catch(err => console.error(err));
+*/
+
+
+			let promiseLoader = await gltfPromiseLoader(modelPath).then(function( meshGroup ) { // Triangles: 15,452
+					
+					if (meshGroup.scene)
+							meshGroup = meshGroup.scene;
+							
+					let matrixStack = [];
+					let parent;
+					matrixStack.push(new THREE.Matrix4());
+					let totalTriangleCount = 0;
+
+					meshGroup.traverse( function ( child ) {
+
+							if ( child.isMesh ) {
+									let hasUVs = child.geometry.attributes.uv !== undefined ? 3 : 0;
+									let hasNormals = child.geometry.attributes.normal !== undefined ? 3 : 0;
+									
+									if ( parent !== undefined && parent.name !== child.parent.name ) {
+											matrixStack.pop();
+											parent = undefined;
+									}
+									
+									//child.geometry.applyMatrix( child.matrix.multiply( matrixStack[matrixStack.length - 1] ) );
+									let mat = new MaterialObject();
+
+									// note: '4' means clearCoat material over diffuse material.  the clearCoat portion will have an IoR of around 1.4
+									let materialType = child.material.opacity < 1 ? 2 : 4; // 2 = glossy transparent, 4 = glossy opaque
+									mat.type = materialType;
+									mat.color.copy(child.material.color);
+									mat.roughness = child.material.roughness || 0.0;
+									mat.metalness = child.material.metalness || 0.0;
+									mat.opacity = child.material.opacity || 1.0;
+									mat.refractiveIndex = materialType == 4 ? 1.4 : 1.52; // IoR of clearCoat = 1.4, glass = 1.5
+									pathTracingMaterialList.push(mat);
+									totalTriangleCount += child.geometry.index.count / 3;
+									triangleMaterialMarkers.push(totalTriangleCount);
+									meshList.push(child);
+							}
+							else if ( child.isObject3D ) {
+									if ( parent !== undefined )
+											matrixStack.pop();
+									
+									let matrixPeek = new THREE.Matrix4().copy( matrixStack[matrixStack.length - 1] ).multiply( child.matrix );
+									matrixStack.push( matrixPeek );
+									parent = child;
+							}
+					} );
+
+					modelMesh = meshList[0].clone();
+					
+					var geoList = [];
+					for (let i = 0; i < meshList.length; i++) {
+							geoList.push(meshList[i].geometry);
+					}
+					
+					if (modelMesh.geometry.index)
+							modelMesh.geometry = modelMesh.geometry.toNonIndexed();
+
+					
+					// albedo map
+					if (meshList[0].material.map != undefined)
+							albedoMap = meshList[0].material.map;
+
+					// emissive map
+					if (meshList[0].material.emissiveMap != undefined)
+							emissiveMap = meshList[0].material.emissiveMap;
+
+					// metallicRoughness map
+					if (meshList[0].material.roughnessMap != undefined)
+							metallicRoughnessMap = meshList[0].material.roughnessMap;
+					
+					// normal map
+					if (meshList[0].material.normalMap != undefined)
+							normalMap = meshList[0].material.normalMap;
+					
+					
+					for (let i = 0; i < meshList.length; i++) {
+							if (meshList[i].material.map != undefined) {
+									pathTracingMaterialList[i].textureID = 0;	
+							}				
+					}
+					
+
+			});
 
 			promises.push(promiseLoader);
 		}
@@ -340,13 +429,17 @@ var PathtracingRenderer = function()
 		// Start listening to window resize events
 		window.addEventListener('resize', onWindowResize, false);
 
+
 		// Prepare geometry for path tracing
 		prepareGeometryForPT(flattenedMeshList, pathTracingMaterialList, triangleMaterialMarkers);
 	}
 
 	async function prepareGeometryForPT(meshList, pathTracingMaterialList, triangleMaterialMarkers) {
+
+		initSceneData();
+
 		// Gather all geometry from the mesh list that now contains loaded models
-		let geoList = [];
+		/*let geoList = [];
 		for (let i = 0; i < meshList.length; i++)
 			geoList.push(meshList[i].geometry);
 
@@ -392,9 +485,9 @@ var PathtracingRenderer = function()
 					}
 				}
 			}
-		}
+		}*/
 
-		console.log(`Loaded ${modelPaths.length} model(s) consisting of ${total_number_of_triangles} total triangles that are using ${uniqueMaterialTextures.length} textures.`);
+		/*console.log(`Loaded ${modelPaths.length} model(s) consisting of ${total_number_of_triangles} total triangles that are using ${uniqueMaterialTextures.length} textures.`);
 
 		console.timeEnd("LoadingGltf");
 
@@ -599,6 +692,8 @@ var PathtracingRenderer = function()
 		aabbDataTexture.generateMipmaps = false;
 		aabbDataTexture.needsUpdate = true;
 
+		
+
 		let PerlinNoiseTexture = new THREE.TextureLoader().load('scripts/path-tracing/perlin256.png');
 		PerlinNoiseTexture.wrapS = THREE.RepeatWrapping;
 		PerlinNoiseTexture.wrapT = THREE.RepeatWrapping;
@@ -616,15 +711,16 @@ var PathtracingRenderer = function()
 			texture.magFilter = THREE.NearestFilter;
 			texture.flipY = true;
 		} );
+*/
 
 		pathTracingUniforms = {
 
-			tPreviousTexture: {type: "t", value: screenTextureRenderTarget.texture},
-			tTriangleTexture: {type: "t", value: triangleDataTexture},
-			tAABBTexture: {type: "t", value: aabbDataTexture},
-			tAlbedoTextures: {type: "t", value: uniqueMaterialTextures},
-			t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
-			tHDRTexture: { type: "t", value: hdrTexture },
+			//tPreviousTexture: {type: "t", value: screenTextureRenderTarget.texture},
+			//tTriangleTexture: {type: "t", value: triangleDataTexture},
+			//tAABBTexture: {type: "t", value: aabbDataTexture},
+			//tAlbedoTextures: {type: "t", value: uniqueMaterialTextures},
+			//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
+			//tHDRTexture: { type: "t", value: hdrTexture },
 
 			uCameraIsMoving: {type: "b1", value: false},
 			uCameraJustStartedMoving: {type: "b1", value: false},
@@ -645,6 +741,9 @@ var PathtracingRenderer = function()
 			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()},
 
 		};
+
+
+        
 
 		pathTracingDefines = {
 			//N_ALBEDO_MAPS: uniqueMaterialTextures.length
@@ -682,8 +781,11 @@ var PathtracingRenderer = function()
 		screenOutputScene.add(screenOutputMesh);
 
 		// load vertex and fragment shader files that are used in the pathTracing material, mesh and scene
-		let vertexShader = await filePromiseLoader('scripts/path-tracing/shaders/vertex.glsl');
-		let fragmentShader = await filePromiseLoader('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
+		let vertexShader = await filePromiseLoader('scripts/path-tracing/shaders/common_PathTracing_Vertex.glsl');
+		let fragmentShader = await filePromiseLoader('scripts/path-tracing/shaders/BVH_Animated_Model_Fragment.glsl');
+
+		let pathTracingGeometry = new THREE.PlaneBufferGeometry(2, 2);
+	
 
 		let pathTracingMaterial = new THREE.ShaderMaterial({
 			uniforms: pathTracingUniforms,
@@ -693,8 +795,55 @@ var PathtracingRenderer = function()
 			depthTest: false,
 			depthWrite: false
 		});
+		//initPathTracingShaders(pathTracingGeometry, pathTracingMaterial);
 
-		let pathTracingGeometry = new THREE.PlaneBufferGeometry(2, 2);
+
+
+		let newpathTracingUniforms = {
+			tPreviousTexture: { type: "t", value: screenTextureRenderTarget.texture },
+			tTriangleTexture: { type: "t", value: triangleDataTexture },
+			tAABBTexture: { type: "t", value: aabbDataTexture },
+			tAlbedoMap: { type: "t", value: albedoMap },
+			tEmissiveMap: { type: "t", value: emissiveMap },
+			tMetallicRoughnessMap: { type: "t", value: metallicRoughnessMap },
+			tNormalMap: { type: "t", value: normalMap },
+
+			uCameraIsMoving: { type: "b1", value: false },
+			uCameraJustStartedMoving: { type: "b1", value: false },
+
+			uEPS_intersect: { type: "f", value: EPS_intersect },
+			uTime: { type: "f", value: 0.0 },
+			uSampleCounter: { type: "f", value: 1.0 },
+			uFrameCounter: { type: "f", value: 1.0 },
+			uULen: { type: "f", value: 1.0 },
+			uVLen: { type: "f", value: 1.0 },
+			uApertureSize: { type: "f", value: 0.0 },
+			uFocusDistance: { type: "f", value: focusDistance },
+
+			uResolution: { type: "v2", value: new THREE.Vector2() },
+
+			uRandomVector: { type: "v3", value: new THREE.Vector3() },
+			uGLTF_Model_Position: { type: "v3", value: new THREE.Vector3() },
+
+			uCameraMatrix: {type: "m4", value: new THREE.Matrix4() },
+
+			uGLTF_Model_InvMatrix: { type: "m4", value: new THREE.Matrix4() },
+			uGLTF_Model_NormalMatrix: { type: "m3", value: new THREE.Matrix3() }
+		};
+		
+		Object.cloneData(pathTracingUniforms, newpathTracingUniforms);
+
+
+
+
+
+
+
+
+
+
+
+		
 		let pathTracingMesh = new THREE.Mesh(pathTracingGeometry, pathTracingMaterial);
 		pathTracingScene.add(pathTracingMesh);
 

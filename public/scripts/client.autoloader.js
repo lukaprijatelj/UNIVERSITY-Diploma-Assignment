@@ -107,9 +107,9 @@
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BVH_Acc_Structure_Iterative_Builder.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/pathTracingCommon.js'));
 	
-	loadingBlock.push(document.loadScript('scripts/path-tracing/commonFunctions.js'));
+	//loadingBlock.push(document.loadScript('scripts/path-tracing/commonFunctions.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BVH_Animated_Model.js'));
-	
+
 	loadingBlock.push(document.loadScript('scripts/path-tracing/PathtracingRenderer.js'));
 
 	

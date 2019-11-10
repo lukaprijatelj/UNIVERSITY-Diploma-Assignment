@@ -11,9 +11,9 @@ var modelScale = 1.0;
 var modelPositionOffset = new THREE.Vector3();
 var total_number_of_triangles = 0;
 var triangle_array;
-var triangleMaterialMarkers = [];
+/*var triangleMaterialMarkers = [];
 var pathTracingMaterialList = [];
-var uniqueMaterialTextures = [];
+var uniqueMaterialTextures = [];*/
 var meshList = [];
 var geoList = [];
 var triangleDataTexture;
@@ -377,10 +377,10 @@ function initSceneData() {
 
 
 // called automatically from within initTHREEjs() function
-function initPathTracingShaders() {
+function initPathTracingShaders(pathTracingGeometry, pathTracingMaterial) {
  
         // scene/demo-specific uniforms go here
-        pathTracingUniforms = {
+        let newpathTracingUniforms = {
 
                 tPreviousTexture: { type: "t", value: screenTextureRenderTarget.texture },
                 tTriangleTexture: { type: "t", value: triangleDataTexture },
@@ -407,12 +407,14 @@ function initPathTracingShaders() {
                 uRandomVector: { type: "v3", value: new THREE.Vector3() },
                 uGLTF_Model_Position: { type: "v3", value: new THREE.Vector3() },
 
-                uCameraMatrix: {type: "m4", value: new THREE.Matrix4() },
+				uCameraMatrix: {type: "m4", value: new THREE.Matrix4() },
 
                 uGLTF_Model_InvMatrix: { type: "m4", value: new THREE.Matrix4() },
                 uGLTF_Model_NormalMatrix: { type: "m3", value: new THREE.Matrix3() }
         
-        };
+		};
+		
+		Object.cloneData(pathTracingMaterial, newpathTracingUniforms);
 
         pathTracingDefines = {
         	//NUMBER_OF_TRIANGLES: total_number_of_triangles
@@ -422,14 +424,14 @@ function initPathTracingShaders() {
         fileLoader.load('scripts/path-tracing/shaders/common_PathTracing_Vertex.glsl', function (shaderText) {
                 pathTracingVertexShader = shaderText;
 
-                createPathTracingMaterial();
+                createPathTracingMaterial(pathTracingGeometry);
         });
 
 } // end function initPathTracingShaders()
 
 
 // called automatically from within initPathTracingShaders() function above
-function createPathTracingMaterial() {
+function createPathTracingMaterial(pathTracingGeometry) {
 
         fileLoader.load('scripts/path-tracing/shaders/BVH_Animated_Model_Fragment.glsl', function (shaderText) {
                 
@@ -516,4 +518,4 @@ function updateVariablesAndUniforms() {
 
 
 
-load_GLTF_Model(); // load model, init app, and start animating
+//load_GLTF_Model(); // load model, init app, and start animating

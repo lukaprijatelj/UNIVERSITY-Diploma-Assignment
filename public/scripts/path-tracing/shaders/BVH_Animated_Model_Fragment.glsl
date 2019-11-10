@@ -24,10 +24,10 @@ uniform sampler2D tNormalMap;
 
 #define INV_TEXTURE_WIDTH 0.00048828125
 
-#define N_DISKS 1
+//#define N_DISKS 1
 #define N_SPHERES 3
-#define N_BOXES 2
-#define N_OPENCYLINDERS 1
+//#define N_BOXES 1
+//#define N_OPENCYLINDERS 1
 
 //-----------------------------------------------------------------------
 
@@ -38,10 +38,10 @@ struct OpenCylinder { vec3 pos0; vec3 pos1; float radius; vec3 emission; vec3 co
 struct Box { vec3 minCorner; vec3 maxCorner; vec3 emission; vec3 color; int type; bool isDynamic; };
 struct Intersection { vec3 normal; vec3 emission; vec3 color; vec2 uv; int type; int textureID; bool isDynamic; };
 
-Disk disks[N_DISKS];
+//Disk disks[N_DISKS];
 Sphere spheres[N_SPHERES];
-OpenCylinder openCylinders[N_OPENCYLINDERS];
-Box boxes[N_BOXES];
+//OpenCylinder openCylinders[N_OPENCYLINDERS];
+//Box boxes[N_BOXES];
 
 
 #include <pathtracing_random_functions>
@@ -146,7 +146,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		}
 	}
 
-        for (int i = 0; i < N_BOXES; i++)
+       /* for (int i = 0; i < N_BOXES; i++)
         {
 		d = BoxIntersect( boxes[i].minCorner, boxes[i].maxCorner, r, n );
 		if (d < t)
@@ -160,9 +160,10 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 			intersec.isDynamic = false;
 			triangleLookupNeeded = false;
 		}
-        }
+        }*/
+		
 
-        d = DiskIntersect( disks[0].radius, disks[0].pos, disks[0].normal, r );
+    /*    d = DiskIntersect( disks[0].radius, disks[0].pos, disks[0].normal, r );
 	if (d < t)
 	{
 		t = d;
@@ -185,8 +186,10 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		intersec.isDynamic = false;
 		triangleLookupNeeded = false;
 	}
+*/
+	
 
-	d = OpenCylinderIntersect( openCylinders[0].pos0, openCylinders[0].pos1, openCylinders[0].radius, r, n );
+/*	d = OpenCylinderIntersect( openCylinders[0].pos0, openCylinders[0].pos1, openCylinders[0].radius, r, n );
 	if (d < t)
 	{
 		t = d;
@@ -209,7 +212,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		intersec.isDynamic = false;
 		triangleLookupNeeded = false;
         }
-        
+        */
 
 	// transform ray into GLTF_Model's object space
 	r.origin = vec3( uGLTF_Model_InvMatrix * vec4(r.origin, 1.0) );
@@ -831,22 +834,22 @@ void SetupScene(void)
 //-----------------------------------------------------------------------
 {
 	vec3 z  = vec3(0);          
-	vec3 L1 = vec3(0.5, 0.7, 1.0) * 0.02;// Blueish sky light
+	vec3 L1 = vec3(0.5, 0.7, 1.0) * 0.9;// Blueish sky light
 	vec3 L2 = vec3(1.0, 1.0, 1.0) * 800.0;// Bright white light bulb
 	
 	spheres[0] = Sphere( 10000.0,     vec3(0, 0, 0), L1, z, LIGHT, false);//spherical white Light1
 	spheres[1] = Sphere( 3.0, vec3(-10, 100, -50), L2, z, SPOT_LIGHT, false);//spotlight
 	spheres[2] = Sphere( 4000.0, vec3(0, -4000, 0), z, vec3(0.4, 0.4, 0.4), CHECK, false);//Checkered Floor
-        
-        vec3 spotLightTarget = uGLTF_Model_Position;
+
+	    
+	 // Cylinder light
+    /*    vec3 spotLightTarget = uGLTF_Model_Position;
         vec3 spotLightPos = spheres[1].position;
 	vec3 spotLightDir = normalize(spotLightTarget - spotLightPos);
 	openCylinders[0] = OpenCylinder( spotLightPos - (spotLightDir * spheres[1].radius) * 2.0, spotLightPos + (spotLightDir * spheres[1].radius) * 5.0, 
 					   spheres[1].radius * 1.5, z, vec3(1), SPEC, true);//metal open Cylinder
-        disks[0] = Disk( spheres[1].radius * 1.5, spotLightPos - (spotLightDir * spheres[1].radius * 2.0), spotLightDir, z, vec3(0.9, 0.9, 0.9), SPEC, true);//metal disk
-        	
-	boxes[0] = Box( vec3(-20.0,11.0,-110.0), vec3(70.0,18.0,-20.0), z, vec3(0.2,0.9,0.7), REFR, false);//Glass Box
-	boxes[1] = Box( vec3(-14.0,13.0,-104.0), vec3(64.0,16.0,-26.0), z, vec3(0),           DIFF, false);//Inner Box
+       disks[0] = Disk( spheres[1].radius * 1.5, spotLightPos - (spotLightDir * spheres[1].radius * 2.0), spotLightDir, z, vec3(0.9, 0.9, 0.9), SPEC, true);//metal disk
+       */ 
 }
 
 
@@ -910,24 +913,48 @@ void main( void )
         // perform path tracing and get resulting pixel color
         vec3 pixelColor = CalculateRadiance( ray, seed, rayHitIsDynamic );
         
-	vec4 previousImage = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0);
-	vec3 previousColor = previousImage.rgb;
+	/*
+	{
+		// NOTE: commented by Luka Prijatelj (screen is darkening when mouse is not moving)
+		vec4 previousImage = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0);
+		vec3 previousColor = previousImage.rgb;
 
-	if (uCameraIsMoving)
-	{
-                previousColor *= 0.5; // motion-blur trail amount (old image)
-                pixelColor *= 0.5; // brightness of new image (noisy)
-        }
-	else if (previousImage.a > 0.0)
-	{
-                previousColor *= 0.8; // motion-blur trail amount (old image)
-                pixelColor *= 0.2; // brightness of new image (noisy)
-        }
-	else
-	{
+		if (uCameraIsMoving)
+		{
+					previousColor *= 0.5; // motion-blur trail amount (old image)
+					pixelColor *= 0.5; // brightness of new image (noisy)
+			}
+		else if (previousImage.a > 0.0)
+		{
+					previousColor *= 0.8; // motion-blur trail amount (old image)
+					pixelColor *= 0.2; // brightness of new image (noisy)
+			}
+		else
+		{
                 previousColor *= 0.93; // motion-blur trail amount (old image)
                 pixelColor *= 0.07; // brightness of new image (noisy)
         }
 	
         out_FragColor = vec4( pixelColor + previousColor, rayHitIsDynamic? 1.0 : 0.0 );	
+	}
+	*/
+
+
+
+	// NOTE: added by Luka Prijatelj		
+	// perform path tracing and get resulting pixel color
+
+	vec3 previousColor = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+	
+	if ( uCameraJustStartedMoving )
+	{
+		previousColor = vec3(0.0); // clear rendering accumulation buffer
+	}
+	else if ( uCameraIsMoving )
+	{
+		previousColor *= 0.5; // motion-blur trail amount (old image)
+		pixelColor *= 0.5; // brightness of new image (noisy)
+	}
+		
+	out_FragColor = vec4( pixelColor + previousColor, 1.0 );
 }

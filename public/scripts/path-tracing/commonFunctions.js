@@ -7,7 +7,7 @@ var pathTracingScene, screenTextureScene, screenOutputScene;
 var pathTracingUniforms, screenTextureUniforms, screenOutputUniforms;
 var pathTracingDefines;
 var pathTracingVertexShader, pathTracingFragmentShader;
-var pathTracingGeometry, pathTracingMaterial, pathTracingMesh;
+var pathTracingGeometry, pathTracingMesh;
 var screenTextureGeometry, screenTextureMaterial, screenTextureMesh;
 var screenOutputGeometry, screenOutputMaterial, screenOutputMesh;
 var pathTracingRenderTarget, screenOutputRenderTarget;
