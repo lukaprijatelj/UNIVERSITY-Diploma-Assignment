@@ -1,8 +1,21 @@
 'use strict';
 var _this = this;
-var isNodeJS = (typeof module !== 'undefined' && module.exports) ? true : false;
-var isWebWorker = (typeof WorkerGlobalScope !== 'undefined') ? true : false;
-if (isNodeJS == true) {
+if (typeof _this.IS_DEBUG === 'undefined') {
+    _this.IS_DEBUG = false;
+}
+if (typeof _this.IS_CONSOLE_ENABLED === 'undefined') {
+    _this.IS_CONSOLE_ENABLED = true;
+}
+if (typeof _this.CHECK_IF_IDISPOSABLE_IMPLEMENTED === 'undefined') {
+    _this.CHECK_IF_IDISPOSABLE_IMPLEMENTED = false;
+}
+if (typeof _this.IS_NODEJS === 'undefined') {
+    _this.IS_NODEJS = (typeof module !== 'undefined' && module.exports) ? true : false;
+}
+if (typeof _this.IS_WEB_WORKER === 'undefined') {
+    _this.IS_WEB_WORKER = (typeof WorkerGlobalScope !== 'undefined') ? true : false;
+}
+if (_this.IS_NODEJS == true) {
     _this = global;
 }
 var Exception;
@@ -404,48 +417,57 @@ Array.contains = function (array, element) {
     }
     return true;
 };
-let _Event = Event;
-if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    _Event.prototype._stopPropagation = _Event.prototype.stopPropagation;
-    _Event.prototype.stopPropagation = function () {
-        Event.fire(namespace.__.MOUSE.globalClick);
-        _Event.prototype._stopPropagation.apply(this, arguments);
-    };
-}
-var EventListener = function (value, isOneTime) {
+var EventListener = function (value) {
     this.value = value ? value : Function.empty;
-    this.isOneTime = Boolean(isOneTime);
 };
-var Event = function () {
-    this._handlers = [];
-    this._isDisabled = false;
-    this.attach = this.attach.bind(this);
-    this.detach = this.detach.bind(this);
-    this.clear = this.clear.bind(this);
-    this.dispose = this.dispose.bind(this);
+var OneTimeEventListener = function (value) {
+    this.value = value ? value : Function.empty;
 };
-Event.prototype.attach = function (handler, isOneTime) {
-    if (!handler) {
+OneTimeEventListener.attach = function (evt, listener) {
+    if (!listener) {
         new Warning.ValueUndefined();
         return;
     }
-    let _this = this;
+    let _this = evt;
+    if (EventListener.isAttached(_this, listener) == true) {
+        new Warning.Other('Cannot add handler function that already exists! (aborting)');
+        return;
+    }
+    _this._handlers.push(new OneTimeEventListener(listener));
+};
+EventListener.attach = function (evt, listener) {
+    if (!listener) {
+        new Warning.ValueUndefined();
+        return;
+    }
+    let _this = evt;
+    if (EventListener.isAttached(_this, listener) == true) {
+        new Warning.Other('Cannot add handler function that already exists! (aborting)');
+        return;
+    }
+    _this._handlers.push(new EventListener(listener));
+};
+EventListener.isAttached = function (evt, listener) {
+    if (!listener) {
+        new Warning.ValueUndefined();
+        return;
+    }
+    let _this = evt;
     let handlersLength = _this._handlers.length;
     for (var i = 0; i < handlersLength; i++) {
         var eventHandler = _this._handlers[i];
-        if (eventHandler.value == handler) {
-            new Warning.Other('Cannot add handler function that already exists! (aborting)');
-            return;
+        if (eventHandler.value == listener) {
+            return true;
         }
     }
-    _this._handlers.push(new EventListener(handler, isOneTime));
+    return false;
 };
-Event.prototype.detach = function (handler) {
+EventListener.detach = function (evt, handler) {
     if (!handler) {
         new Warning.ValueUndefined();
         return;
     }
-    let _this = this;
+    let _this = evt;
     let handlersLength = _this._handlers.length;
     for (var i = 0; i < handlersLength; i++) {
         var eventHandler = _this._handlers[i];
@@ -455,37 +477,46 @@ Event.prototype.detach = function (handler) {
         }
     }
 };
+let _Event = Event;
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    _Event.prototype._stopPropagation = _Event.prototype.stopPropagation;
+    _Event.prototype.stopPropagation = function () {
+        Event.fire(namespace.__.MOUSE.globalClick);
+        _Event.prototype._stopPropagation.apply(this, arguments);
+    };
+}
+var Event = function () {
+    this._handlers = [];
+    this._isDisabled = false;
+    this.dispose = this.dispose.bind(this);
+};
+Event.prototype.dispose = function () {
+    let _this = this;
+    Event.clear(_this);
+};
 Event.enable = function (_this) {
     _this._isDisabled = false;
 };
 Event.disable = function (_this) {
     _this._isDisabled = true;
 };
-Event.fire = function () {
-    if (this._isDisabled == true) {
+Event.fire = function (_this, eventArgs) {
+    if (_this._isDisabled == true) {
         return;
-    }
-    let _this = arguments[0];
-    let newArgs = [];
-    for (let i = 1; i < arguments.length; i++) {
-        newArgs.push(arguments[i]);
     }
     let handlersLength = _this._handlers.length;
     let newHandlers = [];
     for (var i = 0; i < handlersLength; i++) {
         var eventHandler = _this._handlers[i];
-        eventHandler.value.apply(null, newArgs);
-        if (eventHandler.isOneTime == false) {
+        eventHandler.value(eventArgs);
+        if (eventHandler instanceof EventListener) {
             newHandlers.push(eventHandler);
         }
     }
     _this._handlers = newHandlers;
 };
-Event.prototype.clear = function () {
-    this._handlers = [];
-};
-Event.prototype.dispose = function () {
-    this.clear();
+Event.clear = function (_this) {
+    _this._handlers = [];
 };
 var namespace;
 (function (namespace) {
@@ -499,7 +530,9 @@ var namespace;
                         BROWSER.resizeEvent = new Event();
                         window.onresize = function (event) {
                             BROWSER.updateBody(event);
-                            Event.fire(BROWSER.resizeEvent, event);
+                            let eventArgs = new EventArgs(BROWSER);
+                            eventArgs.event = event;
+                            Event.fire(BROWSER.resizeEvent, eventArgs);
                         };
                         if (document.readyState === "complete") {
                             BROWSER.updateBody();
@@ -875,18 +908,9 @@ Date.getFormatPart = function (date, format) {
 _this.Enum = function (values) {
     Object.cloneData(this, values);
 };
-var namespace;
-(function (namespace) {
-    var core;
-    (function (core) {
-        class EventArgs {
-            constructor() {
-                this.sender = null;
-            }
-        }
-        core.EventArgs = EventArgs;
-    })(core = namespace.core || (namespace.core = {}));
-})(namespace || (namespace = {}));
+var EventArgs = function (sender) {
+    this.sender = sender ? sender : null;
+};
 Function.empty = function () {
 };
 _this.IDisposable = (() => {
@@ -914,15 +938,26 @@ GarbageCollector.dispose = function (obj) {
     if (GarbageCollector.isDisposable(obj) == false) {
         new Exception.Other('Element is not disposable!');
     }
+    if (_this.CHECK_IF_IDISPOSABLE_IMPLEMENTED == true) {
+        if (!element.dispose) {
+            new Warning.Other('Element is not disposable!');
+        }
+        if (!element.onDispose) {
+            new Warning.Other('Element is not disposable!');
+        }
+    }
     if (obj.onDispose) {
         Event.fire(obj.onDispose);
-        obj.onDispose.clear();
+        Event.clear(obj.onDispose);
     }
     if (obj.dispose) {
         obj.dispose();
     }
     if (obj instanceof Array) {
         obj.length = 0;
+        obj.push = undefined;
+        obj.pop = undefined;
+        obj.slice = undefined;
     }
     else {
         for (var key in obj) {
@@ -933,20 +968,14 @@ GarbageCollector.dispose = function (obj) {
     }
     obj._isDisposed = true;
 };
-GarbageCollector.isDisposable = function (element) {
-    if (!element) {
+GarbageCollector.isDisposable = function (obj) {
+    if (!obj) {
         return false;
     }
-    if (typeof element !== 'object') {
+    if (typeof obj !== 'object') {
         return false;
     }
-    if (element instanceof Array) {
-        return true;
-    }
-    if (element.dispose) {
-        return true;
-    }
-    if (element.onDispose) {
+    if (obj instanceof Array) {
         return true;
     }
     return false;
@@ -961,14 +990,26 @@ var namespace;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
 if (typeof Image !== 'undefined') {
+    Image.load = function (filepath) {
+        return new Promise((resolve, reject) => {
+            let image = new Image();
+            image.onload = function () {
+                resolve(image);
+            };
+            image.onerror = function () {
+                reject();
+            };
+            image.src = filepath;
+        });
+    };
     Image.preload = function (filepath) {
         if (!window.preloadedImages) {
-            window.preloadedImages = new Array();
+            window.preloadedImages = new Object();
         }
         return new Promise((resolve, reject) => {
             let image = new Image();
             image.onload = function () {
-                window.preloadedImages.push(image);
+                window.preloadedImages[filepath] = image;
                 resolve(image);
             };
             image.onerror = function () {
@@ -1149,20 +1190,6 @@ var namespace;
         core.Keyboard = Keyboard;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-_this.List = (() => {
-    let List = function () {
-        Class.inherit(this, Array);
-        Interface.inherit(this, IDisposable);
-    };
-    Class.inheritPrototype(List, Array);
-    Interface.inheritPrototype(List, IDisposable);
-    List.prototype.dispose = function () {
-        let _this = this;
-        _this.length = 0;
-        Object.destroy(_this);
-    };
-    return List;
-})();
 var namespace;
 (function (namespace) {
     var core;
@@ -1495,7 +1522,9 @@ var namespace;
                         document.body.addEventListener('click', MOUSE.onGlobalClick);
                     },
                     onGlobalClick: function (event) {
-                        Event.fire(MOUSE.globalClick, event);
+                        let eventArgs = new EventArgs(MOUSE);
+                        eventArgs.event = event;
+                        Event.fire(MOUSE.globalClick, eventArgs);
                     },
                     onMouseMove: function (event) {
                         MOUSE.moveEvent = event;
@@ -1941,22 +1970,6 @@ var namespace;
         Interface.inheritPrototype(State, IDisposable);
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-_this.StaticArray = (() => {
-    let StaticArray = function (length) {
-        Class.inherit(this, Array);
-        Interface.inherit(this, IDisposable);
-        this.length = length;
-        this._init();
-    };
-    Class.inheritPrototype(StaticArray, Array);
-    Interface.inheritPrototype(StaticArray, IDisposable);
-    StaticArray.prototype.push = undefined;
-    StaticArray.prototype.pop = undefined;
-    StaticArray.prototype._init = function () {
-        let _this = this;
-    };
-    return StaticArray;
-})();
 var namespace;
 (function (namespace) {
     var __;
@@ -1978,7 +1991,7 @@ var namespace;
     var core;
     (function (core) {
         core.MainThread = (() => {
-            if (isWebWorker == true) {
+            if (_this.IS_WEB_WORKER == true) {
                 let MainThread = {
                     _instance: null,
                     _promiseQueue: {},
@@ -2336,7 +2349,7 @@ console._error = console.error;
 console._warn = console.warn;
 console._trace = console.trace;
 console.log = function () {
-    if (typeof IS_CONSOLE_ENABLED !== 'undefined' && IS_CONSOLE_ENABLED == false) {
+    if (_this.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._log.apply(this, arguments);
@@ -2345,13 +2358,13 @@ console.error = function () {
     console._error.apply(this, arguments);
 };
 console.warn = function () {
-    if (typeof IS_CONSOLE_ENABLED !== 'undefined' && IS_CONSOLE_ENABLED == false) {
+    if (_this.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._warn.apply(this, arguments);
 };
 console.trace = function () {
-    if (typeof IS_CONSOLE_ENABLED !== 'undefined' && IS_CONSOLE_ENABLED == false) {
+    if (_this.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._trace.apply(this, arguments);

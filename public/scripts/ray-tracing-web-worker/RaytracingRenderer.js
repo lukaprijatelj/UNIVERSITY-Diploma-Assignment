@@ -166,7 +166,7 @@ RaytracingRenderer.prototype.setWorkers = function()
 		new Exception.ValueInvalid('Max threads option must be larger than 0!');
 	}
 
-	_this.threads = new StaticArray(options.MAX_THREADS);
+	_this.threads = new Array(options.MAX_THREADS);
 
 	for (let i=0; i<_this.threads.length; i++)
 	{

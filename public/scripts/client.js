@@ -32,11 +32,6 @@ globals.camera = null;
 globals.renderer = null;
 
 /**
- * Camera controls affected by mouse movement.
- */
-globals.controls = null;
-
-/**
  * Last rendered time.
  */
 globals.lastRenderingTime = 0;
@@ -276,7 +271,10 @@ ClientPage._onServerDisconnect = function()
 {
 	console.log('[ClientPage] Disconnected from server!');
 
-	ClientPage._onStopRenderingService();
+	if (API.renderingServiceState != namespace.enums.renderingServiceState.IDLE)
+	{
+		ClientPage._onStopRenderingService();
+	}
 };
 
 /**
@@ -544,7 +542,7 @@ ClientPage._updateCells = function(cells)
  */
 ClientPage.openScene = async function()
 {
-	try
+	//try
 	{
 		/**
 		 * gltf.animations; // Array<THREE.AnimationClip>
@@ -562,6 +560,8 @@ ClientPage.openScene = async function()
 		ClientPage._initLights(options.LIGHTS);		
 		ClientPage._initRenderer();
 
+		return;
+
 		globals.renderer.prepareJsonData();
 		globals.renderer.initScene();
 		globals.renderer.initCamera();
@@ -570,10 +570,10 @@ ClientPage.openScene = async function()
 		let cells = await API.request('cells/getWaiting');
 		ClientPage._updateWaitingCells(cells);
 	}
-	catch (err)
+	/*catch (err)
 	{
 		console.error(err.message);
-	}		
+	}	*/	
 };
 
 /**

@@ -29,6 +29,8 @@
 	// namespace-enums
 	// -----------------------------
 
+	console.log('[Admin.autoloader] Loading namespace.enums library');
+
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-enums/namespace-enums.js"));
 	loadingBlock.push(document.loadScript('scripts/namespace-enums/types.js'));
@@ -38,6 +40,8 @@
 	// -----------------------------
 	// namespace-html
 	// -----------------------------
+
+	console.log('[Admin.autoloader] Loading namespace.html library');
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.js"));
@@ -53,6 +57,8 @@
 	// namespace-database
 	// -----------------------------
 
+	console.log('[Admin.autoloader] Loading namespace.database library');
+
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/namespace-database/BasicCell.js'));
 	loadingBlock.push(document.loadScript('scripts/namespace-database/SharedCell.js'));
@@ -62,6 +68,8 @@
 	// -----------------------------
 	// ThreeJS
 	// -----------------------------
+
+	console.log('[Admin.autoloader] Loading threeJS library');
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/socket.io/socket.io.js'));
@@ -78,6 +86,8 @@
 	// local scripts
 	// -----------------------------
 
+	console.log('[Admin.autoloader] Loading script');
+
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/debug.js'));
 	loadingBlock.push(document.loadScript('scripts/api.js'));
@@ -88,6 +98,8 @@
 	// -----------------------------
 	// preload background images
 	// -----------------------------
+
+	console.log('[Admin.autoloader] Preloading images');
 
 	loadingBlock = new Array();
 
