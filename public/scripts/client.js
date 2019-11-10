@@ -546,7 +546,7 @@ ClientPage._updateCells = function(cells)
  */
 ClientPage.openScene = async function()
 {
-	//try
+	try
 	{
 		/**
 		 * gltf.animations; // Array<THREE.AnimationClip>
@@ -564,8 +564,6 @@ ClientPage.openScene = async function()
 		ClientPage._initLights(options.LIGHTS);		
 		ClientPage._initRenderer();
 
-		return;
-
 		globals.renderer.prepareJsonData();
 		globals.renderer.initScene();
 		globals.renderer.initCamera();
@@ -574,10 +572,10 @@ ClientPage.openScene = async function()
 		let cells = await API.request('cells/getWaiting');
 		ClientPage._updateWaitingCells(cells);
 	}
-	/*catch (err)
+	catch (err)
 	{
 		console.error(err.message);
-	}	*/	
+	}	
 };
 
 /**

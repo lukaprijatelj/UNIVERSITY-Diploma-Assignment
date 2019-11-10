@@ -990,7 +990,7 @@ GarbageCollector.isDisposable = function (obj) {
     if (obj instanceof Array) {
         return true;
     }
-    return false;
+    return true;
 };
 var namespace;
 (function (namespace) {
