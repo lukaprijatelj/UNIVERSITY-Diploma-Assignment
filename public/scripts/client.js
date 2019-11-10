@@ -302,8 +302,12 @@ ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 			continue;
 		}
 
+		// remove old cell
+		GarbageCollector.dispose(cache.cells[i]);
+
 		// swap old cell with new cell
-		cache.cells[i] = newCell;
+		Array.setAtIndex(cache.cells, newCell, i);
+
 		j++;
 
 		if (j == cells.length)

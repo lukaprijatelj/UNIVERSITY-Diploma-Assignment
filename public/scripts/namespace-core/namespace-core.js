@@ -410,6 +410,18 @@ Array.getAtIndex = function (array, index) {
     }
     return array[index];
 };
+Array.setAtIndex = function (array, element, index) {
+    if (array.length == 0) {
+        return undefined;
+    }
+    if (index < 0) {
+        new Exception.ValueInvalid('Index must be larger than 0!');
+    }
+    if (index >= array.length) {
+        new Exception.ValueInvalid('Index must be smaller than array size!');
+    }
+    array[index] = element;
+};
 Array.contains = function (array, element) {
     let index = array.indexOf(element);
     if (index < 0) {
