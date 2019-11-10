@@ -496,6 +496,7 @@ THREE.GLTFLoader = ( function () {
 		this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
 		this.json = json;
 		this.dracoLoader = dracoLoader;
+		THREE.DRACOLoader.getDecoderModule();
 
 	}
 
@@ -2125,6 +2126,7 @@ THREE.GLTFLoader = ( function () {
 				case 'roughnessMap':
 					texture.format = THREE.RGBFormat;
 					break;
+
 			}
 
 			if ( parser.extensions[ EXTENSIONS.KHR_TEXTURE_TRANSFORM ] ) {
@@ -2139,15 +2141,16 @@ THREE.GLTFLoader = ( function () {
 
 			}
 
-
+			
 			// -----------------------------
 			// convert image to pixels data
 			// -----------------------------
 
 			// NOTE: Added by Luka Prijatelj
 			texture.rawImage = texture.image.toRawImage();
-			
+
 			materialParams[ mapName ] = texture;
+
 		} );
 
 	};

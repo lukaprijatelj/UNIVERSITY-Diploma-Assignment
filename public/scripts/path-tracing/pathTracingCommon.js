@@ -142,6 +142,7 @@ out vec4 out_FragColor;
 #define LIGHTWOOD 15
 #define DARKWOOD 16
 #define PAINTING 17
+#define METALCOAT 18
 
 `;
 
@@ -256,84 +257,15 @@ float RectangleIntersect( vec3 pos, vec3 normal, float radiusU, float radiusV, R
 THREE.ShaderChunk[ 'pathtracing_slab_intersect' ] = `
 
 //--------------------------------------------------------------------------------------
-float YZ_SlabIntersect( float radiusX, Ray r, out vec3 n )
+float SlabIntersect( float radius, vec3 normal, Ray r, out vec3 n )
 //--------------------------------------------------------------------------------------
 {
-	vec3 pOrO;
-	float result0, result1, denom;
-
-	n = vec3(1,0,0);
-	denom = dot(n, r.direction);
-	pOrO = (-radiusX * n) - r.origin; 
-	result0 = dot(pOrO, n) / denom;
-	if (result0 < 0.0) result0 = INFINITY;
-	
-	n.x = -1.0;
-	denom = dot(n, r.direction);
-	pOrO = (-radiusX * n) - r.origin; 
-	result1 = dot(pOrO, n) / denom;
-	if (result1 < 0.0) result1 = INFINITY;
-
-	if (result0 < result1)
-	{
-		n.x = 1.0;
-		return result0;
-	}
-	else return result1;
-}
-
-//--------------------------------------------------------------------------------------
-float XZ_SlabIntersect( float radiusY, Ray r, out vec3 n )
-//--------------------------------------------------------------------------------------
-{
-	vec3 pOrO;
-	float result0, result1, denom;
-
-	n = vec3(0,1,0);
-	denom = dot(n, r.direction);
-	pOrO = (-radiusY * n) - r.origin; 
-	result0 = dot(pOrO, n) / denom;
-	if (result0 < 0.0) result0 = INFINITY;
-	
-	n.y = -1.0;
-	denom = dot(n, r.direction);
-	pOrO = (-radiusY * n) - r.origin; 
-	result1 = dot(pOrO, n) / denom;
-	if (result1 < 0.0) result1 = INFINITY;
-	
-	if (result0 < result1)
-	{
-		n.y = 1.0;
-		return result0;
-	}
-	else return result1;
-}
-
-//--------------------------------------------------------------------------------------
-float XY_SlabIntersect( float radiusZ, Ray r, out vec3 n )
-//--------------------------------------------------------------------------------------
-{
-	vec3 pOrO;
-	float result0, result1, denom;
-
-	n = vec3(0,0,1);
-	denom = dot(n, r.direction);
-	pOrO = (-radiusZ * n) - r.origin; 
-	result0 = dot(pOrO, n) / denom;
-	if (result0 < 0.0) result0 = INFINITY;
-	
-	n.z = -1.0;
-	denom = dot(n, r.direction);
-	pOrO = (-radiusZ * n) - r.origin; 
-	result1 = dot(pOrO, n) / denom;
-	if (result1 < 0.0) result1 = INFINITY;
-	
-	if (result0 < result1)
-	{
-		n.z = 1.0;
-		return result0;
-	}
-	else return result1;
+	n = dot(normal, r.direction) < 0.0 ? normal : -normal;
+	float rad = dot(r.origin, n) > radius ? radius : -radius; 
+	float denom = dot(n, r.direction);
+	vec3 pOrO = (rad * n) - r.origin; 
+	float t = dot(pOrO, n) / denom;
+	return t > 0.0 ? t : INFINITY;
 }
 
 `;
@@ -1535,124 +1467,129 @@ float rand( inout uvec2 seed )
 
 vec3 randomSphereDirection( inout uvec2 seed )
 {
-    	vec2 r = vec2(rand(seed), rand(seed)) * TWO_PI;
-	return vec3( sin(r.x) * vec2(sin(r.y), cos(r.y)), cos(r.x) );	
+    	float up = rand(seed) * 2.0 - 1.0; // range: -1 to +1
+	float over = sqrt( max(0.0, 1.0 - up * up) );
+	float around = rand(seed) * TWO_PI;
+	return normalize(vec3(cos(around) * over, up, sin(around) * over));	
 }
 
 vec3 randomDirectionInHemisphere( vec3 nl, inout uvec2 seed )
 {
-	float up = rand(seed); 
-    	float over = sqrt(1.0 - up * up); //uniform distribution
+	float up = rand(seed); // uniform distribution in hemisphere
+    	float over = sqrt(max(0.0, 1.0 - up * up));
 	float around = rand(seed) * TWO_PI;
 	
 	vec3 u = normalize( cross( abs(nl.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), nl ) );
 	vec3 v = cross(nl, u);
 
-	return normalize(cos(around) * over * u + sin(around) * over * v + up * nl); //uniform distribution
+	return normalize(cos(around) * over * u + sin(around) * over * v + up * nl);
 }
+
+// vec3 randomCosWeightedDirectionInHemisphere( vec3 nl, inout uvec2 seed )
+// {
+// 	float up = sqrt(rand(seed)); // cos-weighted distribution in hemisphere
+// 	float over = sqrt(max(0.0, 1.0 - up * up));
+// 	float around = rand(seed) * TWO_PI;
+	
+// 	vec3 u = normalize( cross( abs(nl.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), nl ) );
+// 	vec3 v = cross(nl, u);
+
+// 	return normalize(cos(around) * over * u + sin(around) * over * v + up * nl);
+// }
+
+#define N_POINTS 32.0
 
 vec3 randomCosWeightedDirectionInHemisphere( vec3 nl, inout uvec2 seed )
 {
-	vec2 uv = vec2(rand(seed), rand(seed));
-	float r1 = TWO_PI * uv.x;
-	float r2 = uv.y;
-	float r2s = sqrt(r2);
+	float i = floor(N_POINTS * rand(seed)) + (rand(seed) * 0.5);
+			// the Golden angle in radians
+	float theta = i * 2.39996322972865332 + mod(uSampleCounter, TWO_PI);
+	theta = mod(theta, TWO_PI);
+	float r = sqrt(i / N_POINTS); // sqrt pushes points outward to prevent clumping in center of disk
+	float x = r * cos(theta);
+	float y = r * sin(theta);
+	vec3 p = vec3(x, y, sqrt(1.0 - x * x - y * y)); // project XY disk points outward along Z axis
 	
 	vec3 u = normalize( cross( abs(nl.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), nl ) );
 	vec3 v = cross(nl, u);
-	
-	return normalize(u * cos(r1) * r2s + v * sin(r1) * r2s + nl * sqrt(1.0 - r2));
+
+	return (u * p.x + v * p.y + nl * p.z);
 }
 
-`;
-
-THREE.ShaderChunk[ 'pathtracing_direct_lighting_sphere' ] = `
-
-vec3 calcDirectLightingSphere(vec3 mask, vec3 x, vec3 nl, Sphere light, inout uvec2 seed)
+vec3 randomDirectionInSpecularLobe( vec3 reflectionDir, float roughness, inout uvec2 seed )
 {
-	vec3 dirLight = vec3(0.0);
-	Intersection shadowIntersec;
+	roughness = mix( 13.0, 0.0, sqrt(clamp(roughness, 0.0, 1.0)) );
+	float cosTheta = pow(rand(seed), 1.0 / (exp(roughness) + 1.0));
+	float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+	float phi = rand(seed) * TWO_PI;
 	
-	// cast shadow ray from intersection point
-	vec3 randPointOnLight = light.position + (randomSphereDirection(seed) * light.radius);
-	vec3 srDir = normalize(randPointOnLight - x);
-		
-	Ray shadowRay = Ray(x, srDir);
-	shadowRay.origin += nl;
-	float st = SceneIntersect(shadowRay, shadowIntersec);
-	if ( shadowIntersec.type == light.type )
-	{
-		float r2 = light.radius * light.radius;
-		vec3 d = randPointOnLight - x;
-		float d2 = dot(d, d);
-		float cos_a_max = sqrt(1.0 - clamp( r2 / d2, 0.0, 1.0));
-                float weight = 2.0 * (1.0 - cos_a_max);
-                dirLight = mask * light.emission * weight * max(0.0, dot(srDir, nl));
-	}
-	
-	return dirLight;
+	vec3 u = normalize( cross( abs(reflectionDir.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), reflectionDir ) );
+	vec3 v = cross(reflectionDir, u);
+
+	return (u * cos(phi) * sinTheta + v * sin(phi) * sinTheta + reflectionDir * cosTheta);
 }
+
+// //the following alternative skips the creation of tangent and bi-tangent vectors u and v 
+// vec3 randomCosWeightedDirectionInHemisphere( vec3 nl, inout uvec2 seed )
+// {
+// 	float phi = rand(seed) * TWO_PI;
+// 	float theta = 2.0 * rand(seed) - 1.0;
+// 	return nl + vec3(sqrt(1.0 - theta * theta) * vec2(cos(phi), sin(phi)), theta);
+// }
+
+// vec3 randomDirectionInPhongSpecular( vec3 reflectionDir, float roughness, inout uvec2 seed )
+// {
+// 	float phi = rand(seed) * TWO_PI;
+// 	roughness = clamp(roughness, 0.0, 1.0);
+// 	roughness = mix(13.0, 0.0, sqrt(roughness));
+// 	float exponent = exp(roughness) + 1.0;
+// 	//weight = (exponent + 2.0) / (exponent + 1.0);
+
+// 	float cosTheta = pow(rand(seed), 1.0 / (exponent + 1.0));
+// 	float radius = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+
+// 	vec3 u = normalize( cross( abs(reflectionDir.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), reflectionDir ) );
+// 	vec3 v = cross(reflectionDir, u);
+
+// 	return (u * cos(phi) * radius + v * sin(phi) * radius + reflectionDir * cosTheta);
+// }
 
 `;
 
-THREE.ShaderChunk[ 'pathtracing_direct_lighting_quad' ] = `
-
-vec3 calcDirectLightingQuad(vec3 mask, vec3 x, vec3 nl, Quad light, inout uvec2 seed)
-{
-	vec3 dirLight = vec3(0.0);
-	Intersection shadowIntersec;
-	vec3 randPointOnLight;
-	randPointOnLight.x = mix(light.v0.x, light.v1.x, rand(seed));
-	randPointOnLight.y = light.v0.y;
-	randPointOnLight.z = mix(light.v0.z, light.v3.z, rand(seed));
-	vec3 srDir = normalize(randPointOnLight - x);
-		
-	// cast shadow ray from intersection point	
-	Ray shadowRay = Ray(x, srDir);
-	shadowRay.origin += nl;
-	float st = SceneIntersect(shadowRay, shadowIntersec);
-	if ( shadowIntersec.type == LIGHT )
-	{
-		float r2 = distance(light.v0, light.v1) * distance(light.v0, light.v3);
-		vec3 d = randPointOnLight - x;
-		float d2 = dot(d, d);
-		float weight = -dot(srDir, normalize(shadowIntersec.normal)) * r2 / d2;
-		float nlDotSrDir = max(dot(nl, srDir), 0.0);
-		dirLight = mask * light.emission * nlDotSrDir * clamp(weight, 0.0, 1.0);
-	}
-
-	return dirLight;
-}
-
-`;
 
 THREE.ShaderChunk[ 'pathtracing_sample_sphere_light' ] = `
 
-float sampleSphereLight(vec3 x, vec3 nl, out vec3 dirToLight, Sphere light, inout uvec2 seed)
+vec3 sampleSphereLight(vec3 x, vec3 nl, Sphere light, vec3 dirToLight, out float weight, inout uvec2 seed)
 {
-	vec3 randPointOnLight = light.position + (randomSphereDirection(seed) * light.radius);
-	dirToLight = randPointOnLight - x;
+	dirToLight = (light.position - x); // no normalize (for distance calc below)
+	float cos_alpha_max = sqrt(1.0 - clamp((light.radius * light.radius) / dot(dirToLight, dirToLight), 0.0, 1.0));
 	
-	float r2 = light.radius * light.radius;
-	float d2 = dot(dirToLight, dirToLight);
-	float cos_a_max = sqrt(1.0 - clamp( r2 / d2, 0.0, 1.0));
+	float cos_alpha = mix( cos_alpha_max, 1.0, rand(seed) ); // 1.0 + (rand(seed) * (cos_alpha_max - 1.0));
+	// * 0.75 below ensures shadow rays don't miss the light, due to shader float precision
+	float sin_alpha = sqrt(max(0.0, 1.0 - cos_alpha * cos_alpha)) * 0.75; 
+	float phi = rand(seed) * TWO_PI;
 
 	dirToLight = normalize(dirToLight);
-	float dotNlRayDir = max(0.0, dot(nl, dirToLight));
+	vec3 u = normalize( cross( abs(dirToLight.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), dirToLight ) );
+	vec3 v = cross(dirToLight, u);
+
+	vec3 sampleDir = normalize(u * cos(phi) * sin_alpha + v * sin(phi) * sin_alpha + dirToLight * cos_alpha);
+	float dotNlSampleDir = max(0.0, dot(nl, sampleDir));
+	weight = clamp(2.0 * (1.0 - cos_alpha_max) * dotNlSampleDir, 0.0, 1.0);
 	
-	return 2.0 * (1.0 - cos_a_max) * dotNlRayDir;
+	return sampleDir;
 }
 
 `;
 
 THREE.ShaderChunk[ 'pathtracing_sample_quad_light' ] = `
 
-float sampleQuadLight(vec3 x, vec3 nl, out vec3 dirToLight, Quad light, inout uvec2 seed)
+vec3 sampleQuadLight(vec3 x, vec3 nl, Quad light, vec3 dirToLight, out float weight, inout uvec2 seed)
 {
 	vec3 randPointOnLight;
-	randPointOnLight.x = mix(light.v0.x, light.v1.x, rand(seed));
+	randPointOnLight.x = mix(light.v0.x, light.v1.x, clamp(rand(seed), 0.1, 0.9));
 	randPointOnLight.y = light.v0.y;
-	randPointOnLight.z = mix(light.v0.z, light.v3.z, rand(seed));
+	randPointOnLight.z = mix(light.v0.z, light.v3.z, clamp(rand(seed), 0.1, 0.9));
 	dirToLight = randPointOnLight - x;
 	float r2 = distance(light.v0, light.v1) * distance(light.v0, light.v3);
 	float d2 = dot(dirToLight, dirToLight);
@@ -1660,25 +1597,38 @@ float sampleQuadLight(vec3 x, vec3 nl, out vec3 dirToLight, Quad light, inout uv
 
 	dirToLight = normalize(dirToLight);
 	float dotNlRayDir = max(0.0, dot(nl, dirToLight)); 
-	return 2.0 * (1.0 - cos_a_max) * max(0.0, -dot(dirToLight, light.normal)) * dotNlRayDir; 
+	weight =  2.0 * (1.0 - cos_a_max) * max(0.0, -dot(dirToLight, light.normal)) * dotNlRayDir; 
+	weight = clamp(weight, 0.0, 1.0);
+
+	return dirToLight;
 }
 
 `;
 
 THREE.ShaderChunk[ 'pathtracing_calc_fresnel_reflectance' ] = `
 
-float calcFresnelReflectance(vec3 n, vec3 nl, vec3 rayDirection, float nc, float nt, out vec3 tdir)
+float calcFresnelReflectance(vec3 rayDirection, vec3 n, float etai, float etat, out float ratioIoR)
 {
-	float nnt = dot(rayDirection, n) < 0.0 ? (nc / nt) : (nt / nc); // Ray from outside going in?
-	tdir = refract(rayDirection, nl, nnt);
-		
-	// Original Fresnel equations
-	float cosThetaInc = dot(nl, rayDirection);
-	float cosThetaTra = dot(nl, tdir);
-	float coefPara = (nt * cosThetaInc - nc * cosThetaTra) / (nt * cosThetaInc + nc * cosThetaTra);
-	float coefPerp = (nc * cosThetaInc - nt * cosThetaTra) / (nc * cosThetaInc + nt * cosThetaTra);
+	float temp;
+	float cosi = clamp(dot(rayDirection, n), -1.0, 1.0);
+	if (cosi > 0.0)
+	{
+		temp = etai;
+		etai = etat;
+		etat = temp;
+	}
+	
+	ratioIoR = etai / etat;
+	float sint = ratioIoR * sqrt(max(0.0, 1.0 - (cosi * cosi)));
+	if (sint >= 1.0) 
+		return 1.0; // total internal reflection
 
-	return ( coefPara * coefPara + coefPerp * coefPerp ) * 0.5; // Unpolarized
+	float cost = sqrt(max(0.0, 1.0 - (sint * sint)));
+	cosi = abs(cosi);
+	float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+	float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+
+	return ((Rs * Rs) + (Rp * Rp)) * 0.5;
 }
 
 `;
@@ -1757,7 +1707,7 @@ void main( void )
 	vec3 focalPoint = uFocusDistance * rayDir;
 	float randomAngle = rand(seed) * TWO_PI; // pick random point on aperture
 	float randomRadius = rand(seed) * uApertureSize;
-	vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * randomRadius;
+	vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * sqrt(randomRadius);
 	// point on aperture to focal point
 	vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
 	
@@ -1781,7 +1731,6 @@ void main( void )
 	}
 		
 	out_FragColor = vec4( pixelColor + previousColor, 1.0 );
-	
 }
 
 `;

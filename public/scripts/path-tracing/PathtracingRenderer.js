@@ -59,6 +59,7 @@ var PathtracingRenderer = function()
 	/////////////////
 	let modelPaths = [
 		"scenes/Textured-box/Scene.gltf"
+		//"scripts/path-tracing/00_001_011.gltf"
 	]
 	let modelScale = 10.0;
 	let modelRotationY = Math.PI; // in radians
@@ -598,23 +599,23 @@ var PathtracingRenderer = function()
 		aabbDataTexture.generateMipmaps = false;
 		aabbDataTexture.needsUpdate = true;
 
-		/*let PerlinNoiseTexture = new THREE.TextureLoader().load('textures/perlin256.png');
+		let PerlinNoiseTexture = new THREE.TextureLoader().load('scripts/path-tracing/perlin256.png');
 		PerlinNoiseTexture.wrapS = THREE.RepeatWrapping;
 		PerlinNoiseTexture.wrapT = THREE.RepeatWrapping;
 		PerlinNoiseTexture.flipY = false;
 		PerlinNoiseTexture.minFilter = THREE.LinearFilter;
 		PerlinNoiseTexture.magFilter = THREE.LinearFilter;
-		PerlinNoiseTexture.generateMipmaps = false;*/
+		PerlinNoiseTexture.generateMipmaps = false;
 
-		/*hdrLoader = new THREE.HDRLoader();
-		hdrPath = 'textures/daytime.hdr';
+		hdrLoader = new THREE.RGBELoader();
+		hdrPath = 'scripts/path-tracing/daytime.hdr';
 
 		hdrTexture = hdrLoader.load( hdrPath, function ( texture, textureData ) {
 			texture.encoding = THREE.RGBEEncoding;
 			texture.minFilter = THREE.NearestFilter;
 			texture.magFilter = THREE.NearestFilter;
 			texture.flipY = true;
-		} );*/
+		} );
 
 		pathTracingUniforms = {
 
@@ -622,8 +623,8 @@ var PathtracingRenderer = function()
 			tTriangleTexture: {type: "t", value: triangleDataTexture},
 			tAABBTexture: {type: "t", value: aabbDataTexture},
 			tAlbedoTextures: {type: "t", value: uniqueMaterialTextures},
-			//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
-			//tHDRTexture: { type: "t", value: hdrTexture },
+			t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
+			tHDRTexture: { type: "t", value: hdrTexture },
 
 			uCameraIsMoving: {type: "b1", value: false},
 			uCameraJustStartedMoving: {type: "b1", value: false},
@@ -946,7 +947,9 @@ var PathtracingRenderer = function()
 		// the following variables will be used to calculate rotations and directions from the camera
 		// this gives us a vector in the direction that the camera is pointing,
 		// which will be useful for moving the camera 'forward' and shooting projectiles in that direction
-		let cameraDirectionVector = new THREE.Vector3(), cameraRightVector = new THREE.Vector3(), cameraUpVector = new THREE.Vector3();
+		let cameraDirectionVector = new THREE.Vector3();
+		let cameraRightVector = new THREE.Vector3();
+		let cameraUpVector = new THREE.Vector3();
 		controls.getDirection(cameraDirectionVector); //for moving where the camera is looking
 		cameraDirectionVector.normalize();
 		controls.getRightVector(cameraRightVector); //for strafing the camera right and left

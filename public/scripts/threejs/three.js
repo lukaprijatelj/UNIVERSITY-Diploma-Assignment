@@ -2909,6 +2909,8 @@
 				name: this.name,
 
 				mapping: this.mapping,
+
+				// NOTE: Added by Luka Prijatelj
 				rawImage: this.rawImage,
 
 				repeat: [ this.repeat.x, this.repeat.y ],
@@ -12937,7 +12939,9 @@
 			if ( this.clearCoat !== undefined ) data.clearCoat = this.clearCoat;
 			if ( this.clearCoatRoughness !== undefined ) data.clearCoatRoughness = this.clearCoatRoughness;
 
+			// NOTE: Added by Luka Prijatelj
 			if ( this.map && this.map.rawImage ) data.rawImage = this.map.rawImage;
+
 			if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
 			if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
 			if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
@@ -38781,7 +38785,9 @@
 
 					}
 
+					// NOTE: Added by Luka Prijatelj
 					texture.image = data.rawImage;
+					
 					texture.needsUpdate = true;
 
 					texture.uuid = data.uuid;

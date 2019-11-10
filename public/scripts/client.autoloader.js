@@ -98,13 +98,22 @@
 	console.log('[Admin.autoloader] Loading path-tracing scripts');
 
 	loadingBlock = new Array();	
-	loadingBlock.push(document.loadScript('scripts/path-tracing/FirstPersonCameraControls.js'));
-	loadingBlock.push(document.loadScript('scripts/path-tracing/threex.keyboardstate.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/RGBELoader.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BufferGeometryUtils.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/dat.gui.min.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/threex.keyboardstate.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/FirstPersonCameraControls.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/MobileJoystickControls.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BVH_Acc_Structure_Iterative_Builder.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/pathTracingCommon.js'));
-	loadingBlock.push(document.loadScript('scripts/path-tracing/RGBELoader.js'));
+	
+	loadingBlock.push(document.loadScript('scripts/path-tracing/commonFunctions.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/BVH_Animated_Model.js'));
+	
 	loadingBlock.push(document.loadScript('scripts/path-tracing/PathtracingRenderer.js'));
+
+	
+	
 	loadingBlock.push(document.loadScript('scripts/client.js'));
 	await Promise.all(loadingBlock);
 	
