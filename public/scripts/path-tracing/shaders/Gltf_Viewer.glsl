@@ -270,11 +270,10 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 	int previousIntersecType = -100;
 	int diffuseCount = 0;
 
-	bool skyHit = false;
 	bool bounceIsSpecular = true;
 	bool sampleSunLight = false;
 
-    	for (int bounces = 0; bounces < 4; bounces++)
+	for (int bounces = 0; bounces < 4; bounces++)
 	{
 
 		float t = SceneIntersect(r, intersec);
@@ -328,8 +327,8 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
         	vec3 nl = dot(n,r.direction) <= 0.0 ? normalize(n) : normalize(n * -1.0);
 		vec3 x = r.origin + r.direction * t;
 
-        	if (intersec.type == DIFF) // Ideal DIFFUSE reflection
-        	{
+		if (intersec.type == DIFF) // Ideal DIFFUSE reflection
+		{
 			diffuseCount++;
 			previousIntersecType = DIFF;
 

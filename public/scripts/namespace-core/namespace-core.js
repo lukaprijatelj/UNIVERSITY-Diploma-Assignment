@@ -1,22 +1,27 @@
 'use strict';
-var _this = this;
-if (typeof _this.IS_DEBUG === 'undefined') {
-    _this.IS_DEBUG = false;
+var _global = this;
+if (typeof module !== 'undefined' && module.exports) {
+    _global = global;
 }
-if (typeof _this.IS_CONSOLE_ENABLED === 'undefined') {
-    _this.IS_CONSOLE_ENABLED = true;
+const YES = true;
+const NO = false;
+const FORCE = true;
+const ANIMATE = true;
+const INFINITY = Infinity;
+if (typeof _global.IS_DEBUG === 'undefined') {
+    _global.IS_DEBUG = false;
 }
-if (typeof _this.CHECK_IF_IDISPOSABLE_IMPLEMENTED === 'undefined') {
-    _this.CHECK_IF_IDISPOSABLE_IMPLEMENTED = false;
+if (typeof _global.IS_CONSOLE_ENABLED === 'undefined') {
+    _global.IS_CONSOLE_ENABLED = true;
 }
-if (typeof _this.IS_NODEJS === 'undefined') {
-    _this.IS_NODEJS = (typeof module !== 'undefined' && module.exports) ? true : false;
+if (typeof _global.CHECK_IF_IDISPOSABLE_IMPLEMENTED === 'undefined') {
+    _global.CHECK_IF_IDISPOSABLE_IMPLEMENTED = false;
 }
-if (typeof _this.IS_WEB_WORKER === 'undefined') {
-    _this.IS_WEB_WORKER = (typeof WorkerGlobalScope !== 'undefined') ? true : false;
+if (typeof _global.IS_NODEJS === 'undefined') {
+    _global.IS_NODEJS = (typeof module !== 'undefined' && module.exports) ? true : false;
 }
-if (_this.IS_NODEJS == true) {
-    _this = global;
+if (typeof _global.IS_WEB_WORKER === 'undefined') {
+    _global.IS_WEB_WORKER = (typeof WorkerGlobalScope !== 'undefined') ? true : false;
 }
 var Exception;
 (function (Exception) {
@@ -114,7 +119,7 @@ var Exception;
     }
     Exception.Other = Other;
 })(Exception || (Exception = {}));
-_this.Exception = Exception;
+_global.Exception = Exception;
 var Warning;
 (function (Warning) {
     class NotImplemented {
@@ -187,7 +192,7 @@ var Warning;
     }
     Warning.Other = Other;
 })(Warning || (Warning = {}));
-_this.Warning = Warning;
+_global.Warning = Warning;
 var namespace;
 (function (namespace) {
     var core;
@@ -233,7 +238,7 @@ var namespace;
         core.Ajax = Ajax;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-_this.Class = (() => {
+_global.Class = (() => {
     var Class = {};
     Class.inherit = function (child, parent) {
         if (Class.isInheriting(child, parent)) {
@@ -276,7 +281,7 @@ _this.Class = (() => {
     };
     return Class;
 })();
-_this.Interface = (() => {
+_global.Interface = (() => {
     var Interface = {};
     Interface.inherit = function (child, parent) {
         if (Interface.isInheriting(child, parent)) {
@@ -642,7 +647,7 @@ var namespace;
         core.Cache = Cache;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-_this.Char = (() => {
+_global.Char = (() => {
     var Char = function () {
     };
     Char.isDigit = function (_this) {
@@ -653,49 +658,126 @@ _this.Char = (() => {
     };
     return Char;
 })();
-_this.IStringify = (() => {
+_global.IStringify = (() => {
     let IStringify = function () {
     };
     IStringify.prototype.toString = Function.empty;
     return IStringify;
 })();
-_this.Color = (() => {
-    let Color = function (value) {
-        Interface.inherit(this, IStringify);
+_global.Color = (() => {
+    let Color = function (arg1, arg2, arg3, arg4) {
+        if (arg1 || arg1 == 0) {
+            if (!arg2 && arg2 != 0) {
+                return Color._parse(value);
+            }
+            else {
+                if (arg3 || arg3 == 0) {
+                    let objColor = new Color();
+                    objColor.red = arg1;
+                    objColor.green = arg2;
+                    objColor.blue = arg3;
+                    if (arguments.length == 4) {
+                        objColor.alpha = arg4;
+                    }
+                    return objColor;
+                }
+                else {
+                    new Exception.ArgumentInvalid(value);
+                }
+            }
+        }
         this.red = 0;
         this.green = 0;
         this.blue = 0;
         this.alpha = 255;
-        this._init(value);
     };
-    Interface.inheritPrototype(Color, IStringify);
-    Color.prototype._init = function (value) {
-        let _this = this;
-        if (value) {
-            _this._parse(value);
+    Color._parse = function (value) {
+        if (!value) {
+            new Exception.ArgumentUndefined();
         }
+        if (value instanceof Color) {
+            return value;
+        }
+        if (typeof value !== 'string') {
+            new Exception.ArgumentInvalid(value);
+        }
+        let internalColor = new Color();
+        if (value[0] == '#') {
+            value = value.substr(1);
+            if (value.length >= 2) {
+                let number = parseInt(value.substr(0, 2), 16);
+                internalColor.red = number;
+            }
+            if (value.length >= 4) {
+                let number = parseInt(value.substr(2, 2), 16);
+                internalColor.green = number;
+            }
+            if (value.length >= 6) {
+                let number = parseInt(value.substr(4, 2), 16);
+                internalColor.blue = number;
+            }
+            if (value.length >= 8) {
+                let number = parseInt(value.substr(6, 2), 16);
+                internalColor.alpha = number;
+            }
+        }
+        else if (value.match('rgb') == true) {
+            value = value.substr(4);
+            value = value.substr(0, value.length - 2);
+            let values = value.split(',');
+            let number;
+            number = parseInt(values[0]);
+            internalColor.red = number;
+            number = parseInt(values[1]);
+            internalColor.green = number;
+            number = parseInt(values[2]);
+            internalColor.blue = number;
+        }
+        else if (value.match('rgba') == true) {
+            value = value.substr(5);
+            value = value.substr(0, value.length - 2);
+            let values = value.split(',');
+            let number;
+            number = parseInt(values[0]);
+            internalColor.red = number;
+            number = parseInt(values[1]);
+            internalColor.green = number;
+            number = parseInt(values[2]);
+            internalColor.blue = number;
+            number = Math.round(parseInt(values[3]) * 255);
+            internalColor.alpha = number;
+        }
+        else {
+            new Exception.ArgumentInvalid(value);
+        }
+        return internalColor;
     };
-    Color.prototype._parse = function (value) {
-        new Exception.NotImplemented();
+    Color.toRgb = function (value) {
+        let _this = Color._parse(value);
+        return _this;
     };
-    Color.prototype.toString = function () {
-        let _this = this;
-        return _this.toRgbaString();
-    };
-    Color.prototype.toRgbString = function () {
-        let _this = this;
+    Color.toRgbString = function (value) {
+        let _this = Color._parse(value);
         return 'rgb(' + _this.red + ', ' + _this.green + ', ' + _this.blue + ')';
     };
-    Color.prototype.toRgbaString = function () {
-        let _this = this;
-        return 'rgb(' + _this.red + ', ' + _this.green + ', ' + _this.blue + ', ' + _this.alpha + ')';
+    Color.toRgbaString = function (value) {
+        let _this = Color._parse(value);
+        let alpha = Math.round(_this.alpha / 255);
+        return 'rgba(' + _this.red + ', ' + _this.green + ', ' + _this.blue + ', ' + alpha + ')';
     };
-    Color.prototype.toHexString = function () {
-        let _this = this;
+    Color.toHex = function (value) {
+        let _this = Color._parse(value);
+        _this.red = parseInt(_this.red, 16);
+        _this.green = parseInt(_this.green, 16);
+        _this.blue = parseInt(_this.blue, 16);
+        _this.alpha = parseInt(_this.alpha, 16);
+        return _this;
+    };
+    Color.toHexString = function (value) {
+        let _this = Color._parse(value);
         let r = _this.red.toString(16);
         let g = _this.green.toString(16);
         let b = _this.blue.toString(16);
-        let a = _this.alpha.toString(16);
         if (r.length == 1) {
             r = "0" + r;
         }
@@ -705,22 +787,30 @@ _this.Color = (() => {
         if (b.length == 1) {
             b = "0" + b;
         }
+        return '#' + r + g + b;
+    };
+    Color.toHexAlphaString = function (rawValue) {
+        let _this = Color._parse(rawValue);
+        let r = _this.red.toString(16);
+        let g = _this.green.toString(16);
+        let b = _this.blue.toString(16);
+        if (r.length == 1) {
+            r = "0" + r;
+        }
+        if (g.length == 1) {
+            g = "0" + g;
+        }
+        if (b.length == 1) {
+            b = "0" + b;
+        }
+        let a = _this.alpha.toString(16);
         if (a.length == 1) {
             a = "0" + a;
         }
         return '#' + r + g + b + a;
     };
-    Color.prototype.toAlphaHexString = function () {
-        let _this = this;
-        let a = Math.round(_this.alpha * 255).toString(16);
-        let value = _this.toHexString();
-        if (a.length == 1) {
-            a = "0" + a;
-        }
-        return value + a;
-    };
-    Color.prototype.toHsv = function () {
-        let _this = this;
+    Color.getHsvAlpha = function (rawValue) {
+        let _this = Color._parse(rawValue);
         let r = _this.red / 255;
         let g = _this.green / 255;
         let b = _this.blue / 255;
@@ -748,7 +838,8 @@ _this.Color = (() => {
             }
             h /= 6;
         }
-        return [h, s, v, _this.alpha];
+        let alpha = Math.round(_this.alpha / 255);
+        return [h, s, v, alpha];
     };
     return Color;
 })();
@@ -917,7 +1008,7 @@ Date.getFormatPart = function (date, format) {
     }
     return format;
 };
-_this.Enum = function (values) {
+_global.Enum = function (values) {
     Object.cloneData(this, values);
 };
 var EventArgs = function (sender) {
@@ -925,7 +1016,7 @@ var EventArgs = function (sender) {
 };
 Function.empty = function () {
 };
-_this.IDisposable = (() => {
+_global.IDisposable = (() => {
     let IDisposable = function () {
         Object.defineProperty(this, '_isDisposed', {
             writable: true,
@@ -950,7 +1041,7 @@ GarbageCollector.dispose = function (obj) {
     if (GarbageCollector.isDisposable(obj) == false) {
         new Exception.Other('Element is not disposable!');
     }
-    if (_this.CHECK_IF_IDISPOSABLE_IMPLEMENTED == true) {
+    if (_global.CHECK_IF_IDISPOSABLE_IMPLEMENTED == true) {
         if (!element.dispose) {
             new Warning.Other('Element is not disposable!');
         }
@@ -970,6 +1061,10 @@ GarbageCollector.dispose = function (obj) {
         obj.push = undefined;
         obj.pop = undefined;
         obj.slice = undefined;
+        obj.concat = undefined;
+        obj.reverse = undefined;
+        obj.splice = undefined;
+        obj.shift = undefined;
     }
     else {
         for (var key in obj) {
@@ -1800,50 +1895,52 @@ var namespace;
         core.OperatingSystem = OperatingSystem;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-class Path {
-    constructor(value) {
+(() => {
+    let PathInfo = _global.PathInfo = function (value) {
+        if (value) {
+            return PathInfo._parse(value);
+        }
         this.value = '';
         this.extension = '';
         this.isFile = false;
-        Interface.inherit(this, IStringify);
-        if (typeof value === 'undefined' || !value) {
-            new Exception.ValueUndefined();
-        }
-        this.value = value;
-        this.parse();
-    }
-    parse() {
-        let _this = this;
-        let i = _this.value.length - 1;
+    };
+    PathInfo._parse = function (value) {
+        let _this = new PathInfo();
+        _this.value = value;
+        let i = value.length - 1;
         while (i >= 0) {
-            let char = _this.value[i];
+            let char = value[i];
             if (char == '.') {
                 _this.isFile = true;
                 break;
             }
             else if (char == '\\' || char == '\\\\' || char == '/' || char == '//') {
-                return;
+                return _this;
             }
             i--;
         }
         if (i < 0) {
-            return "";
+            return _this;
         }
         i++;
-        while (i < _this.value.length) {
-            let char = _this.value[i];
+        while (i < value.length) {
+            let char = value[i];
             _this.extension += char;
             i++;
         }
-    }
-    toString() {
-        let _this = this;
-        return _this.value;
-    }
-    dispose() {
-    }
-}
-Interface.inheritPrototype(Path, IStringify);
+        return _this;
+    };
+    let Path = _global.Path = function (value) {
+    };
+    Path.getExtension = function (value) {
+        let obj = new PathInfo(value);
+        return obj.extension;
+    };
+    Path.isFile = function (value) {
+        let obj = new PathInfo(value);
+        return obj.isFile;
+    };
+})();
 var namespace;
 (function (namespace) {
     var core;
@@ -1856,7 +1953,7 @@ var namespace;
                 Interface.inherit(this, IDisposable);
                 let _this = this;
                 if (url) {
-                    _this.url = new Path(url);
+                    _this.url = url;
                 }
                 if (typeof width != 'undefined' && typeof height != 'undefined') {
                     _this.imageData = new ImageData(width, height);
@@ -2003,7 +2100,7 @@ var namespace;
     var core;
     (function (core) {
         core.MainThread = (() => {
-            if (_this.IS_WEB_WORKER == true) {
+            if (_global.IS_WEB_WORKER == true) {
                 let MainThread = {
                     _instance: null,
                     _promiseQueue: {},
@@ -2226,7 +2323,7 @@ var namespace;
         })();
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
-_this.Timer = (() => {
+_global.Timer = (() => {
     let Timer = function (timeInMiliseconds) {
         this.loop = false;
         this.time = -1;
@@ -2361,7 +2458,7 @@ console._error = console.error;
 console._warn = console.warn;
 console._trace = console.trace;
 console.log = function () {
-    if (_this.IS_CONSOLE_ENABLED == false) {
+    if (_global.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._log.apply(this, arguments);
@@ -2370,18 +2467,18 @@ console.error = function () {
     console._error.apply(this, arguments);
 };
 console.warn = function () {
-    if (_this.IS_CONSOLE_ENABLED == false) {
+    if (_global.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._warn.apply(this, arguments);
 };
 console.trace = function () {
-    if (_this.IS_CONSOLE_ENABLED == false) {
+    if (_global.IS_CONSOLE_ENABLED == false) {
         return;
     }
     console._trace.apply(this, arguments);
 };
-_this.IUpdateable = (() => {
+_global.IUpdateable = (() => {
     let IUpdateable = function () {
         this.onUpdate = null;
     };

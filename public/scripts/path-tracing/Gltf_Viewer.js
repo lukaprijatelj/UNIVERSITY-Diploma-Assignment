@@ -605,13 +605,12 @@ async function prepareGeometryForPT(meshList, pathTracingMaterialList, triangleM
 
     hdrLoader = new THREE.RGBELoader();
     hdrPath = 'scripts/path-tracing/daytime.hdr';
-
-    hdrTexture = hdrLoader.load( hdrPath, function ( texture, textureData ) {
-        texture.encoding = THREE.RGBEEncoding;
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.flipY = true;
-    } );
+	hdrTexture = hdrLoader.load( hdrPath, function ( texture, textureData ) {
+		texture.encoding = THREE.RGBEEncoding;
+		texture.minFilter = THREE.NearestFilter;
+		texture.magFilter = THREE.NearestFilter;
+		texture.flipY = true;
+	} );
 
     pathTracingUniforms = {
 

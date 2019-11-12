@@ -1,9 +1,9 @@
 'use strict';
-var _this = this;
-if (typeof _this.namespace == 'undefined') {
-    _this.namespace = new Object();
+var _global = this;
+if (typeof _global.namespace == 'undefined') {
+    _global.namespace = new Object();
 }
-var namespace = _this.namespace;
+var namespace = _global.namespace;
 if (typeof namespace.html == 'undefined') {
     namespace.html = new Object();
 }
@@ -264,7 +264,9 @@ namespace.html.DatePicker = (() => {
     };
     DatePicker.prototype.pickDate = function (date) {
         let _this = this;
-        Event.fire(_this.onDatePick, date);
+        let eventArgs = new EventArgs(_this);
+        eventArgs.date = date;
+        Event.fire(_this.onDatePick, eventArgs);
         _this.close();
     };
     DatePicker.prototype.close = function () {
@@ -1249,7 +1251,10 @@ namespace.html.TimePicker = (() => {
     };
     TimePicker.prototype.pickDate = function () {
         let _this = this;
-        Event.fire(_this.onSelect, _this.selectedHour, _this.selectedMinute);
+        let eventArgs = new EventArgs(_this);
+        eventArgs.selectedHour = _this.selectedHour;
+        eventArgs.selectedMinute = _this.selectedMinute;
+        Event.fire(_this.onSelect, eventArgs);
         _this.close();
     };
     TimePicker.prototype.close = function () {

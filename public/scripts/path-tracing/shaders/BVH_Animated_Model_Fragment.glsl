@@ -12,6 +12,12 @@ uniform vec3 uGLTF_Model_Position;
 
 uniform sampler2D tTriangleTexture;
 uniform sampler2D tAABBTexture;
+uniform sampler2D tHDRTexture;
+uniform float uSkyLightIntensity;
+uniform float uSunLightIntensity;
+uniform vec3 uSunColor;
+
+uniform int MAX_RECURSION_DEPTH;
 
 uniform sampler2D tAlbedoMap;
 uniform sampler2D tEmissiveMap;
@@ -25,9 +31,10 @@ uniform sampler2D tNormalMap;
 #define INV_TEXTURE_WIDTH 0.00048828125
 
 //#define N_DISKS 1
-#define N_SPHERES 3
+#define N_SPHERES 2
 //#define N_BOXES 1
 //#define N_OPENCYLINDERS 1
+
 
 //-----------------------------------------------------------------------
 
@@ -77,6 +84,8 @@ struct BoxNode
 	vec3 maxCorner;  
 };
 
+
+
 BoxNode GetBoxNode(const in float i)
 {
 	// each bounding box's data is encoded in 2 rgba(or xyzw) texture slots 
@@ -90,14 +99,12 @@ BoxNode GetBoxNode(const in float i)
 	vec4 aabbNodeData0 = texelFetch(tAABBTexture, uv0, 0);
 	vec4 aabbNodeData1 = texelFetch(tAABBTexture, uv1, 0);
 	
+	BoxNode BN = BoxNode( aabbNodeData0.x, aabbNodeData0.yzw, aabbNodeData1.x, aabbNodeData1.yzw );
 
-	BoxNode BN = BoxNode( aabbNodeData0.x,
-			      aabbNodeData0.yzw,
-			      aabbNodeData1.x,
-			      aabbNodeData1.yzw );
-
-        return BN;
+    return BN;
 }
+
+
 
 //----------------------------------------------------------
 float SceneIntersect( Ray r, inout Intersection intersec )
@@ -115,7 +122,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	vec3 hitPos, toLightBulb;
 	ivec2 uv0, uv1, uv2, uv3, uv4, uv5, uv6, uv7;
 
-        float stackptr = 0.0;	
+    float stackptr = 0.0;	
 	float bc, bd;
 	float id = 0.0;
 	float tu, tv;
@@ -131,8 +138,9 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	StackLevelData currentStackData, slDataA, slDataB, tmp;
 
 	for (int i = 0; i < N_SPHERES; i++)
-        {
+    {
 		d = SphereIntersect( spheres[i].radius, spheres[i].position, r );
+
 		if (d < t)
 		{
 			t = d;
@@ -146,9 +154,11 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		}
 	}
 
-       /* for (int i = 0; i < N_BOXES; i++)
-        {
+	/* 
+	for (int i = 0; i < N_BOXES; i++)
+	{
 		d = BoxIntersect( boxes[i].minCorner, boxes[i].maxCorner, r, n );
+
 		if (d < t)
 		{
 			t = d;
@@ -160,10 +170,13 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 			intersec.isDynamic = false;
 			triangleLookupNeeded = false;
 		}
-        }*/
+	}
+	*/
 		
 
-    /*    d = DiskIntersect( disks[0].radius, disks[0].pos, disks[0].normal, r );
+    /*    
+	d = DiskIntersect( disks[0].radius, disks[0].pos, disks[0].normal, r );
+	
 	if (d < t)
 	{
 		t = d;
@@ -186,10 +199,12 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		intersec.isDynamic = false;
 		triangleLookupNeeded = false;
 	}
-*/
+	*/
 	
 
-/*	d = OpenCylinderIntersect( openCylinders[0].pos0, openCylinders[0].pos1, openCylinders[0].radius, r, n );
+	/*	
+	d = OpenCylinderIntersect( openCylinders[0].pos0, openCylinders[0].pos1, openCylinders[0].radius, r, n );
+
 	if (d < t)
 	{
 		t = d;
@@ -211,8 +226,8 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		intersec.textureID = -1;
 		intersec.isDynamic = false;
 		triangleLookupNeeded = false;
-        }
-        */
+	}
+	*/
 
 	// transform ray into GLTF_Model's object space
 	r.origin = vec3( uGLTF_Model_InvMatrix * vec4(r.origin, 1.0) );
@@ -224,18 +239,16 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	stackLevels[0] = currentStackData;
 	
 	while (true)
-        {
-
+	{
 		if ( currentStackData.rayT < t )
-                {
-                        
-                        if (currentBoxNode.branch_A_Index >= 0.0) // signifies this is a branch
-                        {
-                                nodeA = GetBoxNode(currentBoxNode.branch_A_Index);
-                                nodeB = GetBoxNode(currentBoxNode.branch_B_Index);
-                                slDataA = StackLevelData(currentBoxNode.branch_A_Index, BoundingBoxIntersect(nodeA.minCorner, nodeA.maxCorner, r.origin, inverseDir));
-                                slDataB = StackLevelData(currentBoxNode.branch_B_Index, BoundingBoxIntersect(nodeB.minCorner, nodeB.maxCorner, r.origin, inverseDir));
-				
+		{	
+			if (currentBoxNode.branch_A_Index >= 0.0) // signifies this is a branch
+			{
+				nodeA = GetBoxNode(currentBoxNode.branch_A_Index);
+				nodeB = GetBoxNode(currentBoxNode.branch_B_Index);
+				slDataA = StackLevelData(currentBoxNode.branch_A_Index, BoundingBoxIntersect(nodeA.minCorner, nodeA.maxCorner, r.origin, inverseDir));
+				slDataB = StackLevelData(currentBoxNode.branch_B_Index, BoundingBoxIntersect(nodeB.minCorner, nodeB.maxCorner, r.origin, inverseDir));
+	
 				// first sort the branch node data so that 'a' is the smallest
 				if (slDataB.rayT < slDataA.rayT)
 				{
@@ -264,10 +277,9 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 					currentBoxNode = nodeA;
 					skip = true; // this will prevent the stackptr from decreasing by 1
 				}
-                        }
-
-                        else //if (currentBoxNode.branch_A_Index < 0.0) //  < 0.0 signifies a leaf node
-                        {
+			}
+			else //if (currentBoxNode.branch_A_Index < 0.0) //  < 0.0 signifies a leaf node
+			{
 				// each triangle's data is encoded in 8 rgba(or xyzw) texture slots
 				id = 8.0 * (-currentBoxNode.branch_A_Index - 1.0);
 				
@@ -289,21 +301,20 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 					triangleV = tv;
 					triangleLookupNeeded = true;
 				}
-                        }
+			}
 		} // end if (currentStackData.rayT < t)
 
 		if (skip == false) 
-                {
-                        // decrease pointer by 1 (0.0 is root level, 24.0 is maximum depth)
-                        if (--stackptr < 0.0) // went past the root level, terminate loop
-                                break;
-                        currentStackData = stackLevels[int(stackptr)];
-                        currentBoxNode = GetBoxNode(currentStackData.id);
-                }
+		{
+			// decrease pointer by 1 (0.0 is root level, 24.0 is maximum depth)
+			if (--stackptr < 0.0) // went past the root level, terminate loop
+					break;
+			currentStackData = stackLevels[int(stackptr)];
+			currentBoxNode = GetBoxNode(currentStackData.id);
+		}
+
 		skip = false; // reset skip
-
-        } // end while (true)
-
+    } // end while (true)
 
 	if (triangleLookupNeeded)
 	{
@@ -340,13 +351,32 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		
 		//intersec.type = int(vd6.x);
 		intersec.type = PBR_MATERIAL;
-                intersec.textureID = int(vd7.x);
-                intersec.isDynamic = true;
+        intersec.textureID = int(vd7.x);
+        intersec.isDynamic = true;
 	}
 
 	return t;
-
 } // end float SceneIntersect( Ray r, inout Intersection intersec )
+
+
+
+// gets skybox color
+//--------------------------------------------------------------------------------------------------------
+vec3 Get_HDR_Color(Ray r)
+//--------------------------------------------------------------------------------------------------------
+{
+	vec2 sampleUV;
+	sampleUV.x = atan(r.direction.z, r.direction.x) * ONE_OVER_TWO_PI + 0.5;
+	sampleUV.y = asin(clamp(r.direction.y, -1.0, 1.0)) * ONE_OVER_PI + 0.5;
+	
+	vec4 texData = texture( tHDRTexture, sampleUV );
+	texData = RGBEToLinear(texData);
+	
+	// tone mapping
+	vec3 texColor = ACESFilmicToneMapping(texData.rgb);
+
+	return texColor;
+}
 
 
 
@@ -354,26 +384,27 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 //--------------------------------------------------------------------------------------------------------
 {
-        Intersection intersec;
-        Sphere light = spheres[1];
+	Intersection intersec;
+	Sphere light = spheres[0];
 	Ray firstRay;
 
 	vec3 accumCol = vec3(0);
-        vec3 mask = vec3(1);
+    vec3 mask = vec3(1.0);
 	vec3 firstMask = vec3(1);
 	vec3 checkCol0 = vec3(1);
 	vec3 checkCol1 = vec3(0.5);
-        vec3 dirToLight;
-        vec3 tdir;
+    vec3 dirToLight;
+    vec3 tdir;
 	vec3 metallicRoughness = vec3(0);
 	vec3 x, n, nl;
         
-	float t;
-        float nc, nt, ratioIoR, Re, Tr;
-        float weight;
-        float diffuseColorBleeding = 0.3; // range: 0.0 - 0.5, amount of color bleeding between surfaces
+	float t = INFINITY;
+	float nc, nt, ratioIoR, Re, Tr;
+	float weight;
+	float diffuseColorBleeding = 0.3; // range: 0.0 - 0.5, amount of color bleeding between surfaces
         
 	int diffuseCount = 0;
+	int previousIntersecType = -100;
 
 	bool bounceIsSpecular = true;
 	bool sampleLight = false;
@@ -383,29 +414,55 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 	bool shadowTime = false;
 	bool firstTypeWasCOAT = false;
 	bool specularTime = false;
+	bool sampleSunLight = false;
 
-	
-        for (int bounces = 0; bounces < 5; bounces++)
+    for (int bounces = 0; bounces < MAX_RECURSION_DEPTH; bounces++)
 	{
-
 		t = SceneIntersect(r, intersec);
 		
-		/*
-		if (t == INFINITY)
+		if (t == INFINITY && bounces == 0)
 		{
-                        break;
+			accumCol = Get_HDR_Color(r);
+            break;
 		}
-		*/
+	
+        // if ray bounced off of diffuse material and hits sky
+		if (t == INFINITY && previousIntersecType == DIFF)
+		{
+			if (sampleSunLight)
+				accumCol = mask * uSunColor * uSunLightIntensity;
+			else
+				accumCol = mask * Get_HDR_Color(r) * uSkyLightIntensity;
+
+			break;
+		}
+
+		// if ray bounced off of glass and hits sky
+		if (t == INFINITY && previousIntersecType == REFR)
+		{
+            if (diffuseCount == 0) // camera looking through glass, hitting the sky
+			    mask *= Get_HDR_Color(r);
+			else if (sampleSunLight) // sun rays going through glass, hitting another surface
+				mask *= uSunColor * uSunLightIntensity;
+			else  // sky rays going through glass, hitting another surface
+                mask *= Get_HDR_Color(r) * uSkyLightIntensity;
+
+			if (bounceIsSpecular) // prevents sun 'fireflies' on diffuse surfaces
+                accumCol = mask;
+
+			break;
+		}
+		
 		
 		if (bounces == 0)
 			rayHitIsDynamic = intersec.isDynamic;
+
 		if (intersec.type == CHECK)
 			rayHitIsDynamic = false;
 
 
 		if (intersec.type == LIGHT)
 		{	
-
 			if (bounces == 0)
 			{
 				accumCol = mask * intersec.emission;
@@ -422,10 +479,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					shadowTime = true;
 					bounceIsSpecular = false;
 					sampleLight = true;
+
 					// continue with the shadow ray
 					continue;
 				}
@@ -445,10 +504,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					reflectionTime = true;
 					bounceIsSpecular = true;
 					sampleLight = false;
+
 					// continue with the reflection ray
 					continue;
 				}
@@ -468,10 +529,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					specularTime = true;
 					bounceIsSpecular = true;
 					sampleLight = false;
+
 					// continue with the reflection ray
 					continue;
 				}
@@ -488,7 +551,6 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 
 		if (intersec.type == SPOT_LIGHT)
 		{	
-
 			if (bounces == 0)
 			{
 				accumCol = mask * clamp(intersec.emission, 0.0, 1.0);
@@ -503,10 +565,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					shadowTime = true;
 					bounceIsSpecular = false;
 					sampleLight = true;
+
 					// continue with the shadow ray
 					continue;
 				}
@@ -529,10 +593,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					reflectionTime = true;
 					bounceIsSpecular = true;
 					sampleLight = false;
+
 					// continue with the reflection ray
 					continue;
 				}
@@ -559,10 +625,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 					r = firstRay;
 					r.direction = normalize(r.direction);
 					mask = firstMask;
+
 					// set/reset variables
 					specularTime = true;
 					bounceIsSpecular = true;
 					sampleLight = false;
+
 					// continue with the reflection ray
 					continue;
 				}
@@ -586,10 +654,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 				r = firstRay;
 				r.direction = normalize(r.direction);
 				mask = firstMask;
+
 				// set/reset variables
 				shadowTime = true;
 				bounceIsSpecular = false;
 				sampleLight = true;
+
 				// continue with the shadow ray
 				continue;
 			}
@@ -600,10 +670,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 				r = firstRay;
 				r.direction = normalize(r.direction);
 				mask = firstMask;
+
 				// set/reset variables
 				reflectionTime = true;
 				bounceIsSpecular = true;
 				sampleLight = false;
+
 				// continue with the reflection ray
 				continue;
 			}
@@ -614,10 +686,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 				r = firstRay;
 				r.direction = normalize(r.direction);
 				mask = firstMask;
+
 				// set/reset variables
 				specularTime = true;
 				bounceIsSpecular = true;
 				sampleLight = false;
+
 				// continue with the reflection ray
 				continue;
 			}
@@ -629,14 +703,17 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 		
 		// useful data 
 		n = normalize(intersec.normal);
-                nl = dot(n, r.direction) < 0.0 ? normalize(n) : normalize(-n);
+        nl = dot(n, r.direction) < 0.0 ? normalize(n) : normalize(-n);
+
 		x = r.origin + r.direction * t;
+
 
 		if (intersec.type == PBR_MATERIAL)
 		{
 			vec3 S = normalize( cross( abs(nl.y) < 0.9 ? vec3(0, 1, 0) : vec3(0, 0, 1), nl ) );
 			vec3 T = cross(nl, S);
 			vec3 N = normalize( nl );
+			
 			// invert S, T when the UV direction is backwards (from mirrored faces),
 			// otherwise it will do the normal mapping backwards.
 			/* vec3 NfromST = cross( S, T );
@@ -647,7 +724,7 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			} */
 
 			mat3 tsn = mat3( S, T, N );
-			vec3 mapN = texture(tNormalMap, intersec.uv).xyz * 2.0 - 1.0;
+			vec3 mapN = texture(tNormalMap, intersec.uv).xyz * 2.0 + 1.0;
 			vec2 normalScale = vec2(1.0, 1.0);
 			mapN.xy *= normalScale;
 			nl = normalize( tsn * mapN );
@@ -659,6 +736,7 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			intersec.emission = pow(intersec.emission,vec3(2.2));
 			
 			float maxEmission = max(intersec.emission.r, max(intersec.emission.g, intersec.emission.b));
+
 			if (maxEmission > 0.01) //if (rand(seed) < maxEmission)
 			{
 				accumCol = mask * intersec.emission;
@@ -668,13 +746,15 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			intersec.type = COAT;
 
 			metallicRoughness = texture(tMetallicRoughnessMap, intersec.uv).rgb;
+
 			if (metallicRoughness.b > 0.0)
 				intersec.type = SPEC;
 		}
+
 		
-		    
-                if (intersec.type == DIFF || intersec.type == CHECK) // Ideal DIFFUSE reflection
-                {
+		if (intersec.type == DIFF || intersec.type == CHECK) // Ideal DIFFUSE reflection
+		{
+			previousIntersecType = DIFF;
 			diffuseCount++;
 
 			if ( intersec.type == CHECK )
@@ -685,15 +765,15 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			
 			mask *= intersec.color;
 
-                        bounceIsSpecular = false;
+			bounceIsSpecular = false;
 
-                        if (diffuseCount == 1 && !firstTypeWasDIFF && !firstTypeWasREFR && !firstTypeWasCOAT)
+			if (diffuseCount == 1 && !firstTypeWasDIFF && !firstTypeWasREFR && !firstTypeWasCOAT)
 			{	
 				// save intersection data for future shadowray trace
 				firstTypeWasDIFF = true;
 				dirToLight = sampleSphereLight(x, nl, light, dirToLight, weight, seed);
 				firstMask = mask * weight;
-                                firstRay = Ray( x, normalize(dirToLight) ); // create shadow ray pointed towards light
+                firstRay = Ray( x, normalize(dirToLight) ); // create shadow ray pointed towards light
 				firstRay.origin += nl * uEPS_intersect;
 
 				// choose random Diffuse sample vector
@@ -712,15 +792,19 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			dirToLight = sampleSphereLight(x, nl, light, dirToLight, weight, seed);
 			mask *= weight;
 
+			sampleSunLight = true;
+
 			r = Ray( x, normalize(dirToLight) );
 			r.origin += nl * uEPS_intersect;
 			sampleLight = true;
-			continue;
-                        
+
+			continue;  
 		} // end if (intersec.type == DIFF)
 		
-                if (intersec.type == SPEC)  // Ideal SPECULAR reflection
-                {
+
+		if (intersec.type == SPEC)  // Ideal SPECULAR reflection
+		{
+			previousIntersecType = SPEC;
 			mask *= intersec.color;
 
 			vec3 reflectVec = reflect(r.direction, nl);
@@ -730,11 +814,13 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			r.origin += nl * uEPS_intersect;
 			
 			//bounceIsSpecular = true;
-                        continue;
-                }
+			continue;
+		}
 
-                if (intersec.type == REFR)  // Ideal dielectric REFRACTION
+
+		if (intersec.type == REFR)  // Ideal dielectric REFRACTION
 		{
+			previousIntersecType = REFR;
 			nc = 1.0; // IOR of Air
 			nt = 1.5; // IOR of common Glass
 			Re = calcFresnelReflectance(r.direction, n, nc, nt, ratioIoR);
@@ -765,9 +851,9 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			r.origin -= nl * uEPS_intersect;
 			
 			continue;
-			
 		} // end if (intersec.type == REFR)
 		
+
 		if (intersec.type == COAT)  // Diffuse object underneath with ClearCoat on top
 		{
 			nc = 1.0; // IOR of Air
@@ -805,12 +891,12 @@ vec3 CalculateRadiance( Ray r, inout uvec2 seed, inout bool rayHitIsDynamic )
 			bounceIsSpecular = false;
 
 			if (diffuseCount == 1 && firstTypeWasCOAT && rand(seed) < diffuseColorBleeding)
-                        {
-                                // choose random Diffuse sample vector
+			{
+				// choose random Diffuse sample vector
 				r = Ray( x, normalize(randomCosWeightedDirectionInHemisphere(nl, seed)) );
 				r.origin += nl * uEPS_intersect;
 				continue;
-                        }
+			}
                         
 			dirToLight = sampleSphereLight(x, nl, light, dirToLight, weight, seed);
 			mask *= weight;
@@ -837,11 +923,10 @@ void SetupScene(void)
 	vec3 L1 = vec3(0.5, 0.7, 1.0) * 0.9;// Blueish sky light
 	vec3 L2 = vec3(1.0, 1.0, 1.0) * 800.0;// Bright white light bulb
 	
-	spheres[0] = Sphere( 10000.0,     vec3(0, 0, 0), L1, z, LIGHT, false);//spherical white Light1
-	spheres[1] = Sphere( 3.0, vec3(-10, 100, -50), L2, z, SPOT_LIGHT, false);//spotlight
-	spheres[2] = Sphere( 4000.0, vec3(0, -4000, 0), z, vec3(0.4, 0.4, 0.4), CHECK, false);//Checkered Floor
+	//spheres[0] = Sphere( 10000.0,     vec3(0, 0, 0), L1, z, LIGHT, false);//spherical white Light1
+	spheres[0] = Sphere( 3.0, vec3(-10, 100, -50), L2, z, SPOT_LIGHT, false);//spotlight
+	spheres[1] = Sphere( 4000.0, vec3(0, -4000, 0), z, vec3(0.4, 0.4, 0.4), CHECK, false);//Checkered Floor
 
-	    
 	 // Cylinder light
     /*    vec3 spotLightTarget = uGLTF_Model_Position;
         vec3 spotLightPos = spheres[1].position;
@@ -858,61 +943,66 @@ void SetupScene(void)
 // tentFilter from Peter Shirley's 'Realistic Ray Tracing (2nd Edition)' book, pg. 60		
 float tentFilter(float x)
 {
-        if (x < 0.5) 
-                return sqrt(2.0 * x) - 1.0;
-        else return 1.0 - sqrt(2.0 - (2.0 * x));
+	if (x < 0.5) 
+		return sqrt(2.0 * x) - 1.0;
+	else 
+		return 1.0 - sqrt(2.0 - (2.0 * x));
 }
 
 void main( void )
 {
-        // not needed, three.js has a built-in uniform named cameraPosition
-        //vec3 camPos   = vec3( uCameraMatrix[3][0],  uCameraMatrix[3][1],  uCameraMatrix[3][2]);
-        
-        vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
-        vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
-        vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);
-        
-        // seed for rand(seed) function
-        uvec2 seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
+	// not needed, three.js has a built-in uniform named cameraPosition
+	//vec3 camPos   = vec3( uCameraMatrix[3][0],  uCameraMatrix[3][1],  uCameraMatrix[3][2]);
+	
+	/*vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
+	vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
+	vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);*/
 
-        vec2 pixelPos = vec2(0);
-        vec2 pixelOffset = vec2(0);
+	vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
+	vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
+	vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);
+	
+	// seed for rand(seed) function
+	uvec2 seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
 
-        float x = rand(seed);
-        float y = rand(seed);
+	vec2 pixelPos = vec2(0);
+	vec2 pixelOffset = vec2(0);
 
-        //if (!uCameraIsMoving)
-        {
-                pixelOffset.x = tentFilter(x);
-                pixelOffset.y = tentFilter(y);
-        }
-        
-        // pixelOffset ranges from -1.0 to +1.0, so only need to divide by half resolution
-        pixelOffset /= (uResolution * 1.0); // normally this is * 0.5, but for dynamic scenes, * 1.0 looks sharper
+	float x = rand(seed);
+	float y = rand(seed);
 
-        // we must map pixelPos into the range -1.0 to +1.0
+	if (!uCameraIsMoving)
+	{
+		pixelOffset.x = tentFilter(x);
+		pixelOffset.y = tentFilter(y);
+	}
+	
+	// pixelOffset ranges from -1.0 to +1.0, so only need to divide by half resolution
+	pixelOffset /= (uResolution * 1.0); // normally this is * 0.5, but for dynamic scenes, * 1.0 looks sharper
+
+	// we must map pixelPos into the range -1.0 to +1.0
 	pixelPos = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
-        pixelPos += pixelOffset;
+	pixelPos += pixelOffset;
 
-        vec3 rayDir = normalize( pixelPos.x * camRight * uULen + pixelPos.y * camUp * uVLen + camForward );
-        
-        // depth of field
-        vec3 focalPoint = uFocusDistance * rayDir;
-        float randomAngle = rand(seed) * TWO_PI; // pick random point on aperture
-        float randomRadius = rand(seed) * uApertureSize;
-        vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * sqrt(randomRadius);
-        // point on aperture to focal point
-        vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
-        
-        Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
+	vec3 rayDir = normalize( pixelPos.x * camRight * uULen + pixelPos.y * camUp * uVLen + camForward );
+	
+	// depth of field
+	vec3 focalPoint = uFocusDistance * rayDir;
+	float randomAngle = rand(seed) * TWO_PI; // pick random point on aperture
+	float randomRadius = rand(seed) * uApertureSize;
+	vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * sqrt(randomRadius);
+	// point on aperture to focal point
+	vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+	
+	Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
 
-        SetupScene(); 
+	SetupScene(); 
 
-        bool rayHitIsDynamic = false;
+	bool rayHitIsDynamic = false;
 
-        // perform path tracing and get resulting pixel color
-        vec3 pixelColor = CalculateRadiance( ray, seed, rayHitIsDynamic );
-        
+	// perform path tracing and get resulting pixel color
+	vec3 pixelColor = CalculateRadiance( ray, seed, rayHitIsDynamic );
+	
 	/*
 	{
 		// NOTE: commented by Luka Prijatelj (screen is darkening when mouse is not moving)
@@ -944,7 +1034,8 @@ void main( void )
 	// NOTE: added by Luka Prijatelj		
 	// perform path tracing and get resulting pixel color
 
-	vec3 previousColor = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+	vec4 previousImage = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0);
+	vec3 previousColor = previousImage.rgb;
 	
 	if ( uCameraJustStartedMoving )
 	{
@@ -956,5 +1047,5 @@ void main( void )
 		pixelColor *= 0.5; // brightness of new image (noisy)
 	}
 		
-	out_FragColor = vec4( pixelColor + previousColor, 1.0 );
+	out_FragColor = vec4( pixelColor + previousColor, rayHitIsDynamic? 1.0 : 0.0 );
 }

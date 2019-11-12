@@ -85,10 +85,12 @@ ClientPage.init = function()
 
 	let flagCanvasOther = new namespace.html.DOMCanvas();
 	flagCanvasOther.id = 'flag-canvas-others';
+	flagCanvasOther.hide();
 	interfaceHtml.appendChild(flagCanvasOther);
 
 	let flagCanvasThis = new namespace.html.DOMCanvas();
 	flagCanvasThis.id = 'flag-canvas-this';
+	flagCanvasThis.hide();
 	interfaceHtml.appendChild(flagCanvasThis);
 
 	globals.rendererCanvas = new namespace.html.RendererCanvas();

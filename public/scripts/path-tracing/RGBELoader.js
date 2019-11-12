@@ -10,7 +10,6 @@ THREE.RGBELoader = function ( manager ) {
 	THREE.DataTextureLoader.call( this, manager );
 
 	this.type = THREE.UnsignedByteType;
-
 };
 
 THREE.RGBELoader.prototype = Object.assign( Object.create( THREE.DataTextureLoader.prototype ), {

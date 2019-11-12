@@ -2053,7 +2053,8 @@ THREE.GLTFLoader = ( function () {
 
 			// Load Texture resource.
 
-			var loader = THREE.Loader.Handlers.get( sourceURI );
+			// NOTE: @Luka not sure if this is the correct way to get handlers, because it will always be null!
+			var loader = THREE.DefaultLoadingManager.getHandler( sourceURI );
 
 			if ( ! loader ) {
 
