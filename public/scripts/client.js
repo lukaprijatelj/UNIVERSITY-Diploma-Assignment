@@ -41,6 +41,8 @@ globals.lastRenderingTime = 0;
  */
 globals.rendererCanvas = null;
 
+globals.gltf = null;
+
 
 
 
@@ -557,9 +559,9 @@ ClientPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await ClientPage._loadGltfModel();
+		globals.gltf = await ClientPage._loadGltfModel();
 		
-		await ClientPage._initScene(gltf.scene);
+		await ClientPage._initScene(globals.gltf.scene);
 		await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
 		
 		ClientPage._initCamera(options.CAMERA);

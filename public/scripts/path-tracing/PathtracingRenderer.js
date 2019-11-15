@@ -133,7 +133,7 @@ var PathtracingRenderer = function()
 
 	let modelScale = 1.0;
 	let modelRotationY = Math.PI; // in radians
-	let modelPositionOffset = new THREE.Vector3(0, 0, 0);
+	//let modelPositionOffset = new THREE.Vector3(0, 0, 0);
 
 	function filePromiseLoader(url, onProgress) {
 		return new Promise((resolve, reject) => {
@@ -254,11 +254,6 @@ var PathtracingRenderer = function()
 
 		modelMesh = meshList[0].clone();
 		
-		var geoList = [];
-		for (let i = 0; i < meshList.length; i++) {
-				geoList.push(meshList[i].geometry);
-		}
-		
 		if (modelMesh.geometry.index)
 				modelMesh.geometry = modelMesh.geometry.toNonIndexed();
 
@@ -278,10 +273,12 @@ var PathtracingRenderer = function()
 		if (meshList[0].material.normalMap != undefined)
 				normalMap = meshList[0].material.normalMap;
 		
-		for (let i = 0; i < meshList.length; i++) {
-				if (meshList[i].material.map != undefined) {
-						pathTracingMaterialList[i].textureID = 0;	
-				}				
+		for (let i = 0; i < meshList.length; i++) 
+		{
+			if (meshList[i].material.map != undefined) 
+			{
+				pathTracingMaterialList[i].textureID = 0;	
+			}				
 		}
 
 		var flattenedMeshList = [].concat.apply([], meshList);
@@ -315,7 +312,7 @@ var PathtracingRenderer = function()
 
 		// set camera's field of view
 		//worldCamera.fov = 60;
-		focusDistance = 124.0;
+		//focusDistance = 124.0;
 
 		// position and orient camera
 		//cameraControlsObject.position.set(0, 40, 100);
@@ -347,8 +344,8 @@ var PathtracingRenderer = function()
 
 		if (modelMesh.geometry.attributes.uv !== undefined) 
 		{
-				vta = new Float32Array(modelMesh.geometry.attributes.uv.array);
-				modelHasUVs = true;
+			vta = new Float32Array(modelMesh.geometry.attributes.uv.array);
+			modelHasUVs = true;
 		}
 				
 		var materialNumber = 0;
@@ -358,23 +355,27 @@ var PathtracingRenderer = function()
 			triangle_b_box_min.set(Infinity, Infinity, Infinity);
 			triangle_b_box_max.set(-Infinity, -Infinity, -Infinity);
 
-			for (let j = 0; j < pathTracingMaterialList.length; j++) {
-					if (i < triangleMaterialMarkers[j]) {
-							materialNumber = j;
-							break;
-					}
+			for (let j = 0; j < pathTracingMaterialList.length; j++) 
+			{
+				if (i < triangleMaterialMarkers[j]) 
+				{
+					materialNumber = j;
+					break;
+				}
 			}
 
 			// record vertex texture coordinates (UVs)
-			if (modelHasUVs) {
-					vt0.set( vta[6 * i + 0], vta[6 * i + 1] );
-					vt1.set( vta[6 * i + 2], vta[6 * i + 3] );
-					vt2.set( vta[6 * i + 4], vta[6 * i + 5] );
+			if (modelHasUVs) 
+			{
+				vt0.set( vta[6 * i + 0], vta[6 * i + 1] );
+				vt1.set( vta[6 * i + 2], vta[6 * i + 3] );
+				vt2.set( vta[6 * i + 4], vta[6 * i + 5] );
 			}
-			else {
-					vt0.set( -1, -1 );
-					vt1.set( -1, -1 );
-					vt2.set( -1, -1 );
+			else 
+			{
+				vt0.set( -1, -1 );
+				vt1.set( -1, -1 );
+				vt2.set( -1, -1 );
 			}
 			
 			// record vertex normals
@@ -387,13 +388,13 @@ var PathtracingRenderer = function()
 			vp1.set( vpa[9 * i + 3], vpa[9 * i + 4], vpa[9 * i + 5] );
 			vp2.set( vpa[9 * i + 6], vpa[9 * i + 7], vpa[9 * i + 8] );
 
-			vp0.multiplyScalar(modelScale);
+		/*	vp0.multiplyScalar(modelScale);
 			vp1.multiplyScalar(modelScale);
-			vp2.multiplyScalar(modelScale);
+			vp2.multiplyScalar(modelScale);*/
 
-			vp0.add(modelPositionOffset);
+			/*vp0.add(modelPositionOffset);
 			vp1.add(modelPositionOffset);
-			vp2.add(modelPositionOffset);
+			vp2.add(modelPositionOffset);*/
 
 			//slot 0
 			triangle_array[32 * i +  0] = vp0.x; // r or x
@@ -584,7 +585,7 @@ var PathtracingRenderer = function()
 		// worldCamera is the dynamic camera 3d object that will be positioned, oriented and
 		// constantly updated inside the 3d scene.  Its view will ultimately get passed back to the
 		// stationary quadCamera, which renders the scene to a fullscreen quad (made up of 2 large triangles).
-		//worldCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+		//worldCamera = new THREE.PerspectiveCamera(50, canvas.width / canvas.height, 1, 1000);
 		//pathTracingScene.add(worldCamera);
 
 		controls = new FirstPersonCameraControls(worldCamera);
@@ -592,7 +593,7 @@ var PathtracingRenderer = function()
 		cameraControlsYawObject = controls.getYawObject();
 		cameraControlsPitchObject = controls.getPitchObject();
 
-		// TODO: why is this line problematic
+		// TODO: why is this
 		pathTracingScene.add(cameraControlsObject);
 
 		oldYawRotation = cameraControlsYawObject.rotation.y;
@@ -602,7 +603,7 @@ var PathtracingRenderer = function()
 		// and prevents rendering the very first frame in the old default camera position/orientation
 		cameraControlsObject.updateMatrixWorld(true);
 
-		pathTracingRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+		pathTracingRenderTarget = new THREE.WebGLRenderTarget(canvas.width, canvas.height, {
 			minFilter: THREE.NearestFilter,
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
@@ -611,7 +612,7 @@ var PathtracingRenderer = function()
 			stencilBuffer: false
 		});
 
-		screenTextureRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+		screenTextureRenderTarget = new THREE.WebGLRenderTarget(canvas.width, canvas.height, {
 			minFilter: THREE.NearestFilter,
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
@@ -743,8 +744,8 @@ var PathtracingRenderer = function()
 		pathTracingRenderTarget.setSize(renderer.getContext().drawingBufferWidth, renderer.getContext().drawingBufferHeight);
 		screenTextureRenderTarget.setSize(renderer.getContext().drawingBufferWidth, renderer.getContext().drawingBufferHeight);
 
-		//worldCamera.aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight;
-		//worldCamera.updateProjectionMatrix();
+		worldCamera.aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight;
+		worldCamera.updateProjectionMatrix();
 
 		// the following scales all scene objects by the worldCamera's field of view,
 		// taking into account the screen aspect ratio and multiplying the uniform uULen,
@@ -807,8 +808,8 @@ var PathtracingRenderer = function()
 
 		// the following gives us a rotation quaternion (4D vector), which will be useful for
 		// rotating scene objects to match the camera's rotation
-		let cameraWorldQuaternion = new THREE.Quaternion(); //for rotating scene objects to match camera's current rotation
-		worldCamera.getWorldQuaternion(cameraWorldQuaternion);
+		//let cameraWorldQuaternion = new THREE.Quaternion(); //for rotating scene objects to match camera's current rotation
+		//worldCamera.getWorldQuaternion(cameraWorldQuaternion);
 
 		var camFlightSpeed;
 		if (keyboard.modifiers && keyboard.modifiers.shift)

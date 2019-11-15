@@ -1,7 +1,8 @@
 var options = { };
 
 //options.SCENE_FILEPATH = 'scenes/Castle/Scene.gltf';
-options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
+//options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
+options.SCENE_FILEPATH = 'scenes/OrientationCube/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Buggy/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/MetalRoughSpheres/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/boomBox/Scene.gltf';

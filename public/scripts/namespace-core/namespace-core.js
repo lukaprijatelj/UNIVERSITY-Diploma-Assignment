@@ -434,6 +434,18 @@ Array.contains = function (array, element) {
     }
     return true;
 };
+Array.shuffle = function (_this) {
+    let j;
+    let x;
+    let i;
+    for (i = _this.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = _this[i];
+        _this[i] = _this[j];
+        _this[j] = x;
+    }
+    return _this;
+};
 var EventListener = function (value) {
     this.value = value ? value : Function.empty;
 };
@@ -658,12 +670,6 @@ _global.Char = (() => {
     };
     return Char;
 })();
-_global.IStringify = (() => {
-    let IStringify = function () {
-    };
-    IStringify.prototype.toString = Function.empty;
-    return IStringify;
-})();
 _global.Color = (() => {
     let Color = function (arg1, arg2, arg3, arg4) {
         if (arg1 || arg1 == 0) {
@@ -760,7 +766,7 @@ _global.Color = (() => {
         let _this = Color._parse(value);
         return 'rgb(' + _this.red + ', ' + _this.green + ', ' + _this.blue + ')';
     };
-    Color.toRgbaString = function (value) {
+    Color.toRgbAlphaString = function (value) {
         let _this = Color._parse(value);
         let alpha = Math.round(_this.alpha / 255);
         return 'rgba(' + _this.red + ', ' + _this.green + ', ' + _this.blue + ', ' + alpha + ')';
@@ -1016,26 +1022,6 @@ var EventArgs = function (sender) {
 };
 Function.empty = function () {
 };
-_global.IDisposable = (() => {
-    let IDisposable = function () {
-        Object.defineProperty(this, '_isDisposed', {
-            writable: true,
-            enumerable: false
-        });
-        this._isDisposed = false;
-        Object.defineProperty(this, 'onDispose', {
-            writable: true,
-            enumerable: false
-        });
-        this.onDispose = new Event();
-    };
-    Object.defineProperty(IDisposable.prototype, 'dispose', {
-        writable: true,
-        enumerable: false
-    });
-    IDisposable.prototype.dispose = Function.empty;
-    return IDisposable;
-})();
 var GarbageCollector = {};
 GarbageCollector.dispose = function (obj) {
     if (GarbageCollector.isDisposable(obj) == false) {
@@ -1379,6 +1365,9 @@ Math.toPositive = function (value) {
 };
 Math.toPercentage = function (value, maxValue) {
     return (100 * value) / maxValue;
+};
+Math.randomBetweenInterval = function (min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 String.generateUUID = function () {
     var dt = new Date().getTime();
@@ -1950,7 +1939,6 @@ var namespace;
                 this.url = null;
                 this.numOfChannels = 4;
                 this.imageData = null;
-                Interface.inherit(this, IDisposable);
                 let _this = this;
                 if (url) {
                     _this.url = url;
@@ -1977,7 +1965,6 @@ var namespace;
             }
         }
         core.RawImage = RawImage;
-        Interface.inheritPrototype(RawImage, IDisposable);
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
 function Reflection(value, parent) {
@@ -2072,11 +2059,9 @@ var namespace;
                 this.previousState = null;
                 this.nextState = 0;
                 this.data = 0;
-                Interface.inherit(this, IDisposable);
             }
         }
         core.State = State;
-        Interface.inheritPrototype(State, IDisposable);
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
 var namespace;
@@ -2211,9 +2196,9 @@ var namespace;
                 let Thread = function (filename) {
                     this._instance = null;
                     this._promiseQueue = {};
-                    this._init(filename);
+                    this._constructor(filename);
                 };
-                Thread.prototype._init = function (filename) {
+                Thread.prototype._constructor = function (filename) {
                     let _this = this;
                     namespace.__.THREADING.threads.push(_this);
                     _this._onMessage = _this._onMessage.bind(this);
@@ -2329,9 +2314,9 @@ _global.Timer = (() => {
         this.time = -1;
         this._id = null;
         this.callback = Function.empty;
-        this._init(timeInMiliseconds);
+        this._constructor(timeInMiliseconds);
     };
-    Timer.prototype._init = function (timeInMiliseconds) {
+    Timer.prototype._constructor = function (timeInMiliseconds) {
         this.time = (timeInMiliseconds >= 0) ? timeInMiliseconds : -1;
     };
     Timer.prototype._setTimer = function () {
@@ -2387,7 +2372,6 @@ var namespace;
                 this.minor = 0;
                 this.build = 0;
                 this.revision = 0;
-                Interface.inherit(this, IStringify);
                 if (value) {
                     this._parse(value);
                 }
@@ -2437,7 +2421,6 @@ var namespace;
             }
         }
         core.Version = Version;
-        Interface.inheritPrototype(Version, IStringify);
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
 var namespace;
@@ -2457,6 +2440,8 @@ console._log = console.log;
 console._error = console.error;
 console._warn = console.warn;
 console._trace = console.trace;
+console._time = console.time;
+console._timeEnd = console.timeEnd;
 console.log = function () {
     if (_global.IS_CONSOLE_ENABLED == false) {
         return;
@@ -2478,6 +2463,44 @@ console.trace = function () {
     }
     console._trace.apply(this, arguments);
 };
+console.time = function () {
+    if (_global.IS_CONSOLE_ENABLED == false) {
+        return;
+    }
+    console._time.apply(this, arguments);
+};
+console.timeEnd = function () {
+    if (_global.IS_CONSOLE_ENABLED == false) {
+        return;
+    }
+    console._timeEnd.apply(this, arguments);
+};
+_global.IDisposable = (() => {
+    let IDisposable = function () {
+        Object.defineProperty(this, '_isDisposed', {
+            writable: true,
+            enumerable: false
+        });
+        this._isDisposed = false;
+        Object.defineProperty(this, 'onDispose', {
+            writable: true,
+            enumerable: false
+        });
+        this.onDispose = new Event();
+    };
+    Object.defineProperty(IDisposable.prototype, 'dispose', {
+        writable: true,
+        enumerable: false
+    });
+    IDisposable.prototype.dispose = Function.empty;
+    return IDisposable;
+})();
+_global.IStringify = (() => {
+    let IStringify = function () {
+    };
+    IStringify.prototype.toString = Function.empty;
+    return IStringify;
+})();
 _global.IUpdateable = (() => {
     let IUpdateable = function () {
         this.onUpdate = null;
