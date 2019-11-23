@@ -17,15 +17,12 @@ namespace.html.RendererCanvas = (() =>
 	 */
 	var RendererCanvas = function()
 	{
-		Interface.inherit(this, IDisposable);
-
 		this.canvasV = null;
 		this.flagCanvasV = null;
 		this.flagCanvasOthersV = null;
 
 		this.updateThreadCellImage = this.updateThreadCellImage.bind(this);
 	};
-	Interface.inheritPrototype(RendererCanvas, IDisposable);
 
 	/**
 	 * Initializes canvas.

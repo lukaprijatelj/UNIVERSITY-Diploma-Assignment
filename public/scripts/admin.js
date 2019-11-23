@@ -722,7 +722,6 @@ AdminPage.onUploadSceneClick = function()
 
 AdminPage.onDropdownsCurtainClick = function(event)
 {
-	let mouse = new namespace.core.Mouse(event);
 	let list = document.querySelector('layer#dropdowns');
 	
 	if (event && mouse.isTarget(list) == false)

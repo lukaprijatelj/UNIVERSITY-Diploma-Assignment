@@ -491,7 +491,6 @@ ClientPage._updateOptions = function(dataOptions)
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
 		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
 		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
@@ -597,7 +596,6 @@ ClientPage.stopRendererUi = function()
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
 		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
 		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
@@ -693,7 +691,6 @@ ClientPage.startRendering = function(cellsWaiting)
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
 		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
 		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
 

@@ -17,12 +17,9 @@ namespace.html.EditorCanvas = (() =>
 	 */
 	var EditorCanvas = function()
 	{
-		Interface.inherit(this, IDisposable);
-
 		this.canvasV = document.getElementById('editor-canvas');
 		this.resize = EditorCanvas.resize.bind(this);
 	};
-	Interface.inheritPrototype(EditorCanvas, IDisposable);
 
 	EditorCanvas.prototype.init = function()
 	{

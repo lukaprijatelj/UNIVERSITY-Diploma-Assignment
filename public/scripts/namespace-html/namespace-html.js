@@ -12,7 +12,7 @@ if (typeof namespace.__ == 'undefined') {
 }
 namespace.html.Anchor = (() => {
     let Anchor = function (element) {
-        this.onDispose = new Event();
+        this.disposeEvent = new Event();
         this._constructor(element);
     };
     Anchor.prototype._constructor = function (element) {
@@ -22,13 +22,15 @@ namespace.html.Anchor = (() => {
         _this._onBrowserResizeEventHandler = _this._onBrowserResizeEventHandler.bind(_this);
         _this.element = element;
         _this.element.addClass('has-anchor');
-        EventListener.attach(_this.element.onDispose, _this._onElementDisposeEventHandler);
+        if (!_this.element.disposeEvent) {
+            _this.element.disposeEvent = new Event();
+        }
+        EventListener.attach(_this.element.disposeEvent, _this._onElementDisposeEventHandler);
         _this.target = null;
         _this.top = '0px';
         _this.left = '0px';
         _this.centerTop = '0px';
         _this.centerLeft = '0px';
-        let browser = new namespace.core.Browser();
         EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     Anchor.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -41,7 +43,6 @@ namespace.html.Anchor = (() => {
     };
     Anchor.prototype.dispose = function () {
         let _this = this;
-        let browser = new namespace.core.Browser();
         EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     Anchor.prototype.setPosition = function (top, left) {
@@ -106,14 +107,14 @@ namespace.html.Canvas = (() => {
         Object.cloneData(_this, Canvas.prototype);
         _this.resizeCanvas = _this.resizeCanvas.bind(_this);
         _this._onBrowserResizeEventHandler = _this._onBrowserResizeEventHandler.bind(_this);
-        _this.onDispose = new Event();
+        _this.disposeEvent = new Event();
         _this._constructor(resizable);
         return _this;
     };
     Canvas.prototype._constructor = function (resizable) {
         let _this = this;
         if (resizable == true) {
-            EventListener.attach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+            EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
         }
     };
     Canvas.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -146,7 +147,7 @@ namespace.html.Canvas = (() => {
         return _this.toImage(posX, posY, 1, 1).data;
     };
     Canvas.prototype.dispose = function () {
-        EventListener.detach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+        EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     return Canvas;
 })();
@@ -183,7 +184,7 @@ namespace.html.DOMCanvas = (() => {
     DOMCanvas.prototype._constructor = function (resizable) {
         let _this = this;
         if (resizable == true) {
-            EventListener.attach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+            EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
         }
     };
     DOMCanvas.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -210,7 +211,7 @@ namespace.html.DOMCanvas = (() => {
         _this.style.background = value;
     };
     DOMCanvas.prototype.dispose = function () {
-        EventListener.detach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+        EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     return DOMCanvas;
 })();
@@ -642,13 +643,13 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
 HTMLElement.prototype.onClick = function (callback) {
     var _this = this;
     _this.addEventListener("click", callback);
-    if (!_this.onDispose) {
-        _this.onDispose = new Event();
+    if (!_this.disposeEvent) {
+        _this.disposeEvent = new Event();
     }
     let onDisposeEventHandler = (() => {
         _this.removeEventListener("click", callback);
     });
-    OneTimeEventListener.attach(_this.onDispose, onDisposeEventHandler);
+    EventListener.attachOneTime(_this.disposeEvent, onDisposeEventHandler);
 };
 HTMLElement.prototype.onClickOnce = function (callback) {
     var _this = this;
@@ -683,7 +684,6 @@ HTMLElement.prototype.trackLastChild = function () {
 };
 HTMLElement.prototype.hide = function () {
     let _this = this;
-    _this.removeClass('visible');
     _this.addClass('hidden');
     if (_this.parentElement) {
         _this.parentElement.updateTrackLastChild();
@@ -699,7 +699,6 @@ HTMLElement.prototype.isHidden = function () {
 HTMLElement.prototype.show = function () {
     let _this = this;
     _this.removeClass('hidden');
-    _this.addClass('visible');
     if (_this.parentElement) {
         _this.parentElement.updateTrackLastChild();
     }
@@ -723,14 +722,14 @@ HTMLElement.prototype.enable = function () {
     return _this.removeAttribute(ATTR_NAME);
 };
 HTMLElement.prototype.isEnabled = function () {
-    return !this.isDisable();
+    return !this.isDisabled();
 };
 HTMLElement.prototype.disable = function () {
     let _this = this;
     let ATTR_NAME = 'disabled';
     return _this.setAttribute(ATTR_NAME, '');
 };
-HTMLElement.prototype.isDisable = function () {
+HTMLElement.prototype.isDisabled = function () {
     let _this = this;
     let ATTR_NAME = 'disabled';
     if (_this.hasAttribute(ATTR_NAME)) {
@@ -802,7 +801,7 @@ namespace.html.HTMLProperty = (() => {
     };
     return HTMLProperty;
 })();
-_this.NotifyUpdate = function (property) {
+_global.NotifyUpdate = function (property) {
     if (!(property instanceof namespace.html.HTMLProperty)) {
         new Exception.Other('Cannot notify element that is not of namespace.html.HTMLProperty type!');
     }

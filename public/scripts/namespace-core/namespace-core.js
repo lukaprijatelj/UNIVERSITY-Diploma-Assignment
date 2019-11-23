@@ -448,21 +448,7 @@ Array.shuffle = function (_this) {
 };
 var EventListener = function (value) {
     this.value = value ? value : Function.empty;
-};
-var OneTimeEventListener = function (value) {
-    this.value = value ? value : Function.empty;
-};
-OneTimeEventListener.attach = function (evt, listener) {
-    if (!listener) {
-        new Warning.ValueUndefined();
-        return;
-    }
-    let _this = evt;
-    if (EventListener.isAttached(_this, listener) == true) {
-        new Warning.Other('Cannot add handler function that already exists! (aborting)');
-        return;
-    }
-    _this._handlers.push(new OneTimeEventListener(listener));
+    this.oneTime = false;
 };
 EventListener.attach = function (evt, listener) {
     if (!listener) {
@@ -475,6 +461,20 @@ EventListener.attach = function (evt, listener) {
         return;
     }
     _this._handlers.push(new EventListener(listener));
+};
+EventListener.attachOneTime = function (evt, listener) {
+    if (!listener) {
+        new Warning.ValueUndefined();
+        return;
+    }
+    let _this = evt;
+    if (EventListener.isAttached(_this, listener) == true) {
+        new Warning.Other('Cannot add handler function that already exists! (aborting)');
+        return;
+    }
+    let handler = new EventListener(listener);
+    handler.oneTime = true;
+    _this._handlers.push(handler);
 };
 EventListener.isAttached = function (evt, listener) {
     if (!listener) {
@@ -510,7 +510,7 @@ let _Event = Event;
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     _Event.prototype._stopPropagation = _Event.prototype.stopPropagation;
     _Event.prototype.stopPropagation = function () {
-        Event.fire(namespace.__.MOUSE.globalClick);
+        Event.fire(mouse.globalClick);
         _Event.prototype._stopPropagation.apply(this, arguments);
     };
 }
@@ -538,7 +538,7 @@ Event.fire = function (_this, eventArgs) {
     for (var i = 0; i < handlersLength; i++) {
         var eventHandler = _this._handlers[i];
         eventHandler.value(eventArgs);
-        if (eventHandler instanceof EventListener) {
+        if (eventHandler.oneTime == false) {
             newHandlers.push(eventHandler);
         }
     }
@@ -547,109 +547,247 @@ Event.fire = function (_this, eventArgs) {
 Event.clear = function (_this) {
     _this._handlers = [];
 };
-var namespace;
-(function (namespace) {
-    var __;
-    (function (__) {
-        __.BROWSER = (() => {
-            if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                let BROWSER = {
-                    resizeEvent: null,
-                    init: function () {
-                        BROWSER.resizeEvent = new Event();
-                        window.onresize = function (event) {
-                            BROWSER.updateBody(event);
-                            let eventArgs = new EventArgs(BROWSER);
-                            eventArgs.event = event;
-                            Event.fire(BROWSER.resizeEvent, eventArgs);
-                        };
-                        if (document.readyState === "complete") {
-                            BROWSER.updateBody();
-                        }
-                        else if (document.readyState === "interactive") {
-                            BROWSER.updateBody();
-                        }
-                        else {
-                            var firstCall = () => {
-                                BROWSER.updateBody();
-                                window.removeEventListener("load", firstCall);
-                            };
-                            window.addEventListener("load", firstCall);
-                        }
-                    },
-                    updateBody: function (event) {
-                        let element = document.body;
-                        let width = element.clientWidth;
-                        if (width < 481) {
-                            element.setAttribute('responsive-type', 'smartphone');
-                        }
-                        else if (width < 641) {
-                            element.setAttribute('responsive-type', 'smartphone-landscape');
-                        }
-                        else if (width < 961) {
-                            element.setAttribute('responsive-type', 'tablet');
-                        }
-                        else if (width < 1025) {
-                            element.setAttribute('responsive-type', 'tablet-landscape');
-                        }
-                        else if (width < 1281) {
-                            element.setAttribute('responsive-type', 'laptop');
-                        }
-                        else {
-                            element.setAttribute('responsive-type', 'desktop');
-                        }
-                    }
-                };
-                BROWSER.init();
-                return BROWSER;
+Object.cloneData = function (dst, src) {
+    for (var key in src) {
+        if (src.hasOwnProperty(key)) {
+            dst[key] = src[key];
+        }
+    }
+    return dst;
+};
+Object.parse = function (obj) {
+    let constructorString = Object.getMetadata(obj, 'constructor');
+    if (!constructorString) {
+        new Exception.ValueUndefined('Constructor metadata is mising!');
+    }
+    let constructorClass = new Reflection(constructorString, _this);
+    if (!constructorClass) {
+        new Exception.ValueUndefined();
+    }
+    if (!constructorClass.parse) {
+        new Exception.Other('Constructor class does not have parse method implemented!');
+    }
+    constructorClass.parse(obj);
+};
+Object.toJson = function (obj) {
+    let constructorString = Object.getMetadata(obj, 'constructor');
+    if (!constructorString) {
+        new Exception.ValueUndefined('Constructor metadata is mising!');
+    }
+    let constructorClass = new Reflection(constructorString, _this);
+    if (!constructorClass) {
+        new Exception.ValueUndefined();
+    }
+    if (!constructorClass.toJson) {
+        new Exception.Other('Constructor class does not have toJson method implemented!');
+    }
+    constructorClass.toJson(obj);
+};
+Object.setMetadata = function (dst, property, value) {
+    if (!dst['_metadata']) {
+        dst['_metadata'] = new Object();
+    }
+    dst['_metadata'][property] = value;
+};
+Object.getMetadata = function (dst, property) {
+    if (!dst['_metadata']) {
+        return null;
+    }
+    return dst['_metadata'][property];
+};
+Object.destroy = function (src) {
+    for (var key in src) {
+        if (src.hasOwnProperty(key)) {
+            delete src[key];
+        }
+    }
+    return src;
+};
+Object.shrink = function (template, src) {
+    var dst = new Object();
+    for (var key in template) {
+        if (src.hasOwnProperty(key)) {
+            dst[key] = src[key];
+        }
+    }
+    return dst;
+};
+Object.isEmpty = function (obj) {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
+};
+Object.isNotEmpty = function (obj) {
+    return !Object.isEmpty(obj);
+};
+Object.getSizeInBytes = function (object) {
+    if (!object) {
+        return 0;
+    }
+    var objectList = [];
+    var stack = [object];
+    var bytes = 0;
+    while (stack.length) {
+        var value = stack.pop();
+        if (typeof value === 'function') {
+            value = '' + value;
+        }
+        if (typeof value === 'boolean') {
+            bytes += 4;
+        }
+        else if (typeof value === 'string') {
+            bytes += value.length * 2;
+        }
+        else if (typeof value === 'number') {
+            bytes += 8;
+        }
+        else if (typeof value === 'object') {
+            if (value instanceof Int8Array || value instanceof Uint8Array || value instanceof Uint8ClampedArray) {
+                bytes += value.length;
             }
-            return null;
-        })();
-    })(__ = namespace.__ || (namespace.__ = {}));
-})(namespace || (namespace = {}));
-(function (namespace) {
-    var core;
-    (function (core) {
-        class Browser {
-            constructor(application) {
-                this.application = null;
-                this.resizeEvent = namespace.__.BROWSER.resizeEvent;
-                this.state = null;
-                this.localStorage = null;
-                this.isStateRestoring = false;
-                this.application = application;
-                this.state = window.history.state;
-                this.localStorage = window.localStorage;
+            else if (value instanceof Int16Array || value instanceof Uint16Array) {
+                bytes += value.length * 2;
             }
-            dispose() {
-                new Exception.NotImplemented();
+            else if (value instanceof Int32Array || value instanceof Uint32Array || value instanceof Float32Array) {
+                bytes += value.length * 4;
             }
-            setTitle(value) {
-                document.title = value;
+            else if (value instanceof Float64Array || value instanceof BigInt64Array || value instanceof BigUint64Array) {
+                bytes += value.length * 8;
             }
-            getType() {
-                new Exception.NotImplemented();
-            }
-            isSecureHTTP() {
-                return location.protocol === 'https:';
-            }
-            isRetinaDisplay() {
-                if (typeof window.devicePixelRatio !== 'undefined') {
-                    if (window.devicePixelRatio >= 1.5) {
-                        return true;
+            else {
+                if (objectList.indexOf(value) === -1) {
+                    objectList.push(value);
+                    for (var i in value) {
+                        stack.push(value[i]);
                     }
                 }
-                else if (typeof window.matchMedia !== 'undefined') {
-                    if (window.matchMedia('(-webkit-min-device-pixel-ratio: 1.5),(min-resolution: 1.5dppx),(min-resolution: 144dpi)').matches) {
-                        return true;
-                    }
-                }
-                return false;
             }
         }
-        core.Browser = Browser;
-    })(core = namespace.core || (namespace.core = {}));
+    }
+    return bytes;
+};
+_global.Enum = function (values) {
+    Object.cloneData(this, values);
+};
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.Browser = (() => {
+            return new Enum({
+                CHROME: 'chrome',
+                OPERA: 'opera',
+                FIREFOX: 'firefox',
+                EDGE: 'edge',
+                SAFARI: 'safari',
+                IE: 'internet-explorer'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
 })(namespace || (namespace = {}));
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    (() => {
+        _global.browser =
+            {
+                resizeEvent: null,
+                state: null,
+                localStorage: null,
+                isStateRestoring: false,
+                type: '',
+                responsiveType: '',
+                init: function () {
+                    browser._initType();
+                    browser.resizeEvent = new Event();
+                    window.onresize = function (event) {
+                        browser.updateBody(event);
+                        let eventArgs = new EventArgs(browser);
+                        eventArgs.event = event;
+                        Event.fire(browser.resizeEvent, eventArgs);
+                    };
+                    if (document.readyState === "complete") {
+                        browser.updateBody();
+                    }
+                    else if (document.readyState === "interactive") {
+                        browser.updateBody();
+                    }
+                    else {
+                        var firstCall = () => {
+                            browser.updateBody();
+                            window.removeEventListener("load", firstCall);
+                        };
+                        window.addEventListener("load", firstCall);
+                    }
+                },
+                updateBody: function (event) {
+                    let element = document.body;
+                    let width = element.clientWidth;
+                    if (width < 481) {
+                        browser.responsiveType = 'smartphone';
+                    }
+                    else if (width < 641) {
+                        browser.responsiveType = 'smartphone-landscape';
+                    }
+                    else if (width < 961) {
+                        browser.responsiveType = 'tablet';
+                    }
+                    else if (width < 1025) {
+                        browser.responsiveType = 'tablet-landscape';
+                    }
+                    else if (width < 1281) {
+                        browser.responsiveType = 'laptop';
+                    }
+                    else {
+                        browser.responsiveType = 'desktop';
+                    }
+                    element.setAttribute('responsive-type', browser.responsiveType);
+                },
+                setTitle: function (value) {
+                    document.title = value;
+                },
+                _initType: function () {
+                    var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+                    var isFirefox = typeof InstallTrigger !== 'undefined';
+                    var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
+                    var isIE = false || !!document.documentMode;
+                    var isEdge = !isIE && !!window.StyleMedia;
+                    var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+                    if (isOpera == true) {
+                        browser.type = namespace.enums.Browser.OPERA;
+                    }
+                    if (isFirefox == true) {
+                        browser.type = namespace.enums.Browser.FIREFOX;
+                    }
+                    if (isSafari == true) {
+                        browser.type = namespace.enums.Browser.SAFARI;
+                    }
+                    if (isIE == true) {
+                        browser.type = namespace.enums.Browser.IE;
+                    }
+                    if (isEdge == true) {
+                        browser.type = namespace.enums.Browser.EDGE;
+                    }
+                    if (isChrome == true) {
+                        browser.type = namespace.enums.Browser.CHROME;
+                    }
+                },
+                isSecureHTTP: function () {
+                    return location.protocol === 'https:';
+                },
+                isRetinaDisplay: function () {
+                    if (typeof window.devicePixelRatio !== 'undefined') {
+                        if (window.devicePixelRatio >= 1.5) {
+                            return true;
+                        }
+                    }
+                    else if (typeof window.matchMedia !== 'undefined') {
+                        if (window.matchMedia('(-webkit-min-device-pixel-ratio: 1.5),(min-resolution: 1.5dppx),(min-resolution: 144dpi)').matches) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+        browser.init();
+    })();
+}
 var namespace;
 (function (namespace) {
     var core;
@@ -1014,9 +1152,6 @@ Date.getFormatPart = function (date, format) {
     }
     return format;
 };
-_global.Enum = function (values) {
-    Object.cloneData(this, values);
-};
 var EventArgs = function (sender) {
     this.sender = sender ? sender : null;
 };
@@ -1031,13 +1166,13 @@ GarbageCollector.dispose = function (obj) {
         if (!element.dispose) {
             new Warning.Other('Element is not disposable!');
         }
-        if (!element.onDispose) {
+        if (!element.disposeEvent) {
             new Warning.Other('Element is not disposable!');
         }
     }
-    if (obj.onDispose) {
-        Event.fire(obj.onDispose);
-        Event.clear(obj.onDispose);
+    if (obj.disposeEvent) {
+        Event.fire(obj.disposeEvent);
+        Event.clear(obj.disposeEvent);
     }
     if (obj.dispose) {
         obj.dispose();
@@ -1199,90 +1334,74 @@ if (typeof ImageData !== 'undefined') {
         }
     };
 }
-var namespace;
-(function (namespace) {
-    var core;
-    (function (core) {
-        class IsolatedStorage {
-            constructor(location) {
-                this.location = '';
-                let _this = this;
-                _this.location = location;
+if (IS_NODEJS == true) {
+    let namespace;
+    (function (namespace) {
+        let core;
+        (function (core) {
+            class IsolatedStorage {
+                constructor(location) {
+                    this.location = '';
+                    let _this = this;
+                    _this.location = location;
+                }
             }
-        }
-        core.IsolatedStorage = IsolatedStorage;
-    })(core = namespace.core || (namespace.core = {}));
-})(namespace || (namespace = {}));
-var namespace;
-(function (namespace) {
-    var __;
-    (function (__) {
-        __.KEYBOARD = (() => {
-            if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                let KEYBOARD = {
-                    map: {},
-                    event: null,
-                    init: function () {
-                        document.body.onkeydown = KEYBOARD.onKeyPressChange;
-                        document.body.onkeyup = KEYBOARD.onKeyPressChange;
-                    },
-                    onKeyPressChange: function (event) {
-                        KEYBOARD.event = event;
-                        KEYBOARD.map[event.keyCode] = event.type == 'keydown';
+            core.IsolatedStorage = IsolatedStorage;
+        })(core = namespace.core || (namespace.core = {}));
+    })(namespace || (namespace = {}));
+}
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    (() => {
+        _global.keyboard =
+            {
+                map: {},
+                event: null,
+                init: function () {
+                    document.body.onkeydown = keyboard.onKeyPressChange;
+                    document.body.onkeyup = keyboard.onKeyPressChange;
+                },
+                onKeyPressChange: function (event) {
+                    keyboard.event = event;
+                    keyboard.map[event.keyCode] = event.type == 'keydown';
+                },
+                isKeyDown: function (key) {
+                    if (keyboard.map[key] == true) {
+                        return true;
                     }
-                };
-                KEYBOARD.init();
-                return KEYBOARD;
-            }
-        })();
-    })(__ = namespace.__ || (namespace.__ = {}));
-})(namespace || (namespace = {}));
-(function (namespace) {
-    var core;
-    (function (core) {
-        class Keyboard {
-            isKeyDown(key) {
-                if (namespace.__.KEYBOARD.map[key] == true) {
-                    return true;
-                }
-                return false;
-            }
-            isKeyUp(key) {
-                let _this = this;
-                return !_this.isKeyDown(key);
-            }
-            ;
-            isNumberPressed() {
-                let _this = this;
-                let event = namespace.__.KEYBOARD.event;
-                if (!event) {
+                    return false;
+                },
+                isKeyUp: function (key) {
+                    let _this = this;
+                    return !_this.isKeyDown(key);
+                },
+                isNumberPressed: function () {
+                    let _this = this;
+                    let event = keyboard.event;
+                    if (!event) {
+                        return false;
+                    }
+                    var key = event.keyCode;
+                    if ((key >= 48 && key <= 57) || (key >= 96 && key <= 105)) {
+                        return true;
+                    }
+                    return false;
+                },
+                isLetterPressed: function () {
+                    let _this = this;
+                    let event = keyboard.event;
+                    if (!event) {
+                        return false;
+                    }
+                    var key = event.keyCode;
+                    if (key >= 65 && key <= 90) {
+                        return true;
+                    }
                     return false;
                 }
-                var key = event.keyCode;
-                if ((key >= 48 && key <= 57) || (key >= 96 && key <= 105)) {
-                    return true;
-                }
-                return false;
-            }
-            isLetterPressed() {
-                let _this = this;
-                let event = namespace.__.KEYBOARD.event;
-                if (!event) {
-                    return false;
-                }
-                var key = event.keyCode;
-                if (key >= 65 && key <= 90) {
-                    return true;
-                }
-                return false;
-            }
-            dispose() {
-                new Exception.NotImplemented();
-            }
-        }
-        core.Keyboard = Keyboard;
-    })(core = namespace.core || (namespace.core = {}));
-})(namespace || (namespace = {}));
+            };
+        keyboard.init();
+    })();
+}
 var namespace;
 (function (namespace) {
     var core;
@@ -1604,115 +1723,86 @@ class MemoryUnit extends Unit {
         return MemoryUnit.toString(newValue, unit);
     }
 }
-var namespace;
-(function (namespace) {
-    var __;
-    (function (__) {
-        __.MOUSE = (() => {
-            if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                let MOUSE = {
-                    moveEvent: null,
-                    globalClick: new Event(),
-                    init: function () {
-                        document.addEventListener('mousemove', MOUSE.onMouseMove, false);
-                        document.body.addEventListener('click', MOUSE.onGlobalClick);
-                    },
-                    onGlobalClick: function (event) {
-                        let eventArgs = new EventArgs(MOUSE);
-                        eventArgs.event = event;
-                        Event.fire(MOUSE.globalClick, eventArgs);
-                    },
-                    onMouseMove: function (event) {
-                        MOUSE.moveEvent = event;
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    (() => {
+        _global.mouse =
+            {
+                moveEvent: null,
+                clickEvent: null,
+                globalClick: new Event(),
+                init: function () {
+                    document.addEventListener('mousemove', mouse.onMouseMove, false);
+                    document.body.addEventListener('click', mouse.onGlobalClick);
+                },
+                onGlobalClick: function (event) {
+                    mouse.clickEvent = event;
+                    let eventArgs = new EventArgs(mouse);
+                    eventArgs.event = event;
+                    Event.fire(mouse.globalClick, eventArgs);
+                },
+                onMouseMove: function (event) {
+                    mouse.moveEvent = event;
+                },
+                getPositionX: function () {
+                    if (!mouse.moveEvent) {
+                        return 0;
                     }
-                };
-                MOUSE.init();
-                return MOUSE;
-            }
-        })();
-    })(__ = namespace.__ || (namespace.__ = {}));
-})(namespace || (namespace = {}));
-(function (namespace) {
-    var core;
-    (function (core) {
-        class Mouse {
-            constructor(event) {
-                this.event = null;
-                this.event = event;
-            }
-            getPositionX() {
-                let _this = this;
-                let event = namespace.__.MOUSE.moveEvent;
-                if (!event) {
-                    return 0;
-                }
-                return event.clientX;
-            }
-            getPositionY() {
-                let _this = this;
-                let event = namespace.__.MOUSE.moveEvent;
-                if (!event) {
-                    return 0;
-                }
-                return event.clientY;
-            }
-            isMiddleClick() {
-                let _this = this;
-                let event = _this.event;
-                if (!event) {
+                    return mouse.moveEvent.clientX;
+                },
+                getPositionY: function () {
+                    if (!mouse.moveEvent) {
+                        return 0;
+                    }
+                    return mouse.moveEvent.clientY;
+                },
+                isMiddleClick: function () {
+                    if (!mouse.clickEvent) {
+                        return false;
+                    }
+                    else if (mouse.clickEvent.ctrlKey || mouse.clickEvent.which == 2) {
+                        mouse.clickEvent.stopImmediatePropagation();
+                        return true;
+                    }
+                    else {
+                        mouse.stopPropagation(mouse.clickEvent);
+                        return false;
+                    }
+                },
+                isLeftClick: function () {
+                    if (!mouse.clickEvent) {
+                        return false;
+                    }
+                    if (mouse.clickEvent.which == 0) {
+                        return true;
+                    }
                     return false;
-                }
-                else if (event.ctrlKey || event.which == 2) {
-                    event.stopImmediatePropagation();
-                    return true;
-                }
-                else {
-                    _this.stopPropagation();
+                },
+                isRightClick: function () {
+                    if (!mouse.clickEvent) {
+                        return false;
+                    }
+                    if (mouse.clickEvent.which == 2) {
+                        return true;
+                    }
                     return false;
+                },
+                stopPropagation: function (clickEvent) {
+                    if (!clickEvent) {
+                        return;
+                    }
+                    clickEvent.preventDefault();
+                    clickEvent.stopPropagation();
+                },
+                isTarget: function (target) {
+                    if (!mouse.clickEvent) {
+                        return false;
+                    }
+                    return mouse.clickEvent.target == target;
                 }
-            }
-            isLeftClick() {
-                let _this = this;
-                if (!_this.event) {
-                    return false;
-                }
-                if (_this.event.which == 0) {
-                    return true;
-                }
-                return false;
-            }
-            isRightClick() {
-                let _this = this;
-                if (!_this.event) {
-                    return false;
-                }
-                if (_this.event.which == 2) {
-                    return true;
-                }
-                return false;
-            }
-            stopPropagation() {
-                let _this = this;
-                if (!_this.event) {
-                    return;
-                }
-                _this.event.preventDefault();
-                _this.event.stopPropagation();
-            }
-            isTarget(target) {
-                let _this = this;
-                if (!_this.event) {
-                    return false;
-                }
-                return _this.event.target == target;
-            }
-            dispose() {
-                new Exception.NotImplemented();
-            }
-        }
-        core.Mouse = Mouse;
-    })(core = namespace.core || (namespace.core = {}));
-})(namespace || (namespace = {}));
+            };
+        mouse.init();
+    })();
+}
 Number.fromMetricPrefix = function (unit) {
     if (unit == namespace.enums.MetricPrefix.pico) {
         return Math.pow(10, -12);
@@ -1753,123 +1843,6 @@ Number.fromMetricPrefix = function (unit) {
     else {
         new Exception.ArgumentInvalid(unit, 'Unknown metric prefix type!');
     }
-};
-Object.cloneData = function (dst, src) {
-    for (var key in src) {
-        if (src.hasOwnProperty(key)) {
-            dst[key] = src[key];
-        }
-    }
-    return dst;
-};
-Object.parse = function (obj) {
-    let constructorString = Object.getMetadata(obj, 'constructor');
-    if (!constructorString) {
-        new Exception.ValueUndefined('Constructor metadata is mising!');
-    }
-    let constructorClass = new Reflection(constructorString, _this);
-    if (!constructorClass) {
-        new Exception.ValueUndefined();
-    }
-    if (!constructorClass.parse) {
-        new Exception.Other('Constructor class does not have parse method implemented!');
-    }
-    constructorClass.parse(obj);
-};
-Object.toJson = function (obj) {
-    let constructorString = Object.getMetadata(obj, 'constructor');
-    if (!constructorString) {
-        new Exception.ValueUndefined('Constructor metadata is mising!');
-    }
-    let constructorClass = new Reflection(constructorString, _this);
-    if (!constructorClass) {
-        new Exception.ValueUndefined();
-    }
-    if (!constructorClass.toJson) {
-        new Exception.Other('Constructor class does not have toJson method implemented!');
-    }
-    constructorClass.toJson(obj);
-};
-Object.setMetadata = function (dst, property, value) {
-    if (!dst['_metadata']) {
-        dst['_metadata'] = new Object();
-    }
-    dst['_metadata'][property] = value;
-};
-Object.getMetadata = function (dst, property) {
-    if (!dst['_metadata']) {
-        return null;
-    }
-    return dst['_metadata'][property];
-};
-Object.destroy = function (src) {
-    for (var key in src) {
-        if (src.hasOwnProperty(key)) {
-            delete src[key];
-        }
-    }
-    return src;
-};
-Object.shrink = function (template, src) {
-    var dst = new Object();
-    for (var key in template) {
-        if (src.hasOwnProperty(key)) {
-            dst[key] = src[key];
-        }
-    }
-    return dst;
-};
-Object.isEmpty = function (obj) {
-    return Object.keys(obj).length === 0 && obj.constructor === Object;
-};
-Object.isNotEmpty = function (obj) {
-    return !Object.isEmpty(obj);
-};
-Object.getSizeInBytes = function (object) {
-    if (!object) {
-        return 0;
-    }
-    var objectList = [];
-    var stack = [object];
-    var bytes = 0;
-    while (stack.length) {
-        var value = stack.pop();
-        if (typeof value === 'function') {
-            value = '' + value;
-        }
-        if (typeof value === 'boolean') {
-            bytes += 4;
-        }
-        else if (typeof value === 'string') {
-            bytes += value.length * 2;
-        }
-        else if (typeof value === 'number') {
-            bytes += 8;
-        }
-        else if (typeof value === 'object') {
-            if (value instanceof Int8Array || value instanceof Uint8Array || value instanceof Uint8ClampedArray) {
-                bytes += value.length;
-            }
-            else if (value instanceof Int16Array || value instanceof Uint16Array) {
-                bytes += value.length * 2;
-            }
-            else if (value instanceof Int32Array || value instanceof Uint32Array || value instanceof Float32Array) {
-                bytes += value.length * 4;
-            }
-            else if (value instanceof Float64Array || value instanceof BigInt64Array || value instanceof BigUint64Array) {
-                bytes += value.length * 8;
-            }
-            else {
-                if (objectList.indexOf(value) === -1) {
-                    objectList.push(value);
-                    for (var i in value) {
-                        stack.push(value[i]);
-                    }
-                }
-            }
-        }
-    }
-    return bytes;
 };
 var namespace;
 (function (namespace) {
@@ -2056,6 +2029,7 @@ var namespace;
     (function (core) {
         class State {
             constructor() {
+                this.title = '';
                 this.previousState = null;
                 this.nextState = 0;
                 this.data = 0;
@@ -2475,41 +2449,132 @@ console.timeEnd = function () {
     }
     console._timeEnd.apply(this, arguments);
 };
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.Digit = (() => {
+            return new Enum({
+                ZERO: 0,
+                ONE: 1,
+                TWO: 2,
+                THREE: 3,
+                FOUR: 4,
+                FIVE: 5,
+                SIX: 6,
+                SEVEN: 7,
+                EIGHT: 8,
+                NINE: 9
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.Direction = (() => {
+            return new Enum({
+                NONE: 'none',
+                UP: 'up',
+                DOWN: 'down',
+                LEFT: 'left',
+                RIGHT: 'right'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.LengthUnit = (() => {
+            return new Enum({
+                PX: 'px',
+                PERCENTAGE: '%',
+                POINTS: 'pt',
+                INCHES: 'inch',
+                CENTIMETERS: 'cm',
+                METERS: 'm',
+                KILOMETERS: 'km'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.MemoryUnit = (() => {
+            return new Enum({
+                Bit: 'b',
+                Byte: 'B'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.MetricPrefix = (() => {
+            return new Enum({
+                pico: 'p',
+                Nano: 'n',
+                Micro: 'μ',
+                Mili: 'm',
+                Centi: 'c',
+                Deci: 'd',
+                Deca: 'da',
+                Hecto: 'h',
+                Kilo: 'k',
+                Mega: 'M',
+                Giga: 'G',
+                Tera: 'T'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.Mobile = (() => {
+            return new Enum({
+                NONE: 'none',
+                ANDROID: 'android',
+                IPHONE: 'iphone',
+                OTHER: 'other'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
+var namespace;
+(function (namespace) {
+    var enums;
+    (function (enums) {
+        enums.OperatingSystem = (() => {
+            return new Enum({
+                NONE: 'none',
+                WINDOWS: 'windows',
+                MAC: 'mac',
+                LINUX: 'linux',
+                OTHER: 'other'
+            });
+        })();
+    })(enums = namespace.enums || (namespace.enums = {}));
+})(namespace || (namespace = {}));
 _global.IDisposable = (() => {
     let IDisposable = function () {
-        Object.defineProperty(this, '_isDisposed', {
-            writable: true,
-            enumerable: false
-        });
         this._isDisposed = false;
-        Object.defineProperty(this, 'onDispose', {
-            writable: true,
-            enumerable: false
-        });
-        this.onDispose = new Event();
+        this.disposeEvent = new Event();
+        this.dispose = Function.empty;
     };
-    Object.defineProperty(IDisposable.prototype, 'dispose', {
-        writable: true,
-        enumerable: false
-    });
-    IDisposable.prototype.dispose = Function.empty;
     return IDisposable;
 })();
 _global.IStringify = (() => {
     let IStringify = function () {
+        this.toString = Function.empty;
     };
-    IStringify.prototype.toString = Function.empty;
     return IStringify;
-})();
-_global.IUpdateable = (() => {
-    let IUpdateable = function () {
-        this.onUpdate = null;
-    };
-    IUpdateable.prototype.update = function () {
-        let _this = this;
-        if (_this.onUpdate) {
-            Event.fire(_this.onUpdate);
-        }
-    };
-    return IUpdateable;
 })();
