@@ -1485,8 +1485,13 @@ Math.toPositive = function (value) {
 Math.toPercentage = function (value, maxValue) {
     return (100 * value) / maxValue;
 };
-Math.randomBetweenInterval = function (min, max) {
+Math.randomIntegerInterval = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+Math.randomFloatInterval = function (min, max, decimals) {
+    decimals = decimals ? decimals : 0;
+    var precision = Math.pow(10, decimals);
+    return Math.floor(Math.random() * (max * precision - min * precision + 1) + min * precision) / precision;
 };
 String.generateUUID = function () {
     var dt = new Date().getTime();

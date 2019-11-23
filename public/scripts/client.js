@@ -569,7 +569,7 @@ ClientPage.openScene = async function()
 
 		ClientPage._initRenderer();
 
-return;
+//return;
 	
 
 		globals.renderer.prepareJsonData();

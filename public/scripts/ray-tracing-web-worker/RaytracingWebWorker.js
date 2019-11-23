@@ -16,7 +16,7 @@ function init(thread, data)
 	options = data.options;
 
 	worker = new RaytracingWebWorker(data.threadIndex, options.MAX_RECURSION_DEPTH);
-	worker.initCanvas(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
+	worker.initCanvas(data.canvasWidth, data.canvasHeight, options.MULTISAMPLING_FACTOR);
 }
 
 
@@ -44,7 +44,7 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
-	this.antialiasingFactor = -1;
+	this.multisamplingFactor = -1;
 
 	/**
 	 * Index of the thread that this web worker is on.
@@ -145,14 +145,14 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 /**
  * Initializes canvas.
  */
-RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingFactor)
+RaytracingWebWorker.prototype.initCanvas = function(width, height, multisamplingFactor)
 {
 	let _this = this;
 
-	_this.antialiasingFactor = antialiasingFactor;
+	_this.multisamplingFactor = multisamplingFactor;
 
-	_this.canvasWidth = width * _this.antialiasingFactor;
-	_this.canvasHeight = height * _this.antialiasingFactor;
+	_this.canvasWidth = width;
+	_this.canvasHeight = height;
 
 	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
 	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
@@ -897,16 +897,18 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 	let cell = _this.cell;
 
-	let width = cell.width * _this.antialiasingFactor;
-	let height = cell.height * _this.antialiasingFactor;
+	let width = cell.width;
+	let height = cell.height;
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 
 	let startRenderingTime = Date.nowInNanoseconds();
 	let stateStartTime = 0;
 
+	let multisamplingFactorSquare = _this.multisamplingFactor * _this.multisamplingFactor;
+
 	for (let posY=0; posY < height; posY++)
 	{
-		let rayPosY = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let rayPosY = -(posY + cell.startY - _this.canvasHeightHalf);
 		let canvasY = cell.startY + posY;
 
 		for (let posX=0; posX < width; posX++) 
@@ -920,22 +922,37 @@ RaytracingWebWorker.prototype.renderCell = async function()
 				stateStartTime = Date.nowInMiliseconds();
 			}
 						
-			let rayPosX = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
+			let rayPosX = posX + cell.startX - _this.canvasWidthHalf;
 			let canvasX = cell.startX + posX;
 						
-			// spawn ray at pixel position
-			let pixelColor = new THREE.Color();
-			_this.origin.copy(_this.cameraPosition);
-			_this.direction.set(rayPosX, rayPosY, -_this.perspective);
-			_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
-			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
+			let renderedColor = new Color(0, 0, 0, 255);
 
-			// convert from linear to gamma
-			let renderedColor = new Color();
-			renderedColor.red = Math.sqrt(pixelColor.r) * 255;
-			renderedColor.green = Math.sqrt(pixelColor.g) * 255;
-			renderedColor.blue = Math.sqrt(pixelColor.b) * 255;
-			renderedColor.alpha = 255;
+			for (let j=0; j<_this.multisamplingFactor; j++)
+			{
+				let antiRayPosY = rayPosY + (j / _this.multisamplingFactor - 0.5);
+
+				for (let i=0; i<_this.multisamplingFactor; i++)
+				{
+					let antiRayPosX = rayPosX - (i / _this.multisamplingFactor - 0.5);
+					
+					// spawn ray at pixel position
+					let pixelColor = new THREE.Color();
+					_this.origin.copy(_this.cameraPosition);
+					_this.direction.set(antiRayPosX, antiRayPosY, -_this.perspective);
+					_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
+					_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
+
+					// convert from linear to gamma
+					renderedColor.red += Math.sqrt(pixelColor.r) * 255; 
+					renderedColor.green += Math.sqrt(pixelColor.g) * 255;
+					renderedColor.blue += Math.sqrt(pixelColor.b) * 255;
+				}
+			}
+
+			renderedColor.red /= multisamplingFactorSquare;
+			renderedColor.green /= multisamplingFactorSquare;
+			renderedColor.blue /= multisamplingFactorSquare;
+
 			cell.rawImage.imageData.setPixel(posX, posY, renderedColor);
 
 			let progress = Math.round(Math.toPercentage((posY + 1) * (posX + 1), height * width));
@@ -961,10 +978,10 @@ RaytracingWebWorker.prototype._onCellRendered = function()
 
 	let _this = this;
 
-	if (_this.antialiasingFactor > 1)
+	/*if (_this.antialiasingFactor > 1)
 	{
 		_this.cell.rawImage.scale(namespace.enums.Direction.DOWN, _this.antialiasingFactor);
-	}
+	}*/
 
 	mainThread.invoke('globals.renderer.onCellRendered', _this.cell);
 

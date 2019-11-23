@@ -146,10 +146,10 @@ namespace.html.OptionsDropdown = (() =>
 
 		let antialiasingInput = new namespace.html.NumberInput();
 		antialiasingInput.id = 'antialiasing-factor-input';
-		antialiasingInput.value = options.ANTIALIASING_FACTOR;
+		antialiasingInput.value = options.MULTISAMPLING_FACTOR;
 		antialiasingInput.onchange = () =>
 		{
-			options.ANTIALIASING_FACTOR = Number(antialiasingInput.value);
+			options.MULTISAMPLING_FACTOR = Number(antialiasingInput.value);
 		};
 		antialiasingSection.appendChild(antialiasingInput);
 
