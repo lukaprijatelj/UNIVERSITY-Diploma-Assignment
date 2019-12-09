@@ -3,8 +3,8 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 
 
 ## Screenshots
-![alt tag](https://raw.githubusercontent.com/mrLukas/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg)
-![alt tag](https://raw.githubusercontent.com/mrLukas/UNIVERSITY-Diploma-Assignment/master/images/All.jpg)
+![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg)
+![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/All.jpg)
 
 
 # Building 
