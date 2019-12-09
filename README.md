@@ -2,6 +2,11 @@
 Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 
 
+## Screenshots
+![alt tag](https://raw.githubusercontent.com/mrLukas/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg)
+![alt tag](https://raw.githubusercontent.com/mrLukas/UNIVERSITY-Diploma-Assignment/master/images/All.jpg)
+
+
 # Building 
 	npm run build
 Build task will be read from scripts property of the package.json file.
