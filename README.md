@@ -41,7 +41,8 @@ I used browsersLocal storage for saving data received from server.
 	CPU
 	GPE
 	BVH 	- bounding volume hierarchy (BVH) is a tree structure on a set of geometric objects.
-
+	Color bleading
+	
 
 
 ## Connect with android

@@ -336,6 +336,19 @@ namespace.html.Div = (() => {
         Object.cloneData(_this, Div.prototype);
         return _this;
     };
+    Div.prototype.setAspectRatio = function (ratioW, ratioH) {
+        let _this = this;
+        let aspectRatioWrapper = _this.querySelector('wrapper_.aspectRatio');
+        if (!aspectRatioWrapper) {
+            aspectRatioWrapper = new namespace.html.Wrapper();
+            aspectRatioWrapper.addClass('aspectRatio');
+            aspectRatioWrapper.style.width = '100%';
+            aspectRatioWrapper.style.display = 'block';
+            _this.appendChild(aspectRatioWrapper);
+        }
+        let paddingSum = ratioH / ratioW * 100;
+        aspectRatioWrapper.style.paddingTop = paddingSum + '%';
+    };
     return Div;
 })();
 namespace.html.EmbeddedObject = (() => {
@@ -482,6 +495,27 @@ HTMLElement.prototype.appendChild = function (value) {
     _this._appendChild(element);
     _this.updateTrackChildren();
     _this.isInDOM = true;
+};
+HTMLElement.prototype.queryChild = function (selectorString) {
+    let _this = this;
+    for (let i = 0; i < _this.children.length; i++) {
+        let current = _this.children[i];
+        if (current.matches(selectorString) == true) {
+            return current;
+        }
+    }
+    return null;
+};
+HTMLElement.prototype.queryChildren = function (selectorString) {
+    let _this = this;
+    let childs = [];
+    for (let i = 0; i < _this.children.length; i++) {
+        let current = _this.children[i];
+        if (current.matches(selectorString) == true) {
+            childs.push(current);
+        }
+    }
+    return childs;
 };
 HTMLElement.prototype.updateTrackChildren = function () {
     let _this = this;
@@ -1228,6 +1262,21 @@ namespace.html.Video = (() => {
         var _this = document.createElement('video');
         Object.cloneData(_this, Video.prototype);
         return _this;
+    };
+    Video.prototype.stop = function () {
+        let _this = this;
+        _this.removeAttribute("src");
+    };
+    Video.prototype.getFrameRawImage = function () {
+        let _this = this;
+        var canvas = new namespace.html.Canvas();
+        canvas.height = _this.videoHeight;
+        canvas.width = _this.videoWidth;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(_this, 0, 0, canvas.width, canvas.height);
+        var rawImage = new namespace.core.RawImage(_this.src);
+        rawImage.imageData = canvas.toImageData();
+        return rawImage;
     };
     return Video;
 })();

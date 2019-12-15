@@ -1493,6 +1493,9 @@ Math.randomFloatInterval = function (min, max, decimals) {
     var precision = Math.pow(10, decimals);
     return Math.floor(Math.random() * (max * precision - min * precision + 1) + min * precision) / precision;
 };
+Math.clamp = function (num, min, max) {
+    return Math.min(Math.max(num, min), max);
+};
 String.generateUUID = function () {
     var dt = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -1940,6 +1943,17 @@ var namespace;
             scale(direction, factor) {
                 let _this = this;
                 _this.imageData = ImageData.scale(_this.imageData, direction, factor);
+            }
+            static toImage(_this) {
+                let imageData = _this.imageData;
+                let canvas = document.createElement('canvas');
+                canvas.width = imageData.width;
+                canvas.height = imageData.height;
+                let ctx = canvas.getContext('2d');
+                ctx.putImageData(imageData, 0, 0);
+                let image = new Image();
+                image.src = canvas.toDataURL();
+                return image;
             }
         }
         core.RawImage = RawImage;
