@@ -21,7 +21,8 @@ function init(thread, data)
 
 
 /**
- * DOM-less version of Raytracing Renderer
+ * DOM-less version of Raytracing Renderer.
+ * @author erichlof / https://github.com/erichlof
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85

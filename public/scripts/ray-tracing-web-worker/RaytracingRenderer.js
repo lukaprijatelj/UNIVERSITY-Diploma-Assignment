@@ -3,6 +3,7 @@
  * compute the pixels itself but it hands off and coordinates the tasks for workers.
  * The worker compute the pixel values and this renderer simply paints it to the Canvas.
  *
+ * @author erichlof / https://github.com/erichlof
  * @author zz85 / http://github.com/zz85
  * @author lukaprijatelj / http://github.com/lukaprijatelj 
  */

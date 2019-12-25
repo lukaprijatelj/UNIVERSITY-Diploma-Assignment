@@ -343,8 +343,11 @@ async function initModels(modelPaths) {
 async function prepareGeometryForPT(meshList, pathTracingMaterialList, triangleMaterialMarkers) {
     // Gather all geometry from the mesh list that now contains loaded models
     let geoList = [];
-    for (let i = 0; i < meshList.length; i++)
-        geoList.push(meshList[i].geometry);
+	for (let i = 0; i < meshList.length; i++)
+	{
+		geoList.push(meshList[i].geometry);
+	}
+       
 
     // Merge geometry from all models into one new mesh
     let modelMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geoList));

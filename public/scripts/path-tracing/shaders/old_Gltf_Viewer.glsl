@@ -16,9 +16,6 @@ uniform float uSkyLightIntensity;
 uniform float uSunLightIntensity;
 uniform vec3 uSunColor;
 
-
-uniform sampler2D tAlbedoMap;
-
 // (1 / 2048 texture width)
 #define INV_TEXTURE_WIDTH 0.00048828125
 
@@ -223,7 +220,6 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 		// interpolated normal using triangle intersection's uv's
 		triangleW = 1.0 - triangleU - triangleV;
-		
 		intersec.normal = normalize(triangleW * vec3(vd2.yzw) + triangleU * vec3(vd3.xyz) + triangleV * vec3(vd3.w, vd4.xy));
 		intersec.emission = vec3(1, 0, 1); // use this if intersec.type will be LIGHT
 		intersec.color = vd6.yzw;
@@ -336,12 +332,8 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			diffuseCount++;
 			previousIntersecType = DIFF;
 
-			
-            bounceIsSpecular = false;
-
-			vec3 intersecColor = texture(tAlbedoMap, intersec.uv).rgb;
-			intersecColor = pow(intersecColor,vec3(2.2));
-			mask *= intersecColor;
+			mask *= intersec.color;
+            		bounceIsSpecular = false;
 
 			// Russian Roulette
 			float p = max(mask.r, max(mask.g, mask.b));
@@ -390,7 +382,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			continue;
 		}
 
-        if (intersec.type == REFR)  // Ideal dielectric REFRACTION
+        	if (intersec.type == REFR)  // Ideal dielectric REFRACTION
 		{
 			previousIntersecType = REFR;
 

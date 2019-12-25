@@ -569,7 +569,11 @@ ClientPage.openScene = async function()
 
 		ClientPage._initRenderer();
 
-//return;
+		if (options.RENDERER_TYPE == namespace.enums.rendererType.PATH_TRACING)
+		{
+			return;
+		}
+
 	
 
 		globals.renderer.prepareJsonData();

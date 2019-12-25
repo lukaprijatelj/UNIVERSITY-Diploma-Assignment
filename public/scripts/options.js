@@ -18,7 +18,7 @@ options.SKY_CUBE_IMAGES =
 	'posZ.png', 'negZ.png'
 ];
 
-options.RENDERER_TYPE = 'ray-tracing';
+options.RENDERER_TYPE = 'path-tracing';
 
 options.RESOLUTION_FACTOR = 1;
 
