@@ -65,12 +65,13 @@ http://minecraft.fri.uni-lj.si:30003/admin
 http://minecraft.fri.uni-lj.si:30003/client
 
 
-## Libraries used
+## Libraries/technologies used
 - SocketIO (bidirectional communication between server and client. It can also send to all clients at once)
 - glMatrix (vector and matrix operations )
 - Typescript
 - Sass (Scss)
-
+- WebGL (glsl)
+- THREEJS
 
 ## NPM Packages used
 - MongoDB

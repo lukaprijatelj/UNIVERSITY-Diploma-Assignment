@@ -10,21 +10,24 @@ uniform vec3 uSunDirection;
 uniform sampler2D t_PerlinNoise;
 uniform sampler2D tTriangleTexture;
 uniform sampler2D tAABBTexture;
-uniform sampler2D tAlbedoTextures[8]; // 8 = max number of diffuse albedo textures per model
+
+const int MAX_ARRAY_SIZE = 10;
+uniform sampler2D tAlbedoTextures[MAX_ARRAY_SIZE]; // 8 = max number of diffuse albedo textures per model
 uniform sampler2D tHDRTexture;
 uniform float uSkyLightIntensity;
 uniform float uSunLightIntensity;
 uniform vec3 uSunColor;
 
-
-uniform sampler2D tAlbedoMap;
+uniform int a;
 
 // (1 / 2048 texture width)
 #define INV_TEXTURE_WIDTH 0.00048828125
 
 struct Ray { vec3 origin; vec3 direction; };
 struct Plane { vec4 pla; vec3 emission; vec3 color; int type; };
-struct Intersection { vec3 normal; vec3 emission; vec3 color; vec2 uv; int type; int albedoTextureID; float opacity;};
+struct Intersection { 
+	vec3 normal; vec3 emission; vec3 color; vec2 uv; int type; int albedoTextureID; float opacity;
+};
 
 Plane plane;
 
@@ -50,6 +53,56 @@ struct BoxNode
 	vec3 maxCorner;
 };
 
+// Because array indexing cannot be done via for loop it will be done via function and static indexing.
+// sampler2d also cannot be return type of the function. Any of the opaque types cannot be.
+vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_ARRAY_SIZE], vec2 uv)
+{
+	switch(index)
+	{
+		case 0:
+			return texture(array[0], uv).rgb;
+			break;
+
+		case 1:
+			return texture(array[1], uv).rgb;
+			break;
+
+		case 2:
+			return texture(array[2], uv).rgb;
+			break;
+
+		case 3:
+			return texture(array[3], uv).rgb;
+			break;
+
+		case 4:
+			return texture(array[4], uv).rgb;
+			break;
+
+		case 5:
+			return texture(array[5], uv).rgb;;
+			break;
+
+		case 6:
+			return texture(array[6], uv).rgb;
+			break;
+
+		case 7:
+			return texture(array[7], uv).rgb;
+			break;
+
+		case 8:
+			return texture(array[8], uv).rgb;
+			break;
+
+		case 9:
+			return texture(array[9], uv).rgb;
+			break;
+	}
+
+	return vec3(-1, -1, -1);
+}
+
 BoxNode GetBoxNode(const in float i)
 {
 	// each bounding box's data is encoded in 2 rgba(or xyzw) texture slots 
@@ -70,6 +123,9 @@ BoxNode GetBoxNode(const in float i)
 
 	return BN;
 }
+
+
+
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 float SceneIntersect( Ray r, inout Intersection intersec )
@@ -335,14 +391,15 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 		{
 			diffuseCount++;
 			previousIntersecType = DIFF;
-
 			
             bounceIsSpecular = false;
 
-			vec3 intersecColor = texture(tAlbedoMap, intersec.uv).rgb;
+			vec3 intersecColor = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);			
+			//vec3 intersecColor = texture(tAlbedoMap, intersec.uv).rgb;
 			intersecColor = pow(intersecColor,vec3(2.2));
 			mask *= intersecColor;
-
+					
+			
 			// Russian Roulette
 			float p = max(mask.r, max(mask.g, mask.b));
 			if (bounces > 0)
@@ -444,10 +501,11 @@ void main( void )
 {
 	// not needed, three.js has a built-in uniform named cameraPosition
 	//vec3 camPos   = vec3( uCameraMatrix[3][0],  uCameraMatrix[3][1],  uCameraMatrix[3][2]);
-    	vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
-    	vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
+    
+  	vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
+    vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
 	vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);
-	
+
 	// seed for rand(seed) function
 	uvec2 seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
 

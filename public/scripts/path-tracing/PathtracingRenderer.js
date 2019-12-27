@@ -135,7 +135,7 @@ var PathtracingRenderer = function()
 
 	let modelScale = 1.0;
 	let modelRotationY = Math.PI; // in radians
-	//let modelPositionOffset = new THREE.Vector3(0, 0, 0);
+	let modelPositionOffset = new THREE.Vector3(0, 0, 0);
 
 	function filePromiseLoader(url, onProgress) {
 		return new Promise((resolve, reject) => {
@@ -189,7 +189,7 @@ var PathtracingRenderer = function()
 		}
 	}
 
-	function MaterialObject(material, pathTracingMaterialList) {
+	function MaterialObject(material) {
 		// a list of material types and their corresponding numbers are found in the 'pathTracingCommon.js' file
 		this.type = material.opacity < 1 ? 2 : 1; // default is 1 = diffuse opaque, 2 = glossy transparent, 4 = glossy opaque;
 		this.albedoTextureID = -1; // which diffuse map to use for model's color, '-1' = no textures are used
@@ -197,6 +197,7 @@ var PathtracingRenderer = function()
 		this.roughness = material.roughness || 0.0; // 0.0 to 1.0 range, perfectly smooth to extremely rough
 		this.metalness = material.metalness || 0.0; // 0.0 to 1.0 range, usually either 0 or 1, either non-metal or metal
 		this.opacity = material.opacity || 1.0; // 0.0 to 1.0 range, fully transparent to fully opaque
+	
 		// this seems to be unused
 		// this.refractiveIndex = this.type === 4 ? 1.0 : 1.5; // 1.0=air, 1.33=water, 1.4=clearCoat, 1.5=glass, etc.
 		pathTracingMaterialList.push(this);
@@ -231,11 +232,11 @@ var PathtracingRenderer = function()
 				if (child.material.length > 0) 
 				{
 					for (let i = 0; i < child.material.length; i++)
-						new MaterialObject(child.material[i], pathTracingMaterialList);
+						new MaterialObject(child.material[i]);
 				} 
 				else 
 				{
-					new MaterialObject(child.material, pathTracingMaterialList);
+					new MaterialObject(child.material);
 				}
 	
 				if (child.geometry.groups.length > 0) 
@@ -288,8 +289,8 @@ var PathtracingRenderer = function()
 
 		
 	// called automatically from within initTHREEjs() function
-	function initSceneData() {
-			
+	function initSceneData() 
+	{
 		// scene/demo-specific three.js objects setup goes here
 		EPS_intersect = mouseControl ? 0.01 : 1.0; // less precision on mobile
 
@@ -299,11 +300,6 @@ var PathtracingRenderer = function()
 
 		for (let i = 0; i < meshList.length; i++)
 		{
-			if (meshList[i].material && meshList[i].material.map != undefined)
-			{
-				albedoMap = meshList[i].material.map;
-			}
-
 			geoList.push(meshList[i].geometry);
 		}
 			
@@ -317,6 +313,58 @@ var PathtracingRenderer = function()
 		}
 			
 		total_number_of_triangles = modelMesh.geometry.attributes.position.array.length / 9;
+
+		// Gather all textures from materials
+		for (let i = 0; i < meshList.length; i++) 
+		{
+			if (meshList[i].material.length > 0) 
+			{
+				for (let j = 0; j < meshList[i].material.length; j++) 
+				{
+					if (meshList[i].material[j].map)
+						uniqueMaterialTextures.push(meshList[i].material[j].map);
+				}
+			} else if (meshList[i].material.map) 
+			{
+				uniqueMaterialTextures.push(meshList[i].material.map);
+			}
+		}
+	
+		// Remove duplicate entries
+		uniqueMaterialTextures = Array.from(new Set(uniqueMaterialTextures));
+	
+		// Assign textures to the path tracing material with the correct id
+		for (let i = 0; i < meshList.length; i++) 
+		{
+			if (meshList[i].material.length > 0) 
+			{
+				for (let j = 0; j < meshList[i].material.length; j++) 
+				{
+					if (meshList[i].material[j].map) 
+					{
+						for (let k = 0; k < uniqueMaterialTextures.length; k++) 
+						{
+							if (meshList[i].material[j].map.image.src === uniqueMaterialTextures[k].image.src) 
+							{
+								// albedo map
+								pathTracingMaterialList[i].albedoTextureID = k;
+							}
+						}
+					}
+				}
+			} 
+			else if (meshList[i].material.map) 
+			{
+				for (let j = 0; j < uniqueMaterialTextures.length; j++) 
+				{
+					if (meshList[i].material.map.image.src === uniqueMaterialTextures[j].image.src) 
+					{
+						// albedo map
+						pathTracingMaterialList[i].albedoTextureID = j;
+					}
+				}
+			}
+		}
 
 		console.log("Triangle count:" + total_number_of_triangles);
 
@@ -382,13 +430,13 @@ var PathtracingRenderer = function()
 			let vp1 = new THREE.Vector3(vpa[9 * i + 3], vpa[9 * i + 4], vpa[9 * i + 5]);
 			let vp2 = new THREE.Vector3(vpa[9 * i + 6], vpa[9 * i + 7], vpa[9 * i + 8]);
 
-		/*	vp0.multiplyScalar(modelScale);
+			vp0.multiplyScalar(modelScale);
 			vp1.multiplyScalar(modelScale);
 			vp2.multiplyScalar(modelScale);
 
 			vp0.add(modelPositionOffset);
 			vp1.add(modelPositionOffset);
-			vp2.add(modelPositionOffset);*/
+			vp2.add(modelPositionOffset);
 
 			//slot 0
 			triangle_array[32 * i + 0] = vp0.x; // r or x
@@ -672,7 +720,7 @@ var PathtracingRenderer = function()
 			texture.flipY = true;
 		});
 
-		pathTracingUniforms = 
+		/*pathTracingUniforms = 
 		{
 			MAX_RECURSION_DEPTH: {type: "i", value: options.MAX_RECURSION_DEPTH},
 
@@ -717,7 +765,36 @@ var PathtracingRenderer = function()
 			uGLTF_Model_InvMatrix: { type: "m4", value: new THREE.Matrix4() },
 			uGLTF_Model_NormalMatrix: { type: "m3", value: new THREE.Matrix3() }
 		};
+	*/
+		pathTracingUniforms = {
+
+			tPreviousTexture: {type: "t", value: screenTextureRenderTarget.texture},
+			tTriangleTexture: {type: "t", value: triangleDataTexture},
+			tAABBTexture: {type: "t", value: aabbDataTexture},
+			tAlbedoTextures: {type: "t", value: uniqueMaterialTextures},
+			//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
+			tHDRTexture: { type: "t", value: hdrTexture },
 	
+			uCameraIsMoving: {type: "b1", value: false},
+			uCameraJustStartedMoving: {type: "b1", value: false},
+	
+			uTime: {type: "f", value: 0.0},
+			uFrameCounter: {type: "f", value: 1.0},
+			uULen: {type: "f", value: 1.0},
+			uVLen: {type: "f", value: 1.0},
+			uApertureSize: {type: "f", value: apertureSize},
+			uFocusDistance: {type: "f", value: focusDistance},
+			uSkyLightIntensity: {type: "f", value: skyLightIntensity},
+			uSunLightIntensity: {type: "f", value: sunLightIntensity},
+			uSunColor: {type: "v3", value: new THREE.Color().fromArray(sunColor.map(x => x / 255))},
+	
+			uResolution: {type: "v2", value: new THREE.Vector2()},
+	
+			uSunDirection: {type: "v3", value: new THREE.Vector3()},
+			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()},
+	
+		};
+
 		let pathTracingMaterial = new THREE.ShaderMaterial({
 			uniforms: pathTracingUniforms,
 			defines: pathTracingDefines,
@@ -734,7 +811,7 @@ var PathtracingRenderer = function()
 		// the following keeps the large scene ShaderMaterial quad right in front
 		//   of the camera at all times. This is necessary because without it, the scene
 		//   quad will fall out of view and get clipped when the camera rotates past 180 degrees.
-		worldCamera.add(pathTracingMesh);
+		//worldCamera.add(pathTracingMesh);
 
 		let drawingBufferWidth = renderer.getContext().drawingBufferWidth;
 		let drawingBufferHeight = renderer.getContext().drawingBufferHeight;
@@ -944,7 +1021,7 @@ var PathtracingRenderer = function()
 		pathTracingUniforms.uFrameCounter.value = frameCounter;
 
 		// CAMERA
-		cameraControlsObject.updateMatrixWorld(true);
+		//cameraControlsObject.updateMatrixWorld(true);
 		pathTracingUniforms.uCameraMatrix.value.copy(worldCamera.matrixWorld);
 		screenOutputMaterial.uniforms.uOneOverSampleCounter.value = 1.0 / sampleCounter;
 		
