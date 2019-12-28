@@ -114,6 +114,8 @@ var PathtracingRenderer = function()
 
 	var flattenedMeshList;
 
+	var stateStartTime = 0;
+
 	var EPS_intersect;
 	var sceneIsDynamic = true;
 	var camFlightSpeed = 60;
@@ -141,11 +143,49 @@ var PathtracingRenderer = function()
 		});
 	}
 
-	// init Three.js
-	initThree();
+	
+	this.animationFrameID = -1;
+	
+	/**
+	 * Checks if rendering state is running or paused.
+	 */
+	this.resolve = null;
+	this.reject = null;
+	this.checkRenderingState = function()
+	{
+		let _this = this;
 
-	// init models
-	loadModels();
+		return new Promise((resolve, reject) =>
+		{
+			if (API.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
+			{
+				_this.resolve = resolve;
+				_this.reject = reject;
+			}
+			else if (API.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
+			{
+				reject();
+			}
+			else
+			{
+				resolve();
+			}
+		});		
+	};
+	this.resumeRendering = function()
+	{
+		if (this.resolve)
+		{
+			this.resolve();
+		}
+	};
+	this.stopRendering = function()
+	{
+		if (this.animationFrameID >= 0)
+		{
+			cancelAnimationFrame(this.animationFrameID);
+		}
+	};
 
 	function onMouseWheel(event) {
 
@@ -201,20 +241,19 @@ var PathtracingRenderer = function()
 		pathTracingMaterialList.push(this);
 	}
 
-	async function loadModels() 
+	this.loadModels = async function() 
 	{
 		pathTracingMaterialList = [];
 		triangleMaterialMarkers = [];
 		uniqueMaterialTextures = [];
 
-		let meshGroup = globals.scene;					
-				
-		let matrixStack = [];
+		let meshGroup = globals.scene;							
 		let parent;
+
+		let matrixStack = [];
 		matrixStack.push(new THREE.Matrix4());
 
 		meshList = [];
-
 		meshGroup.traverse(function (child) 
 		{
 			if (child.isMesh) 
@@ -282,12 +321,12 @@ var PathtracingRenderer = function()
 		*/
 
 		// Prepare geometry for path tracing
-		prepareGeometryForPT(flattenedMeshList, pathTracingMaterialList, triangleMaterialMarkers);
+		this.prepareGeometryForPT(flattenedMeshList, pathTracingMaterialList, triangleMaterialMarkers);
 	}
 
 		
 	// called automatically from within initTHREEjs() function
-	function initSceneData() 
+	this.initSceneData = function () 
 	{
 		// scene/demo-specific three.js objects setup goes here
 		EPS_intersect = mouseControl ? 0.01 : 1.0; // less precision on mobile
@@ -572,7 +611,7 @@ var PathtracingRenderer = function()
 		aabbDataTexture.needsUpdate = true;
 	} // end function initSceneData()
 
-	function initThree() 
+	this.initThree = function() 
 	{
 		console.time("InitThree");
 
@@ -667,14 +706,9 @@ var PathtracingRenderer = function()
 		console.timeEnd("InitThree");
 	}
 
-	async function prepareGeometryForPT(meshList, pathTracingMaterialList, triangleMaterialMarkers) 
+	this.prepareGeometryForPT = async function(meshList, pathTracingMaterialList, triangleMaterialMarkers) 
 	{
-		initSceneData();        
-
-		pathTracingDefines = 
-		{
-			//N_ALBEDO_MAPS: uniqueMaterialTextures.length
-		};
+		this.initSceneData();        
 
 		let screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
 		let screenTextureMaterial = new THREE.ShaderMaterial({
@@ -784,10 +818,8 @@ var PathtracingRenderer = function()
 			tAlbedoTextures: { type: "t", value: uniqueMaterialTextures },
 			//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
 			//tHDRTexture: { type: "t", value: hdrTexture },
-			tSkyCubeTextures: { type: "t", value: skycubeTextures },
-	
-			uCameraIsMoving: { type: "b1", value: false },
-			uCameraJustStartedMoving: {type: "b1", value: false},
+
+			tSkyCubeTextures: { type: "t", value: skycubeTextures },			
 	
 			uTime: {type: "f", value: 0.0},
 			uFrameCounter: {type: "f", value: 1.0},
@@ -795,14 +827,25 @@ var PathtracingRenderer = function()
 			uVLen: {type: "f", value: 1.0},
 			uApertureSize: {type: "f", value: apertureSize},
 			uFocusDistance: {type: "f", value: focusDistance},
+
 			uSkyLightIntensity: {type: "f", value: skyLightIntensity},
 			uSunLightIntensity: {type: "f", value: sunLightIntensity},
 			uSunColor: {type: "v3", value: new THREE.Color().fromArray(sunColor.map(x => x / 255))},
+			uSunDirection: {type: "v3", value: new THREE.Vector3()},
 	
 			uResolution: {type: "v2", value: new THREE.Vector2()},
-	
-			uSunDirection: {type: "v3", value: new THREE.Vector3()},
-			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()}
+				
+			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()},
+			uCameraIsMoving: { type: "b1", value: false },
+			uCameraJustStartedMoving: {type: "b1", value: false}
+		};
+
+		pathTracingDefines = 
+		{
+			// don't know why, but current glsl setting only allows max 16 textures (tSkyCubeTextures + tAlbedoTextures = 10 already) 
+			MAX_TEXTURES_IN_ARRAY: 6,
+			MAX_BOUNCES: options.MAX_RECURSION_DEPTH,
+			NUM_OF_SKYCUBE_TEXTURES: options.SKY_CUBE_IMAGES.length
 		};
 
 		let pathTracingMaterial = new THREE.ShaderMaterial({
@@ -844,13 +887,26 @@ var PathtracingRenderer = function()
 
 		forceUpdate = true;
 
+		stateStartTime = 0;
+
 		// everything is set up, now we can start animating
-		animate();
+		this.animate();
 	} 
 
-	function animate() 
+	this.animate = async function() 
 	{
-		requestAnimationFrame(animate);
+		let elapsedTime = Date.nowInMiliseconds() - stateStartTime;
+
+		if (elapsedTime > options.CHECK_RENDERING_SERVICE_STATE)
+		{
+			// time check is needed because we don't want to slow down rendering too much with synchronization
+			await this.checkRenderingState();
+			stateStartTime = Date.nowInMiliseconds();
+		}
+			
+		console.log('test');
+
+		this.animationFrameID = requestAnimationFrame(this.animate);
 
 		let frameTime = clock.getDelta();
 
@@ -1059,6 +1115,12 @@ var PathtracingRenderer = function()
 		renderer.render(screenOutputScene, quadCamera);
 
 
-	} // end function animate()
+	};
+	this.animate = this.animate.bind(this);
 
+	// init Three.js
+	this.initThree();
+
+	// init models
+	this.loadModels();
 };

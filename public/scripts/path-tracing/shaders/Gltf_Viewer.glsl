@@ -4,9 +4,9 @@ precision highp float;
 precision highp int;
 precision highp sampler2D;
 
+// includes defines
 #include <pathtracing_uniforms_and_defines>
 
-uniform vec3 uSunDirection;
 
 // actual model triangles with info about position and texture
 uniform sampler2D tTriangleTexture;
@@ -14,17 +14,15 @@ uniform sampler2D tTriangleTexture;
 // AABB tree for checking if ray hit model
 uniform sampler2D tAABBTexture;
 
-// don't know why, but current glsl setting only allows max 16 textures (tSkyCubeTextures + tAlbedoTextures = 10 already) 
-const int MAX_ARRAY_SIZE = 6;
-
-uniform sampler2D tSkyCubeTextures[MAX_ARRAY_SIZE]; 
-uniform sampler2D tAlbedoTextures[MAX_ARRAY_SIZE]; // 8 = max number of diffuse albedo textures per model
+// textures
+uniform sampler2D tSkyCubeTextures[NUM_OF_SKYCUBE_TEXTURES]; 
+uniform sampler2D tAlbedoTextures[MAX_TEXTURES_IN_ARRAY]; 
 
 uniform float uSkyLightIntensity;
 uniform float uSunLightIntensity;
 uniform vec3 uSunColor;
+uniform vec3 uSunDirection;
 
-uniform int a;
 
 // (1 / 2048 texture width)
 #define INV_TEXTURE_WIDTH 0.00048828125
@@ -78,7 +76,7 @@ struct BoxNode
 
 // Because array indexing cannot be done via for loop it will be done via function and static indexing.
 // sampler2d also cannot be return type of the function. Any of the opaque types cannot be.
-vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_ARRAY_SIZE], vec2 uv)
+vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_TEXTURES_IN_ARRAY], vec2 uv)
 {
 	switch(index)
 	{
@@ -103,7 +101,7 @@ vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_ARRAY_SIZE], vec2 
 			break;
 
 		case 5:
-			return texture(array[5], uv).rgb;;
+			return texture(array[5], uv).rgb;
 			break;
 /*
 		case 6:
@@ -311,7 +309,13 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		intersec.opacity = vd7.y;
 		intersec.uv = triangleW * vec2(vd4.zw) + triangleU * vec2(vd5.xy) + triangleV * vec2(vd5.zw);
 		intersec.type = int(vd6.x);
+
 		intersec.albedoTextureID = int(vd7.x);
+
+		if (intersec.albedoTextureID >= 0)
+		{
+			intersec.color = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);	
+		}
 	}
 
 	return t;
@@ -428,11 +432,43 @@ vec3 GetSkycubeColor(Ray r)
 	posU = (posU + 1.0) / 2.0;
 	posV = (posV + 1.0) / 2.0;
 
-	vec3 pixelColor = GetTexturePixelsFromArray(skyMap, tSkyCubeTextures, vec2(posU, posV));
+	vec2 uv = vec2(posU, posV);
+	vec3 pixelColor;
+
+	switch(skyMap)
+	{
+		case 0:
+			pixelColor = texture(tSkyCubeTextures[0], uv).rgb;
+			break;
+
+		case 1:
+			pixelColor = texture(tSkyCubeTextures[1], uv).rgb;
+			break;
+
+		case 2:
+			pixelColor = texture(tSkyCubeTextures[2], uv).rgb;
+			break;
+
+		case 3:
+			pixelColor = texture(tSkyCubeTextures[3], uv).rgb;
+			break;
+
+		case 4:
+			pixelColor = texture(tSkyCubeTextures[4], uv).rgb;
+			break;
+
+		case 5:
+			pixelColor = texture(tSkyCubeTextures[5], uv).rgb;
+			break;
+	}
+
+	// gama to linear color space	
 	pixelColor = pow(pixelColor, vec3(2.2));
 
 	return pixelColor;
 }
+
+
 
 //-----------------------------------------------------------------------
 vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
@@ -459,7 +495,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 	bool bounceIsSpecular = true;
 	bool sampleSunLight = false;
 
-	for (int bounces = 0; bounces < 4; bounces++)
+	for (int bounces = 0; bounces < MAX_BOUNCES; bounces++)
 	{
 		float t = SceneIntersect(r, intersec);
 
@@ -470,7 +506,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			break;	
 		}
 
-        	// if ray bounced off of diffuse material and hits sky
+        // if ray bounced off of diffuse material and hits sky
 		if (t == INFINITY && previousIntersecType == DIFF)
 		{
 			if (sampleSunLight)
@@ -481,7 +517,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			break;
 		}
 
-        	// if ray bounced off of glass and hits sky
+        // if ray bounced off of glass and hits sky
 		if (t == INFINITY && previousIntersecType == REFR)
 		{
             if (diffuseCount == 0) // camera looking through glass, hitting the sky
@@ -518,19 +554,8 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			
             bounceIsSpecular = false;
 
-			vec3 intersecColor;			
-
-			if (intersec.albedoTextureID > 0)
-			{
-				intersecColor = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);	
-			}
-			else
-			{
-				intersecColor = intersec.color;
-			}
-
 			// convert from gamma to linear color space
-			intersecColor = pow(intersecColor, vec3(2.2));
+			vec3 intersecColor = pow(intersec.color, vec3(2.2));
 
 			mask *= intersecColor;
 				
@@ -573,6 +598,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 		if (intersec.type == SPEC)  // Ideal SPECULAR reflection
 		{
 			previousIntersecType = SPEC;
+
 			mask *= intersec.color;
 
 			r = Ray( x, reflect(r.direction, nl) );
@@ -677,7 +703,7 @@ void main( void )
 	Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
 
 	// Add ground plane
-	plane = Plane( vec4(0, 1, 0, 0.0), vec3(0), vec3(0.45), DIFF);
+	//plane = Plane( vec4(0, 1, 0, 0.0), vec3(0), vec3(0.45), DIFF);
 
 	// perform path tracing and get resulting pixel color
 	vec3 pixelColor = CalculateRadiance( ray, uSunDirection, seed );

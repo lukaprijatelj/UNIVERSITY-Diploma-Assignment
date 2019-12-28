@@ -32,6 +32,7 @@ options.BLOCK_WIDTH = 25;
 options.BLOCK_HEIGHT = 25;
 options.NUM_OF_BLOCKS_IN_CHUNK = 3;
 
+// ray bounces for path-tracing and recursion depth for ray-tracing
 options.MAX_RECURSION_DEPTH = 5;
 options.MAX_THREADS = 2;
 
