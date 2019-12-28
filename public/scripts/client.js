@@ -549,45 +549,36 @@ ClientPage._updateCells = function(cells)
  */
 ClientPage.openScene = async function()
 {
-	//try
-	{
-		/**
-		 * gltf.animations; // Array<THREE.AnimationClip>
-		 * gltf.scene; // THREE.Scene
-		 * gltf.scenes; // Array<THREE.Scene>
-		 * gltf.cameras; // Array<THREE.Camera>
-		 * gltf.asset; // Object
-		 */
-		globals.gltf = await ClientPage._loadGltfModel();
-		
-		await ClientPage._initScene(globals.gltf.scene);
-		await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
-		
-		ClientPage._initCamera(options.CAMERA);
-		ClientPage._initLights(options.LIGHTS);		
-
-
-		ClientPage._initRenderer();
-
-		if (options.RENDERER_TYPE == namespace.enums.rendererType.PATH_TRACING)
-		{
-			return;
-		}
-
+	/**
+	 * gltf.animations; // Array<THREE.AnimationClip>
+	 * gltf.scene; // THREE.Scene
+	 * gltf.scenes; // Array<THREE.Scene>
+	 * gltf.cameras; // Array<THREE.Camera>
+	 * gltf.asset; // Object
+	 */
+	globals.gltf = await ClientPage._loadGltfModel();
 	
+	await ClientPage._initScene(globals.gltf.scene);
+	await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
+	
+	ClientPage._initCamera(options.CAMERA);
+	ClientPage._initLights(options.LIGHTS);		
 
-		globals.renderer.prepareJsonData();
-		globals.renderer.initScene();
-		globals.renderer.initCamera();
-		globals.renderer.initLights();		
 
-		let cells = await API.request('cells/getWaiting');
-		ClientPage._updateWaitingCells(cells);
-	}
-	/*catch (err)
+	ClientPage._initRenderer();
+
+	if (options.RENDERER_TYPE == namespace.enums.rendererType.PATH_TRACING)
 	{
-		console.error(err.message);
-	}	*/
+		return;
+	}
+
+	globals.renderer.prepareJsonData();
+	globals.renderer.initScene();
+	globals.renderer.initCamera();
+	globals.renderer.initLights();		
+
+	let cells = await API.request('cells/getWaiting');
+	ClientPage._updateWaitingCells(cells);
 };
 
 /**
