@@ -28,8 +28,6 @@ var PathtracingRenderer = function()
 	let worldCamera = globals.camera;
 
 	// HDR image variables
-	var hdrPath;
-	var hdrTexture;
 	var hdrExposure = 1.0;
 
 	// Environment variables
@@ -368,7 +366,8 @@ var PathtracingRenderer = function()
 
 		console.log("Triangle count:" + total_number_of_triangles);
 
-		modelMesh.geometry.rotateY(modelRotationY);
+		// todo: luka not sure why rotation is needed
+		//modelMesh.geometry.rotateX(modelRotationY / 2);
 
 		totalWork = new Uint32Array(total_number_of_triangles);
 
@@ -611,12 +610,11 @@ var PathtracingRenderer = function()
 		renderer.setSize(canvas.width, canvas.height);
 		//required by WebGL 2.0 for rendering to FLOAT textures
 		renderer.getContext().getExtension('EXT_color_buffer_float');
-		renderer.toneMappingExposure = hdrExposure;
+		//renderer.toneMappingExposure = hdrExposure;
 
 		clock = new THREE.Clock();
 
 		pathTracingScene = new THREE.Scene();
-
 		screenTextureScene = new THREE.Scene();
 		screenOutputScene = new THREE.Scene();
 
@@ -707,18 +705,29 @@ var PathtracingRenderer = function()
 		// load vertex and fragment shader files that are used in the pathTracing material, mesh and scene
 		let vertexShader = await filePromiseLoader('scripts/path-tracing/shaders/vertex.glsl');
 		let fragmentShader = await filePromiseLoader('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
-
-
 		
 	
-		let hdrLoader = new THREE.RGBELoader();
-		hdrPath = 'scripts/path-tracing/daytime.hdr';
-		hdrTexture = hdrLoader.load( hdrPath, function(texture, textureData) {
-			texture.encoding = THREE.RGBEEncoding;
-			texture.minFilter = THREE.NearestFilter;
-			texture.magFilter = THREE.NearestFilter;
-			texture.flipY = true;
-		});
+		let hdrLoader = new THREE.TextureLoader();
+		var skycubeTextures = [];
+		var promises = [];
+
+		for (var i=0; i<options.SKY_CUBE_IMAGES.length; i++)
+		{
+			promises.push(new Promise((resolve, reject) => 
+			{
+				skycubeTextures.push(hdrLoader.load( options.SKY_CUBE_FILEPATH + options.SKY_CUBE_IMAGES[i], function(texture, textureData) 
+				{
+					texture.encoding = THREE.RGBEEncoding;
+					texture.minFilter = THREE.NearestFilter;
+					texture.magFilter = THREE.NearestFilter;
+					texture.flipY = true;
+					resolve();
+				}));
+			}));
+		}
+
+		await Promise.all(promises);
+		
 
 		/*pathTracingUniforms = 
 		{
@@ -765,17 +774,19 @@ var PathtracingRenderer = function()
 			uGLTF_Model_InvMatrix: { type: "m4", value: new THREE.Matrix4() },
 			uGLTF_Model_NormalMatrix: { type: "m3", value: new THREE.Matrix3() }
 		};
-	*/
-		pathTracingUniforms = {
+		*/
 
-			tPreviousTexture: {type: "t", value: screenTextureRenderTarget.texture},
-			tTriangleTexture: {type: "t", value: triangleDataTexture},
-			tAABBTexture: {type: "t", value: aabbDataTexture},
-			tAlbedoTextures: {type: "t", value: uniqueMaterialTextures},
+		pathTracingUniforms = 
+		{
+			tPreviousTexture: { type: "t", value: screenTextureRenderTarget.texture },
+			tTriangleTexture: { type: "t", value: triangleDataTexture },
+			tAABBTexture: { type: "t", value: aabbDataTexture },
+			tAlbedoTextures: { type: "t", value: uniqueMaterialTextures },
 			//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
-			tHDRTexture: { type: "t", value: hdrTexture },
+			//tHDRTexture: { type: "t", value: hdrTexture },
+			tSkyCubeTextures: { type: "t", value: skycubeTextures },
 	
-			uCameraIsMoving: {type: "b1", value: false},
+			uCameraIsMoving: { type: "b1", value: false },
 			uCameraJustStartedMoving: {type: "b1", value: false},
 	
 			uTime: {type: "f", value: 0.0},
@@ -791,8 +802,7 @@ var PathtracingRenderer = function()
 			uResolution: {type: "v2", value: new THREE.Vector2()},
 	
 			uSunDirection: {type: "v3", value: new THREE.Vector3()},
-			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()},
-	
+			uCameraMatrix: {type: "m4", value: new THREE.Matrix4()}
 		};
 
 		let pathTracingMaterial = new THREE.ShaderMaterial({
@@ -886,8 +896,8 @@ var PathtracingRenderer = function()
 
 		// the following gives us a rotation quaternion (4D vector), which will be useful for
 		// rotating scene objects to match the camera's rotation
-		//let cameraWorldQuaternion = new THREE.Quaternion(); //for rotating scene objects to match camera's current rotation
-		//worldCamera.getWorldQuaternion(cameraWorldQuaternion);
+		let cameraWorldQuaternion = new THREE.Quaternion(); //for rotating scene objects to match camera's current rotation
+		worldCamera.getWorldQuaternion(cameraWorldQuaternion);
 
 		var camFlightSpeed;
 		if (keyboard.modifiers && keyboard.modifiers.shift)

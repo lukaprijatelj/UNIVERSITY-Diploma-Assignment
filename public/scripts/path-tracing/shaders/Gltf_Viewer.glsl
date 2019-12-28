@@ -7,13 +7,19 @@ precision highp sampler2D;
 #include <pathtracing_uniforms_and_defines>
 
 uniform vec3 uSunDirection;
-uniform sampler2D t_PerlinNoise;
+
+// actual model triangles with info about position and texture
 uniform sampler2D tTriangleTexture;
+
+// AABB tree for checking if ray hit model
 uniform sampler2D tAABBTexture;
 
-const int MAX_ARRAY_SIZE = 10;
+// don't know why, but current glsl setting only allows max 16 textures (tSkyCubeTextures + tAlbedoTextures = 10 already) 
+const int MAX_ARRAY_SIZE = 6;
+
+uniform sampler2D tSkyCubeTextures[MAX_ARRAY_SIZE]; 
 uniform sampler2D tAlbedoTextures[MAX_ARRAY_SIZE]; // 8 = max number of diffuse albedo textures per model
-uniform sampler2D tHDRTexture;
+
 uniform float uSkyLightIntensity;
 uniform float uSunLightIntensity;
 uniform vec3 uSunColor;
@@ -23,10 +29,27 @@ uniform int a;
 // (1 / 2048 texture width)
 #define INV_TEXTURE_WIDTH 0.00048828125
 
-struct Ray { vec3 origin; vec3 direction; };
-struct Plane { vec4 pla; vec3 emission; vec3 color; int type; };
-struct Intersection { 
-	vec3 normal; vec3 emission; vec3 color; vec2 uv; int type; int albedoTextureID; float opacity;
+struct Ray 
+{
+	vec3 origin; 
+	vec3 direction; 
+};
+struct Plane 
+{ 
+	vec4 pla; 
+	vec3 emission; 
+	vec3 color; 
+	int type; 
+};
+struct Intersection 
+{	 
+	vec3 normal; 
+	vec3 emission; 
+	vec3 color; 
+	vec2 uv; 
+	int type; 
+	int albedoTextureID; 
+	float opacity;
 };
 
 Plane plane;
@@ -82,7 +105,7 @@ vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_ARRAY_SIZE], vec2 
 		case 5:
 			return texture(array[5], uv).rgb;;
 			break;
-
+/*
 		case 6:
 			return texture(array[6], uv).rgb;
 			break;
@@ -97,7 +120,7 @@ vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_ARRAY_SIZE], vec2 
 
 		case 9:
 			return texture(array[9], uv).rgb;
-			break;
+			break;*/
 	}
 
 	return vec3(-1, -1, -1);
@@ -156,7 +179,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	StackLevelData currentStackData, slDataA, slDataB, tmp;
 	
 	// GROUND Plane
-    d = PlaneIntersect( plane.pla, r );
+   /* d = PlaneIntersect( plane.pla, r );
     if (d < t)
     {
         t = d;
@@ -164,7 +187,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
         intersec.emission = plane.emission;
         intersec.color = plane.color;
         intersec.type = plane.type;
-    }
+    }*/
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// glTF
@@ -177,7 +200,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	while(true)
 	{
 		if (currentStackData.rayT < t)
-        	{
+		{
 			if (currentBoxNode.branch_A_Index >= 0.0) // signifies this is a branch
 			{
 				nodeA = GetBoxNode(currentBoxNode.branch_A_Index);
@@ -246,15 +269,17 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 			// decrease pointer by 1 (0.0 is root level, 24.0 is maximum depth)
 			if (--stackptr < 0.0) // went past the root level, terminate loop
 				break;
+
 			currentStackData = stackLevels[int(stackptr)];
 			currentBoxNode = GetBoxNode(currentStackData.id);
 		}
+
 		skip = false; // reset skip
 
 	} // end while (true)
 
 
-	if (triangleLookupNeeded)
+	if (triangleLookupNeeded == true)
 	{
 		uv0 = ivec2( mod(triangleID + 0.0, 2048.0), floor((triangleID + 0.0) * INV_TEXTURE_WIDTH) );
 		uv1 = ivec2( mod(triangleID + 1.0, 2048.0), floor((triangleID + 1.0) * INV_TEXTURE_WIDTH) );
@@ -294,9 +319,9 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 } // end float SceneIntersect( Ray r, inout Intersection intersec )
 
 
-vec3 Get_HDR_Color(Ray r)
+vec3 GetSkycubeColor(Ray r)
 {
-	vec2 sampleUV;
+	/*vec2 sampleUV;
 	sampleUV.x = atan(r.direction.z, r.direction.x) * ONE_OVER_TWO_PI + 0.5;
 	sampleUV.y = asin(clamp(r.direction.y, -1.0, 1.0)) * ONE_OVER_PI + 0.5;
 	vec4 texData = texture( tHDRTexture, sampleUV );
@@ -305,7 +330,108 @@ vec3 Get_HDR_Color(Ray r)
 	// tone mapping
 	vec3 texColor = ACESFilmicToneMapping(texData.rgb);
 
-	return texColor;
+	return texColor;*/
+
+	float posU;
+	float posV;
+	int skyMap;
+	
+	if(abs(r.direction.x) > abs(r.direction.y))
+	{
+		if(abs(r.direction.x) > abs(r.direction.z))
+		{
+			// x is dominant axis.
+
+			// X direction is probably flipped, so positiveX image is actually negativeX image
+
+			if (r.direction.x < 0.0)
+			{
+				// -X is dominant axis -> left face
+				skyMap = 0;
+
+				posU = r.direction.z / r.direction.x;
+				posV = -r.direction.y / (-r.direction.x);
+			}
+			else
+			{
+				// +X is dominant axis -> right face
+				skyMap = 1;
+
+				posU = r.direction.z / r.direction.x;
+				posV = -r.direction.y / r.direction.x;
+			}				
+		}
+		else
+		{
+			// z is dominant axis.
+			if (r.direction.z < 0.0)
+			{
+				// -Z is dominant axis -> front face
+				skyMap = 5;
+
+				posU = r.direction.x / (-r.direction.z);
+				posV = -r.direction.y / (-r.direction.z);
+			}
+			else
+			{
+				// +Z is dominant axis -> back face
+				skyMap = 4;
+
+				posU = -r.direction.x / r.direction.z;
+				posV = -r.direction.y / r.direction.z;
+			}
+		}
+	}
+	else if(abs(r.direction.y) > abs(r.direction.z))
+	{
+		// y is dominant axis.
+		if (r.direction.y < 0.0)
+		{
+			// -Y is dominant axis -> bottom face
+			skyMap = 3;
+
+			posU = r.direction.x / r.direction.y;
+			posV = -r.direction.z / (-r.direction.y);
+		}
+		else
+		{
+			// +Y is dominant axis -> top face
+			skyMap = 2;
+
+			posU = -r.direction.x / r.direction.y;
+			posV = r.direction.z / r.direction.y;
+		}
+	}
+	else
+	{
+		// z is dominant axis.
+		if (r.direction.z < 0.0)
+		{
+			// -Z is dominant axis -> front face
+			skyMap = 5;
+
+			posU = r.direction.x / (-r.direction.z);
+			posV = -r.direction.y / (-r.direction.z);
+		}
+		else
+		{
+			// +Z is dominant axis -> back face
+			skyMap = 4;
+
+			// compute the orthogonal normalized texture coordinates. Start with a normalized [-1..1] space
+			posU = -r.direction.x / r.direction.z;
+			posV = -r.direction.y / r.direction.z;
+		}
+	}
+
+	// need to transform this to [0..1] space
+	posU = (posU + 1.0) / 2.0;
+	posV = (posV + 1.0) / 2.0;
+
+	vec3 pixelColor = GetTexturePixelsFromArray(skyMap, tSkyCubeTextures, vec2(posU, posV));
+	pixelColor = pow(pixelColor, vec3(2.2));
+
+	return pixelColor;
 }
 
 //-----------------------------------------------------------------------
@@ -335,14 +461,12 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 
 	for (int bounces = 0; bounces < 4; bounces++)
 	{
-
 		float t = SceneIntersect(r, intersec);
 
 		// ray hits sky first
 		if (t == INFINITY && bounces == 0 )
 		{
-			accumCol = Get_HDR_Color(r);
-
+			accumCol = GetSkycubeColor(r);
 			break;	
 		}
 
@@ -352,7 +476,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			if (sampleSunLight)
 				accumCol = mask * uSunColor * uSunLightIntensity;
 			else
-				accumCol = mask * Get_HDR_Color(r) * uSkyLightIntensity;
+				accumCol = mask * GetSkycubeColor(r) * uSkyLightIntensity;
 
 			break;
 		}
@@ -360,31 +484,31 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
         	// if ray bounced off of glass and hits sky
 		if (t == INFINITY && previousIntersecType == REFR)
 		{
-            		if (diffuseCount == 0) // camera looking through glass, hitting the sky
-			    	mask *= Get_HDR_Color(r);
+            if (diffuseCount == 0) // camera looking through glass, hitting the sky
+			    mask *= GetSkycubeColor(r);
 			else if (sampleSunLight) // sun rays going through glass, hitting another surface
 				mask *= uSunColor * uSunLightIntensity;
 			else  // sky rays going through glass, hitting another surface
-                		mask *= Get_HDR_Color(r) * uSkyLightIntensity;
+                mask *= GetSkycubeColor(r) * uSkyLightIntensity;
 
 			if (bounceIsSpecular) // prevents sun 'fireflies' on diffuse surfaces
-                		accumCol = mask;
+                accumCol = mask;
 
 			break;
 		}
 
-        	// other lights, like houselights, could be added to the scene
+        // other lights, like houselights, could be added to the scene
 		// if we reached light material, don't spawn any more rays
 		if (intersec.type == LIGHT)
 		{
-            		accumCol = mask * intersec.emission;
+            accumCol = mask * intersec.emission;
 
 			break;
 		}
 
 		// useful data
 		vec3 n = intersec.normal;
-        	vec3 nl = dot(n,r.direction) <= 0.0 ? normalize(n) : normalize(n * -1.0);
+        vec3 nl = dot(n,r.direction) <= 0.0 ? normalize(n) : normalize(n * -1.0);
 		vec3 x = r.origin + r.direction * t;
 
 		if (intersec.type == DIFF) // Ideal DIFFUSE reflection
@@ -394,20 +518,30 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			
             bounceIsSpecular = false;
 
-			vec3 intersecColor = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);			
-			//vec3 intersecColor = texture(tAlbedoMap, intersec.uv).rgb;
-			intersecColor = pow(intersecColor,vec3(2.2));
+			vec3 intersecColor;			
+
+			if (intersec.albedoTextureID > 0)
+			{
+				intersecColor = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);	
+			}
+			else
+			{
+				intersecColor = intersec.color;
+			}
+
+			// convert from gamma to linear color space
+			intersecColor = pow(intersecColor, vec3(2.2));
+
 			mask *= intersecColor;
-					
-			
+				
 			// Russian Roulette
 			float p = max(mask.r, max(mask.g, mask.b));
 			if (bounces > 0)
 			{
 				if (rand(seed) < p)
-                    			mask *= 1.0 / p;
-                		else
-                    			break;
+					mask *= 1.0 / p;
+				else
+					break;
 			}
 
 			if (diffuseCount == 1 && rand(seed) < 0.5)
@@ -426,6 +560,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 				r = Ray( x, normalize(sunDirection + (randVec * 0.01)) );
 				r.origin += nl * epsIntersect;
 				weight = dot(r.direction, nl);
+
 				if (weight < 0.01)
 					break;
 
@@ -467,7 +602,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 			{
 				r = Ray( x, reflect(r.direction, nl) );
 				r.origin += r.direction * epsIntersect;
-                		continue;
+				continue;
 			}
 			else // transmit ray through surface
 			{
@@ -476,8 +611,9 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 				r = Ray(x, r.direction); // TODO using r.direction instead of tdir, because going through common Glass makes everything spherical from up close...
 				r.origin += r.direction * epsIntersect;
 				
-                		if (diffuseCount < 2)
+				if (diffuseCount < 2)
 					bounceIsSpecular = true;
+					
 				continue;
 			}
 
