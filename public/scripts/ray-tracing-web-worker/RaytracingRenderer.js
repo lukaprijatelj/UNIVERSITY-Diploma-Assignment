@@ -9,6 +9,9 @@
  */
 var RaytracingRenderer = function() 
 {
+	/**
+	 * todo: is this even needed?
+	 */
 	this.context = null;
 
 	/**
@@ -21,9 +24,10 @@ var RaytracingRenderer = function()
 	 */
 	this.cellsDone = null;
 
+	/**
+	 * All web worker threads.
+	 */
 	this.threads = null;	
-
-	this.state = 'idle';
 
 	/**
 	 * Additional properties that were not serialize automatically
@@ -37,6 +41,7 @@ var RaytracingRenderer = function()
 	this.camera = null;
 	this.cameraJSON = null;
 
+	// rebind event handlers
 	this.onCellRendered = this.onCellRendered.bind(this);
 	this.checkRenderingState = this.checkRenderingState.bind(this);
 
@@ -149,6 +154,10 @@ RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolv
 
 		globals.rendererCanvas.pauseThreadCell(thread);
 	}
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
+	{
+		reject();
+	}
 	else
 	{
 		resolve();
@@ -239,7 +248,7 @@ RaytracingRenderer.prototype.initScene = function()
 };
 
 /**
- * Initializes scene.
+ * Initializes camera.
  */
 RaytracingRenderer.prototype.initCamera = function()
 {
@@ -254,7 +263,7 @@ RaytracingRenderer.prototype.initCamera = function()
 };
 
 /**
- * Initializes scene.
+ * Initializes lights.
  */
 RaytracingRenderer.prototype.initLights = function()
 {
@@ -269,7 +278,7 @@ RaytracingRenderer.prototype.initLights = function()
 };
 
 /**
- * Starts rendering.
+ * Sets cells waiting to be rendered.
  */
 RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting) 
 {
@@ -297,7 +306,7 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 };
 
 /**
- * Stops rendering process.
+ * Clears/removes all cells from other clients.
  */
 RaytracingRenderer.prototype.clearOthersCells = function()
 {
@@ -322,7 +331,7 @@ RaytracingRenderer.prototype.clearOthersCells = function()
 };
 
 /**
- * Stops rendering process.
+ * Clears/removes all cells still waiting to be rendered.
  */
 RaytracingRenderer.prototype.clearWaitingCells = function()
 {

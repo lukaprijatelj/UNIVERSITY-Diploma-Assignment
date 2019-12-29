@@ -79,11 +79,8 @@ var PathtracingRenderer = function()
 		
 	this.stateStartTime = 0;
 
-	this.flattenedMeshList;
+	this.meshList;
 	this.modelMesh;
-	this.total_number_of_triangles = 0;
-
-	this.modelRotationY = Math.PI; // in radians
 	
 	this.animationFrameID = -1;
 	
@@ -128,7 +125,7 @@ PathtracingRenderer.prototype.checkRenderingState = function()
 			_this.resolve = resolve;
 			_this.reject = reject;
 		}
-		else if (API.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
+		else if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 		{
 			reject();
 		}
@@ -242,7 +239,8 @@ PathtracingRenderer.prototype.loadModels = async function()
 	};
 							
 	let parent;
-	let meshList = [];
+
+	_this.meshList = [];
 
 	let matrixStack = [];
 	matrixStack.push(new THREE.Matrix4());
@@ -283,7 +281,7 @@ PathtracingRenderer.prototype.loadModels = async function()
 				_this.triangleMaterialMarkers.push((_this.triangleMaterialMarkers.length > 0 ? _this.triangleMaterialMarkers[_this.triangleMaterialMarkers.length - 1] : 0) + child.geometry.index.count / 3);
 			}
 
-			meshList.push(child);
+			_this.meshList.push(child);
 		} 
 		else if (child.isObject3D) 
 		{
@@ -296,7 +294,6 @@ PathtracingRenderer.prototype.loadModels = async function()
 		}
 	});
 
-	_this.flattenedMeshList = Array.prototype.concat.apply([], meshList);
 
 	/*
 	// albedo map
@@ -327,8 +324,7 @@ PathtracingRenderer.prototype.initSceneData = function ()
 {
 	let _this = this;
 
-	var meshList = _this.flattenedMeshList;
-
+	let meshList = _this.meshList;
 	let geoList = [];
 
 	for (let i = 0; i < meshList.length; i++)
@@ -345,7 +341,7 @@ PathtracingRenderer.prototype.initSceneData = function ()
 		_this.modelMesh.geometry = _this.modelMesh.geometry.toNonIndexed(); // why do we need NonIndexed geometry?
 	}
 		
-	_this.total_number_of_triangles = _this.modelMesh.geometry.attributes.position.array.length / 9;
+	let total_number_of_triangles = _this.modelMesh.geometry.attributes.position.array.length / 9;
 
 	// Gather all textures from materials
 	for (let i = 0; i < meshList.length; i++) 
@@ -400,41 +396,39 @@ PathtracingRenderer.prototype.initSceneData = function ()
 		}
 	}
 
-	console.log("Triangle count:" + _this.total_number_of_triangles);
+	console.log("Triangle count:" + total_number_of_triangles);
 
-	// todo: luka not sure why rotation is needed
-	//_this.modelMesh.geometry.rotateX(_this.modelRotationY / 2);
-
-	let totalWork = new Uint32Array(_this.total_number_of_triangles);
+	let totalWork = new Uint32Array(total_number_of_triangles);
 
 	// Initialize triangle and aabb arrays where 2048 = width and height of texture and 4 are the r, g, b and a components
 	let textureWidth = 2048;
 	let textureHeight = 2048;
+
 	let triangle_array = new Float32Array(textureWidth * textureHeight * 4);
 	let aabb_array = new Float32Array(textureWidth * textureHeight * 4);
 
-	var triangle_b_box_min = new THREE.Vector3();
-	var triangle_b_box_max = new THREE.Vector3();
-	var triangle_b_box_centroid = new THREE.Vector3();
+	let triangle_b_box_min = new THREE.Vector3();
+	let triangle_b_box_max = new THREE.Vector3();
+	let triangle_b_box_centroid = new THREE.Vector3();
 
-	var vpa = new Float32Array(_this.modelMesh.geometry.attributes.position.array);
+	let vpa = new Float32Array(_this.modelMesh.geometry.attributes.position.array);
 
 	if (_this.modelMesh.geometry.attributes.normal === undefined)
+	{
 		_this.modelMesh.geometry.computeVertexNormals();
+	}		
 
-	var vna = new Float32Array(_this.modelMesh.geometry.attributes.normal.array);
-
-	var modelHasUVs = false;
+	let vta = null;
 
 	if (_this.modelMesh.geometry.attributes.uv !== undefined) 
 	{
-		var vta = new Float32Array(_this.modelMesh.geometry.attributes.uv.array);
-		modelHasUVs = true;
+		vta = new Float32Array(_this.modelMesh.geometry.attributes.uv.array);
 	}
 
+	let vna = new Float32Array(_this.modelMesh.geometry.attributes.normal.array);
 	let materialNumber = 0;
 
-	for (let i = 0; i < _this.total_number_of_triangles; i++) 
+	for (let i = 0; i < total_number_of_triangles; i++) 
 	{
 		triangle_b_box_min.set(Infinity, Infinity, Infinity);
 		triangle_b_box_max.set(-Infinity, -Infinity, -Infinity);
@@ -444,7 +438,7 @@ PathtracingRenderer.prototype.initSceneData = function ()
 		let vt2 = new THREE.Vector3();
 		// record vertex texture coordinates (UVs)
 
-		if (modelHasUVs) 
+		if (vta) 
 		{
 			vt0.set(vta[6 * i + 0], vta[6 * i + 1]);
 			vt1.set(vta[6 * i + 2], vta[6 * i + 3]);
@@ -506,8 +500,10 @@ PathtracingRenderer.prototype.initSceneData = function ()
 		// the remaining slots are used for PBR material properties
 
 		if (i >= _this.triangleMaterialMarkers[materialNumber])
+		{
 			materialNumber++;
-
+		}
+			
 		//slot 6
 		triangle_array[32 * i + 24] = _this.pathTracingMaterialList[materialNumber].type; // r or x
 		triangle_array[32 * i + 25] = _this.pathTracingMaterialList[materialNumber].color.r; // g or y
@@ -617,7 +613,7 @@ PathtracingRenderer.prototype.initThree = function()
 		this.requestPointerLock();
 	}, false);
 
-	var pointerlockChange = () => 
+	let pointerlockChange = () => 
 	{
 		isPaused = !(document.pointerLockElement === _this.canvas || document.mozPointerLockElement === _this.canvas || document.webkitPointerLockElement === _this.canvas);
 	};
@@ -739,9 +735,9 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	let fragmentShader = await fragmentAjax.send();
 	fragmentShader = fragmentShader.responseText;
 	
-	var skycubeTextures = [];
+	let skycubeTextures = [];
 
-	for (var i=0; i<options.SKY_CUBE_IMAGES.length; i++)
+	for (let i=0; i<options.SKY_CUBE_IMAGES.length; i++)
 	{
 		let text = new THREE.Texture(globals.scene.background.image[i]);
 		text.needsUpdate = true;
@@ -822,7 +818,7 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	// the following scales all scene objects by the worldCamera's field of view,
 	// taking into account the screen aspect ratio and multiplying the uniform uULen,
 	// the x-coordinate, by this ratio
-	var fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
+	let fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
 	_this.pathTracingUniforms.uVLen.value = Math.tan(fovScale);
 	_this.pathTracingUniforms.uULen.value = _this.pathTracingUniforms.uVLen.value * _this.worldCamera.aspect;
 
@@ -890,7 +886,7 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 	let cameraWorldQuaternion = new THREE.Quaternion(); //for rotating scene objects to match camera's current rotation
 	_this.worldCamera.getWorldQuaternion(cameraWorldQuaternion);
 
-	var camFlightSpeed;
+	let camFlightSpeed;
 
 	if (_this.keyboard.modifiers && _this.keyboard.modifiers.shift)
 		camFlightSpeed = _this.speed * 2;
@@ -950,7 +946,7 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 	}
 
 	if (_this.fovChanged) {
-		var fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
+		let fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
 		_this.pathTracingUniforms.uVLen.value = Math.tan(fovScale);
 		_this.pathTracingUniforms.uULen.value = _this.pathTracingUniforms.uVLen.value * _this.worldCamera.aspect;
 		_this.fovChanged = false;
