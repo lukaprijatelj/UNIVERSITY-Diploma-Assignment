@@ -18,6 +18,7 @@ uniform sampler2D tAABBTexture;
 uniform sampler2D tSkyCubeTextures[NUM_OF_SKYCUBE_TEXTURES]; 
 uniform sampler2D tAlbedoTextures[MAX_TEXTURES_IN_ARRAY]; 
 
+
 uniform float uSkyLightIntensity;
 uniform float uSunLightIntensity;
 uniform vec3 uSunColor;
@@ -630,27 +631,15 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 				continue;
 			}
 
-		} // end if (intersec.type == REFR)
+		}
 
-	} // end for (int bounces = 0; bounces < 4; bounces++)
+	} 
 
 	return accumCol;
 }
 
-// tentFilter from Peter Shirley's 'Realistic Ray Tracing (2nd Edition)' book, pg. 60
-float tentFilter(float x)
-{
-	if (x < 0.5)
-		return sqrt(2.0 * x) - 1.0;
-
-	return 1.0 - sqrt(2.0 - (2.0 * x));
-}
-
 void main( void )
 {
-	// not needed, three.js has a built-in uniform named cameraPosition
-	//vec3 camPos   = vec3( uCameraMatrix[3][0],  uCameraMatrix[3][1],  uCameraMatrix[3][2]);
-    
   	vec3 camRight   = vec3( uCameraMatrix[0][0],  uCameraMatrix[0][1],  uCameraMatrix[0][2]);
     vec3 camUp      = vec3( uCameraMatrix[1][0],  uCameraMatrix[1][1],  uCameraMatrix[1][2]);
 	vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);
@@ -658,42 +647,44 @@ void main( void )
 	// seed for rand(seed) function
 	uvec2 seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
 
-	vec2 pixelPos = vec2(0);
+	vec2 pixelPos = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
 	vec2 pixelOffset = vec2(0);
-	
-	float x = rand(seed);
-	float y = rand(seed);
+	vec3 pixelColor = vec3(0);
 
-	if (!uCameraIsMoving)
-	{
-		pixelOffset.x = tentFilter(x);
-		pixelOffset.y = tentFilter(y);
-	}
-	
-	// pixelOffset ranges from -1.0 to +1.0, so only need to divide by half resolution
-	pixelOffset /= (uResolution * 0.5);
+	float multisamplingFactor = float(MULTISAMPLING_FACTOR);
 
-	// we must map pixelPos into the range -1.0 to +1.0
-	pixelPos = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
-	pixelPos += pixelOffset;
-
-	vec3 rayDir = normalize( pixelPos.x * camRight * uULen + pixelPos.y * camUp * uVLen + camForward );
-	
-	// depth of field
-	vec3 focalPoint = uFocusDistance * rayDir;
 	float randomAngle = rand(seed) * TWO_PI; // pick random point on aperture
 	float randomRadius = rand(seed) * uApertureSize;
 	vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * randomRadius;
-	// point on aperture to focal point
-	vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
-    
-	Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
 
-	// Add ground plane
-	//plane = Plane( vec4(0, 1, 0, 0.0), vec3(0), vec3(0.45), DIFF);
+	for (int j=0; j<MULTISAMPLING_FACTOR; j++)
+	{
+		pixelOffset.y = float(j) / multisamplingFactor;
+		pixelOffset.y /= (uResolution.y * 0.5);
 
-	// perform path tracing and get resulting pixel color
-	vec3 pixelColor = CalculateRadiance( ray, uSunDirection, seed );
+		for (int i=0; i<MULTISAMPLING_FACTOR; i++)
+		{
+			pixelOffset.x = float(i) / multisamplingFactor;
+			pixelOffset.x /= (uResolution.x * 0.5);
+
+			vec3 rayDir = normalize( (pixelPos.x + pixelOffset.x) * camRight * uULen + (pixelPos.y + pixelOffset.y) * camUp * uVLen + camForward );
+			
+			// depth of field
+			vec3 focalPoint = uFocusDistance * rayDir;
+			
+			// point on aperture to focal point
+			vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+			
+			Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
+
+			// perform path tracing and get resulting pixel color
+			vec3 currPixelColor = CalculateRadiance( ray, uSunDirection, seed );
+
+			pixelColor += currPixelColor; 
+		}
+	}
+
+	pixelColor /= pow(multisamplingFactor, 2.0);
 
 	vec3 previousColor = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0).rgb;
 	

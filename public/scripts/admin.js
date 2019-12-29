@@ -107,20 +107,20 @@ AdminPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await AdminPage._loadGltfModel();
-
-		await AdminPage._initScene(gltf.scene);
-		await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
-
-		AdminPage._initCamera(gltf.cameras);
-		AdminPage._initLights();
-		AdminPage._initRenderer();
-		AdminPage._initCameraControls();		
+		var gltf = await AdminPage._loadGltfModel();			
 	}
 	catch (err)
 	{
 		console.error(err.message);
-	}		
+	}	
+	
+	AdminPage._initScene(gltf.scene);
+	await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
+
+	AdminPage._initCamera(gltf.cameras);
+	AdminPage._initLights();
+	AdminPage._initRenderer();
+	AdminPage._initCameraControls();	
 	
 	AdminPage.onRenderFrame();
 };
@@ -308,6 +308,8 @@ AdminPage._loadGltfModel = function()
  */
 AdminPage._initScene = function(gltfScene)
 {
+	AdminPage.clearScene();
+
 	globals.scene = new THREE.Scene();
 	globals.scene.add(gltfScene);
 };
@@ -496,12 +498,19 @@ AdminPage.onRenderFrame = function()
  */
 AdminPage.clearScene = function()
 {
+	if (!globals.scene)
+	{
+		return;
+	}
+
 	let scene = globals.scene;
 
 	while(scene.children.length > 0)
 	{ 
 		scene.remove(scene.children[0]); 
 	}
+
+	AdminPage.onRenderFrame();
 };
 
 /**

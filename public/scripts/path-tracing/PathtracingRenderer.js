@@ -733,16 +733,17 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 		// don't know why, but current glsl setting only allows max 16 textures per shader unit (tSkyCubeTextures + tAlbedoTextures = 10 already) 
 		MAX_TEXTURES_IN_ARRAY: 6,
 		MAX_BOUNCES: options.MAX_RECURSION_DEPTH,
-		NUM_OF_SKYCUBE_TEXTURES: options.SKY_CUBE_IMAGES.length
+		NUM_OF_SKYCUBE_TEXTURES: options.SKY_CUBE_IMAGES.length,
+		MULTISAMPLING_FACTOR: options.MULTISAMPLING_FACTOR
 	};
 	_this.pathTracingUniforms = 
 	{
+		tSkyCubeTextures: { type: "t", value: skycubeTextures },			
+
 		tPreviousTexture: { type: "t", value: _this.screenTextureRenderTarget.texture },
 		tTriangleTexture: { type: "t", value: _this.triangleDataTexture },
 		tAABBTexture: { type: "t", value: _this.aabbDataTexture },
-		tAlbedoTextures: { type: "t", value: _this.uniqueMaterialTextures },
-
-		tSkyCubeTextures: { type: "t", value: skycubeTextures },			
+		tAlbedoTextures: { type: "t", value: _this.uniqueMaterialTextures },		
 
 		uTime: {type: "f", value: 0.0},
 		uFrameCounter: {type: "f", value: 1.0},
