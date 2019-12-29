@@ -2,10 +2,14 @@
 var isPaused = true;
 const PI_2 = Math.PI / 2; // used in animation method
 
+/**
+ * Pathtracing renderer
+ *
+ * @author erichlof / https://github.com/erichlof
+ * @author lukaprijatelj / http://github.com/lukaprijatelj 
+ */
 var PathtracingRenderer = function()
-{
-	console.log('[PathtracingRenderer] Initializing renderer');
-	
+{	
 	// Three.js related variables
 	this.canvas;
 	
@@ -31,9 +35,6 @@ var PathtracingRenderer = function()
 	this.skyLightIntensity = 1;
 	this.sunLightIntensity = 1;
 	this.sunColor = [255, 250, 235];
-	this.skyLightIntensityChanged = false;
-	this.sunLightIntensityChanged = false;
-	this.sunColorChanged = false;
 	this.cameraControlsObject; //for positioning and moving the camera itself
 	this.cameraControlsYawObject; //allows access to control camera's left/right movements through mobile input
 	this.cameraControlsPitchObject; //allows access to control camera's up/down movements through mobile input
@@ -92,16 +93,30 @@ var PathtracingRenderer = function()
 	this.resolve = null;
 	this.reject = null;
 	
-	this.animate = this.animate.bind(this);
+	// rebind event handlers
+	this.onRenderFrame = this.onRenderFrame.bind(this);
 	this.onMouseWheel = this.onMouseWheel.bind(this);
 
-	// init Three.js
-	this.initThree();
-
-	// init models
-	this.loadModels();
+	this._init();
 };
 
+/**
+ * Initializes renderer.
+ */
+PathtracingRenderer.prototype._init = function()
+{
+	let _this = this;
+
+	console.log('[PathtracingRenderer] Initializing renderer');
+
+	_this.initThree();
+
+	_this.loadModels();
+};
+
+/**
+ * Checks for rendering state.
+ */
 PathtracingRenderer.prototype.checkRenderingState = function()
 {
 	let _this = this;
@@ -124,6 +139,9 @@ PathtracingRenderer.prototype.checkRenderingState = function()
 	});		
 };
 
+/**
+ * Resumes rendering state.
+ */
 PathtracingRenderer.prototype.resumeRendering = function()
 {
 	let _this = this;
@@ -134,6 +152,9 @@ PathtracingRenderer.prototype.resumeRendering = function()
 	}
 };
 
+/**
+ * Completely stops rendering state.
+ */
 PathtracingRenderer.prototype.stopRendering = function()
 {
 	let _this = this;
@@ -144,6 +165,10 @@ PathtracingRenderer.prototype.stopRendering = function()
 	}
 };
 
+
+/**
+ * TODO: remove all these functions because they are no longer needed.
+ */
 PathtracingRenderer.prototype.onMouseWheel = function(event) 
 {
 	let _this = this;
@@ -156,7 +181,6 @@ PathtracingRenderer.prototype.onMouseWheel = function(event)
 	else if (event.deltaY < 0)
 		_this.decreaseFov();
 };
-
 PathtracingRenderer.prototype.increaseFov = function() 
 {
 	let _this = this;
@@ -167,7 +191,6 @@ PathtracingRenderer.prototype.increaseFov = function()
 		_this.fovChanged = true;
 	}
 };
-
 PathtracingRenderer.prototype.decreaseFov = function() 
 {
 	let _this = this;
@@ -178,7 +201,6 @@ PathtracingRenderer.prototype.decreaseFov = function()
 		_this.fovChanged = true;
 	}
 };
-
 PathtracingRenderer.prototype.increaseApertureSize = function() 
 {
 	if (_this.apertureSize < _this.maxApertureSize) 
@@ -187,7 +209,6 @@ PathtracingRenderer.prototype.increaseApertureSize = function()
 		_this.apertureSizeChanged = true;
 	}
 };
-
 PathtracingRenderer.prototype.decreaseApertureSize = function() 
 {
 	let _this = this;
@@ -199,36 +220,34 @@ PathtracingRenderer.prototype.decreaseApertureSize = function()
 	}
 };
 
-function MaterialObject(material) 
-{
-	// a list of material types and their corresponding numbers are found in the 'pathTracingCommon.js' file
-	this.type = material.opacity < 1 ? 2 : 1; // default is 1 = diffuse opaque, 2 = glossy transparent, 4 = glossy opaque;
-	this.albedoTextureID = -1; // which diffuse map to use for model's color, '-1' = no textures are used
-	this.color = material.color ? material.color.copy(material.color) : new THREE.Color(1.0, 1.0, 1.0); // takes on different meanings, depending on 'type' above
-	this.roughness = material.roughness || 0.0; // 0.0 to 1.0 range, perfectly smooth to extremely rough
-	this.metalness = material.metalness || 0.0; // 0.0 to 1.0 range, usually either 0 or 1, either non-metal or metal
-	this.opacity = material.opacity || 1.0; // 0.0 to 1.0 range, fully transparent to fully opaque
-
-	// this seems to be unused
-	// this.refractiveIndex = this.type === 4 ? 1.0 : 1.5; // 1.0=air, 1.33=water, 1.4=clearCoat, 1.5=glass, etc.
-}
-
+/**
+ * Starts loading models.
+ */
 PathtracingRenderer.prototype.loadModels = async function() 
 {
 	let _this = this;
 
-	_this.pathTracingMaterialList = [];
-	_this.triangleMaterialMarkers = [];
-	_this.uniqueMaterialTextures = [];
+	let MaterialObject = function(material) 
+	{
+		// a list of material types and their corresponding numbers are found in the 'pathTracingCommon.js' file
+		this.type = material.opacity < 1 ? 2 : 1; // default is 1 = diffuse opaque, 2 = glossy transparent, 4 = glossy opaque;
+		this.albedoTextureID = -1; // which diffuse map to use for model's color, '-1' = no textures are used
+		this.color = material.color ? material.color.copy(material.color) : new THREE.Color(1.0, 1.0, 1.0); // takes on different meanings, depending on 'type' above
+		this.roughness = material.roughness || 0.0; // 0.0 to 1.0 range, perfectly smooth to extremely rough
+		this.metalness = material.metalness || 0.0; // 0.0 to 1.0 range, usually either 0 or 1, either non-metal or metal
+		this.opacity = material.opacity || 1.0; // 0.0 to 1.0 range, fully transparent to fully opaque
 
-	let meshGroup = globals.scene;							
+		// this seems to be unused
+		// this.refractiveIndex = this.type === 4 ? 1.0 : 1.5; // 1.0=air, 1.33=water, 1.4=clearCoat, 1.5=glass, etc.
+	};
+							
 	let parent;
+	let meshList = [];
 
 	let matrixStack = [];
 	matrixStack.push(new THREE.Matrix4());
-
-	let meshList = [];
-	meshGroup.traverse(function(child) 
+	
+	globals.scene.traverse(function(child) 
 	{
 		if (child.isMesh) 
 		{
@@ -243,7 +262,9 @@ PathtracingRenderer.prototype.loadModels = async function()
 			if (child.material.length > 0) 
 			{
 				for (let i = 0; i < child.material.length; i++)
+				{
 					_this.pathTracingMaterialList.push(new MaterialObject(child.material[i]));
+				}
 			} 
 			else 
 			{
@@ -275,9 +296,7 @@ PathtracingRenderer.prototype.loadModels = async function()
 		}
 	});
 
-	modelMesh = meshList[0].clone();
-
-	_this.flattenedMeshList = [].concat.apply([], meshList);
+	_this.flattenedMeshList = Array.prototype.concat.apply([], meshList);
 
 	/*
 	// albedo map
@@ -301,7 +320,9 @@ PathtracingRenderer.prototype.loadModels = async function()
 	_this.prepareGeometryForPT(_this.pathTracingMaterialList, _this.triangleMaterialMarkers);
 };
 
-
+/**
+ * Initializes scene data.
+ */
 PathtracingRenderer.prototype.initSceneData = function () 
 {
 	let _this = this;
@@ -579,6 +600,9 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	_this.aabbDataTexture.needsUpdate = true;
 };
 
+/**
+ * Initializes threejs variables.
+ */
 PathtracingRenderer.prototype.initThree = function() 
 {
 	let _this = this;
@@ -669,6 +693,9 @@ PathtracingRenderer.prototype.initThree = function()
 	});
 };
 
+/**
+ * Prepares model triangles to be sent to shader.
+ */
 PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingMaterialList, triangleMaterialMarkers) 
 {
 	let _this = this;
@@ -702,12 +729,12 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	_this.screenOutputScene.add(screenOutputMesh);
 
 	// load vertex and fragment shader files that are used in the pathTracing material, mesh and scene
-	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/vertex.glsl');
+	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingVertexShader.glsl');
 	vertexAjax.method = 'GET';
 	let vertexShader = await vertexAjax.send();
 	vertexShader = vertexShader.responseText;
 
-	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
+	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingFragmentShader.glsl');
 	fragmentAjax.method = 'GET';
 	let fragmentShader = await fragmentAjax.send();
 	fragmentShader = fragmentShader.responseText;
@@ -804,10 +831,13 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	_this.stateStartTime = 0;
 
 	// everything is set up, now we can start animating
-	_this.animate();
+	_this.onRenderFrame();
 };
 
-PathtracingRenderer.prototype.animate = async function() 
+/**
+ * Main animate logic.
+ */
+PathtracingRenderer.prototype.onRenderFrame = async function() 
 {
 	let _this = this;
 
@@ -820,7 +850,7 @@ PathtracingRenderer.prototype.animate = async function()
 		_this.stateStartTime = Date.nowInMiliseconds();
 	}
 
-	_this.animationFrameID = requestAnimationFrame(_this.animate);
+	_this.animationFrameID = requestAnimationFrame(_this.onRenderFrame);
 
 	let frameTime = _this.clock.getDelta();
 
@@ -936,21 +966,6 @@ PathtracingRenderer.prototype.animate = async function()
 		_this.focusDistanceChanged = false;
 	}
 
-	if (_this.skyLightIntensityChanged) {
-		_this.pathTracingUniforms.uSkyLightIntensity.value = _this.skyLightIntensity;
-		_this.skyLightIntensityChanged = false;
-	}
-
-	if (_this.sunLightIntensityChanged) {
-		_this.pathTracingUniforms.uSunLightIntensity.value = _this.sunLightIntensity;
-		_this.sunLightIntensityChanged = false;
-	}
-
-	if (_this.sunColorChanged) {
-		_this.pathTracingUniforms.uSunColor.value = new THREE.Color().fromArray(_this.sunColor.map(x => x / 255));
-		_this.sunColorChanged = false;
-	}
-
 	if (_this.cameraIsMoving) 
 	{
 		_this.sampleCounter = 1.0;
@@ -975,7 +990,6 @@ PathtracingRenderer.prototype.animate = async function()
 		_this.cameraRecentlyMoving = false;
 	}
 
-	// _this.sunAngle = Math.PI / 2.5;
 	let sunDirection = new THREE.Vector3(Math.cos(_this.sunAngle) * 1.2, Math.sin(_this.sunAngle), -Math.cos(_this.sunAngle) * 3.0);
 	sunDirection.normalize();
 
@@ -1009,4 +1023,14 @@ PathtracingRenderer.prototype.animate = async function()
 	// After the image is gamma-corrected, it will be shown on the screen as the final accumulated output
 	_this.renderer.setRenderTarget(null);
 	_this.renderer.render(_this.screenOutputScene, _this.quadCamera);
+};
+
+/**
+ * Disposes objects.
+ */
+PathtracingRenderer.prototype.dispose = function()
+{
+	let _this = this;
+
+	new Exception.NotImplemented();
 };

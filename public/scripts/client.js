@@ -17,11 +17,6 @@ var globals = new namespace.core.Globals();
 globals.scene = null;
 
 /**
- * GLTF loader.
- */
-globals.loader = null;
-
-/**
  * ThreeJS camera in the scene.
  */
 globals.camera = null;
@@ -40,8 +35,6 @@ globals.lastRenderingTime = 0;
  * Rendering canvas.
  */
 globals.rendererCanvas = null;
-
-globals.gltf = null;
 
 
 
@@ -218,6 +211,8 @@ ClientPage._startRenderingService = async function()
 		// nothing to render
 		return;
 	}
+
+	ClientPage.dispose();
 
 	ClientPage.openScene();
 };
@@ -414,7 +409,7 @@ ClientPage._initCamera = function(gltfCamera)
 };
 
 /**
- * Initializes lights.
+ * Initializes additional lights like ambient light.
  */
 ClientPage._initLights = function(gltfLights)
 {
@@ -549,21 +544,30 @@ ClientPage._updateCells = function(cells)
  */
 ClientPage.openScene = async function()
 {
-	/**
-	 * gltf.animations; // Array<THREE.AnimationClip>
-	 * gltf.scene; // THREE.Scene
-	 * gltf.scenes; // Array<THREE.Scene>
-	 * gltf.cameras; // Array<THREE.Camera>
-	 * gltf.asset; // Object
-	 */
-	globals.gltf = await ClientPage._loadGltfModel();
+	let gltf = null;
+
+	try
+	{
+		/**
+		 * gltf.animations; // Array<THREE.AnimationClip>
+		 * gltf.scene; // THREE.Scene
+		 * gltf.scenes; // Array<THREE.Scene>
+		 * gltf.cameras; // Array<THREE.Camera>
+		 * gltf.asset; // Object
+		 */
+		gltf = await ClientPage._loadGltfModel();
+	}
+	catch (err)
+	{
+		console.error(err.message);
+		return;
+	}	
 	
-	await ClientPage._initScene(globals.gltf.scene);
+	await ClientPage._initScene(gltf.scene);
 	await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
 	
 	ClientPage._initCamera(options.CAMERA);
 	ClientPage._initLights(options.LIGHTS);		
-
 
 	ClientPage._initRenderer();
 
@@ -697,5 +701,34 @@ ClientPage.startRendering = function(cellsWaiting)
 		// start rendering
 		globals.renderer.setWaitingCells(cellsWaiting);
 		globals.renderer.startRendering();
+	}
+};
+
+/**
+ * Disposes of the current rendering, scene, cameras, etc.
+ */
+ClientPage.dispose = function()
+{
+	if (globals.renderer)
+	{
+		globals.renderer.dispose();
+		globals.renderer = null;
+	}
+
+	if (globals.scene)
+	{
+		let scene = globals.scene;
+
+		while(scene.children.length > 0)
+		{ 
+			scene.remove(scene.children[0]); 
+		}
+
+		globals.scene = null;
+	}
+
+	if (globals.camera)
+	{
+		globals.camera = null;
 	}
 };

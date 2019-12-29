@@ -9,8 +9,6 @@
  */
 var RaytracingRenderer = function() 
 {
-	console.log('[RaytracingRenderer] Initializing renderer');
-
 	this.context = null;
 
 	/**
@@ -55,6 +53,8 @@ Object.assign(RaytracingRenderer.prototype, THREE.EventDispatcher.prototype);
 RaytracingRenderer.prototype._init = function()
 {
 	let _this = this;
+
+	console.log('[RaytracingRenderer] Initializing renderer');
 
 	_this.scene = globals.scene;
 	_this.camera = globals.camera;
@@ -455,4 +455,14 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	
 	thread.isRendering = true;
 	thread.invoke('worker.startRendering');
+};
+
+/**
+ * Disposes the renderer.
+ */
+RaytracingRenderer.prototype.dispose = function()
+{
+	let _this = this;
+
+	_this.cellsWaiting = null;
 };

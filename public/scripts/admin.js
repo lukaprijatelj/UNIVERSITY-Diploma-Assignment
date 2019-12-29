@@ -12,11 +12,6 @@ var globals = new namespace.core.Globals();
 globals.scene = null;
 
 /**
- * GLTF loader.
- */
-globals.loader = null;
-
-/**
  * Camera controls affected by mouse movement.
  */
 globals.controls = null;
@@ -29,7 +24,7 @@ globals.camera = null;
 /**
  * Additional scene lights.
  */
-globals.lights = [];
+globals.lights = null;
 
 /**
  * Canvas for editor aka preview.
@@ -40,6 +35,8 @@ globals.editorCanvas = null;
  * Is rendering service running.
  */
 globals.renderingServiceState = namespace.enums.renderingServiceState.IDLE;
+
+
 
 
 
@@ -59,11 +56,17 @@ cache.clients = new Array();
 
 var AdminPage = new namespace.core.WebPage('Admin');
 
+/**
+ * Loader properties.
+ */
 AdminPage.loadingText = null;
-
 AdminPage.loadingBar = null;
-
 AdminPage.loadingCounter = null;
+
+/**
+ * Last animationFrame ID.
+ */
+AdminPage.animationFrameID = -1;
 
 /**
  * Initializes page.
@@ -98,6 +101,8 @@ AdminPage.init = function()
  */
 AdminPage.openScene = async function()
 {
+	let gltf = null;
+
 	try
 	{
 		/**
@@ -107,21 +112,27 @@ AdminPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await AdminPage._loadGltfModel();			
+		gltf = await AdminPage._loadGltfModel();			
 	}
 	catch (err)
 	{
 		console.error(err.message);
+		return;
 	}	
 	
 	AdminPage._initScene(gltf.scene);
+
 	await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
 
 	AdminPage._initCamera(gltf.cameras);
+
 	AdminPage._initLights();
+
 	AdminPage._initRenderer();
+
 	AdminPage._initCameraControls();	
 	
+	// start rendering
 	AdminPage.onRenderFrame();
 };
 
@@ -154,6 +165,8 @@ AdminPage._onServerConnected = async function(socket)
 
 	data = await API.request('rendering/getState');
 	AdminPage._updateRenderingServiceState(data);
+
+	AdminPage.dispose();
 
 	AdminPage.openScene();
 };
@@ -308,8 +321,6 @@ AdminPage._loadGltfModel = function()
  */
 AdminPage._initScene = function(gltfScene)
 {
-	AdminPage.clearScene();
-
 	globals.scene = new THREE.Scene();
 	globals.scene.add(gltfScene);
 };
@@ -413,7 +424,7 @@ AdminPage._initCameraControls = function()
 };
 
 /**
- * Initializes lights.
+ * Initializes additional lights like ambient light.
  */
 AdminPage._initLights = function()
 {
@@ -424,6 +435,8 @@ AdminPage._initLights = function()
 
 	AdminPage.loadingText.setValue('Loading lights ...');
 	AdminPage.loadingCounter.setValue(0);
+
+	globals.lights = new Array();
 
 	var light = new THREE.AmbientLight(0x404040, 3);
 	globals.scene.add(light);
@@ -482,35 +495,15 @@ AdminPage._initRenderer = async function()
  * Main rendering loop.
  */
 AdminPage.onRenderFrame = function()
-{
+{	
 	// will start loop for this function
-	requestAnimationFrame(AdminPage.onRenderFrame);	
+	AdminPage.animationFrameID = requestAnimationFrame(AdminPage.onRenderFrame);	
 
 	// render current frame
 	globals.renderer.render(globals.scene, globals.camera);
 		
 	// update camera by reading control changes
 	globals.controls.update();
-};
-
-/**
- * Clears scene.
- */
-AdminPage.clearScene = function()
-{
-	if (!globals.scene)
-	{
-		return;
-	}
-
-	let scene = globals.scene;
-
-	while(scene.children.length > 0)
-	{ 
-		scene.remove(scene.children[0]); 
-	}
-
-	AdminPage.onRenderFrame();
 };
 
 /**
@@ -682,6 +675,8 @@ AdminPage.onPreloadedSceneClick = async function(element)
 {
 	options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
+	AdminPage.dispose();
+
 	AdminPage.openScene();
 
 	AdminPage.onDropdownsCurtainClick();
@@ -852,4 +847,49 @@ AdminPage._onBackgroundButtonClick = function(button)
 	layer.appendChild(curtain);
 	layer.appendChild(dropdown);
 	layer.show();
+};
+
+/**
+ * Disposes of the current rendering, scene, cameras, etc.
+ */
+AdminPage.dispose = function()
+{
+	if (AdminPage.animationFrameID >= 0)
+	{
+		cancelAnimationFrame(AdminPage.animationFrameID);
+		AdminPage.animationFrameID = -1;
+	}
+	
+	if (globals.renderer)
+	{		
+		globals.renderer.dispose();
+		globals.renderer = null;
+	}
+
+	if (globals.scene)
+	{
+		let scene = globals.scene;
+
+		while(scene.children.length > 0)
+		{ 
+			scene.remove(scene.children[0]); 
+		}		
+
+		globals.scene = null;
+	}
+	
+	if (globals.camera)
+	{
+		globals.camera = null;
+	}
+
+	if (globals.controls)
+	{
+		globals.controls = null;
+	}
+
+	if (globals.lights)
+	{
+		globals.lights = null;
+	}
 };
