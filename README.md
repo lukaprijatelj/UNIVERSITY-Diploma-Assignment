@@ -46,12 +46,14 @@ I used browsersLocal storage for saving data received from server.
 	aabb tree
 	BVH - bounding volume hierarchy
 
+# Issues
+	- Had to transform images from HTMLImg object to rawImage. This had to be done in main thread because WebWorkers do not have DOM elements.
 
 # convert color from Linear to Gamma
-255*POWER(linearvalue/255,1/2.2)
+255 * POWER(linearvalue / 255, 1 / 2.2)
 
 # convert color from Gamma To Linear
-255 * POWER(gammavalue / 255,2.2)
+255 * POWER(gammavalue / 255, 2.2)
 
 ## Connect with android
 - Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type:

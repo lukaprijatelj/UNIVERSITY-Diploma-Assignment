@@ -1,7 +1,6 @@
 
 var isPaused = true;
 const PI_2 = Math.PI / 2; // used in animation method
-var fileLoader = new THREE.FileLoader();
 
 var PathtracingRenderer = function()
 {
@@ -101,14 +100,6 @@ var PathtracingRenderer = function()
 
 	// init models
 	this.loadModels();
-};
-
-PathtracingRenderer.prototype.filePromiseLoader = function(url, onProgress) 
-{
-	return new Promise((resolve, reject) => 
-	{
-		fileLoader.load(url, resolve, onProgress, reject);
-	});
 };
 
 PathtracingRenderer.prototype.checkRenderingState = function()
@@ -711,8 +702,15 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	_this.screenOutputScene.add(screenOutputMesh);
 
 	// load vertex and fragment shader files that are used in the pathTracing material, mesh and scene
-	let vertexShader = await _this.filePromiseLoader('scripts/path-tracing/shaders/vertex.glsl');
-	let fragmentShader = await _this.filePromiseLoader('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
+	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/vertex.glsl');
+	vertexAjax.method = 'GET';
+	let vertexShader = await vertexAjax.send();
+	vertexShader = vertexShader.responseText;
+
+	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
+	fragmentAjax.method = 'GET';
+	let fragmentShader = await fragmentAjax.send();
+	fragmentShader = fragmentShader.responseText;
 	
 	var skycubeTextures = [];
 
