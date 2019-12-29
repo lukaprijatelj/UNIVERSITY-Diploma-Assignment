@@ -94,6 +94,7 @@ var PathtracingRenderer = function()
 	this.reject = null;
 	
 	this.animate = this.animate.bind(this);
+	this.onMouseWheel = this.onMouseWheel.bind(this);
 
 	// init Three.js
 	this.initThree();
@@ -283,8 +284,10 @@ PathtracingRenderer.prototype.loadModels = async function()
 		}
 	});
 
+	modelMesh = meshList[0].clone();
+
 	_this.flattenedMeshList = [].concat.apply([], meshList);
-	
+
 	/*
 	// albedo map
 	if (meshList[0].material.map != undefined)
@@ -322,7 +325,8 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	}
 		
 	// Merge geometry from all models into one new mesh
-	_this.modelMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geoList));
+	let bufferGeometryUtils = THREE.BufferGeometryUtils.mergeBufferGeometries(geoList);
+	_this.modelMesh = new THREE.Mesh(bufferGeometryUtils);
 
 	if (_this.modelMesh.geometry.index)
 	{
@@ -392,8 +396,10 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	let totalWork = new Uint32Array(_this.total_number_of_triangles);
 
 	// Initialize triangle and aabb arrays where 2048 = width and height of texture and 4 are the r, g, b and a components
-	let triangle_array = new Float32Array(2048 * 2048 * 4);
-	let aabb_array = new Float32Array(2048 * 2048 * 4);
+	let textureWidth = 2048;
+	let textureHeight = 2048;
+	let triangle_array = new Float32Array(textureWidth * textureHeight * 4);
+	let aabb_array = new Float32Array(textureWidth * textureHeight * 4);
 
 	var triangle_b_box_min = new THREE.Vector3();
 	var triangle_b_box_max = new THREE.Vector3();
@@ -548,8 +554,8 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	}
 
 	_this.triangleDataTexture = new THREE.DataTexture(triangle_array,
-		2048,
-		2048,
+		textureWidth,
+		textureHeight,
 		THREE.RGBAFormat,
 		THREE.FloatType,
 		THREE.Texture.DEFAULT_MAPPING,
@@ -565,8 +571,8 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	_this.triangleDataTexture.needsUpdate = true;
 
 	_this.aabbDataTexture = new THREE.DataTexture(aabb_array,
-		2048,
-		2048,
+		textureWidth,
+		textureHeight,
 		THREE.RGBAFormat,
 		THREE.FloatType,
 		THREE.Texture.DEFAULT_MAPPING,

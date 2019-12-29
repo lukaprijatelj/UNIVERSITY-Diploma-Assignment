@@ -2,15 +2,18 @@ var options = { };
 
 //options.SCENE_FILEPATH = 'scenes/Castle/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
-options.SCENE_FILEPATH = 'scenes/OrientationCube/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Buggy/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/MetalRoughSpheres/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/boomBox/Scene.gltf';
 
+// scene must already include point-lights and a camera
+options.SCENE_FILEPATH = 'scenes/OrientationCube/Scene.gltf';
+
 //options.SKY_CUBE_FILEPATH = 'images/skycube_lake/';
-options.SKY_CUBE_FILEPATH = 'images/skycube_car/';
 //options.SKY_CUBE_FILEPATH = 'images/skycube_black/';
 //options.SKY_CUBE_FILEPATH = 'images/skycube_building/';
+
+options.SKY_CUBE_FILEPATH = 'images/skycube_car/';
 options.SKY_CUBE_IMAGES = 
 [
 	'posX.png', 'negX.png',

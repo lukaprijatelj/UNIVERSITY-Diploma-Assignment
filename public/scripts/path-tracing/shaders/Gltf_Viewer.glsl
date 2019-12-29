@@ -25,7 +25,7 @@ uniform vec3 uSunDirection;
 
 
 // (1 / 2048 texture width)
-#define INV_TEXTURE_WIDTH 0.00048828125
+#define INV_TEXTURE_WIDTH 1.0 / 2048.0
 
 struct Ray 
 {
@@ -137,10 +137,7 @@ BoxNode GetBoxNode(const in float i)
 	vec4 aabbNodeData0 = texelFetch(tAABBTexture, uv0, 0);
 	vec4 aabbNodeData1 = texelFetch(tAABBTexture, uv1, 0);
 	
-	BoxNode BN = BoxNode( aabbNodeData0.x,
-			      aabbNodeData0.yzw,
-			      aabbNodeData1.x,
-			      aabbNodeData1.yzw );
+	BoxNode BN = BoxNode( aabbNodeData0.x, aabbNodeData0.yzw, aabbNodeData1.x, aabbNodeData1.yzw );
 
 	return BN;
 }
@@ -320,22 +317,11 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 	return t;
 
-} // end float SceneIntersect( Ray r, inout Intersection intersec )
+}
 
 
 vec3 GetSkycubeColor(Ray r)
 {
-	/*vec2 sampleUV;
-	sampleUV.x = atan(r.direction.z, r.direction.x) * ONE_OVER_TWO_PI + 0.5;
-	sampleUV.y = asin(clamp(r.direction.y, -1.0, 1.0)) * ONE_OVER_PI + 0.5;
-	vec4 texData = texture( tHDRTexture, sampleUV );
-	texData = RGBEToLinear(texData);
-	
-	// tone mapping
-	vec3 texColor = ACESFilmicToneMapping(texData.rgb);
-
-	return texColor;*/
-
 	float posU;
 	float posV;
 	int skyMap;
@@ -429,8 +415,8 @@ vec3 GetSkycubeColor(Ray r)
 	}
 
 	// need to transform this to [0..1] space
-	posU = (posU + 1.0) / 2.0;
-	posV = (posV + 1.0) / 2.0;
+	posU = (1.0 + posU) / 2.0;
+	posV = (1.0 - posV) / 2.0;  // V has inverse numbers
 
 	vec2 uv = vec2(posU, posV);
 	vec3 pixelColor;
@@ -561,6 +547,7 @@ vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
 				
 			// Russian Roulette
 			float p = max(mask.r, max(mask.g, mask.b));
+
 			if (bounces > 0)
 			{
 				if (rand(seed) < p)
