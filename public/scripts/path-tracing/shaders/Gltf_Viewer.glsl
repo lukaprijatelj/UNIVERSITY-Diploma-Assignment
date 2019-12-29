@@ -416,7 +416,7 @@ vec3 GetSkycubeColor(Ray r)
 
 	// need to transform this to [0..1] space
 	posU = (1.0 + posU) / 2.0;
-	posV = (1.0 - posV) / 2.0;  // V has inverse numbers
+	posV = (1.0 + posV) / 2.0;
 
 	vec2 uv = vec2(posU, posV);
 	vec3 pixelColor;

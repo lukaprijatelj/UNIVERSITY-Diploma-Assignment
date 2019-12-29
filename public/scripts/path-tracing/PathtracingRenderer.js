@@ -714,44 +714,33 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	let vertexShader = await _this.filePromiseLoader('scripts/path-tracing/shaders/vertex.glsl');
 	let fragmentShader = await _this.filePromiseLoader('scripts/path-tracing/shaders/Gltf_Viewer.glsl');
 	
-
-	let hdrLoader = new THREE.TextureLoader();
 	var skycubeTextures = [];
-	var promises = [];
 
 	for (var i=0; i<options.SKY_CUBE_IMAGES.length; i++)
 	{
-		promises.push(new Promise((resolve, reject) => 
-		{
-			skycubeTextures.push(hdrLoader.load( options.SKY_CUBE_FILEPATH + options.SKY_CUBE_IMAGES[i], function(texture, textureData) 
-			{
-				texture.encoding = THREE.RGBEEncoding;
-				texture.minFilter = THREE.NearestFilter;
-				texture.magFilter = THREE.NearestFilter;
-				texture.flipY = true;
-				resolve();
-			}));
-		}));
+		let text = new THREE.Texture(globals.scene.background.image[i]);
+		text.needsUpdate = true;
+		text.minFilter = THREE.NearestFilter;
+		text.magFilter = THREE.NearestFilter;
+		text.generateMipmaps = false;
+		text.flipY = false;
+		
+		skycubeTextures.push(text);
 	}
-
-	await Promise.all(promises);
 	
 	_this.pathTracingDefines = 
 	{
-		// don't know why, but current glsl setting only allows max 16 textures (tSkyCubeTextures + tAlbedoTextures = 10 already) 
+		// don't know why, but current glsl setting only allows max 16 textures per shader unit (tSkyCubeTextures + tAlbedoTextures = 10 already) 
 		MAX_TEXTURES_IN_ARRAY: 6,
 		MAX_BOUNCES: options.MAX_RECURSION_DEPTH,
 		NUM_OF_SKYCUBE_TEXTURES: options.SKY_CUBE_IMAGES.length
 	};
-
 	_this.pathTracingUniforms = 
 	{
 		tPreviousTexture: { type: "t", value: _this.screenTextureRenderTarget.texture },
 		tTriangleTexture: { type: "t", value: _this.triangleDataTexture },
 		tAABBTexture: { type: "t", value: _this.aabbDataTexture },
 		tAlbedoTextures: { type: "t", value: _this.uniqueMaterialTextures },
-		//t_PerlinNoise: {type: "t", value: PerlinNoiseTexture},
-		//tHDRTexture: { type: "t", value: hdrTexture },
 
 		tSkyCubeTextures: { type: "t", value: skycubeTextures },			
 
