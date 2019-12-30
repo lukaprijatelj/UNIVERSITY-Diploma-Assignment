@@ -10,11 +10,6 @@
 var RaytracingRenderer = function() 
 {
 	/**
-	 * todo: is this even needed?
-	 */
-	this.context = null;
-
-	/**
 	 * Cells that will be rendered.
 	 */
 	this.cellsWaiting = null;
@@ -32,13 +27,11 @@ var RaytracingRenderer = function()
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.scene = null;
 	this.sceneJSON = null;
 
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.camera = null;
 	this.cameraJSON = null;
 
 	// rebind event handlers
@@ -60,9 +53,6 @@ RaytracingRenderer.prototype._init = function()
 	let _this = this;
 
 	console.log('[RaytracingRenderer] Initializing renderer');
-
-	_this.scene = globals.scene;
-	_this.camera = globals.camera;
 
 	_this.setWorkers();
 };
@@ -216,20 +206,20 @@ RaytracingRenderer.prototype.prepareJsonData = function()
 
 	// update scene graph
 
-	if (_this.scene.autoUpdate === true) 
+	if (globals.scene.autoUpdate === true) 
 	{
-		_this.scene.updateMatrixWorld();
+		globals.scene.updateMatrixWorld();
 	}
 
 	// update camera matrices
 
-	if (_this.camera.parent === null) 
+	if (globals.camera.parent === null) 
 	{
-		_this.camera.updateMatrixWorld();
+		globals.camera.updateMatrixWorld();
 	}
 
-	_this.sceneJSON = _this.scene.toJSON();
-	_this.cameraJSON = _this.camera.toJSON();			
+	_this.sceneJSON = globals.scene.toJSON();
+	_this.cameraJSON = globals.camera.toJSON();			
 };
 
 /**

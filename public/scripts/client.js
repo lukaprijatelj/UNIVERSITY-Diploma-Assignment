@@ -36,6 +36,15 @@ globals.lastRenderingTime = 0;
  */
 globals.rendererCanvas = null;
 
+/**
+ * Vertex shader script text.
+ */
+globals.vertexShader = null;
+
+/**
+ * Fragment shader script text.
+ */
+globals.fragmentShader = null;
 
 
 
@@ -53,12 +62,13 @@ cache.clients = new Array();
 
 
 
+
 var ClientPage = new namespace.core.WebPage('Client');
 
 /**
  * Initializes page.
  */
-ClientPage.init = function()
+ClientPage.init = async function()
 {
 	console.log('[ClientPage] Initializing!');
 
@@ -68,6 +78,16 @@ ClientPage.init = function()
 		// at least 1 thread needed for rendering
 		new Exception.Other('Client does not have enough cores/threads to work properly!');
 	}
+
+	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingVertexShader.glsl');
+	vertexAjax.method = 'GET';
+	let vertexShader = await vertexAjax.send();
+	globals.vertexShader = vertexShader.responseText;
+
+	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingFragmentShader.glsl');
+	fragmentAjax.method = 'GET';
+	let fragmentShader = await fragmentAjax.send();
+	globals.fragmentShader = fragmentShader.responseText;
 
 	let interfaceHtml = new namespace.html.ScrollViewer(document.querySelector('interface'));
 	interfaceHtml.removeClass('loading');
@@ -571,11 +591,6 @@ ClientPage.openScene = async function()
 
 	ClientPage._initRenderer();
 
-	if (options.RENDERER_TYPE == namespace.enums.rendererType.PATH_TRACING)
-	{
-		return;
-	}
-
 	globals.renderer.prepareJsonData();
 	globals.renderer.initScene();
 	globals.renderer.initCamera();
@@ -696,12 +711,9 @@ ClientPage.startRendering = function(cellsWaiting)
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	if (options.RENDERER_TYPE == namespace.enums.rendererType.RAY_TRACING)
-	{
-		// start rendering
-		globals.renderer.setWaitingCells(cellsWaiting);
-		globals.renderer.startRendering();
-	}
+	// start rendering
+	globals.renderer.setWaitingCells(cellsWaiting);
+	globals.renderer.startRendering();
 };
 
 /**

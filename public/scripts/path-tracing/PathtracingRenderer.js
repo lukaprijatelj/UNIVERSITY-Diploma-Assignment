@@ -107,8 +107,35 @@ PathtracingRenderer.prototype._init = function()
 	console.log('[PathtracingRenderer] Initializing renderer');
 
 	_this.initThree();
+};
 
-	_this.loadModels();
+PathtracingRenderer.prototype.initCamera = function()
+{
+	let _this = this;
+
+	// do nothing
+};
+
+PathtracingRenderer.prototype.initLights = function()
+{
+	let _this = this;
+	
+	// do nothing
+};
+
+PathtracingRenderer.prototype.setWaitingCells = function()
+{
+	let _this = this;
+	
+	// do nothing
+};
+
+PathtracingRenderer.prototype.startRendering = function()
+{
+	let _this = this;
+
+	_this.stateStartTime = 0;
+	_this.onRenderFrame();
 };
 
 /**
@@ -220,7 +247,7 @@ PathtracingRenderer.prototype.decreaseApertureSize = function()
 /**
  * Starts loading models.
  */
-PathtracingRenderer.prototype.loadModels = async function() 
+PathtracingRenderer.prototype.prepareJsonData = async function() 
 {
 	let _this = this;
 
@@ -312,15 +339,12 @@ PathtracingRenderer.prototype.loadModels = async function()
 	if (meshList[0].material.normalMap != undefined)
 			normalMap = meshList[0].material.normalMap;
 	*/
-
-	// Prepare geometry for path tracing
-	_this.prepareGeometryForPT(_this.pathTracingMaterialList, _this.triangleMaterialMarkers);
 };
 
 /**
  * Initializes scene data.
  */
-PathtracingRenderer.prototype.initSceneData = function () 
+PathtracingRenderer.prototype.initScene = function () 
 {
 	let _this = this;
 
@@ -594,6 +618,8 @@ PathtracingRenderer.prototype.initSceneData = function ()
 	_this.aabbDataTexture.flipY = false;
 	_this.aabbDataTexture.generateMipmaps = false;
 	_this.aabbDataTexture.needsUpdate = true;
+
+	_this.prepareGeometryForPT();
 };
 
 /**
@@ -692,11 +718,9 @@ PathtracingRenderer.prototype.initThree = function()
 /**
  * Prepares model triangles to be sent to shader.
  */
-PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingMaterialList, triangleMaterialMarkers) 
+PathtracingRenderer.prototype.prepareGeometryForPT = function() 
 {
-	let _this = this;
-
-	this.initSceneData();        
+	let _this = this;	        
 
 	let screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
 	let screenTextureMaterial = new THREE.ShaderMaterial({
@@ -724,17 +748,6 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	let screenOutputMesh = new THREE.Mesh(screenOutputGeometry, _this.screenOutputMaterial);
 	_this.screenOutputScene.add(screenOutputMesh);
 
-	// load vertex and fragment shader files that are used in the pathTracing material, mesh and scene
-	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingVertexShader.glsl');
-	vertexAjax.method = 'GET';
-	let vertexShader = await vertexAjax.send();
-	vertexShader = vertexShader.responseText;
-
-	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingFragmentShader.glsl');
-	fragmentAjax.method = 'GET';
-	let fragmentShader = await fragmentAjax.send();
-	fragmentShader = fragmentShader.responseText;
-	
 	let skycubeTextures = [];
 
 	for (let i=0; i<options.SKY_CUBE_IMAGES.length; i++)
@@ -788,8 +801,8 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	let pathTracingMaterial = new THREE.ShaderMaterial({
 		uniforms: _this.pathTracingUniforms,
 		defines: _this.pathTracingDefines,
-		vertexShader: vertexShader,
-		fragmentShader: fragmentShader,
+		vertexShader: globals.vertexShader,
+		fragmentShader: globals.fragmentShader,
 		depthTest: false,
 		depthWrite: false
 	});
@@ -823,11 +836,6 @@ PathtracingRenderer.prototype.prepareGeometryForPT = async function(pathTracingM
 	_this.pathTracingUniforms.uULen.value = _this.pathTracingUniforms.uVLen.value * _this.worldCamera.aspect;
 
 	_this.forceUpdate = true;
-
-	_this.stateStartTime = 0;
-
-	// everything is set up, now we can start animating
-	_this.onRenderFrame();
 };
 
 /**
