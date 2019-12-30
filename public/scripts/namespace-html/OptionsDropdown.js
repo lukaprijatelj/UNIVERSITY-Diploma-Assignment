@@ -88,7 +88,7 @@ namespace.html.OptionsDropdown = (() =>
 		canvasWidthInput.value = options.CANVAS_WIDTH;
 		canvasWidthInput.onchange = () =>
 		{
-			options.CANVAS_WIDTH = Number(canvasWidthInput.value);
+			options.CANVAS_WIDTH = parseInt(canvasWidthInput.value);
 		};
 		canvasFlex.appendChild(canvasWidthInput);
 
@@ -99,7 +99,7 @@ namespace.html.OptionsDropdown = (() =>
 		canvasHeightInput.value = options.CANVAS_HEIGHT;
 		canvasHeightInput.onchange = () =>
 		{
-			options.CANVAS_HEIGHT = Number(canvasHeightInput.value);
+			options.CANVAS_HEIGHT = parseInt(canvasHeightInput.value);
 		};
 		canvasFlex.appendChild(canvasHeightInput);
 
@@ -124,7 +124,7 @@ namespace.html.OptionsDropdown = (() =>
 		resolutionInput.value = options.RESOLUTION_FACTOR;
 		resolutionInput.onchange = () =>
 		{
-			options.RESOLUTION_FACTOR = Number(resolutionInput.value);
+			options.RESOLUTION_FACTOR = parseInt(resolutionInput.value);
 		};
 		resolutionSection.appendChild(resolutionInput);
 
@@ -149,9 +149,34 @@ namespace.html.OptionsDropdown = (() =>
 		antialiasingInput.value = options.MULTISAMPLING_FACTOR;
 		antialiasingInput.onchange = () =>
 		{
-			options.MULTISAMPLING_FACTOR = Number(antialiasingInput.value);
+			options.MULTISAMPLING_FACTOR = parseInt(antialiasingInput.value);
 		};
 		antialiasingSection.appendChild(antialiasingInput);
+
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+		// -----------------------------
+		// max recursion options
+		// -----------------------------
+
+		let recursionSection = new namespace.html.Section();
+		wrapper.appendChild(recursionSection);
+
+		let recursionLabel = new namespace.html.Label();
+		recursionLabel.innerHTML = 'RECURSION DEPTH (max number)';
+		recursionSection.appendChild(recursionLabel);
+
+		recursionSection.appendChild('<divider-x-small></divider-x-small>');
+
+		let recursionInput = new namespace.html.NumberInput();
+		recursionInput.id = 'threads-max-number-input';
+		recursionInput.value = options.MAX_RECURSION_DEPTH;
+		recursionInput.onchange = () =>
+		{
+			options.MAX_RECURSION_DEPTH = parseInt(recursionInput.value);
+		};
+		recursionSection.appendChild(recursionInput);
 
 		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
@@ -174,7 +199,7 @@ namespace.html.OptionsDropdown = (() =>
 		threadsInput.value = options.MAX_THREADS;
 		threadsInput.onchange = () =>
 		{
-			options.MAX_THREADS = Number(threadsInput.value);
+			options.MAX_THREADS = parseInt(threadsInput.value);
 		};
 		threadsSection.appendChild(threadsInput);
 
@@ -202,7 +227,7 @@ namespace.html.OptionsDropdown = (() =>
 		blockWidthInput.value = options.BLOCK_WIDTH;
 		blockWidthInput.onchange = () =>
 		{
-			options.BLOCK_WIDTH = Number(blockWidthInput.value);
+			options.BLOCK_WIDTH = parseInt(blockWidthInput.value);
 		};
 		blockFlex.appendChild(blockWidthInput);
 
@@ -213,7 +238,7 @@ namespace.html.OptionsDropdown = (() =>
 		blockHeightInput.value = options.BLOCK_HEIGHT;
 		blockHeightInput.onchange = () =>
 		{
-			options.BLOCK_HEIGHT = Number(blockHeightInput.value);
+			options.BLOCK_HEIGHT = parseInt(blockHeightInput.value);
 		};
 		blockFlex.appendChild(blockHeightInput);
 
@@ -238,7 +263,7 @@ namespace.html.OptionsDropdown = (() =>
 		numBlocksInput.value = options.NUM_OF_BLOCKS_IN_CHUNK;
 		numBlocksInput.onchange = () =>
 		{
-			options.NUM_OF_BLOCKS_IN_CHUNK = Number(numBlocksInput.value);
+			options.NUM_OF_BLOCKS_IN_CHUNK = parseInt(numBlocksInput.value);
 		};
 		numBlocksSection.appendChild(numBlocksInput);
 		

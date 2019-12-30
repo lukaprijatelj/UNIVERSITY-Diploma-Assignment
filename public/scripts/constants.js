@@ -27,7 +27,7 @@ _this.SOCKETIO_PORT = 30004;
 _this.LIST_OF_BACKGROUND_IMAGES =  
 [
 	'images/skycube_black/',
-	'images/skycube_building/',
+	'images/skycube_white/',
 	'images/skycube_car/',
 	'images/skycube_lake/',
 ];
