@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * RaytracingRenderer renders by raytracing it's scene. However, it does not
  * compute the pixels itself but it hands off and coordinates the tasks for workers.
@@ -386,16 +388,21 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 	_this.clearOthersCells();
 
-	for (let i=0; i<_this.threads.length; i++)
+	if (_this.threads)
 	{
-		let current = _this.threads[i];		
-		
-		current.isRendering = false;
-
-		globals.rendererCanvas.removeThreadCell(current);
-
-		current.terminate();
-	};
+		for (let i=0; i<_this.threads.length; i++)
+		{
+			let current = _this.threads[i];		
+			
+			current.isRendering = false;
+	
+			globals.rendererCanvas.removeThreadCell(current);
+	
+			current.terminate();
+		};
+	
+		_this.threads = null;
+	}	
 };
 
 /**
@@ -462,6 +469,8 @@ RaytracingRenderer.prototype._runThread = function(thread)
 RaytracingRenderer.prototype.dispose = function()
 {
 	let _this = this;
+
+	_this.stopRendering();
 
 	_this.cellsWaiting = null;
 };

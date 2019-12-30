@@ -1,3 +1,4 @@
+'use strict';
 
 var isPaused = true;
 const PI_2 = Math.PI / 2; // used in animation method
@@ -186,6 +187,7 @@ PathtracingRenderer.prototype.stopRendering = function()
 	if (_this.animationFrameID >= 0)
 	{
 		cancelAnimationFrame(_this.animationFrameID);
+		_this.animationFrameID = -1;
 	}
 };
 
@@ -321,6 +323,10 @@ PathtracingRenderer.prototype.prepareJsonData = async function()
 		}
 	});
 
+	if (Array.isEmpty(_this.meshList))
+	{
+		new Exception.ArrayEmpty('Model does not have any geometry?');
+	}
 
 	/*
 	// albedo map
@@ -354,7 +360,7 @@ PathtracingRenderer.prototype.initScene = function ()
 	for (let i = 0; i < meshList.length; i++)
 	{
 		geoList.push(meshList[i].geometry);
-	}
+	}	
 		
 	// Merge geometry from all models into one new mesh
 	let bufferGeometryUtils = THREE.BufferGeometryUtils.mergeBufferGeometries(geoList);
@@ -366,6 +372,11 @@ PathtracingRenderer.prototype.initScene = function ()
 	}
 		
 	let total_number_of_triangles = _this.modelMesh.geometry.attributes.position.array.length / 9;
+
+	if (total_number_of_triangles <= 0)
+	{
+		new Exception.Other('No geometry triangles found!');
+	}
 
 	// Gather all textures from materials
 	for (let i = 0; i < meshList.length; i++) 
@@ -1036,5 +1047,9 @@ PathtracingRenderer.prototype.dispose = function()
 {
 	let _this = this;
 
-	new Exception.NotImplemented();
+	new Warning.NotImplemented();
+
+	_this.stopRendering();
+
+	_this.pathTracingUniforms = null;
 };

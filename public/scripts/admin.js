@@ -188,6 +188,9 @@ AdminPage._onRenderingFinished = function()
 	AdminPage._changeRenderingState('stop');
 };
 
+/**
+ * Rendering progress was updated (some new cells finished rendering).
+ */
 AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 {
 	let progress = data;
@@ -589,12 +592,12 @@ AdminPage._onSceneButtonClick = async function(button)
 		wrapper.appendChild(div);
 	}
 
-	let uploadDiv = new namespace.html.Div();
+	/*let uploadDiv = new namespace.html.Div();
 	uploadDiv.id = 'upload-button';
 	uploadDiv.addClass('entry');
 	uploadDiv.setAttribute('onclick', 'AdminPage.onUploadSceneClick()');
 	uploadDiv.appendChild('UPLOAD SCENE');
-	wrapper.appendChild(uploadDiv);
+	wrapper.appendChild(uploadDiv);*/
 
 	let dropdown = new namespace.html.Dropdown();
 	dropdown.setAttribute('id', 'scene-dropdown');
@@ -616,6 +619,9 @@ AdminPage._onSceneButtonClick = async function(button)
 	layer.show();
 };
 
+/**
+ * New renderer button was clicked, which will open new window.
+ */
 AdminPage._onNewRendererClick = function()
 {
 	/*var a = document.createElement("a");    
@@ -639,6 +645,9 @@ AdminPage._onNewRendererClick = function()
 	}	
 };
 
+/**
+ * Options button was clicked.
+ */
 AdminPage._onOptionsButtonClick = async function(button)
 {
 	let dropdown = new namespace.html.OptionsDropdown();
@@ -703,6 +712,9 @@ AdminPage.onFileUploadChange = async function(event)
 	AdminPage.onFileUploadDone();
 };
 
+/**
+ * File has done uploading.
+ */
 AdminPage.onFileUploadDone = function()
 {
 	AdminPage.resetFilesInput();
@@ -711,6 +723,9 @@ AdminPage.onFileUploadDone = function()
 	loadingLayer.hide();
 };
 
+/**
+ * Resets input field for file upload.
+ */
 AdminPage.resetFilesInput = function()
 {
 	var input = document.getElementById('upload-file-input');
@@ -719,11 +734,17 @@ AdminPage.resetFilesInput = function()
 	input.value = String();
 };
 
+/**
+ * Upload scene button was clicked.
+ */
 AdminPage.onUploadSceneClick = function()
 {
 	document.getElementById('upload-file-input').click();
 };
 
+/**
+ * Dropdown curtain was clicked, which means we must hide/cancel dropdown.
+ */
 AdminPage.onDropdownsCurtainClick = function(event)
 {
 	let list = document.querySelector('layer#dropdowns');
@@ -748,7 +769,10 @@ AdminPage.hideLastDropdown = function()
 	popup.remove();
 };
 
-AdminPage._onStartStopRenderingClick = function(type)
+/**
+ * Start/stop/pause/resume button was clicked.
+ */
+AdminPage._onRenderButtonClick = function(type)
 {
 	AdminPage._changeRenderingState(type);
 };

@@ -2,12 +2,15 @@
 
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 
+
 /** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
 
 var options = null;
 var previousOptions = null;
+
+
 
 var globals = new namespace.core.Globals();
 
@@ -232,8 +235,6 @@ ClientPage._startRenderingService = async function()
 		return;
 	}
 
-	ClientPage.dispose();
-
 	ClientPage.openScene();
 };
 
@@ -257,12 +258,13 @@ ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 	previousOptions = options;
 	options = null;	
 
-	globals.renderer.stopRendering();
 	ClientPage.stopRendererUi();
+
+	ClientPage.dispose();	
 };
 
 /**
- * Server stopped rendering service.
+ * Server paused rendering service.
  */
 ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 {
@@ -272,7 +274,7 @@ ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 };
 
 /**
- * Server stopped rendering service.
+ * Server resumed rendering service.
  */
 ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 {
@@ -290,10 +292,7 @@ ClientPage._onServerDisconnect = function()
 {
 	console.log('[ClientPage] Disconnected from server!');
 
-	if (API.renderingServiceState != namespace.enums.renderingServiceState.IDLE)
-	{
-		ClientPage._onStopRenderingService();
-	}
+	ClientPage._onStopRenderingService();
 };
 
 /**
@@ -480,6 +479,10 @@ ClientPage._initRenderer = function()
 
 		case namespace.enums.rendererType.PATH_TRACING:
 			renderer = new PathtracingRenderer();
+			break;
+
+		default:
+			new Exception.Other('Unknown renderer type "' + options.RENDERER_TYPE + '"');
 			break;
 	}	
 	
