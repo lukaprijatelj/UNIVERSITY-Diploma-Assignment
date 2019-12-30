@@ -143,6 +143,32 @@ BoxNode GetBoxNode(const in float i)
 }
 
 
+
+// vec4 GetPixel(sampler image, vec2 uv)
+// {
+// 	int NUM_OF_CHANNELS = 4;
+// 	int position = 0;
+// 
+// 	// add rows
+// 	position += uv.y * image.width;
+// 	
+// 	// add columns
+// 	position += uv.x;
+// 
+// 	position *= NUM_OF_CHANNELS;
+// 
+// 	vec4 color;
+// 
+// 	color.x = imageData[position + 0];  // red
+// 	color.y = imageData[position + 1];	// green
+// 	color.z = imageData[position + 2];	// blue
+// 	color.w = imageData[position + 3];	// alpha
+// 
+// 	return color;
+// }
+
+
+
 //-----------------------------------------------------------------------
 vec3 GetSkycubeColor(Ray r)
 //-----------------------------------------------------------------------
@@ -281,6 +307,7 @@ vec3 GetSkycubeColor(Ray r)
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// With the help of AABB graph we can find out if ray intersects any of the 3D objects.
 float SceneIntersect( Ray r, inout Intersection intersec )
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 {
@@ -288,7 +315,6 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 	float t = INFINITY;
 
 	// AABB BVH Intersection variables
-	vec4 aabbNodeData0, aabbNodeData1, aabbNodeData2;
 	vec4 vd0, vd1, vd2, vd3, vd4, vd5, vd6, vd7;
 	vec3 inverseDir = 1.0 / r.direction;
 	vec3 n = vec3(0);
@@ -307,10 +333,6 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 	BoxNode currentBoxNode, nodeA, nodeB, tnp;
 	StackLevelData currentStackData, slDataA, slDataB, tmp;
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// glTF
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	currentBoxNode = GetBoxNode(stackptr);
 	currentStackData = StackLevelData(stackptr, BoundingBoxIntersect(currentBoxNode.minCorner, currentBoxNode.maxCorner, r.origin, inverseDir));
@@ -449,8 +471,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 		// use this if intersec.type will be LIGHT
 		intersec.emission = vec3(1, 0, 1); 
-
-		intersec.color = vd6.yzw;
+		
 		intersec.opacity = vd7.y;
 		intersec.uv = triangleW * vec2(vd4.zw) + triangleU * vec2(vd5.xy) + triangleV * vec2(vd5.zw);
 		intersec.type = int(vd6.x);
@@ -461,6 +482,10 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 		{
 			intersec.color = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);	
 		}
+		else
+		{
+			intersec.color = vd6.yzw;
+		}
 	}
 
 	return t;
@@ -468,7 +493,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 
 //-----------------------------------------------------------------------
-vec3 CalculateRadiance( Ray r, vec3 sunDirection, inout uvec2 seed )
+vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
 //-----------------------------------------------------------------------
 {
 	vec3 randVec = vec3(rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0);
@@ -735,7 +760,7 @@ void main( void )
 			Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
 
 			// perform path tracing and get resulting pixel color
-			vec3 currPixelColor = CalculateRadiance( ray, uSunDirection, seed );
+			vec3 currPixelColor = SpawnRay( ray, uSunDirection, seed );
 
 			pixelColor += currPixelColor; 
 		}

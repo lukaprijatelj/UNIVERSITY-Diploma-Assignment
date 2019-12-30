@@ -490,7 +490,7 @@ ClientPage._initRenderer = function()
 };	
 
 /**
- * Updates options.
+ * Updates rendering options.
  */
 ClientPage._updateOptions = function(dataOptions)
 {

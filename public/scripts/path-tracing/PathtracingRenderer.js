@@ -30,7 +30,7 @@ var PathtracingRenderer = function()
 
 	// Camera variables
 	this.quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-	this.worldCamera = globals.camera;
+	this.worldCamera = null;
 
 	// Environment variables
 	this.skyLightIntensity = 1;
@@ -80,7 +80,7 @@ var PathtracingRenderer = function()
 		
 	this.stateStartTime = 0;
 
-	this.meshList;
+	this.meshList = [];
 	this.modelMesh;
 	
 	this.animationFrameID = -1;
@@ -110,13 +110,50 @@ PathtracingRenderer.prototype._init = function()
 	_this.initThree();
 };
 
+/**
+ * Initializes camera.
+ */
 PathtracingRenderer.prototype.initCamera = function()
 {
 	let _this = this;
 
-	// do nothing
+	_this.worldCamera = globals.camera;
+
+	_this.worldCamera.aspect = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
+	_this.worldCamera.updateProjectionMatrix();
+
+	// the following scales all scene objects by the worldCamera's field of view,
+	// taking into account the screen aspect ratio and multiplying the uniform uULen,
+	// the x-coordinate, by this ratio
+	let fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
+	_this.pathTracingUniforms.uVLen.value = Math.tan(fovScale);
+	_this.pathTracingUniforms.uULen.value = _this.pathTracingUniforms.uVLen.value * _this.worldCamera.aspect;
+
+	// worldCamera is the dynamic camera 3d object that will be positioned, oriented and
+	// constantly updated inside the 3d scene.  Its view will ultimately get passed back to the
+	// stationary quadCamera, which renders the scene to a fullscreen quad (made up of 2 large triangles).
+	//_this.worldCamera = new THREE.PerspectiveCamera(50, canvas.width / canvas.height, 1, 1000);
+	//_this.pathTracingScene.add(_this.worldCamera);
+
+	_this.controls = new FirstPersonCameraControls(_this.worldCamera);
+	_this.cameraControlsObject = _this.controls.getObject();
+	_this.cameraControlsYawObject = _this.controls.getYawObject();
+	_this.cameraControlsPitchObject = _this.controls.getPitchObject();
+
+	_this.oldYawRotation = _this.cameraControlsYawObject.rotation.y;
+	_this.oldPitchRotation = _this.cameraControlsPitchObject.rotation.x;
+
+	// now that we moved and rotated the camera, the following line force-updates the camera's matrix,
+	// and prevents rendering the very first frame in the old default camera position/orientation
+	_this.cameraControlsObject.updateMatrixWorld(true);
+
+	// TODO: why is this
+	_this.pathTracingScene.add(_this.cameraControlsObject);	
 };
 
+/**
+ * Initializes lights.
+ */
 PathtracingRenderer.prototype.initLights = function()
 {
 	let _this = this;
@@ -124,6 +161,9 @@ PathtracingRenderer.prototype.initLights = function()
 	// do nothing
 };
 
+/**
+ * Sets cells waiting to be rendered.
+ */
 PathtracingRenderer.prototype.setWaitingCells = function()
 {
 	let _this = this;
@@ -131,6 +171,9 @@ PathtracingRenderer.prototype.setWaitingCells = function()
 	// do nothing
 };
 
+/**
+ * Starts rendering process.
+ */
 PathtracingRenderer.prototype.startRendering = function()
 {
 	let _this = this;
@@ -191,61 +234,6 @@ PathtracingRenderer.prototype.stopRendering = function()
 	}
 };
 
-
-/**
- * TODO: remove all these functions because they are no longer needed.
- */
-PathtracingRenderer.prototype.onMouseWheel = function(event) 
-{
-	let _this = this;
-
-	event.preventDefault();
-	event.stopPropagation();
-
-	if (event.deltaY > 0)
-		_this.increaseFov();
-	else if (event.deltaY < 0)
-		_this.decreaseFov();
-};
-PathtracingRenderer.prototype.increaseFov = function() 
-{
-	let _this = this;
-
-	if (_this.worldCamera.fov < _this.maxFov) 
-	{
-		_this.worldCamera.fov++;
-		_this.fovChanged = true;
-	}
-};
-PathtracingRenderer.prototype.decreaseFov = function() 
-{
-	let _this = this;
-
-	if (_this.worldCamera.fov > _this.minFov) 
-	{
-		_this.worldCamera.fov--;
-		_this.fovChanged = true;
-	}
-};
-PathtracingRenderer.prototype.increaseApertureSize = function() 
-{
-	if (_this.apertureSize < _this.maxApertureSize) 
-	{
-		_this.apertureSize += 0.1;
-		_this.apertureSizeChanged = true;
-	}
-};
-PathtracingRenderer.prototype.decreaseApertureSize = function() 
-{
-	let _this = this;
-
-	if (_this.apertureSize > _this.minApertureSize) 
-	{
-		_this.apertureSize -= 0.1;
-		_this.apertureSizeChanged = true;
-	}
-};
-
 /**
  * Starts loading models.
  */
@@ -268,8 +256,6 @@ PathtracingRenderer.prototype.prepareJsonData = async function()
 	};
 							
 	let parent;
-
-	_this.meshList = [];
 
 	let matrixStack = [];
 	matrixStack.push(new THREE.Matrix4());
@@ -641,6 +627,7 @@ PathtracingRenderer.prototype.initThree = function()
 	let _this = this;
 
 	_this.canvas = document.getElementById('rendering-canvas');
+
 	let context = _this.canvas.getContext('webgl2');
 
 	window.addEventListener('wheel', _this.onMouseWheel, false);
@@ -686,26 +673,7 @@ PathtracingRenderer.prototype.initThree = function()
 	_this.screenTextureScene.add(_this.quadCamera);
 	_this.screenOutputScene.add(_this.quadCamera);
 
-	// worldCamera is the dynamic camera 3d object that will be positioned, oriented and
-	// constantly updated inside the 3d scene.  Its view will ultimately get passed back to the
-	// stationary quadCamera, which renders the scene to a fullscreen quad (made up of 2 large triangles).
-	//_this.worldCamera = new THREE.PerspectiveCamera(50, canvas.width / canvas.height, 1, 1000);
-	//_this.pathTracingScene.add(_this.worldCamera);
-
-	_this.controls = new FirstPersonCameraControls(_this.worldCamera);
-	_this.cameraControlsObject = _this.controls.getObject();
-	_this.cameraControlsYawObject = _this.controls.getYawObject();
-	_this.cameraControlsPitchObject = _this.controls.getPitchObject();
-
-	// TODO: why is this
-	_this.pathTracingScene.add(_this.cameraControlsObject);
-
-	_this.oldYawRotation = _this.cameraControlsYawObject.rotation.y;
-	_this.oldPitchRotation = _this.cameraControlsPitchObject.rotation.x;
-
-	// now that we moved and rotated the camera, the following line force-updates the camera's matrix,
-	// and prevents rendering the very first frame in the old default camera position/orientation
-	_this.cameraControlsObject.updateMatrixWorld(true);
+	
 
 	_this.pathTracingRenderTarget = new THREE.WebGLRenderTarget(_this.canvas.width, _this.canvas.height, {
 		minFilter: THREE.NearestFilter,
@@ -835,16 +803,6 @@ PathtracingRenderer.prototype.prepareGeometryForPT = function()
 
 	_this.pathTracingRenderTarget.setSize(drawingBufferWidth, drawingBufferHeight);
 	_this.screenTextureRenderTarget.setSize(drawingBufferWidth, drawingBufferHeight);
-
-	_this.worldCamera.aspect = _this.renderer.domElement.clientWidth / _this.renderer.domElement.clientHeight;
-	_this.worldCamera.updateProjectionMatrix();
-
-	// the following scales all scene objects by the worldCamera's field of view,
-	// taking into account the screen aspect ratio and multiplying the uniform uULen,
-	// the x-coordinate, by this ratio
-	let fovScale = _this.worldCamera.fov * 0.5 * (Math.PI / 180.0);
-	_this.pathTracingUniforms.uVLen.value = Math.tan(fovScale);
-	_this.pathTracingUniforms.uULen.value = _this.pathTracingUniforms.uVLen.value * _this.worldCamera.aspect;
 
 	_this.forceUpdate = true;
 };
@@ -1039,6 +997,62 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 	_this.renderer.setRenderTarget(null);
 	_this.renderer.render(_this.screenOutputScene, _this.quadCamera);
 };
+
+
+/**
+ * TODO: remove all these functions because they are no longer needed.
+ */
+PathtracingRenderer.prototype.onMouseWheel = function(event) 
+{
+	let _this = this;
+
+	event.preventDefault();
+	event.stopPropagation();
+
+	if (event.deltaY > 0)
+		_this.increaseFov();
+	else if (event.deltaY < 0)
+		_this.decreaseFov();
+};
+PathtracingRenderer.prototype.increaseFov = function() 
+{
+	let _this = this;
+
+	if (_this.worldCamera.fov < _this.maxFov) 
+	{
+		_this.worldCamera.fov++;
+		_this.fovChanged = true;
+	}
+};
+PathtracingRenderer.prototype.decreaseFov = function() 
+{
+	let _this = this;
+
+	if (_this.worldCamera.fov > _this.minFov) 
+	{
+		_this.worldCamera.fov--;
+		_this.fovChanged = true;
+	}
+};
+PathtracingRenderer.prototype.increaseApertureSize = function() 
+{
+	if (_this.apertureSize < _this.maxApertureSize) 
+	{
+		_this.apertureSize += 0.1;
+		_this.apertureSizeChanged = true;
+	}
+};
+PathtracingRenderer.prototype.decreaseApertureSize = function() 
+{
+	let _this = this;
+
+	if (_this.apertureSize > _this.minApertureSize) 
+	{
+		_this.apertureSize -= 0.1;
+		_this.apertureSizeChanged = true;
+	}
+};
+
 
 /**
  * Disposes objects.
