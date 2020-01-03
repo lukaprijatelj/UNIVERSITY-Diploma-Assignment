@@ -211,27 +211,40 @@ THREE.BufferGeometryUtils = {
 
 			// ensure that all geometries are indexed, or none
 
-			if ( isIndexed !== ( geometry.index !== null ) ) return null;
+			if ( isIndexed !== ( geometry.index !== null ) )
+			{
+				return null;
+			}
 
 			// gather attributes, exit early if they're different
 
-			for ( var name in geometry.attributes ) {
-
-				if ( ! attributesUsed.has( name ) ) return null;
+			for ( var name in geometry.attributes ) 
+			{
+				if ( ! attributesUsed.has( name ) )
+				{
+					// changed by Luka  
+					// return null;
+					continue;
+				} 
 
 				if ( attributes[ name ] === undefined ) attributes[ name ] = [];
 
 				attributes[ name ].push( geometry.attributes[ name ] );
-
 			}
 
 			// gather morph attributes, exit early if they're different
 
-			if ( morphTargetsRelative !== geometry.morphTargetsRelative ) return null;
+			if ( morphTargetsRelative !== geometry.morphTargetsRelative ) 
+			{
+				return null;
+			}
 
 			for ( var name in geometry.morphAttributes ) {
 
-				if ( ! morphAttributesUsed.has( name ) ) return null;
+				if ( ! morphAttributesUsed.has( name ) ) 
+				{
+					return null;
+				}
 
 				if ( morphAttributes[ name ] === undefined ) morphAttributes[ name ] = [];
 
@@ -301,7 +314,10 @@ THREE.BufferGeometryUtils = {
 
 			var mergedAttribute = this.mergeBufferAttributes( attributes[ name ] );
 
-			if ( ! mergedAttribute ) return null;
+			if ( ! mergedAttribute ) 
+			{
+				return null;
+			}
 
 			mergedGeometry.setAttribute( name, mergedAttribute );
 
@@ -313,7 +329,10 @@ THREE.BufferGeometryUtils = {
 
 			var numMorphTargets = morphAttributes[ name ][ 0 ].length;
 
-			if ( numMorphTargets === 0 ) break;
+			if ( numMorphTargets === 0 ) 
+			{
+				break;
+			}
 
 			mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};
 			mergedGeometry.morphAttributes[ name ] = [];
@@ -330,7 +349,10 @@ THREE.BufferGeometryUtils = {
 
 				var mergedMorphAttribute = this.mergeBufferAttributes( morphAttributesToMerge );
 
-				if ( ! mergedMorphAttribute ) return null;
+				if ( ! mergedMorphAttribute ) 
+				{
+					return null;
+				}
 
 				mergedGeometry.morphAttributes[ name ].push( mergedMorphAttribute );
 
@@ -339,7 +361,6 @@ THREE.BufferGeometryUtils = {
 		}
 
 		return mergedGeometry;
-
 	},
 
 	/**
