@@ -23,6 +23,48 @@ namespace.html.OptionsDropdown = (() =>
 		
 		let wrapper = new namespace.html.Wrapper();
 		dropdown.appendChild(wrapper);
+		
+
+		// -----------------------------
+		// rendering options
+		// -----------------------------
+
+		let raySection = new namespace.html.Section();
+		wrapper.appendChild(raySection);
+
+		let RAY_BUTTON_GROUP_NAME = 'ray-cast-type';
+
+		let rayLabel = new namespace.html.Label();
+		rayLabel.innerHTML = 'RAY CAST TYPE';
+		raySection.appendChild(rayLabel);
+
+		raySection.appendChild('<divider-x-small></divider-x-small>');
+
+		let rayTracingButton = new namespace.html.RadioButton();
+		rayTracingButton.name = RAY_BUTTON_GROUP_NAME;
+		rayTracingButton.checked = options.RENDERER_TYPE == 'ray-tracing';
+		rayTracingButton.onclick = function()
+		{
+			options.RENDERER_TYPE = 'ray-tracing';
+		};
+		raySection.appendChild(rayTracingButton);
+		raySection.appendChild('Ray tracing');
+
+		raySection.appendChild('<divider-y-small></divider-y-small>');
+
+		let pathTracingButton = new namespace.html.RadioButton();
+		pathTracingButton.name = RAY_BUTTON_GROUP_NAME;
+		pathTracingButton.checked = options.RENDERER_TYPE == 'path-tracing';
+		pathTracingButton.onclick = function()
+		{
+			options.RENDERER_TYPE = 'path-tracing';
+		};
+		raySection.appendChild(pathTracingButton);
+		raySection.appendChild('Path tracing');
+
+
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
 
 		// -----------------------------

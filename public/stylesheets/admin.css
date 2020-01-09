@@ -92,6 +92,10 @@ dropdown#background-dropdown>wrapper_
 	padding: 15px;
 }
 
+#options-dropdown input[type="radio"]
+{
+    vertical-align: bottom;
+}
 
 
 
