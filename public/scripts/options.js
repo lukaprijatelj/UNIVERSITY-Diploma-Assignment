@@ -21,9 +21,7 @@ options.SKY_CUBE_IMAGES =
 	'posZ.png', 'negZ.png'
 ];
 
-options.RENDERER_TYPE = 'path-tracing';
-
-options.RESOLUTION_FACTOR = 1;
+options.RENDERER_TYPE = 'ray-tracing';
 
 // multisamling
 options.MULTISAMPLING_FACTOR = 1;  // (n^2) = 1 2 4 8 16 32 64 128

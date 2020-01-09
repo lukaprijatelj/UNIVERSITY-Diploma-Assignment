@@ -48,12 +48,12 @@ namespace.html.RendererCanvas = (() =>
 		var height = interfaceV.clientHeight; */
 
 		var canvas = _this.canvasV;
-		canvas.width = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
-		canvas.height = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
+		canvas.width = options.CANVAS_WIDTH;
+		canvas.height = options.CANVAS_HEIGHT;
 
 		let flagCanvas = _this.flagCanvasV;
-		flagCanvas.style.width = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR + 'px';
-		flagCanvas.style.height = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR + 'px';
+		flagCanvas.style.width = options.CANVAS_WIDTH + 'px';
+		flagCanvas.style.height = options.CANVAS_HEIGHT + 'px';
 
 		//var ctx = canvas.getContext('2d');
 		//ctx.translate(width/2,height/2); // now 0,0 is the center of the canvas.

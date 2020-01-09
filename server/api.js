@@ -394,8 +394,8 @@ var API =
 		DATABASE.removeAllCells();
 
 		var startY = 0;
-		var MAX_WIDTH = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
-		var MAX_HEIGHT = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
+		var MAX_WIDTH = options.CANVAS_WIDTH;
+		var MAX_HEIGHT = options.CANVAS_HEIGHT;
 
 		let index = 0;
 

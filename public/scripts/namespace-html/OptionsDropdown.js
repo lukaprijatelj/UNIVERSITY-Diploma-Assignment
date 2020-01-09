@@ -147,32 +147,7 @@ namespace.html.OptionsDropdown = (() =>
 
 		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
-
-		// -----------------------------
-		// resolution options
-		// -----------------------------
-
-		/*let resolutionSection = new namespace.html.Section();
-		wrapper.appendChild(resolutionSection);
-
-		let resolutionLabel = new namespace.html.Label();
-		resolutionLabel.innerHTML = 'RESOLUTION (factor)';
-		resolutionSection.appendChild(resolutionLabel);
-
-		resolutionSection.appendChild('<divider-x-small></divider-x-small>');
-
-		let resolutionInput = new namespace.html.NumberInput();
-		resolutionInput.id = 'resolution-factor-input';
-		resolutionInput.value = options.RESOLUTION_FACTOR;
-		resolutionInput.onchange = () =>
-		{
-			options.RESOLUTION_FACTOR = parseInt(resolutionInput.value);
-		};
-		resolutionSection.appendChild(resolutionInput);
-
-		wrapper.appendChild('<divider-x-small></divider-x-small>');*/
-
-
+		
 		// -----------------------------
 		// antialiasing options
 		// -----------------------------

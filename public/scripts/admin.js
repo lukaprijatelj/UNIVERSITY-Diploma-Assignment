@@ -633,8 +633,8 @@ AdminPage._onNewRendererClick = function()
 
 	if (options.OPEN_NEW_RENDERER_IN_WINDOW == true)
 	{
-		let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
-		let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+		let width = options.CANVAS_WIDTH;
+		let height = options.CANVAS_HEIGHT;
 
 		window.open("/client", "", "width=" + width + ",height=" + height);
 	}
@@ -871,6 +871,22 @@ AdminPage._onBackgroundButtonClick = function(button)
 	layer.appendChild(curtain);
 	layer.appendChild(dropdown);
 	layer.show();
+};
+
+/**
+ * Downloads rendered image.
+ */
+AdminPage._onDownloadImage = function()
+{
+
+};
+
+/**
+ * Downloads rendering results like speed of each renderer cell etc.
+ */
+AdminPage._onDownloadInfo = function()
+{
+
 };
 
 /**

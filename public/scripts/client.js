@@ -509,8 +509,8 @@ ClientPage._updateOptions = function(dataOptions)
 
 	if (previousOptions)
 	{
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
@@ -613,8 +613,8 @@ ClientPage.stopRendererUi = function()
 
 	if (previousOptions)
 	{
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 };
@@ -708,8 +708,8 @@ ClientPage.startRendering = function(cellsWaiting)
 
 	if (previousOptions)
 	{
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
