@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const upload = require('./upload.js');
 const fsExtra = require('fs-extra');
+const Jimp = require('jimp');
 
 require('../public/scripts/namespace-enums/types.js');
 
@@ -228,6 +229,34 @@ var API =
 	},
 
 	/**
+	 * Current rendering has finished.
+	 */
+	onFinish: function()
+	{
+		if (API.hasNotifiedFinish == true)
+		{
+			return;
+		}
+
+		API.hasNotifiedFinish = true;
+		API.notifyFinished();
+
+		let buffer = DATABASE.getImagesBuffer(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+		new Jimp({ data: buffer, width: options.CANVAS_WIDTH, height: options.CANVAS_HEIGHT }, (err, image) => 
+		{
+			image.write('public/results/rendered-image.jpg');
+		});		
+
+		let htmlString = DATABASE.getRenderingInfo();
+		fs.writeFile("public/results/rendering-info.html", htmlString, function(err) {
+			if(err) {
+				return console.log(err);
+			}
+			console.log("The file was saved!");
+		}); 
+	},
+
+	/**
 	 * Respond with any of the cells still waiting to be rendered.
 	 */
 	onGetWaitingCells: function(data, callback)
@@ -252,11 +281,7 @@ var API =
 		{
 			console.log("[Api] All cells are already rendered! (aborting)");
 
-			if (API.hasNotifiedFinish == false)
-			{
-				API.hasNotifiedFinish = true;
-				API.notifyFinished();
-			}
+			API.onFinish();
 
 			return;
 		}
@@ -329,6 +354,9 @@ var API =
 		callback();
 	},
 
+	/**
+	 * Notifies rendering progress
+	 */
 	notifyProgress: function()
 	{
 		let cellsTable = DATABASE.tables.renderingCells;

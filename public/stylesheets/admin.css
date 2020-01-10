@@ -148,6 +148,14 @@ interface:not(.rendering) #editor-curtain
 	background-color: var(--DARK-BLUE-COLOR);
 }
 
+#download-image[disabled],
+#download-info[disabled]
+{
+	opacity: 0.2;
+	cursor: default !important;
+	pointer-events: none !important;
+}
+
 #upload-button
 {
 	color: var(--LIGHT-BLUE-COLOR);

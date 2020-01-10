@@ -142,7 +142,8 @@ button.dark:not([disabled]):hover
 	color: var(--DARK-BLUE-COLOR);
 }
 
-bar-button
+bar-button,
+.bar-button
 {
 	background-color: var(--LIGHT-BLACK-COLOR);
 	color: rgba(255, 255, 255, 1);
@@ -163,12 +164,14 @@ bar-button
 	padding-right: 15px;
 }
 
-bar-button[disabled]
+bar-button[disabled],
+.bar-button[disabled]
 {
 	opacity: 0.2;
 }
 
-bar-button:not([disabled]):hover
+bar-button:not([disabled]):hover,
+.bar-button:not([disabled]):hover
 {
 	background-color: var(--LIGHT-BLACK-COLOR);
 	color: rgba(255, 255, 255, 0.7);

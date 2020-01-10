@@ -186,6 +186,9 @@ AdminPage._onRenderingFinished = function()
 {
 	console.log('[AdminPage] Rendering has finished successfully');
 	AdminPage._changeRenderingState('stop');
+
+	document.getElementById('download-image').enable();
+	document.getElementById('download-info').enable();
 };
 
 /**
@@ -554,7 +557,7 @@ AdminPage._updateRenderingState = function()
 		pauseRenderingButtonV.hide();
 		startRenderingButtonV.hide();
 	}
-	else
+	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 	{
 		interfaceV.removeClass('rendering');
 		canvasV.enable();
@@ -567,6 +570,10 @@ AdminPage._updateRenderingState = function()
 		stopRenderingButtonV.hide();
 		pauseRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
+	}
+	else
+	{
+		new Exception.Other('Unknown rendering service type!');
 	}
 };
 
@@ -795,6 +802,12 @@ AdminPage._changeRenderingState = async function(type)
 
 	let data;
 
+	var downloadImageButtonV = document.getElementById('download-image');
+	downloadImageButtonV.disable();
+
+	var downloadInfoButtonV = document.getElementById('download-info');
+	downloadInfoButtonV.disable();
+
 	if (type == 'stop')
 	{
 		data = await API.request('rendering/stop');	
@@ -807,7 +820,7 @@ AdminPage._changeRenderingState = async function(type)
 	{
 		data = await API.request('rendering/resume');	
 	}
-	else
+	else if (type == 'start')
 	{
 		options.CAMERA = globals.camera.toJSON();
 	
@@ -821,6 +834,10 @@ AdminPage._changeRenderingState = async function(type)
 		await API.request('rendering/setOptions', options);
 
 		data = await API.request('rendering/start');				
+	}
+	else
+	{
+		new Exception.Other('Unknown rendering type!');
 	}
 
 	globals.renderingServiceState = data;
@@ -871,22 +888,6 @@ AdminPage._onBackgroundButtonClick = function(button)
 	layer.appendChild(curtain);
 	layer.appendChild(dropdown);
 	layer.show();
-};
-
-/**
- * Downloads rendered image.
- */
-AdminPage._onDownloadImage = function()
-{
-
-};
-
-/**
- * Downloads rendering results like speed of each renderer cell etc.
- */
-AdminPage._onDownloadInfo = function()
-{
-
 };
 
 /**
