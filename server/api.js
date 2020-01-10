@@ -49,7 +49,7 @@ var API =
 	/**
 	 * Creates deletes existing one and creates new one.
 	 */
-	createFolder: function(path)
+	createFolder: async function(path)
 	{
 		await fsExtra.remove(path);
 		await fsExtra.mkdir(path);
