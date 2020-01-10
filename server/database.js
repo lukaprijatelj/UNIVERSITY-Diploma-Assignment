@@ -47,6 +47,7 @@ var DATABASE =
 	 */
 	finishedCells: 0,
 	
+
 	init: function()
 	{
 		console.log('[Database] Initializing');
@@ -60,6 +61,7 @@ var DATABASE =
 		DATABASE.tables.renderingCells = new BasicTable(tablesRoot, 'renderingCells');
 	},
 
+	
 	/**
 	 * Clears list of client indexes.
 	 */
@@ -155,7 +157,7 @@ var DATABASE =
 		htmlString += '<tr>';
 		htmlString += '<th>Index</th>';
 		htmlString += '<th>Size</th>';
-		htmlString += '<th>Cell position</th>';
+		htmlString += '<th>Position</th>';
 		htmlString += '<th>Client IP</th>';
 		htmlString += '<th>Time rendering</th>';
 		htmlString += '<th>Full time</th>';

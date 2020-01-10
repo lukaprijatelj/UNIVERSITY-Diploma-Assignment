@@ -1,5 +1,7 @@
 var options = { };
 
+options.RENDERER_TYPE = 'ray-tracing';
+
 //options.SCENE_FILEPATH = 'scenes/Castle/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Buggy/Scene.gltf';
@@ -12,7 +14,6 @@ options.SCENE_FILEPATH = 'scenes/OrientationCube/Scene.gltf';
 //options.SKY_CUBE_FILEPATH = 'images/skycube_lake/';
 //options.SKY_CUBE_FILEPATH = 'images/skycube_black/';
 //options.SKY_CUBE_FILEPATH = 'images/skycube_building/';
-
 options.SKY_CUBE_FILEPATH = 'images/skycube_car/';
 options.SKY_CUBE_IMAGES = 
 [
@@ -20,8 +21,6 @@ options.SKY_CUBE_IMAGES =
 	'posY.png', 'negY.png',
 	'posZ.png', 'negZ.png'
 ];
-
-options.RENDERER_TYPE = 'ray-tracing';
 
 // multisamling
 options.MULTISAMPLING_FACTOR = 1;  // (n^2) = 1 2 4 8 16 32 64 128
@@ -39,15 +38,16 @@ options.MAX_THREADS = 2;
 
 options.CAMERA = null;
 
+// additional lights like ambient light to be added to scene
 options.LIGHTS = [];
 
 // should client autoscroll to current rendering area
 options.AUTO_SCROLL_TO_RENDERING_AREA = false;
 
-// should clicking on "new client" button open client in new window or tab
+// should clicking on "new client" button open client in new window or new tab
 options.OPEN_NEW_RENDERER_IN_WINDOW = true;
 
-// check every 500ms if rendering-service is still running on server
+// check every 500ms if rendering-service is still running on server (used for pause)
 options.CHECK_RENDERING_SERVICE_STATE = 500;
 
 

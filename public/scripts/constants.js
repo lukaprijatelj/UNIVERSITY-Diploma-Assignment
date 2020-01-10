@@ -31,3 +31,6 @@ _this.LIST_OF_BACKGROUND_IMAGES =
 	'images/skycube_car/',
 	'images/skycube_lake/',
 ];
+
+_this.RENDERED_IMAGE_FILEPATH = 'results/rendered-image.jpg';
+_this.RENDERING_INFO_FILEPATH = 'results/rendering-info.html';

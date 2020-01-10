@@ -73,6 +73,12 @@ AdminPage.animationFrameID = -1;
  */
 AdminPage.init = function()
 {	
+	let downloadImageButton = document.getElementById('download-image');
+	downloadImageButton.setAttribute('href', '/' + RENDERED_IMAGE_FILEPATH);
+
+	let downloadInfoButton = document.getElementById('download-info');
+	downloadInfoButton.setAttribute('href', '/' + RENDERING_INFO_FILEPATH);
+
 	globals.editorCanvas = new namespace.html.EditorCanvas();
 	globals.editorCanvas.init();
 
@@ -173,6 +179,7 @@ AdminPage._onServerConnected = async function(socket)
 
 /**
  * Client has disconnected from server.
+ * @private
  */
 AdminPage._onServerDisconnect = function()
 {
@@ -181,6 +188,7 @@ AdminPage._onServerDisconnect = function()
 
 /**
  * Rendering has finished.
+ * @private
  */
 AdminPage._onRenderingFinished = function()
 {
@@ -193,6 +201,7 @@ AdminPage._onRenderingFinished = function()
 
 /**
  * Rendering progress was updated (some new cells finished rendering).
+ * @private
  */
 AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 {
@@ -203,6 +212,7 @@ AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 
 /**
  * Updates clients list.
+ * @private
  */
 AdminPage._updateClients = function(data)
 {
@@ -215,6 +225,7 @@ AdminPage._updateClients = function(data)
 
 /**
  * Server has notified us that clients were updated.
+ * @private
  */
 AdminPage._onClientAdd = function(thread, data, resolve, reject)
 {
@@ -227,6 +238,7 @@ AdminPage._onClientAdd = function(thread, data, resolve, reject)
 
 /**
  * Client has removed.
+ * @private
  */
 AdminPage._onClientRemove = function(thread, data, resolve, reject)
 {
@@ -250,6 +262,7 @@ AdminPage._onClientRemove = function(thread, data, resolve, reject)
 
 /**
  * Updated bottom left label for number of connected clients.
+ * @private
  */
 AdminPage._updateClientsLabel = function(data)
 {
@@ -261,6 +274,7 @@ AdminPage._updateClientsLabel = function(data)
 
 /**
  * Updates options.
+ * @private
  */
 AdminPage._updateOptions = function(dataOptions)
 {
@@ -273,6 +287,7 @@ AdminPage._updateOptions = function(dataOptions)
 
 /**
  * Updates rendering service state.
+ * @private
  */
 AdminPage._updateRenderingServiceState = function(renderingServiceState)
 {
@@ -285,6 +300,7 @@ AdminPage._updateRenderingServiceState = function(renderingServiceState)
 
 /**
  * Starts loading GLTF model.
+ * @private
  */
 AdminPage._loadGltfModel = function()
 {
@@ -324,6 +340,7 @@ AdminPage._loadGltfModel = function()
 
 /**
  * Initializes scene.
+ * @private
  */
 AdminPage._initScene = function(gltfScene)
 {
@@ -333,6 +350,7 @@ AdminPage._initScene = function(gltfScene)
 
 /**
  * Sets background for scene.
+ * @private
  */
 AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 {
@@ -377,6 +395,7 @@ AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 
 /**
  * Intializes camera in the scene.
+ * @private
  */
 AdminPage._initCamera = function(cameras)
 {
@@ -420,6 +439,7 @@ AdminPage._initCamera = function(cameras)
 
 /**
  * Initializes camera mouse controls, so that changing view is easier.
+ * @private
  */
 AdminPage._initCameraControls = function()
 {
@@ -431,6 +451,7 @@ AdminPage._initCameraControls = function()
 
 /**
  * Initializes additional lights like ambient light.
+ * @private
  */
 AdminPage._initLights = function()
 {
@@ -471,6 +492,7 @@ AdminPage._initLights = function()
 
 /**
  * Initializes renderer.
+ * @private
  */
 AdminPage._initRenderer = async function()
 {
@@ -514,6 +536,7 @@ AdminPage.onRenderFrame = function()
 
 /**
  * Updates buttons and popups when rendering state is switched.
+ * @private
  */
 AdminPage._updateRenderingState = function()
 {
@@ -579,6 +602,7 @@ AdminPage._updateRenderingState = function()
 
 /**
  * Scene button od dropdown was clicked.
+ * @private
 */
 AdminPage._onSceneButtonClick = async function(button)
 {
@@ -628,6 +652,7 @@ AdminPage._onSceneButtonClick = async function(button)
 
 /**
  * New renderer button was clicked, which will open new window.
+ * @private
  */
 AdminPage._onNewRendererClick = function()
 {
@@ -654,6 +679,7 @@ AdminPage._onNewRendererClick = function()
 
 /**
  * Options button was clicked.
+ * @private
  */
 AdminPage._onOptionsButtonClick = async function(button)
 {
@@ -778,6 +804,7 @@ AdminPage.hideLastDropdown = function()
 
 /**
  * Start/stop/pause/resume button was clicked.
+ * @private
  */
 AdminPage._onRenderButtonClick = function(type)
 {
@@ -852,6 +879,7 @@ AdminPage._changeRenderingState = async function(type)
 
 /**
  * Background button was clicked.
+ * @private
  */
 AdminPage._onBackgroundButtonClick = function(button)
 {

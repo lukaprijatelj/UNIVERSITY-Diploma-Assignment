@@ -120,6 +120,7 @@ ClientPage.init = async function()
 
 /**
  * On server-client connection.
+ * @private
  */
 ClientPage._onServerConnected = async function()
 {
@@ -153,6 +154,7 @@ ClientPage._onServerConnected = async function()
 
 /**
  * Updates clients list.
+ * @private
  */
 ClientPage._updateClients = function(data)
 {
@@ -163,6 +165,7 @@ ClientPage._updateClients = function(data)
 
 /**
  * Server has notified us that clients were updated.
+ * @private
  */
 ClientPage._onClientAdd = function(thread, data, resolve, reject)
 {
@@ -173,6 +176,7 @@ ClientPage._onClientAdd = function(thread, data, resolve, reject)
 
 /**
  * Client has removed.
+ * @private
  */
 ClientPage._onClientRemove = function(thread, data, resolve, reject)
 {
@@ -218,6 +222,7 @@ ClientPage._onClientRemove = function(thread, data, resolve, reject)
 
 /**
  * Starts rendering procedure.
+ * @private
  */
 ClientPage._startRenderingService = async function()
 {
@@ -240,6 +245,7 @@ ClientPage._startRenderingService = async function()
 
 /**
  * Server started rendering service.
+ * @private
  */
 ClientPage._onStartRenderingService = function(thread, data, resolve, reject)
 {
@@ -250,6 +256,7 @@ ClientPage._onStartRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Server stopped rendering service.
+ * @private
  */
 ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 {
@@ -265,6 +272,7 @@ ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Server paused rendering service.
+ * @private
  */
 ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 {
@@ -275,6 +283,7 @@ ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Server resumed rendering service.
+ * @private
  */
 ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 {
@@ -287,6 +296,7 @@ ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Client has disconnected from server.
+ * @private
  */
 ClientPage._onServerDisconnect = function()
 {
@@ -297,6 +307,7 @@ ClientPage._onServerDisconnect = function()
 
 /**
  * Progress was updated.
+ * @private
  */
 ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 {	
@@ -352,6 +363,7 @@ ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 
 /**
  * Starts loading GLTF model.
+ * @private
  */
 ClientPage._loadGltfModel = function()
 {
@@ -381,6 +393,7 @@ ClientPage._loadGltfModel = function()
 
 /**
  * Initializes scene.
+ * @private
  */
 ClientPage._initScene = function(gltfScene)
 {
@@ -390,6 +403,7 @@ ClientPage._initScene = function(gltfScene)
 
 /**
  * Sets background for scene.
+ * @private
  */
 ClientPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 {
@@ -412,6 +426,7 @@ ClientPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 
 /**
  * Intializes camera in the scene.
+ * @private
  */
 ClientPage._initCamera = function(gltfCamera)
 {
@@ -429,6 +444,7 @@ ClientPage._initCamera = function(gltfCamera)
 
 /**
  * Initializes additional lights like ambient light.
+ * @private
  */
 ClientPage._initLights = function(gltfLights)
 {
@@ -464,6 +480,7 @@ ClientPage._initLights = function(gltfLights)
 
 /**
  * Initializes renderer.
+ * @private
  */
 ClientPage._initRenderer = function()
 {
@@ -491,6 +508,7 @@ ClientPage._initRenderer = function()
 
 /**
  * Updates rendering options.
+ * @private
  */
 ClientPage._updateOptions = function(dataOptions)
 {
@@ -519,6 +537,7 @@ ClientPage._updateOptions = function(dataOptions)
 
 /**
  * Updates rendering service state from server.
+ * @private
  */
 ClientPage._updateRenderingServiceState = function(renderingServiceState)
 {
@@ -529,6 +548,7 @@ ClientPage._updateRenderingServiceState = function(renderingServiceState)
 
 /**
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
+ * @private
  */
 ClientPage._updateCells = function(cells)
 {
@@ -646,6 +666,7 @@ ClientPage.onRendererDone = async function(cells)
 
 /**
  * Cell waiting to be rendered is received.
+ * @private
  */
 ClientPage._updateWaitingCells = function(cells)
 {

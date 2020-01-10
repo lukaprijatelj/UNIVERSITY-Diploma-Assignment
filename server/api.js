@@ -35,12 +35,24 @@ var API =
     {
 		console.log('[Api] Initializing');
 
+		API.createFolder('public/results');
+		
+
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
 		app.post(API.baseUrl + '/uploadScene', API.emptyUploadsFolder, upload.array('reserved_word-scene'), API.onUploadFile);
 		app.post(API.baseUrl + '/listScenes', API.onListScenes);
 		
 		io.on('connection', API.onConnect);
+	},
+
+	/**
+	 * Creates deletes existing one and creates new one.
+	 */
+	createFolder: function(path)
+	{
+		await fsExtra.remove(path);
+		await fsExtra.mkdir(path);
 	},
 
 	/**
@@ -231,7 +243,7 @@ var API =
 	/**
 	 * Current rendering has finished.
 	 */
-	onFinish: function()
+	onFinish: async function()
 	{
 		if (API.hasNotifiedFinish == true)
 		{
@@ -239,21 +251,24 @@ var API =
 		}
 
 		API.hasNotifiedFinish = true;
-		API.notifyFinished();
 
-		let buffer = DATABASE.getImagesBuffer(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
-		new Jimp({ data: buffer, width: options.CANVAS_WIDTH, height: options.CANVAS_HEIGHT }, (err, image) => 
+		try
 		{
-			image.write('public/results/rendered-image.jpg');
-		});		
+			let buffer = DATABASE.getImagesBuffer(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+			let image = new Jimp({ data: buffer, width: options.CANVAS_WIDTH, height: options.CANVAS_HEIGHT });	
+			
+			await image.writeAsync('public/' + RENDERED_IMAGE_FILEPATH);
+		}
+		catch(err)
+		{
+			console.error(err.message);
+		}
 
 		let htmlString = DATABASE.getRenderingInfo();
-		fs.writeFile("public/results/rendering-info.html", htmlString, function(err) {
-			if(err) {
-				return console.log(err);
-			}
-			console.log("The file was saved!");
-		}); 
+			
+		await fs.writeFileSync("public/" + RENDERING_INFO_FILEPATH, htmlString); 
+
+		API.notifyFinished();
 	},
 
 	/**
@@ -376,9 +391,7 @@ var API =
 		// perform middleware function e.g. check if user is authenticated
 
 		var folder = 'public/scenes/Uploads';
-
 		await fsExtra.remove(folder);
-
 		await fsExtra.mkdir(folder);
 	
 		next();  // move on to the next middleware
