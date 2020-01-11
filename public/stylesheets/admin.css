@@ -156,6 +156,7 @@ interface:not(.rendering) #editor-curtain
 #pause-rendering-button
 {
 	background-image: url('../images/Pause_icon.png');
+	margin-right: 5px;
 }
 
 #stop-rendering-button
@@ -166,6 +167,7 @@ interface:not(.rendering) #editor-curtain
 #resume-rendering-button
 {
 	background-image: url('../images/Resume_icon.png');
+	margin-right: 5px;
 }
 
 #new-renderer-button
