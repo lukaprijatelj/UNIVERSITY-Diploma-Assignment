@@ -39,8 +39,7 @@
 
 			<!-- Canvas for displaying preview -->
 			<canvas id="editor-canvas" class=""></canvas>
-			<curtain id="editor-curtain"></curtain>
-
+			
 			<debug class="left-side">
 				<div id="num-clients-connected">
 					<span class="title">Number of clients:</span>
@@ -59,28 +58,46 @@
 				</div>				
 			</debug>
 
+			<curtain id="editor-curtain"></curtain>
+
 			<layer-resizable id="bars">
 				<flex id="top-bar">
 					<bar-button id="scene-button" class="" onclick="AdminPage._onSceneButtonClick(this)">SCENE</bar-button>
 					<bar-button id="background-button" class="" onclick="AdminPage._onBackgroundButtonClick(this)">BACKGROUND</bar-button>
 					<bar-button id="options-button" class="" onclick="AdminPage._onOptionsButtonClick(this)">OPTIONS</bar-button>
-					<a id="download-image" download class="bar-button" disabled>DOWNLOAD IMAGE</a>
-					<a id="download-info" download class="bar-button" disabled>DOWNLOAD INFO</a>
-
-					<bar-button id="start-rendering-button" class="render-button" onclick="AdminPage._onRenderButtonClick('start')"></bar-button>
-					<bar-button id="pause-rendering-button" class="hidden render-button" onclick="AdminPage._onRenderButtonClick('pause')"></bar-button>
-					<bar-button id="resume-rendering-button" class="hidden render-button" onclick="AdminPage._onRenderButtonClick('resume')"></bar-button>
-					<bar-button id="stop-rendering-button" class="hidden render-button" onclick="AdminPage._onRenderButtonClick('stop')"></bar-button>
-					<bar-button id="new-renderer-button" class="hidden" onclick="AdminPage._onNewRendererClick(event)">NEW RENDERER</bar-button>	
-				
+					
+					<bar-button id="start-rendering-button" class="" onclick="AdminPage._onRenderButtonClick('start')">START RENDERING</bar-button>				
 					<div style="flex-grow: 2;"></div>
 				</flex>
 			</layer-resizable>
 			
 			<layer id="dropdowns" class="hidden" js-class="" num-of-children="" onclick="AdminPage.onDropdownsCurtainClick(event)"></layer>
+
+			<layer id="rendering" class="hidden">
+				<curtain></curtain>
+				<div class="centered-text">
+					<wrapper_>
+						<flex class="interaction-section">
+							<bar-button id="pause-rendering-button" class="render-button" onclick="AdminPage._onRenderButtonClick('pause')"></bar-button>
+							<bar-button id="resume-rendering-button" class="render-button" onclick="AdminPage._onRenderButtonClick('resume')"></bar-button>
+							<bar-button id="stop-rendering-button" class="render-button" onclick="AdminPage._onRenderButtonClick('stop')"></bar-button>
+							<bar-button id="close-rendering-button" class="" onclick="AdminPage._onRenderButtonClick('stop')"></bar-button>
+						</flex>
+
+						<div class="loading-section"></div>
+						
+						<bar-button id="new-renderer-button" class="hidden" onclick="AdminPage._onNewRendererClick(event)">NEW RENDERER</bar-button>
+
+						<flex class="finished-section hidden">
+							<a id="download-image" download class="bar-button">DOWNLOAD IMAGE</a>
+							<a id="download-info" download class="bar-button">DOWNLOAD INFO</a>
+						</flex>						
+					</wrapper_>
+				</div>
+			</layer>	
 			
 			<!-- Loading layer must always be on the top of all other layers -->
-			<layer id="loading" class="hidden">
+			<layer id="loading" class="">
 				<curtain></curtain>
 				<div class="centered-text">
 					<wrapper_></wrapper_>

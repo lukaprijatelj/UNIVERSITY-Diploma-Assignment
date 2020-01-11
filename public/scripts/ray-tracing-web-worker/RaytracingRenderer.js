@@ -150,9 +150,17 @@ RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolv
 	{
 		reject();
 	}
-	else
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.FINISHED)
+	{
+		reject();
+	}
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 	{
 		resolve();
+	}
+	else
+	{
+		new Exception.Other('Unknown rendering state!');
 	}
 };
 

@@ -234,7 +234,9 @@ var API =
 	 */
 	notifyFinished: function()
 	{
-		let responseData = new Object();
+		API.renderingServiceState = namespace.enums.renderingServiceState.FINISHED;
+
+		let responseData = API.renderingServiceState;
 
 		// emits to ALL sockets
 		io.sockets.emit(API.baseUrl + '/rendering/finished', responseData);
@@ -251,7 +253,7 @@ var API =
 		}
 
 		API.hasNotifiedFinish = true;
-
+		
 		try
 		{
 			let buffer = DATABASE.getImagesBuffer(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);

@@ -64,25 +64,33 @@ AdminPage.loadingBar = null;
 AdminPage.loadingCounter = null;
 
 /**
+ * Loader properties.
+ */
+AdminPage.renderingText = null;
+AdminPage.renderingBar = null;
+AdminPage.renderingCounter = null;
+
+/**
  * Last animationFrame ID.
  */
 AdminPage.animationFrameID = -1;
+
+/**
+ * Timeout ID for hiding loading layer.
+ */
+AdminPage.hideLoadingLayerTimeoutID = -1;
+
 
 /**
  * Initializes page.
  */
 AdminPage.init = function()
 {	
-	let downloadImageButton = document.getElementById('download-image');
-	downloadImageButton.setAttribute('href', '/' + RENDERED_IMAGE_FILEPATH);
-
-	let downloadInfoButton = document.getElementById('download-info');
-	downloadInfoButton.setAttribute('href', '/' + RENDERING_INFO_FILEPATH);
+	let loadingLayer = document.querySelector('layer#loading');
 
 	globals.editorCanvas = new namespace.html.EditorCanvas();
 	globals.editorCanvas.init();
 
-	let loadingLayer = document.querySelector('layer#loading');
 	let wrapper = loadingLayer.querySelector('.centered-text wrapper_');
 
 	let loadingTextElement = new namespace.html.Div();
@@ -94,12 +102,61 @@ AdminPage.init = function()
 	AdminPage.loadingBar = new namespace.html.LoadingBar();
 	AdminPage.loadingCounter = new namespace.core.LoadingCounter(100, AdminPage.loadingBar);
 	wrapper.appendChild(AdminPage.loadingBar);
+
+	AdminPage.loadingText.setValue('Initializing ...');
+	AdminPage.loadingCounter.setValue(0);
+
+
+
+	let renderingLayer = document.querySelector('layer#rendering');
+	let renderingContent = renderingLayer.querySelector('.centered-text wrapper_ .loading-section');
+	let renderingTextElement = new namespace.html.Div();
+	AdminPage.renderingText = new namespace.html.ObservableString(renderingTextElement);
+	renderingContent.appendChild(renderingTextElement);
+
+	renderingContent.appendChild('<divider-x-small></divider-x-small>');
+
+	AdminPage.renderingBar = new namespace.html.LoadingBar();
+	AdminPage.renderingCounter = new namespace.core.LoadingCounter(100, AdminPage.renderingBar);
+	renderingContent.appendChild(AdminPage.renderingBar);
+
+	AdminPage.renderingText.setValue('Rendering ...');
+	AdminPage.renderingCounter.setValue(0);
+
+	let downloadImageButton = document.getElementById('download-image');
+	downloadImageButton.setAttribute('href', '/' + RENDERED_IMAGE_FILEPATH);
+
+	let downloadInfoButton = document.getElementById('download-info');
+	downloadInfoButton.setAttribute('href', '/' + RENDERING_INFO_FILEPATH);
+
+
 	
 	DEBUG.init();
 
 	API.init(namespace.enums.apiClientType.ADMIN);	
 
 	API.connect(AdminPage._onServerConnected, AdminPage._onServerDisconnect);
+};
+
+
+/**
+ * Hides loading layer after a while so that blinking of showing/hiding is avoided.
+ */
+AdminPage._hideLoadingLayer = function()
+{
+	if (AdminPage.hideLoadingLayerTimeoutID == -1)
+	{
+		window.clearTimeout(AdminPage.hideLoadingLayerTimeoutID);
+		AdminPage.hideLoadingLayerTimeoutID = -1;
+	}
+
+	AdminPage.hideLoadingLayerTimeoutID = window.setTimeout(() =>
+	{
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.hide();
+
+		AdminPage.hideLoadingLayerTimeoutID = -1;
+	}, 100);
 };
 
 /**
@@ -190,13 +247,11 @@ AdminPage._onServerDisconnect = function()
  * Rendering has finished.
  * @private
  */
-AdminPage._onRenderingFinished = function()
+AdminPage._onRenderingFinished = function(thread, data)
 {
 	console.log('[AdminPage] Rendering has finished successfully');
-	AdminPage._changeRenderingState('stop');
 
-	document.getElementById('download-image').enable();
-	document.getElementById('download-info').enable();
+	AdminPage._updateRenderingServiceState(data);
 };
 
 /**
@@ -208,6 +263,9 @@ AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 	let progress = data;
 
 	console.log('[AdminPage] Rendering progress "' + progress + '%" updated');	
+
+	AdminPage.renderingText.setValue('Rendered ' + progress + '%');
+	AdminPage.renderingCounter.setValue(Math.roundToTwoDecimals(progress));
 };
 
 /**
@@ -327,7 +385,7 @@ AdminPage._loadGltfModel = function()
 		{
 			console.log('[AdminPage] Scene finished loading');
 		
-			loadingLayer.hide();
+			AdminPage._hideLoadingLayer();
 
 			resolve(gltf);
 		};
@@ -374,7 +432,8 @@ AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 		{
 			console.log('[AdminPage] Scene background finished loading');	
 
-			loadingLayer.hide();
+			AdminPage._hideLoadingLayer();
+
 			resolve();
 		};
 
@@ -434,7 +493,7 @@ AdminPage._initCamera = function(cameras)
 	}	
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
@@ -487,7 +546,7 @@ AdminPage._initLights = function()
 	globals.lights.push(light);*/
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
@@ -516,7 +575,7 @@ AdminPage._initRenderer = async function()
 	globals.editorCanvas.resize();
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
@@ -549,50 +608,87 @@ AdminPage._updateRenderingState = function()
 	let sceneButton = document.getElementById('scene-button');
 	let optionsButton = document.getElementById('options-button');
 	let backgroundButton = document.getElementById('background-button');
-	let newRendererButton = document.getElementById('new-renderer-button');
+	//let newRendererButton = document.getElementById('new-renderer-button');
+
+	let renderingLayer = document.querySelector('layer#rendering');
+
+	let closeRenderingButtonV = document.getElementById('close-rendering-button');
+	
+	let finishedSection = renderingLayer.querySelector('.finished-section');
+	let renderingSpacing = renderingLayer.querySelector('.loading-section divider-x-small');
+	let renderingBar = renderingLayer.querySelector('.loading-section loadingbar');
 
 	if (globals.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 	{
+		renderingLayer.show();
+
+		AdminPage.renderingText.setValue('Rendering ...');
+
 		interfaceV.addClass('rendering');
 		canvasV.disable();
-		sceneButton.disable();
-		optionsButton.disable();
-		backgroundButton.disable();
 
-		startRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
 
-		newRendererButton.show();
-		stopRenderingButtonV.show();
+		//newRendererButton.show();
 		pauseRenderingButtonV.show();
+		stopRenderingButtonV.show();
 	}
 	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
 	{		
+		renderingLayer.show();
+
+		AdminPage.renderingText.setValue('Rendering paused!');
+
 		interfaceV.addClass('rendering');
 		canvasV.disable();
-		sceneButton.disable();
-		optionsButton.disable();
-		backgroundButton.disable();
 
-		newRendererButton.show();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
+
+		//newRendererButton.show();
 		resumeRenderingButtonV.show();
-		stopRenderingButtonV.show();
 		pauseRenderingButtonV.hide();
-		startRenderingButtonV.hide();
+		stopRenderingButtonV.show();
 	}
 	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 	{
+		renderingLayer.hide();
+
 		interfaceV.removeClass('rendering');
 		canvasV.enable();
-		sceneButton.enable();
-		optionsButton.enable();
-		backgroundButton.enable();
 
-		newRendererButton.hide();
-		startRenderingButtonV.show();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
+
+		//newRendererButton.hide();
+		pauseRenderingButtonV.hide();
+		resumeRenderingButtonV.hide();
+		stopRenderingButtonV.show();
+	}
+	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.FINISHED)
+	{
+		renderingLayer.show();
+
+		interfaceV.addClass('rendering');
+
+		renderingBar.hide();
+		renderingSpacing.hide();
+		finishedSection.show();
+		AdminPage.renderingText.setValue('Rendering done!');
+		
 		stopRenderingButtonV.hide();
 		pauseRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
+
+		closeRenderingButtonV.show();	
 	}
 	else
 	{
@@ -752,8 +848,7 @@ AdminPage.onFileUploadDone = function()
 {
 	AdminPage.resetFilesInput();
 
-	let loadingLayer = document.querySelector('layer#loading');
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
@@ -817,26 +912,22 @@ AdminPage._onRenderButtonClick = function(type)
  */
 AdminPage._changeRenderingState = async function(type)
 {
-	var stopRenderingButtonV = document.getElementById('stop-rendering-button');
-	var pauseRenderingButtonV = document.getElementById('pause-rendering-button');
-	var startRenderingButtonV = document.getElementById('start-rendering-button');
-	var resumeRenderingButtonV = document.getElementById('resume-rendering-button');
+	let renderingLayer = document.querySelector('layer#rendering');
+	
+	let stopRenderingButtonV = document.getElementById('stop-rendering-button');
+	let pauseRenderingButtonV = document.getElementById('pause-rendering-button');
+	let startRenderingButtonV = document.getElementById('start-rendering-button');
+	let resumeRenderingButtonV = document.getElementById('resume-rendering-button');
 	
 	startRenderingButtonV.disable();
 	pauseRenderingButtonV.disable();
-	stopRenderingButtonV.disable();
 	resumeRenderingButtonV.disable();
 
 	let data;
 
-	var downloadImageButtonV = document.getElementById('download-image');
-	downloadImageButtonV.disable();
-
-	var downloadInfoButtonV = document.getElementById('download-info');
-	downloadInfoButtonV.disable();
-
 	if (type == 'stop')
 	{
+		renderingLayer.hide();
 		data = await API.request('rendering/stop');	
 	}
 	else if (type == 'pause')
@@ -849,6 +940,9 @@ AdminPage._changeRenderingState = async function(type)
 	}
 	else if (type == 'start')
 	{
+		AdminPage.renderingText.setValue('Rendering ...');
+		AdminPage.renderingCounter.setValue(0);
+
 		options.CAMERA = globals.camera.toJSON();
 	
 		options.LIGHTS = [];
@@ -871,7 +965,6 @@ AdminPage._changeRenderingState = async function(type)
 	
 	startRenderingButtonV.enable();
 	pauseRenderingButtonV.enable();
-	stopRenderingButtonV.enable();
 	resumeRenderingButtonV.enable();
 
 	AdminPage._updateRenderingState();
