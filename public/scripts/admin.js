@@ -264,6 +264,16 @@ AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 
 	console.log('[AdminPage] Rendering progress "' + progress + '%" updated');	
 
+	if (globals.renderingServiceState == namespace.enums.renderingServiceState.FINISHED)
+	{
+		return;
+	}
+
+	if (globals.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
+	{
+		return;
+	}
+
 	AdminPage.renderingText.setValue('Rendered ' + progress + '%');
 	AdminPage.renderingCounter.setValue(Math.roundToTwoDecimals(progress));
 };

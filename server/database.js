@@ -171,7 +171,16 @@ var DATABASE =
 			htmlString += '<td>' + cell.index + '</td>';
 			htmlString += '<td>' + cell.width + 'x' + cell.height + '</td>';
 			htmlString += '<td>' + cell.startX + ',' + cell.startY + '</td>';
-			htmlString += '<td>' + cell.socketIoClient.ipAddress + '</td>';
+
+			if (cell.socketIoClient)
+			{
+				htmlString += '<td>' + cell.socketIoClient.ipAddress + '</td>';
+			}
+			else
+			{
+				htmlString += '<td></td>';
+			}
+			
 			htmlString += '<td>' + cell.timeRendering + 'ns</td>';
 			htmlString += '<td>' + cell.fullTime + 'ms</td>';
 			htmlString += '</tr>';
