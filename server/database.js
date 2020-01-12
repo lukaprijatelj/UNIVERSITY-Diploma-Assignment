@@ -241,12 +241,12 @@ var DATABASE =
 			{
 				continue;
 			}	
-			
-			// todo: not sure why i need this
-			/*if (cell.progress == 100)
+		
+			if (cell.progress == 100)
 			{
+				// needed to track which client rendered this cell
 				continue;
-			}*/
+			}
 
 			cell.socketIoClient = null;
 		}
