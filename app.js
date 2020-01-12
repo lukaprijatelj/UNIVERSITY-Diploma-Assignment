@@ -14,7 +14,6 @@ var fs = require('fs');
 // import namespace-core
 // -----------------------------
 require('./public/scripts/namespace-core/namespace-core.js');
-require('./public/scripts/namespace-enums/namespace-enums.js');
 
 
 // -----------------------------

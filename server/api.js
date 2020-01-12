@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const upload = require('./upload.js');
 const fsExtra = require('fs-extra');
+const Jimp = require('jimp');
 
 require('../public/scripts/namespace-enums/types.js');
 
@@ -34,12 +35,24 @@ var API =
     {
 		console.log('[Api] Initializing');
 
+		API.createFolder('public/results');
+		
+
         // mutiple callbacks are separated with comma.
         // first upload.single parses file and saves it into request.file
 		app.post(API.baseUrl + '/uploadScene', API.emptyUploadsFolder, upload.array('reserved_word-scene'), API.onUploadFile);
 		app.post(API.baseUrl + '/listScenes', API.onListScenes);
 		
 		io.on('connection', API.onConnect);
+	},
+
+	/**
+	 * Creates deletes existing one and creates new one.
+	 */
+	createFolder: async function(path)
+	{
+		await fsExtra.remove(path);
+		await fsExtra.mkdir(path);
 	},
 
 	/**
@@ -221,10 +234,43 @@ var API =
 	 */
 	notifyFinished: function()
 	{
-		let responseData = new Object();
+		API.renderingServiceState = namespace.enums.renderingServiceState.FINISHED;
+
+		let responseData = API.renderingServiceState;
 
 		// emits to ALL sockets
 		io.sockets.emit(API.baseUrl + '/rendering/finished', responseData);
+	},
+
+	/**
+	 * Current rendering has finished.
+	 */
+	onFinish: async function()
+	{
+		if (API.hasNotifiedFinish == true)
+		{
+			return;
+		}
+
+		API.hasNotifiedFinish = true;
+		
+		try
+		{
+			let buffer = DATABASE.getImagesBuffer(options.CANVAS_WIDTH, options.CANVAS_HEIGHT);
+			let image = new Jimp({ data: buffer, width: options.CANVAS_WIDTH, height: options.CANVAS_HEIGHT });	
+			
+			await image.writeAsync('public/' + RENDERED_IMAGE_FILEPATH);
+		}
+		catch(err)
+		{
+			console.error(err.message);
+		}
+
+		let htmlString = DATABASE.getRenderingInfo();
+			
+		await fs.writeFileSync("public/" + RENDERING_INFO_FILEPATH, htmlString); 
+
+		API.notifyFinished();
 	},
 
 	/**
@@ -252,11 +298,7 @@ var API =
 		{
 			console.log("[Api] All cells are already rendered! (aborting)");
 
-			if (API.hasNotifiedFinish == false)
-			{
-				API.hasNotifiedFinish = true;
-				API.notifyFinished();
-			}
+			API.onFinish();
 
 			return;
 		}
@@ -329,6 +371,9 @@ var API =
 		callback();
 	},
 
+	/**
+	 * Notifies rendering progress
+	 */
 	notifyProgress: function()
 	{
 		let cellsTable = DATABASE.tables.renderingCells;
@@ -348,9 +393,7 @@ var API =
 		// perform middleware function e.g. check if user is authenticated
 
 		var folder = 'public/scenes/Uploads';
-
 		await fsExtra.remove(folder);
-
 		await fsExtra.mkdir(folder);
 	
 		next();  // move on to the next middleware
@@ -394,8 +437,8 @@ var API =
 		DATABASE.removeAllCells();
 
 		var startY = 0;
-		var MAX_WIDTH = options.CANVAS_WIDTH * options.RESOLUTION_FACTOR;
-		var MAX_HEIGHT = options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR;
+		var MAX_WIDTH = options.CANVAS_WIDTH;
+		var MAX_HEIGHT = options.CANVAS_HEIGHT;
 
 		let index = 0;
 

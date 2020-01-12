@@ -45,8 +45,20 @@ I used browsersLocal storage for saving data received from server.
 	HTML
 	CPU
 	GPE
+	BVH 	- bounding volume hierarchy (BVH) is a tree structure on a set of geometric objects.
+	Color bleading
+	texel - texture pixel
+	aabb tree
+	BVH - bounding volume hierarchy
 
+# Issues
+	- Had to transform images from HTMLImg object to rawImage. This had to be done in main thread because WebWorkers do not have DOM elements.
 
+# convert color from Linear to Gamma
+255 * POWER(linearvalue / 255, 1 / 2.2)
+
+# convert color from Gamma To Linear
+255 * POWER(gammavalue / 255, 2.2)
 
 ## Connect with android
 - Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type:
@@ -66,12 +78,13 @@ http://minecraft.fri.uni-lj.si:30003/admin
 http://minecraft.fri.uni-lj.si:30003/client
 
 
-## Libraries used
+## Libraries/technologies used
 - SocketIO (bidirectional communication between server and client. It can also send to all clients at once)
 - glMatrix (vector and matrix operations )
 - Typescript
 - Sass (Scss)
-
+- WebGL (glsl)
+- THREEJS
 
 ## NPM Packages used
 - MongoDB

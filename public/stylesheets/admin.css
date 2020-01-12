@@ -18,11 +18,6 @@ interface
 	position: fixed;
 }
 
-interface.rendering
-{
-	border-color: var(--LIGHT-RED-COLOR);
-}
-
 
 
 
@@ -34,26 +29,42 @@ interface.rendering
 layer#loading>curtain
 {
 	background-color: rgba(0, 0, 0, 1);
-	opacity: 0.87;
+	opacity: 1;
 }
 
-layer#loading .centered-text
+layer#rendering>curtain
+{
+	background-color: rgba(0, 0, 0, 1);
+	opacity: 0.93;
+}
+
+layer#loading .centered-text,
+layer#rendering .centered-text
 {
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
+	min-width: 200px;
 }
 
-layer#loading>.centered-text wrapper_
+layer#loading .centered-text,
+layer#rendering .centered-text .loading-section
 {
-	background-color: var(--DARK-BLUE-COLOR);
-	padding: 20px;
+	text-align: center;
 }
 
 
+layer#rendering .interaction-section
+{
+	margin-bottom: 20px;
+	justify-content: center;
+}
 
-
+layer#rendering .loading-section
+{
+	margin-bottom: 20px;
+}
 
 
 /* ----------------------------- */
@@ -92,6 +103,10 @@ dropdown#background-dropdown>wrapper_
 	padding: 15px;
 }
 
+#options-dropdown input[type="radio"]
+{
+    vertical-align: bottom;
+}
 
 
 
@@ -108,25 +123,40 @@ interface:not(.rendering) #editor-curtain
 .render-button
 {
 	width: 50px;
+	height: 50px;
 	background-size: 20px 20px;
 	background-position: center;
 	background-repeat: no-repeat;
 	background-color: var(--LIGHT-RED-COLOR);
 }
-
 .render-button:not([disabled]):hover
 {
 	background-color: var(--LIGHT-RED-COLOR);
 }
 
+#close-rendering-button
+{
+	width: 50px;
+	height: 50px;
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-image: url('../images/Close_icon.png');
+}
+
 #start-rendering-button
 {
-	background-image: url('../images/Play_icon.png');
+	background-color: var(--LIGHT-RED-COLOR);
+}
+#start-rendering-button:not([disabled]):hover
+{
+	background-color: var(--LIGHT-RED-COLOR);
 }
 
 #pause-rendering-button
 {
 	background-image: url('../images/Pause_icon.png');
+	margin-right: 5px;
 }
 
 #stop-rendering-button
@@ -137,11 +167,20 @@ interface:not(.rendering) #editor-curtain
 #resume-rendering-button
 {
 	background-image: url('../images/Resume_icon.png');
+	margin-right: 5px;
 }
 
 #new-renderer-button
 {
 	background-color: var(--DARK-BLUE-COLOR);
+}
+
+#download-image[disabled],
+#download-info[disabled]
+{
+	opacity: 0.2;
+	cursor: default !important;
+	pointer-events: none !important;
 }
 
 #upload-button

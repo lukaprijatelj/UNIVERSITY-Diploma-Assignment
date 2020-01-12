@@ -2,6 +2,7 @@
 
 var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assignment');
 
+
 /** ----- NOTES: ----- */ 
 // when exporting .obj scene from Cinema4D please use meters as a unit. 
 // then use coverter command "obj2gltf -i input.obj -o output.gltf"
@@ -9,17 +10,14 @@ var WebApplication = new namespace.core.WebApplication('UNIVERSITY-Diploma-Assig
 var options = null;
 var previousOptions = null;
 
+
+
 var globals = new namespace.core.Globals();
 
 /**
  * ThreeJS scene.
  */
 globals.scene = null;
-
-/**
- * GLTF loader.
- */
-globals.loader = null;
 
 /**
  * ThreeJS camera in the scene.
@@ -41,6 +39,15 @@ globals.lastRenderingTime = 0;
  */
 globals.rendererCanvas = null;
 
+/**
+ * Vertex shader script text.
+ */
+globals.vertexShader = null;
+
+/**
+ * Fragment shader script text.
+ */
+globals.fragmentShader = null;
 
 
 
@@ -58,12 +65,13 @@ cache.clients = new Array();
 
 
 
+
 var ClientPage = new namespace.core.WebPage('Client');
 
 /**
  * Initializes page.
  */
-ClientPage.init = function()
+ClientPage.init = async function()
 {
 	console.log('[ClientPage] Initializing!');
 
@@ -73,6 +81,16 @@ ClientPage.init = function()
 		// at least 1 thread needed for rendering
 		new Exception.Other('Client does not have enough cores/threads to work properly!');
 	}
+
+	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingVertexShader.glsl');
+	vertexAjax.method = 'GET';
+	let vertexShader = await vertexAjax.send();
+	globals.vertexShader = vertexShader.responseText;
+
+	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingFragmentShader.glsl');
+	fragmentAjax.method = 'GET';
+	let fragmentShader = await fragmentAjax.send();
+	globals.fragmentShader = fragmentShader.responseText;
 
 	let interfaceHtml = new namespace.html.ScrollViewer(document.querySelector('interface'));
 	interfaceHtml.removeClass('loading');
@@ -85,10 +103,12 @@ ClientPage.init = function()
 
 	let flagCanvasOther = new namespace.html.DOMCanvas();
 	flagCanvasOther.id = 'flag-canvas-others';
+	flagCanvasOther.hide();
 	interfaceHtml.appendChild(flagCanvasOther);
 
 	let flagCanvasThis = new namespace.html.DOMCanvas();
 	flagCanvasThis.id = 'flag-canvas-this';
+	flagCanvasThis.hide();
 	interfaceHtml.appendChild(flagCanvasThis);
 
 	globals.rendererCanvas = new namespace.html.RendererCanvas();
@@ -100,6 +120,7 @@ ClientPage.init = function()
 
 /**
  * On server-client connection.
+ * @private
  */
 ClientPage._onServerConnected = async function()
 {
@@ -133,6 +154,7 @@ ClientPage._onServerConnected = async function()
 
 /**
  * Updates clients list.
+ * @private
  */
 ClientPage._updateClients = function(data)
 {
@@ -143,6 +165,7 @@ ClientPage._updateClients = function(data)
 
 /**
  * Server has notified us that clients were updated.
+ * @private
  */
 ClientPage._onClientAdd = function(thread, data, resolve, reject)
 {
@@ -153,6 +176,7 @@ ClientPage._onClientAdd = function(thread, data, resolve, reject)
 
 /**
  * Client has removed.
+ * @private
  */
 ClientPage._onClientRemove = function(thread, data, resolve, reject)
 {
@@ -198,6 +222,7 @@ ClientPage._onClientRemove = function(thread, data, resolve, reject)
 
 /**
  * Starts rendering procedure.
+ * @private
  */
 ClientPage._startRenderingService = async function()
 {
@@ -220,6 +245,7 @@ ClientPage._startRenderingService = async function()
 
 /**
  * Server started rendering service.
+ * @private
  */
 ClientPage._onStartRenderingService = function(thread, data, resolve, reject)
 {
@@ -230,6 +256,7 @@ ClientPage._onStartRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Server stopped rendering service.
+ * @private
  */
 ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 {
@@ -238,12 +265,14 @@ ClientPage._onStopRenderingService = function(thread, data, resolve, reject)
 	previousOptions = options;
 	options = null;	
 
-	globals.renderer.stopRendering();
 	ClientPage.stopRendererUi();
+
+	ClientPage.dispose();	
 };
 
 /**
- * Server stopped rendering service.
+ * Server paused rendering service.
+ * @private
  */
 ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 {
@@ -253,7 +282,8 @@ ClientPage._onPauseRenderingService = function(thread, data, resolve, reject)
 };
 
 /**
- * Server stopped rendering service.
+ * Server resumed rendering service.
+ * @private
  */
 ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 {
@@ -266,19 +296,18 @@ ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 
 /**
  * Client has disconnected from server.
+ * @private
  */
 ClientPage._onServerDisconnect = function()
 {
 	console.log('[ClientPage] Disconnected from server!');
 
-	if (API.renderingServiceState != namespace.enums.renderingServiceState.IDLE)
-	{
-		ClientPage._onStopRenderingService();
-	}
+	ClientPage._onStopRenderingService();
 };
 
 /**
  * Progress was updated.
+ * @private
  */
 ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 {	
@@ -334,6 +363,7 @@ ClientPage._onCellsUpdate = function(thread, data, resolve, reject)
 
 /**
  * Starts loading GLTF model.
+ * @private
  */
 ClientPage._loadGltfModel = function()
 {
@@ -363,6 +393,7 @@ ClientPage._loadGltfModel = function()
 
 /**
  * Initializes scene.
+ * @private
  */
 ClientPage._initScene = function(gltfScene)
 {
@@ -372,6 +403,7 @@ ClientPage._initScene = function(gltfScene)
 
 /**
  * Sets background for scene.
+ * @private
  */
 ClientPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 {
@@ -394,6 +426,7 @@ ClientPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 
 /**
  * Intializes camera in the scene.
+ * @private
  */
 ClientPage._initCamera = function(gltfCamera)
 {
@@ -410,7 +443,8 @@ ClientPage._initCamera = function(gltfCamera)
 };
 
 /**
- * Initializes lights.
+ * Initializes additional lights like ambient light.
+ * @private
  */
 ClientPage._initLights = function(gltfLights)
 {
@@ -446,6 +480,7 @@ ClientPage._initLights = function(gltfLights)
 
 /**
  * Initializes renderer.
+ * @private
  */
 ClientPage._initRenderer = function()
 {
@@ -462,13 +497,18 @@ ClientPage._initRenderer = function()
 		case namespace.enums.rendererType.PATH_TRACING:
 			renderer = new PathtracingRenderer();
 			break;
+
+		default:
+			new Exception.Other('Unknown renderer type "' + options.RENDERER_TYPE + '"');
+			break;
 	}	
 	
 	globals.renderer = renderer;
 };	
 
 /**
- * Updates options.
+ * Updates rendering options.
+ * @private
  */
 ClientPage._updateOptions = function(dataOptions)
 {
@@ -487,9 +527,8 @@ ClientPage._updateOptions = function(dataOptions)
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
@@ -498,6 +537,7 @@ ClientPage._updateOptions = function(dataOptions)
 
 /**
  * Updates rendering service state from server.
+ * @private
  */
 ClientPage._updateRenderingServiceState = function(renderingServiceState)
 {
@@ -508,6 +548,7 @@ ClientPage._updateRenderingServiceState = function(renderingServiceState)
 
 /**
  * Gets rendering grid layout. Layout is needed, so that images from other clients are displayed.
+ * @private
  */
 ClientPage._updateCells = function(cells)
 {
@@ -546,6 +587,8 @@ ClientPage._updateCells = function(cells)
  */
 ClientPage.openScene = async function()
 {
+	let gltf = null;
+
 	try
 	{
 		/**
@@ -555,27 +598,29 @@ ClientPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await ClientPage._loadGltfModel();
-		
-		await ClientPage._initScene(gltf.scene);
-		await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
-		
-		ClientPage._initCamera(options.CAMERA);
-		ClientPage._initLights(options.LIGHTS);		
-		ClientPage._initRenderer();
-
-		globals.renderer.prepareJsonData();
-		globals.renderer.initScene();
-		globals.renderer.initCamera();
-		globals.renderer.initLights();		
-
-		let cells = await API.request('cells/getWaiting');
-		ClientPage._updateWaitingCells(cells);
+		gltf = await ClientPage._loadGltfModel();
 	}
 	catch (err)
 	{
 		console.error(err.message);
+		return;
 	}	
+	
+	await ClientPage._initScene(gltf.scene);
+	await ClientPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
+	
+	ClientPage._initCamera(options.CAMERA);
+	ClientPage._initLights(options.LIGHTS);		
+
+	ClientPage._initRenderer();
+
+	globals.renderer.prepareJsonData();
+	globals.renderer.initScene();
+	globals.renderer.initCamera();
+	globals.renderer.initLights();		
+
+	let cells = await API.request('cells/getWaiting');
+	ClientPage._updateWaitingCells(cells);
 };
 
 /**
@@ -588,9 +633,8 @@ ClientPage.stopRendererUi = function()
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 		browser.setTitle('Idle (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 };
@@ -622,6 +666,7 @@ ClientPage.onRendererDone = async function(cells)
 
 /**
  * Cell waiting to be rendered is received.
+ * @private
  */
 ClientPage._updateWaitingCells = function(cells)
 {
@@ -684,17 +729,42 @@ ClientPage.startRendering = function(cellsWaiting)
 
 	if (previousOptions)
 	{
-		let browser = new namespace.core.Browser();
-		let prevWidth = (previousOptions.CANVAS_WIDTH * previousOptions.RESOLUTION_FACTOR);
-		let prevHeight = (previousOptions.CANVAS_HEIGHT * previousOptions.RESOLUTION_FACTOR);
+		let prevWidth = previousOptions.CANVAS_WIDTH;
+		let prevHeight = previousOptions.CANVAS_HEIGHT;
 
 		browser.setTitle('Rendering (' + prevWidth + ' x ' + prevHeight + ')');
 	}
 
-	if (options.RENDERER_TYPE == namespace.enums.rendererType.RAY_TRACING)
+	// start rendering
+	globals.renderer.setWaitingCells(cellsWaiting);
+	globals.renderer.startRendering();
+};
+
+/**
+ * Disposes of the current rendering, scene, cameras, etc.
+ */
+ClientPage.dispose = function()
+{
+	if (globals.renderer)
 	{
-		// start rendering
-		globals.renderer.setWaitingCells(cellsWaiting);
-		globals.renderer.startRendering();
+		globals.renderer.dispose();
+		globals.renderer = null;
+	}
+
+	if (globals.scene)
+	{
+		let scene = globals.scene;
+
+		while(scene.children.length > 0)
+		{ 
+			scene.remove(scene.children[0]); 
+		}
+
+		globals.scene = null;
+	}
+
+	if (globals.camera)
+	{
+		globals.camera = null;
 	}
 };

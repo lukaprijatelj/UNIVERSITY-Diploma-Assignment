@@ -1,17 +1,16 @@
+'use strict';
+
 /**
  * RaytracingRenderer renders by raytracing it's scene. However, it does not
  * compute the pixels itself but it hands off and coordinates the tasks for workers.
  * The worker compute the pixel values and this renderer simply paints it to the Canvas.
  *
+ * @author erichlof / https://github.com/erichlof
  * @author zz85 / http://github.com/zz85
  * @author lukaprijatelj / http://github.com/lukaprijatelj 
  */
 var RaytracingRenderer = function() 
 {
-	console.log('[RaytracingRenderer] Initializing renderer');
-
-	this.context = null;
-
 	/**
 	 * Cells that will be rendered.
 	 */
@@ -22,22 +21,22 @@ var RaytracingRenderer = function()
 	 */
 	this.cellsDone = null;
 
+	/**
+	 * All web worker threads.
+	 */
 	this.threads = null;	
-
-	this.state = 'idle';
 
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.scene = null;
 	this.sceneJSON = null;
 
 	/**
 	 * Additional properties that were not serialize automatically
 	 */
-	this.camera = null;
 	this.cameraJSON = null;
 
+	// rebind event handlers
 	this.onCellRendered = this.onCellRendered.bind(this);
 	this.checkRenderingState = this.checkRenderingState.bind(this);
 
@@ -55,8 +54,7 @@ RaytracingRenderer.prototype._init = function()
 {
 	let _this = this;
 
-	_this.scene = globals.scene;
-	_this.camera = globals.camera;
+	console.log('[RaytracingRenderer] Initializing renderer');
 
 	_this.setWorkers();
 };
@@ -148,9 +146,21 @@ RaytracingRenderer.prototype.checkRenderingState = function(thread, data, resolv
 
 		globals.rendererCanvas.pauseThreadCell(thread);
 	}
-	else
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
+	{
+		reject();
+	}
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.FINISHED)
+	{
+		reject();
+	}
+	else if (API.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 	{
 		resolve();
+	}
+	else
+	{
+		new Exception.Other('Unknown rendering state!');
 	}
 };
 
@@ -206,20 +216,20 @@ RaytracingRenderer.prototype.prepareJsonData = function()
 
 	// update scene graph
 
-	if (_this.scene.autoUpdate === true) 
+	if (globals.scene.autoUpdate === true) 
 	{
-		_this.scene.updateMatrixWorld();
+		globals.scene.updateMatrixWorld();
 	}
 
 	// update camera matrices
 
-	if (_this.camera.parent === null) 
+	if (globals.camera.parent === null) 
 	{
-		_this.camera.updateMatrixWorld();
+		globals.camera.updateMatrixWorld();
 	}
 
-	_this.sceneJSON = _this.scene.toJSON();
-	_this.cameraJSON = _this.camera.toJSON();			
+	_this.sceneJSON = globals.scene.toJSON();
+	_this.cameraJSON = globals.camera.toJSON();			
 };
 
 /**
@@ -238,7 +248,7 @@ RaytracingRenderer.prototype.initScene = function()
 };
 
 /**
- * Initializes scene.
+ * Initializes camera.
  */
 RaytracingRenderer.prototype.initCamera = function()
 {
@@ -253,7 +263,7 @@ RaytracingRenderer.prototype.initCamera = function()
 };
 
 /**
- * Initializes scene.
+ * Initializes lights.
  */
 RaytracingRenderer.prototype.initLights = function()
 {
@@ -268,7 +278,7 @@ RaytracingRenderer.prototype.initLights = function()
 };
 
 /**
- * Starts rendering.
+ * Sets cells waiting to be rendered.
  */
 RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting) 
 {
@@ -296,7 +306,7 @@ RaytracingRenderer.prototype.setWaitingCells = function(cellsWaiting)
 };
 
 /**
- * Stops rendering process.
+ * Clears/removes all cells from other clients.
  */
 RaytracingRenderer.prototype.clearOthersCells = function()
 {
@@ -321,7 +331,7 @@ RaytracingRenderer.prototype.clearOthersCells = function()
 };
 
 /**
- * Stops rendering process.
+ * Clears/removes all cells still waiting to be rendered.
  */
 RaytracingRenderer.prototype.clearWaitingCells = function()
 {
@@ -386,16 +396,21 @@ RaytracingRenderer.prototype.stopRendering = function()
 
 	_this.clearOthersCells();
 
-	for (let i=0; i<_this.threads.length; i++)
+	if (_this.threads)
 	{
-		let current = _this.threads[i];		
-		
-		current.isRendering = false;
-
-		globals.rendererCanvas.removeThreadCell(current);
-
-		current.terminate();
-	};
+		for (let i=0; i<_this.threads.length; i++)
+		{
+			let current = _this.threads[i];		
+			
+			current.isRendering = false;
+	
+			globals.rendererCanvas.removeThreadCell(current);
+	
+			current.terminate();
+		};
+	
+		_this.threads = null;
+	}	
 };
 
 /**
@@ -454,4 +469,16 @@ RaytracingRenderer.prototype._runThread = function(thread)
 	
 	thread.isRendering = true;
 	thread.invoke('worker.startRendering');
+};
+
+/**
+ * Disposes the renderer.
+ */
+RaytracingRenderer.prototype.dispose = function()
+{
+	let _this = this;
+
+	_this.stopRendering();
+
+	_this.cellsWaiting = null;
 };

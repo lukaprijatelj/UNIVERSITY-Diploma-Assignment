@@ -47,5 +47,7 @@ namespace.enums.renderingServiceState = new Enum(
 
 	RUNNING: 'running',
 
-	PAUSED: 'pause'
+	PAUSED: 'pause',
+
+	FINISHED: 'finished'
 });

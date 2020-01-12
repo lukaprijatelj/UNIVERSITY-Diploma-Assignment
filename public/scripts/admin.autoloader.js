@@ -29,10 +29,9 @@
 	// namespace-enums
 	// -----------------------------
 
-	console.log('[Admin.autoloader] Loading namespace.enums library');
+	console.log('[Admin.autoloader] Loading enums');
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("scripts/namespace-enums/namespace-enums.js"));
 	loadingBlock.push(document.loadScript('scripts/namespace-enums/types.js'));
 	await Promise.all(loadingBlock);
 

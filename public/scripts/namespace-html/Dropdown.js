@@ -19,9 +19,7 @@ if (typeof namespace.html == 'undefined')
     {
 		let _this = document.createElement('dropdown');
 		Object.cloneData(_this, Dropdown.prototype);
-		Interface.inherit(_this, IDisposable);
 
 		return _this;
 	}
-	Interface.inheritPrototype(Dropdown, IDisposable);
 })();

@@ -47,6 +47,7 @@ var DATABASE =
 	 */
 	finishedCells: 0,
 	
+
 	init: function()
 	{
 		console.log('[Database] Initializing');
@@ -60,6 +61,7 @@ var DATABASE =
 		DATABASE.tables.renderingCells = new BasicTable(tablesRoot, 'renderingCells');
 	},
 
+	
 	/**
 	 * Clears list of client indexes.
 	 */
@@ -97,6 +99,88 @@ var DATABASE =
     {
 		var table = DATABASE.tables.uploadedFiles;
         return table.rows;
+	},
+
+	/**
+	 * Merges all cells data into one buffer.
+	 */
+	getImagesBuffer: function(width, height)
+	{
+		let NUM_OF_CHANNELS = 4;
+		let buffer = new Uint8Array(width * height * NUM_OF_CHANNELS);
+
+		var cellsTable = DATABASE.tables.renderingCells;
+
+		for (let a=0; a<cellsTable.rows.length; a++)
+		{
+			let cell = cellsTable.rows[a];
+
+			for (let j=0; j<cell.height; j++)
+			{
+				for (let i=0; i<cell.width; i++)
+				{					
+					let globalPosition = 0;
+					globalPosition += (cell.startY + j) * width;
+					globalPosition += cell.startX + i;
+					globalPosition *= NUM_OF_CHANNELS;
+
+					let localPosition = 0;
+					localPosition += j * cell.width;
+					localPosition += i;
+					localPosition *= NUM_OF_CHANNELS;
+
+					buffer[globalPosition + 0] = cell.rawImage.imageData.data[localPosition + 0];
+					buffer[globalPosition + 1] = cell.rawImage.imageData.data[localPosition + 1];
+					buffer[globalPosition + 2] = cell.rawImage.imageData.data[localPosition + 2];
+					buffer[globalPosition + 3] = cell.rawImage.imageData.data[localPosition + 3];
+				}
+			}
+		}
+
+		return buffer;
+	},
+
+	/**
+	 * Gets rendering info results like time rendering, time sending etc.
+	 */
+	getRenderingInfo: function()
+	{
+		let cellsTable = DATABASE.tables.renderingCells;
+		let htmlString = '<!DOCTYPE html>';
+
+		htmlString += '<html lang="en">';
+		htmlString += '<head><meta charset="utf-8"></head>';
+
+		htmlString += '<body>';
+		htmlString += '<table cellspacing="10">';
+
+		htmlString += '<tr>';
+		htmlString += '<th>Index</th>';
+		htmlString += '<th>Size</th>';
+		htmlString += '<th>Position</th>';
+		htmlString += '<th>Client IP</th>';
+		htmlString += '<th>Time rendering</th>';
+		htmlString += '<th>Full time</th>';
+		htmlString += '</tr>';
+		
+		for (let a=0; a<cellsTable.rows.length; a++)
+		{
+			let cell = cellsTable.rows[a];
+
+			htmlString += '<tr>';
+			htmlString += '<td>' + cell.index + '</td>';
+			htmlString += '<td>' + cell.width + 'x' + cell.height + '</td>';
+			htmlString += '<td>' + cell.startX + ',' + cell.startY + '</td>';
+			htmlString += '<td>' + cell.socketIoClient.ipAddress + '</td>';
+			htmlString += '<td>' + cell.timeRendering + 'ns</td>';
+			htmlString += '<td>' + cell.fullTime + 'ms</td>';
+			htmlString += '</tr>';
+		}
+
+		htmlString += '</table>';
+		htmlString += '</body>';
+
+		return htmlString;
 	},
 	
 	/**

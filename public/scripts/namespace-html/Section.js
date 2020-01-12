@@ -19,9 +19,7 @@ if (typeof namespace.html == 'undefined')
     {
 		let _this = document.createElement('Section');
 		Object.cloneData(_this, Section.prototype);
-		Interface.inherit(_this, IDisposable);
 
 		return _this;
 	}
-	Interface.inheritPrototype(Section, IDisposable);
 })();

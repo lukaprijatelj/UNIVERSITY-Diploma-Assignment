@@ -23,6 +23,48 @@ namespace.html.OptionsDropdown = (() =>
 		
 		let wrapper = new namespace.html.Wrapper();
 		dropdown.appendChild(wrapper);
+		
+
+		// -----------------------------
+		// rendering options
+		// -----------------------------
+
+		let raySection = new namespace.html.Section();
+		wrapper.appendChild(raySection);
+
+		let RAY_BUTTON_GROUP_NAME = 'ray-cast-type';
+
+		let rayLabel = new namespace.html.Label();
+		rayLabel.innerHTML = 'RAY CAST TYPE';
+		raySection.appendChild(rayLabel);
+
+		raySection.appendChild('<divider-x-small></divider-x-small>');
+
+		let rayTracingButton = new namespace.html.RadioButton();
+		rayTracingButton.name = RAY_BUTTON_GROUP_NAME;
+		rayTracingButton.checked = options.RENDERER_TYPE == 'ray-tracing';
+		rayTracingButton.onclick = function()
+		{
+			options.RENDERER_TYPE = 'ray-tracing';
+		};
+		raySection.appendChild(rayTracingButton);
+		raySection.appendChild('Ray tracing');
+
+		raySection.appendChild('<divider-y-small></divider-y-small>');
+
+		let pathTracingButton = new namespace.html.RadioButton();
+		pathTracingButton.name = RAY_BUTTON_GROUP_NAME;
+		pathTracingButton.checked = options.RENDERER_TYPE == 'path-tracing';
+		pathTracingButton.onclick = function()
+		{
+			options.RENDERER_TYPE = 'path-tracing';
+		};
+		raySection.appendChild(pathTracingButton);
+		raySection.appendChild('Path tracing');
+
+
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
 
 		// -----------------------------
@@ -88,7 +130,7 @@ namespace.html.OptionsDropdown = (() =>
 		canvasWidthInput.value = options.CANVAS_WIDTH;
 		canvasWidthInput.onchange = () =>
 		{
-			options.CANVAS_WIDTH = Number(canvasWidthInput.value);
+			options.CANVAS_WIDTH = parseInt(canvasWidthInput.value);
 		};
 		canvasFlex.appendChild(canvasWidthInput);
 
@@ -99,38 +141,13 @@ namespace.html.OptionsDropdown = (() =>
 		canvasHeightInput.value = options.CANVAS_HEIGHT;
 		canvasHeightInput.onchange = () =>
 		{
-			options.CANVAS_HEIGHT = Number(canvasHeightInput.value);
+			options.CANVAS_HEIGHT = parseInt(canvasHeightInput.value);
 		};
 		canvasFlex.appendChild(canvasHeightInput);
 
 		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
-
-		// -----------------------------
-		// resolution options
-		// -----------------------------
-
-		/*let resolutionSection = new namespace.html.Section();
-		wrapper.appendChild(resolutionSection);
-
-		let resolutionLabel = new namespace.html.Label();
-		resolutionLabel.innerHTML = 'RESOLUTION (factor)';
-		resolutionSection.appendChild(resolutionLabel);
-
-		resolutionSection.appendChild('<divider-x-small></divider-x-small>');
-
-		let resolutionInput = new namespace.html.NumberInput();
-		resolutionInput.id = 'resolution-factor-input';
-		resolutionInput.value = options.RESOLUTION_FACTOR;
-		resolutionInput.onchange = () =>
-		{
-			options.RESOLUTION_FACTOR = Number(resolutionInput.value);
-		};
-		resolutionSection.appendChild(resolutionInput);
-
-		wrapper.appendChild('<divider-x-small></divider-x-small>');*/
-
-
+		
 		// -----------------------------
 		// antialiasing options
 		// -----------------------------
@@ -146,12 +163,37 @@ namespace.html.OptionsDropdown = (() =>
 
 		let antialiasingInput = new namespace.html.NumberInput();
 		antialiasingInput.id = 'antialiasing-factor-input';
-		antialiasingInput.value = options.ANTIALIASING_FACTOR;
+		antialiasingInput.value = options.MULTISAMPLING_FACTOR;
 		antialiasingInput.onchange = () =>
 		{
-			options.ANTIALIASING_FACTOR = Number(antialiasingInput.value);
+			options.MULTISAMPLING_FACTOR = parseInt(antialiasingInput.value);
 		};
 		antialiasingSection.appendChild(antialiasingInput);
+
+		wrapper.appendChild('<divider-x-small></divider-x-small>');
+
+
+		// -----------------------------
+		// max recursion options
+		// -----------------------------
+
+		let recursionSection = new namespace.html.Section();
+		wrapper.appendChild(recursionSection);
+
+		let recursionLabel = new namespace.html.Label();
+		recursionLabel.innerHTML = 'RECURSION DEPTH (max number)';
+		recursionSection.appendChild(recursionLabel);
+
+		recursionSection.appendChild('<divider-x-small></divider-x-small>');
+
+		let recursionInput = new namespace.html.NumberInput();
+		recursionInput.id = 'threads-max-number-input';
+		recursionInput.value = options.MAX_RECURSION_DEPTH;
+		recursionInput.onchange = () =>
+		{
+			options.MAX_RECURSION_DEPTH = parseInt(recursionInput.value);
+		};
+		recursionSection.appendChild(recursionInput);
 
 		wrapper.appendChild('<divider-x-small></divider-x-small>');
 
@@ -174,7 +216,7 @@ namespace.html.OptionsDropdown = (() =>
 		threadsInput.value = options.MAX_THREADS;
 		threadsInput.onchange = () =>
 		{
-			options.MAX_THREADS = Number(threadsInput.value);
+			options.MAX_THREADS = parseInt(threadsInput.value);
 		};
 		threadsSection.appendChild(threadsInput);
 
@@ -202,7 +244,7 @@ namespace.html.OptionsDropdown = (() =>
 		blockWidthInput.value = options.BLOCK_WIDTH;
 		blockWidthInput.onchange = () =>
 		{
-			options.BLOCK_WIDTH = Number(blockWidthInput.value);
+			options.BLOCK_WIDTH = parseInt(blockWidthInput.value);
 		};
 		blockFlex.appendChild(blockWidthInput);
 
@@ -213,7 +255,7 @@ namespace.html.OptionsDropdown = (() =>
 		blockHeightInput.value = options.BLOCK_HEIGHT;
 		blockHeightInput.onchange = () =>
 		{
-			options.BLOCK_HEIGHT = Number(blockHeightInput.value);
+			options.BLOCK_HEIGHT = parseInt(blockHeightInput.value);
 		};
 		blockFlex.appendChild(blockHeightInput);
 
@@ -238,7 +280,7 @@ namespace.html.OptionsDropdown = (() =>
 		numBlocksInput.value = options.NUM_OF_BLOCKS_IN_CHUNK;
 		numBlocksInput.onchange = () =>
 		{
-			options.NUM_OF_BLOCKS_IN_CHUNK = Number(numBlocksInput.value);
+			options.NUM_OF_BLOCKS_IN_CHUNK = parseInt(numBlocksInput.value);
 		};
 		numBlocksSection.appendChild(numBlocksInput);
 		

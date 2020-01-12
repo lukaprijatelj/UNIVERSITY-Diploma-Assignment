@@ -1,9 +1,9 @@
 'use strict';
-var _this = this;
-if (typeof _this.namespace == 'undefined') {
-    _this.namespace = new Object();
+var _global = this;
+if (typeof _global.namespace == 'undefined') {
+    _global.namespace = new Object();
 }
-var namespace = _this.namespace;
+var namespace = _global.namespace;
 if (typeof namespace.html == 'undefined') {
     namespace.html = new Object();
 }
@@ -12,25 +12,25 @@ if (typeof namespace.__ == 'undefined') {
 }
 namespace.html.Anchor = (() => {
     let Anchor = function (element) {
-        let _this = this;
-        Interface.inherit(_this, IDisposable);
-        this._init(element);
+        this.disposeEvent = new Event();
+        this._constructor(element);
     };
-    Interface.inheritPrototype(Anchor, IDisposable);
-    Anchor.prototype._init = function (element) {
+    Anchor.prototype._constructor = function (element) {
         let _this = this;
         _this.updatePosition = _this.updatePosition.bind(_this);
         _this._onElementDisposeEventHandler = _this._onElementDisposeEventHandler.bind(_this);
         _this._onBrowserResizeEventHandler = _this._onBrowserResizeEventHandler.bind(_this);
         _this.element = element;
         _this.element.addClass('has-anchor');
-        EventListener.attach(_this.element.onDispose, _this._onElementDisposeEventHandler);
+        if (!_this.element.disposeEvent) {
+            _this.element.disposeEvent = new Event();
+        }
+        EventListener.attach(_this.element.disposeEvent, _this._onElementDisposeEventHandler);
         _this.target = null;
         _this.top = '0px';
         _this.left = '0px';
         _this.centerTop = '0px';
         _this.centerLeft = '0px';
-        let browser = new namespace.core.Browser();
         EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     Anchor.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -43,7 +43,6 @@ namespace.html.Anchor = (() => {
     };
     Anchor.prototype.dispose = function () {
         let _this = this;
-        let browser = new namespace.core.Browser();
         EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     Anchor.prototype.setPosition = function (top, left) {
@@ -91,12 +90,10 @@ namespace.html.Button = (() => {
     let Button = function (text) {
         let _this = document.createElement('button');
         Object.cloneData(_this, Button.prototype);
-        Interface.inherit(_this, IDisposable);
-        _this._init(text);
+        _this._constructor(text);
         return _this;
     };
-    Interface.inheritPrototype(Button, IDisposable);
-    Button.prototype._init = function (text) {
+    Button.prototype._constructor = function (text) {
         let _this = this;
         if (text) {
             _this.innerHTML = text;
@@ -108,17 +105,16 @@ namespace.html.Canvas = (() => {
     let Canvas = function (resizable) {
         var _this = document.createElement('canvas');
         Object.cloneData(_this, Canvas.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.resizeCanvas = _this.resizeCanvas.bind(_this);
         _this._onBrowserResizeEventHandler = _this._onBrowserResizeEventHandler.bind(_this);
-        _this._init(resizable);
+        _this.disposeEvent = new Event();
+        _this._constructor(resizable);
         return _this;
     };
-    Interface.inheritPrototype(Canvas, IDisposable);
-    Canvas.prototype._init = function (resizable) {
+    Canvas.prototype._constructor = function (resizable) {
         let _this = this;
         if (resizable == true) {
-            EventListener.attach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+            EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
         }
     };
     Canvas.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -151,7 +147,7 @@ namespace.html.Canvas = (() => {
         return _this.toImage(posX, posY, 1, 1).data;
     };
     Canvas.prototype.dispose = function () {
-        EventListener.detach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+        EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     return Canvas;
 })();
@@ -160,12 +156,10 @@ namespace.html.Checkbox = (() => {
         var _this = document.createElement('input');
         _this.setAttribute('type', 'checkbox');
         Object.cloneData(_this, Checkbox.prototype);
-        Interface.inherit(_this, IDisposable);
-        _this._init();
+        _this._constructor();
         return _this;
     };
-    Interface.inheritPrototype(Checkbox, IDisposable);
-    Checkbox.prototype._init = function () {
+    Checkbox.prototype._constructor = function () {
         let _this = this;
     };
     return Checkbox;
@@ -174,27 +168,23 @@ namespace.html.Curtain = (() => {
     let Curtain = function () {
         let _this = document.createElement('curtain');
         Object.cloneData(_this, Curtain.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Curtain, IDisposable);
     return Curtain;
 })();
 namespace.html.DOMCanvas = (() => {
     let DOMCanvas = function (resizable) {
         var _this = document.createElement('domcanvas');
         Object.cloneData(_this, DOMCanvas.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.resizeCanvas = _this.resizeCanvas.bind(_this);
         _this._onBrowserResizeEventHandler = _this._onBrowserResizeEventHandler.bind(_this);
-        _this._init(resizable);
+        _this._constructor(resizable);
         return _this;
     };
-    Interface.inheritPrototype(DOMCanvas, IDisposable);
-    DOMCanvas.prototype._init = function (resizable) {
+    DOMCanvas.prototype._constructor = function (resizable) {
         let _this = this;
         if (resizable == true) {
-            EventListener.attach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+            EventListener.attach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
         }
     };
     DOMCanvas.prototype._onBrowserResizeEventHandler = function (eventArgs) {
@@ -221,7 +211,7 @@ namespace.html.DOMCanvas = (() => {
         _this.style.background = value;
     };
     DOMCanvas.prototype.dispose = function () {
-        EventListener.detach(namespace.__.BROWSER.resizeEvent, _this._onBrowserResizeEventHandler);
+        EventListener.detach(browser.resizeEvent, _this._onBrowserResizeEventHandler);
     };
     return DOMCanvas;
 })();
@@ -229,16 +219,14 @@ namespace.html.DatePicker = (() => {
     let DatePicker = function (selectedDate) {
         var _this = document.createElement('datepicker');
         Object.cloneData(_this, DatePicker.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.selectedDate = selectedDate;
         _this.minDate = Date.clone(selectedDate);
         _this.onDatePick = new Event();
         _this.onClose = new Event();
-        _this._init();
+        _this._constructor();
         return _this;
     };
-    Interface.inheritPrototype(DatePicker, IDisposable);
-    DatePicker.prototype._init = function () {
+    DatePicker.prototype._constructor = function () {
         let _this = this;
         let topBar = new namespace.html.Div();
         topBar.addClass('top-bar');
@@ -264,7 +252,9 @@ namespace.html.DatePicker = (() => {
     };
     DatePicker.prototype.pickDate = function (date) {
         let _this = this;
-        Event.fire(_this.onDatePick, date);
+        let eventArgs = new EventArgs(_this);
+        eventArgs.date = date;
+        Event.fire(_this.onDatePick, eventArgs);
         _this.close();
     };
     DatePicker.prototype.close = function () {
@@ -344,30 +334,37 @@ namespace.html.Div = (() => {
     let Div = function () {
         let _this = document.createElement('div');
         Object.cloneData(_this, Div.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Div, IDisposable);
+    Div.prototype.setAspectRatio = function (ratioW, ratioH) {
+        let _this = this;
+        let aspectRatioWrapper = _this.querySelector('wrapper_.aspectRatio');
+        if (!aspectRatioWrapper) {
+            aspectRatioWrapper = new namespace.html.Wrapper();
+            aspectRatioWrapper.addClass('aspectRatio');
+            aspectRatioWrapper.style.width = '100%';
+            aspectRatioWrapper.style.display = 'block';
+            _this.appendChild(aspectRatioWrapper);
+        }
+        let paddingSum = ratioH / ratioW * 100;
+        aspectRatioWrapper.style.paddingTop = paddingSum + '%';
+    };
     return Div;
 })();
 namespace.html.EmbeddedObject = (() => {
     let EmbeddedObject = function () {
         var _this = document.createElement('object');
         Object.cloneData(_this, EmbeddedObject.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(EmbeddedObject, IDisposable);
     return EmbeddedObject;
 })();
 namespace.html.FileDrop = (() => {
     let FileDrop = function () {
         var _this = document.createElement('filedrop');
         Object.cloneData(_this, FileDrop.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(FileDrop, IDisposable);
     return FileDrop;
 })();
 namespace.html.FileInput = (() => {
@@ -375,30 +372,24 @@ namespace.html.FileInput = (() => {
         var _this = document.createElement('input');
         _this.setAttribute('type', 'file');
         Object.cloneData(_this, FileInput.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(FileInput, IDisposable);
     return FileInput;
 })();
 namespace.html.Flex = (() => {
     let Flex = function () {
         var _this = document.createElement('flex');
         Object.cloneData(_this, Flex.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Flex, IDisposable);
     return Flex;
 })();
 namespace.html.Frame = (() => {
     let Frame = function () {
         var _this = document.createElement('frame');
         Object.cloneData(_this, Frame.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Frame, IDisposable);
     return Frame;
 })();
 var ANIMATION_END_NAMES = {
@@ -504,6 +495,27 @@ HTMLElement.prototype.appendChild = function (value) {
     _this._appendChild(element);
     _this.updateTrackChildren();
     _this.isInDOM = true;
+};
+HTMLElement.prototype.queryChild = function (selectorString) {
+    let _this = this;
+    for (let i = 0; i < _this.children.length; i++) {
+        let current = _this.children[i];
+        if (current.matches(selectorString) == true) {
+            return current;
+        }
+    }
+    return null;
+};
+HTMLElement.prototype.queryChildren = function (selectorString) {
+    let _this = this;
+    let childs = [];
+    for (let i = 0; i < _this.children.length; i++) {
+        let current = _this.children[i];
+        if (current.matches(selectorString) == true) {
+            childs.push(current);
+        }
+    }
+    return childs;
 };
 HTMLElement.prototype.updateTrackChildren = function () {
     let _this = this;
@@ -630,9 +642,7 @@ Element.prototype._traverseDownTheTree = function (options) {
         }
     }
     if (options.dispose == true) {
-        if (Interface.isInheriting(_this, IDisposable)) {
-            GarbageCollector.dispose(_this);
-        }
+        GarbageCollector.dispose(_this);
         _this.isInDOM = false;
     }
 };
@@ -667,13 +677,13 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
 HTMLElement.prototype.onClick = function (callback) {
     var _this = this;
     _this.addEventListener("click", callback);
-    if (Interface.isInheriting(_this, IDisposable) == false) {
-        Interface.inherit(_this, IDisposable);
+    if (!_this.disposeEvent) {
+        _this.disposeEvent = new Event();
     }
     let onDisposeEventHandler = (() => {
         _this.removeEventListener("click", callback);
     });
-    OneTimeEventListener.attach(_this.onDispose, onDisposeEventHandler);
+    EventListener.attachOneTime(_this.disposeEvent, onDisposeEventHandler);
 };
 HTMLElement.prototype.onClickOnce = function (callback) {
     var _this = this;
@@ -708,7 +718,6 @@ HTMLElement.prototype.trackLastChild = function () {
 };
 HTMLElement.prototype.hide = function () {
     let _this = this;
-    _this.removeClass('visible');
     _this.addClass('hidden');
     if (_this.parentElement) {
         _this.parentElement.updateTrackLastChild();
@@ -724,7 +733,6 @@ HTMLElement.prototype.isHidden = function () {
 HTMLElement.prototype.show = function () {
     let _this = this;
     _this.removeClass('hidden');
-    _this.addClass('visible');
     if (_this.parentElement) {
         _this.parentElement.updateTrackLastChild();
     }
@@ -748,14 +756,14 @@ HTMLElement.prototype.enable = function () {
     return _this.removeAttribute(ATTR_NAME);
 };
 HTMLElement.prototype.isEnabled = function () {
-    return !this.isDisable();
+    return !this.isDisabled();
 };
 HTMLElement.prototype.disable = function () {
     let _this = this;
     let ATTR_NAME = 'disabled';
     return _this.setAttribute(ATTR_NAME, '');
 };
-HTMLElement.prototype.isDisable = function () {
+HTMLElement.prototype.isDisabled = function () {
     let _this = this;
     let ATTR_NAME = 'disabled';
     if (_this.hasAttribute(ATTR_NAME)) {
@@ -822,18 +830,12 @@ HTMLElement.forceReflow = function (_this) {
 };
 namespace.html.HTMLProperty = (() => {
     let HTMLProperty = function (value) {
-        Interface.inherit(this, IDisposable);
         this.value = value;
-        Object.defineProperty(this, 'onUpdate', {
-            writable: true,
-            enumerable: false
-        });
         this.onUpdate = new Event();
     };
-    Interface.inheritPrototype(HTMLProperty, IDisposable);
     return HTMLProperty;
 })();
-_this.NotifyUpdate = function (property) {
+_global.NotifyUpdate = function (property) {
     if (!(property instanceof namespace.html.HTMLProperty)) {
         new Exception.Other('Cannot notify element that is not of namespace.html.HTMLProperty type!');
     }
@@ -843,22 +845,18 @@ namespace.html.Icon = (() => {
     let Icon = function () {
         var _this = document.createElement('icon');
         Object.cloneData(_this, Icon.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Icon, IDisposable);
     return Icon;
 })();
 namespace.html.Image = (() => {
     let _Image = function (src) {
         var _this = document.createElement('img');
         Object.cloneData(_this, _Image.prototype);
-        Interface.inherit(_this, IDisposable);
-        _this._init(src);
+        _this._constructor(src);
         return _this;
     };
-    Interface.inheritPrototype(_Image, IDisposable);
-    _Image.prototype._init = function (src) {
+    _Image.prototype._constructor = function (src) {
         let _this = this;
         if (src) {
             _this.src = src;
@@ -870,55 +868,45 @@ namespace.html.Input = (() => {
     let Input = function () {
         var _this = document.createElement('input');
         Object.cloneData(_this, Input.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Input, IDisposable);
     return Input;
 })();
 namespace.html.Label = (() => {
     let Label = function () {
         var _this = document.createElement('label');
         Object.cloneData(_this, Label.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Label, IDisposable);
     return Label;
 })();
 namespace.html.LoadingBar = (() => {
     let LoadingBar = function () {
         let _this = document.createElement('loadingbar');
         Object.cloneData(_this, LoadingBar.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.appendChild('<div class="progress"></div>');
         return _this;
     };
-    Interface.inheritPrototype(LoadingBar, IDisposable);
     return LoadingBar;
 })();
 namespace.html.NumberInput = (() => {
     let NumberInput = function () {
         var _this = document.createElement('input');
         Object.cloneData(_this, NumberInput.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.setAttribute('type', 'number');
         return _this;
     };
-    Interface.inheritPrototype(NumberInput, IDisposable);
     return NumberInput;
 })();
 namespace.html.ObservableArray = (() => {
     let ObservableArray = function (bindToElement) {
-        Interface.inherit(this, IDisposable);
         this.value = new Array();
         this.elementBlockValues = new Array();
         this.bindToElement = null;
         this.template = Function.empty;
-        this._init(bindToElement);
+        this._constructor(bindToElement);
     };
-    Interface.inheritPrototype(ObservableArray, IDisposable);
-    ObservableArray.prototype._init = function (bindToElement) {
+    ObservableArray.prototype._constructor = function (bindToElement) {
         let _this = this;
         _this.bindToElement = bindToElement ? bindToElement : null;
     };
@@ -991,13 +979,11 @@ namespace.html.ObservableArray = (() => {
 })();
 namespace.html.ObservableNumber = (() => {
     let ObservableNumber = function (bindToElement) {
-        Interface.inherit(this, IDisposable);
         this.elementBlockValues = null;
         this.bindToElement = null;
-        this._init(bindToElement);
+        this._constructor(bindToElement);
     };
-    Interface.inheritPrototype(ObservableNumber, IDisposable);
-    ObservableNumber.prototype._init = function (bindToElement) {
+    ObservableNumber.prototype._constructor = function (bindToElement) {
         let _this = this;
         _this.bindToElement = bindToElement ? bindToElement : null;
     };
@@ -1026,13 +1012,11 @@ namespace.html.ObservableNumber = (() => {
 })();
 namespace.html.ObservableString = (() => {
     let ObservableString = function (bindToElement) {
-        Interface.inherit(this, IDisposable);
         this.elementBlockValues = null;
         this.bindToElement = null;
-        this._init(bindToElement);
+        this._constructor(bindToElement);
     };
-    Interface.inheritPrototype(ObservableString, IDisposable);
-    ObservableString.prototype._init = function (bindToElement) {
+    ObservableString.prototype._constructor = function (bindToElement) {
         let _this = this;
         _this.bindToElement = bindToElement ? bindToElement : null;
     };
@@ -1060,21 +1044,17 @@ namespace.html.Paragraph = (() => {
     let Paragraph = function () {
         var _this = document.createElement('p');
         Object.cloneData(_this, Paragraph.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Paragraph, IDisposable);
     return Paragraph;
 })();
 namespace.html.PasswordInput = (() => {
     let PasswordInput = function () {
         var _this = document.createElement('input');
         Object.cloneData(_this, PasswordInput.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.setAttribute('type', 'password');
         return _this;
     };
-    Interface.inheritPrototype(PasswordInput, IDisposable);
     PasswordInput.prototype.allowOnlyNumbers = function () {
         let _this = this;
         new Exception.NotImplemented();
@@ -1086,12 +1066,10 @@ namespace.html.RadioButton = (() => {
         var _this = document.createElement('input');
         _this.setAttribute('type', 'radio');
         Object.cloneData(_this, RadioButton.prototype);
-        Interface.inherit(_this, IDisposable);
-        _this._init();
+        _this._constructor();
         return _this;
     };
-    Interface.inheritPrototype(RadioButton, IDisposable);
-    RadioButton.prototype._init = function () {
+    RadioButton.prototype._constructor = function () {
         let _this = this;
     };
     return RadioButton;
@@ -1100,10 +1078,8 @@ namespace.html.ReservedSpace = (() => {
     let ReservedSpace = function () {
         var _this = document.createElement('reservedspace');
         Object.cloneData(_this, ReservedSpace.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(ReservedSpace, IDisposable);
     return ReservedSpace;
 })();
 namespace.html.ScrollViewer = (() => {
@@ -1116,13 +1092,11 @@ namespace.html.ScrollViewer = (() => {
         else {
             _this = document.createElement('scrollviewer');
             Object.cloneData(_this, ScrollViewer.prototype);
-            Interface.inherit(_this, IDisposable);
         }
-        _this._init();
+        _this._constructor();
         return _this;
     };
-    Interface.inheritPrototype(ScrollViewer, IDisposable);
-    ScrollViewer.prototype._init = function () {
+    ScrollViewer.prototype._constructor = function () {
         let _this = this;
         _this._onScroll = _this._onScroll.bind(this);
         _this.setAttribute('scroll-x', 0);
@@ -1163,30 +1137,24 @@ namespace.html.Span = (() => {
     let Span = function () {
         var _this = document.createElement('span');
         Object.cloneData(_this, Span.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Span, IDisposable);
     return Span;
 })();
 namespace.html.SpriteIcon = (() => {
     let SpriteIcon = function () {
         var _this = document.createElement('spriteicon');
         Object.cloneData(_this, SpriteIcon.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(SpriteIcon, IDisposable);
     return SpriteIcon;
 })();
 namespace.html.Table = (() => {
     let Table = function () {
         var _this = document.createElement('table');
         Object.cloneData(_this, Table.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Table, IDisposable);
     return Table;
 })();
 namespace.html.Row = (() => {
@@ -1207,10 +1175,8 @@ namespace.html.TextArea = (() => {
     let TextArea = function () {
         var _this = document.createElement('textarea');
         Object.cloneData(_this, TextArea.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(TextArea, IDisposable);
     return TextArea;
 })();
 namespace.html.TextInput = (() => {
@@ -1218,26 +1184,22 @@ namespace.html.TextInput = (() => {
         var _this = document.createElement('input');
         _this.setAttribute('type', 'text');
         Object.cloneData(_this, TextInput.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(TextInput, IDisposable);
     return TextInput;
 })();
 namespace.html.TimePicker = (() => {
     let TimePicker = function (selectedHour, selectedMinute) {
         var _this = document.createElement('timepicker');
         Object.cloneData(_this, TimePicker.prototype);
-        Interface.inherit(_this, IDisposable);
         _this.selectedHour = 0;
         _this.selectedMinute = 0;
         _this.onSelect = new Event();
         _this.onClose = new Event();
-        _this._init(selectedHour, selectedMinute);
+        _this._constructor(selectedHour, selectedMinute);
         return _this;
     };
-    Interface.inheritPrototype(TimePicker, IDisposable);
-    TimePicker.prototype._init = function (selectedHour, selectedMinute) {
+    TimePicker.prototype._constructor = function (selectedHour, selectedMinute) {
         let _this = this;
         _this.selectedHour = selectedHour;
         _this.selectedMinute = selectedMinute;
@@ -1249,7 +1211,10 @@ namespace.html.TimePicker = (() => {
     };
     TimePicker.prototype.pickDate = function () {
         let _this = this;
-        Event.fire(_this.onSelect, _this.selectedHour, _this.selectedMinute);
+        let eventArgs = new EventArgs(_this);
+        eventArgs.selectedHour = _this.selectedHour;
+        eventArgs.selectedMinute = _this.selectedMinute;
+        Event.fire(_this.onSelect, eventArgs);
         _this.close();
     };
     TimePicker.prototype.close = function () {
@@ -1296,19 +1261,30 @@ namespace.html.Video = (() => {
     let Video = function () {
         var _this = document.createElement('video');
         Object.cloneData(_this, Video.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Video, IDisposable);
+    Video.prototype.stop = function () {
+        let _this = this;
+        _this.removeAttribute("src");
+    };
+    Video.prototype.getFrameRawImage = function () {
+        let _this = this;
+        var canvas = new namespace.html.Canvas();
+        canvas.height = _this.videoHeight;
+        canvas.width = _this.videoWidth;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(_this, 0, 0, canvas.width, canvas.height);
+        var rawImage = new namespace.core.RawImage(_this.src);
+        rawImage.imageData = canvas.toImageData();
+        return rawImage;
+    };
     return Video;
 })();
 namespace.html.Wrapper = (() => {
     let Wrapper = function () {
         var _this = document.createElement('wrapper_');
         Object.cloneData(_this, Wrapper.prototype);
-        Interface.inherit(_this, IDisposable);
         return _this;
     };
-    Interface.inheritPrototype(Wrapper, IDisposable);
     return Wrapper;
 })();

@@ -1,6 +1,5 @@
 importScripts('../constants.js');
 importScripts('../../scripts/namespace-core/namespace-core.js');
-importScripts('../../scripts/namespace-enums/namespace-enums.js');
 importScripts('../threejs/three.js');
 
 // only accesible in web worker thread
@@ -17,12 +16,13 @@ function init(thread, data)
 	options = data.options;
 
 	worker = new RaytracingWebWorker(data.threadIndex, options.MAX_RECURSION_DEPTH);
-	worker.initCanvas(data.canvasWidth, data.canvasHeight, options.ANTIALIASING_FACTOR);
+	worker.initCanvas(data.canvasWidth, data.canvasHeight, options.MULTISAMPLING_FACTOR);
 }
 
 
 /**
- * DOM-less version of Raytracing Renderer
+ * DOM-less version of Raytracing Renderer.
+ * @author erichlof / https://github.com/erichlof
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author zz95 / http://github.com/zz85
@@ -45,7 +45,7 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
 	 */
-	this.antialiasingFactor = -1;
+	this.multisamplingFactor = -1;
 
 	/**
 	 * Index of the thread that this web worker is on.
@@ -146,14 +146,14 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 /**
  * Initializes canvas.
  */
-RaytracingWebWorker.prototype.initCanvas = function(width, height, antialiasingFactor)
+RaytracingWebWorker.prototype.initCanvas = function(width, height, multisamplingFactor)
 {
 	let _this = this;
 
-	_this.antialiasingFactor = antialiasingFactor;
+	_this.multisamplingFactor = multisamplingFactor;
 
-	_this.canvasWidth = width * _this.antialiasingFactor;
-	_this.canvasHeight = height * _this.antialiasingFactor;
+	_this.canvasWidth = width;
+	_this.canvasHeight = height;
 
 	_this.canvasWidthHalf = Math.floor(_this.canvasWidth / 2);
 	_this.canvasHeightHalf = Math.floor(_this.canvasHeight / 2);
@@ -273,12 +273,58 @@ RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY)
 	return new THREE.Color(red / MAX_VALUE, green / MAX_VALUE, blue / MAX_VALUE);
 };
 
+
+
+
+
 /**
  * Spawns ray for calculating colour.
  */
-RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
+RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth, reference) 
 {
 	let _this = this;
+
+	/*
+	let staticProp = 
+	{
+		accumCol: new THREE.Vector3(0),
+		mask: new THREE.Vector3(1.0),
+		firstMask: new THREE.Vector3(1),
+		checkCol0: new THREE.Vector3(1),
+		checkCol1: new THREE.Vector3(0.5),
+		dirToLight: null,
+		tdir: null,
+		metallicRoughness = new THREE.Vector3(0),
+		x: null, 
+		n: null, 
+		nl: null,
+	
+		t: INFINITY,
+		nc: 0, 
+		nt: 0, 
+		ratioIoR: 0, 
+		Re: 0,
+		Tr: 0,
+		weight: 0,
+		diffuseColorBleeding: 0.3, // range: 0.0 - 0.5, amount of color bleeding between surfaces
+	
+		diffuseCount: 0,
+		previousIntersecType: -100,
+
+		bounceIsSpecular: true,
+		sampleLight: false,
+		firstTypeWasREFR: false,
+		reflectionTime: false,
+		firstTypeWasDIFF: false,
+		shadowTime: false,
+		firstTypeWasCOAT: false,
+		specularTime: false,
+		sampleSunLight: false,
+		intersectionType: ''
+	};
+	*/
+
+	var intersectionType = '';
 
 	_this.ray.origin = rayOrigin;
 	_this.ray.direction = rayDirection;
@@ -485,6 +531,14 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		}
 	}
 
+	if (roughnessMap && metalnessMap)
+	{
+		intersectionType = 'PBR';
+	}
+
+
+
+
 	let normalComputed = false;
 
 	for (let i=0; i<_this.lights.length; i++) 
@@ -604,8 +658,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		return;
 	}
 
-	
-
 	let tmpColor = new Array();
 
 	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
@@ -613,6 +665,272 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		tmpColor[i] = new THREE.Color();
 	}	
 
+	let x = rayOrigin.multiply(rayDirection);
+
+	if (intersectionType == 'PBR')
+	{
+		let preCross;
+
+		if (Math.abs(normalVector.y) < 0.9)
+		{
+			preCross = new THREE.Vector3(0, 1, 0);
+		}
+		else
+		{
+			preCross = new THREE.Vector3(0, 0, 1);
+		}
+
+		let crossPro = preCross.cross(normalVector);
+		let S = crossPro.normalize();
+		let T = normalVector.cross(S);
+		let N = normalVector.normalize();
+		
+		// invert S, T when the UV direction is backwards (from mirrored faces),
+		// otherwise it will do the normal mapping backwards.
+		//vec3 NfromST = cross( S, T );
+		//if( dot( NfromST, N ) < 0.0 )
+		//{
+		//	S *= -1.0;
+		//	T *= -1.0;
+		//} 
+
+		let tsn = new THREE.Matrix3();   //new THREE.Matrix3( S, T, N );
+		tsn.set(S.x, T.x, N.x,
+				S.y, T.y, N.y,
+				S.z, T.z, N.z);
+
+		if (normalMap)
+		{
+			normalVector = (new THREE.Vector3(normalMap.r, normalMap.g, normalMap.b)).applyMatrix3(tsn).normalize();
+		}
+		
+
+		//intersections.color = texture(tAlbedoMap, intersections.uv).rgb;
+		//intersections.color = pow(intersections.color,vec3(2.2));
+		
+		// luka: why is this needed?
+		//intersections.emission = pow(intersections.emission,vec3(2.2));
+		
+		let mask = new THREE.Vector3(1.0, 1.0, 1.0);
+
+		if (emissiveMap)
+		{
+			let maxEmission = Math.max(emissiveMap.r, Math.max(emissiveMap.g, emissiveMap.b));
+
+			if (maxEmission > 0.01) //if (rand(seed) < maxEmission)
+			{
+				//outputColor.copy(mask);
+				outputColor.multiply(emissiveMap);
+				return;
+			}
+		}
+		
+		let zColor = tmpColor[ recursionDepth ];
+
+		let randoo = Math.random();
+
+		
+
+		var randomDirectionInHemisphere = function( normalVector, randoo)
+		{
+			let up = randoo; // uniform distribution in hemisphere
+			let over = Math.sqrt(Math.max(0.0, 1.0 - up * up));
+
+			let TWO_PI = 6.28318530717958648;
+			let around = randoo * TWO_PI;
+			
+			let crossVec = Math.abs(normalVector.x) > 0.1 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+			let crossProd = crossVec.cross(normalVector);
+			let u = crossProd.normalize();
+			let v = normalVector.cross(u);
+		
+			return (u.multiplyScalar(Math.cos(around) * over).add(v.multiplyScalar(Math.sin(around) * over)).add(normalVector.multiplyScalar(up))).normalize();
+		};
+		let randomCosWeightedDirectionInHemisphere = function(normalVector, randoo)
+		{
+			let N_POINTS = 32.0;
+
+			let i = Math.floor(N_POINTS * randoo) + (randoo * 0.5);
+			
+			// the Golden angle in radians	
+			let theta = i * 2.39996322972865332 + 1;
+			theta = theta % TWO_PI;
+
+			let r = Math.sqrt(i / N_POINTS); // sqrt pushes points outward to prevent clumping in center of disk
+			let x = r * Math.cos(theta);
+			let y = r * Math.sin(theta);
+			let p = new THREE.Vector3(x, y, Math.sqrt(1.0 - x * x - y * y)); // project XY disk points outward along Z axis
+			
+			let crossVec = Math.abs(normalVector.x) > 0.1 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+			let crossPro = crossVec.cross(normalVector);
+			let u = crossPro.normalize();
+			let v = normalVector.cross(u);
+		
+			return (u * p.x + v * p.y + normalVector * p.z);
+		};
+
+		if (metalnessMap && metalnessMap.b > 0.0)
+		{
+			// Ideal SPECULAR reflection
+
+			mask *= zColor;
+	
+			let reflectVec = rayDirection.reflect(normalVector);
+			let glossyVec = randomDirectionInHemisphere(normalVector, randoo);
+
+			let newReference = {};
+			_this.spawnRay( normalVector, rayDirection.normalize(), zColor, recursionDepth + 1, newReference);
+
+			/*r = Ray( x,  lerp(reflectVec, glossyVec, metalnessMap.g));
+
+			rayDirection = rayDirection.normalize();
+			r.origin += normalVector;*/
+
+			return;
+		}
+
+		var calcFresnelReflectance = function(rayDirection, n, etai, etat)
+		{
+			let temp;
+			let cosi = Math.clamp(rayDirection.dot(n), -1.0, 1.0);
+
+			if (cosi > 0.0)
+			{
+				temp = etai;
+				etai = etat;
+				etat = temp;
+			}
+			
+			let ratioIoR = etai / etat;
+			let sint = ratioIoR * Math.sqrt(Math.max(0.0, 1.0 - (cosi * cosi)));
+
+			if (sint >= 1.0) 
+				return 1.0; // total internal reflection
+
+			let cost = Math.sqrt(Math.max(0.0, 1.0 - (sint * sint)));
+			cosi = Math.abs(cosi);
+
+			let Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+			let Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+
+			return ((Rs * Rs) + (Rp * Rp)) * 0.5;
+		};
+
+		// Diffuse object underneath with ClearCoat on top
+		nc = 1.0; // IOR of Air
+		nt = 1.4; // IOR of Clear Coat
+		Re = calcFresnelReflectance(rayDirection, N, nc, nt);
+		Tr = 1.0 - Re;
+
+		if (Re > 0.99)
+		{
+			// reflect ray from surface
+			//r = Ray( x, rayDirection.reflect(normalVector) ); 
+
+			let newReference = {};
+			_this.spawnRay( normalVector, rayDirection.reflect(normalVector), zColor, recursionDepth + 1, newReference);
+
+			//r.origin += normalVector;
+			return;
+		}
+
+		if (recursionDepth < 2 && !reference.firstTypeWasCOAT)
+		{	
+			// save intersection data for future reflection trace
+			reference.firstTypeWasCOAT = true;
+			firstMask = mask * Re;
+
+			// create reflection ray from surface
+			//firstRay = Ray(x, rayDirection.reflect(normalVector)); 
+
+			let newReference = {};
+			_this.spawnRay( x, rayDirection.reflect(normalVector), zColor, recursionDepth + 1, newReference);
+
+			//firstRay.origin += normalVector;
+
+			mask *= Tr;
+		}
+		else if (randoo < Re)
+		{
+			let newReference = {};
+			_this.spawnRay( x, rayDirection.reflect(normalVector), zColor, recursionDepth + 1, newReference);
+
+			//r = Ray( x, rayDirection.reflect(normalVector) ); // reflect ray from surface
+			//r.origin += normalVector;
+			return;
+		}
+
+		reference.diffuseCount++;
+
+		mask *= zColor;
+	
+		if (reference.diffuseCount == 1 && reference.firstTypeWasCOAT && randoo < diffuseColorBleeding)
+		{
+			// choose random Diffuse sample vector
+			//r = Ray( x, normalize(randomCosWeightedDirectionInHemisphere(normalVector, randoo)) );
+
+			let newReference = {};
+			_this.spawnRay( normalVector, normalize(randomCosWeightedDirectionInHemisphere(normalVector, randoo)), zColor, recursionDepth + 1, newReference);
+
+
+			//r.origin += normalVector;
+			return;
+		}
+					
+		/*dirToLight = sampleSphereLight(x, normalVector, light, dirToLight, weight, seed);
+		mask *= weight;
+		
+		r = Ray( x, normalize(dirToLight) );
+		r.origin += normalVector;*/
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+/*
 	if (material.glass) 
 	{
 		let eta = material.refractionRatio;
@@ -703,7 +1021,13 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		outputColor.add( zColor );
 
 		return;
-	}
+	}*/
+};
+
+
+function mix(x,y,a)
+{
+	return x.multiplyScalar(1 - a).add(y.multiplyScalar(a));
 };
 
 function saturate(value)
@@ -898,16 +1222,18 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 	let cell = _this.cell;
 
-	let width = cell.width * _this.antialiasingFactor;
-	let height = cell.height * _this.antialiasingFactor;
+	let width = cell.width;
+	let height = cell.height;
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 
 	let startRenderingTime = Date.nowInNanoseconds();
 	let stateStartTime = 0;
 
+	let multisamplingFactorSquare = _this.multisamplingFactor * _this.multisamplingFactor;
+
 	for (let posY=0; posY < height; posY++)
 	{
-		let rayPosY = -(posY + cell.startY * _this.antialiasingFactor - _this.canvasHeightHalf);
+		let rayPosY = -(posY + cell.startY - _this.canvasHeightHalf);
 		let canvasY = cell.startY + posY;
 
 		for (let posX=0; posX < width; posX++) 
@@ -921,22 +1247,75 @@ RaytracingWebWorker.prototype.renderCell = async function()
 				stateStartTime = Date.nowInMiliseconds();
 			}
 						
-			let rayPosX = posX + cell.startX * _this.antialiasingFactor - _this.canvasWidthHalf;
+			let rayPosX = posX + cell.startX - _this.canvasWidthHalf;
 			let canvasX = cell.startX + posX;
 						
-			// spawn ray at pixel position
-			let pixelColor = new THREE.Color();
-			_this.origin.copy(_this.cameraPosition);
-			_this.direction.set(rayPosX, rayPosY, -_this.perspective);
-			_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
-			_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
+			let renderedColor = new Color(0, 0, 0, 255);
 
-			// convert from linear to gamma
-			let renderedColor = new Color();
-			renderedColor.red = Math.sqrt(pixelColor.r) * 255;
-			renderedColor.green = Math.sqrt(pixelColor.g) * 255;
-			renderedColor.blue = Math.sqrt(pixelColor.b) * 255;
-			renderedColor.alpha = 255;
+			for (let j=0; j<_this.multisamplingFactor; j++)
+			{
+				let antiRayPosY = rayPosY + (j / _this.multisamplingFactor - 0.5);
+
+				for (let i=0; i<_this.multisamplingFactor; i++)
+				{
+					let antiRayPosX = rayPosX - (i / _this.multisamplingFactor - 0.5);
+					
+					// spawn ray at pixel position
+					let pixelColor = new THREE.Color();
+					_this.origin.copy(_this.cameraPosition);
+					_this.direction.set(antiRayPosX, antiRayPosY, -_this.perspective);
+					_this.direction.applyMatrix3(_this.cameraNormalMatrix).normalize();
+
+					let staticProp = 
+					{
+						accumCol: new THREE.Vector3(0,0,0),
+						mask: new THREE.Vector3(1.0,1,1),
+						firstMask: new THREE.Vector3(1,1,1),
+						checkCol0: new THREE.Vector3(1,1,1),
+						checkCol1: new THREE.Vector3(0.5,0.5,0.5),
+						dirToLight: null,
+						tdir: null,
+						metallicRoughness: new THREE.Vector3(0,0,0),
+						x: null, 
+						n: null, 
+						nl: null,
+					
+						t: INFINITY,
+						nc: 0, 
+						nt: 0, 
+						ratioIoR: 0, 
+						Re: 0,
+						Tr: 0,
+						weight: 0,
+						diffuseColorBleeding: 0.3, // range: 0.0 - 0.5, amount of color bleeding between surfaces
+					
+						diffuseCount: 0,
+						previousIntersecType: -100,
+
+						bounceIsSpecular: true,
+						sampleLight: false,
+						firstTypeWasREFR: false,
+						reflectionTime: false,
+						firstTypeWasDIFF: false,
+						shadowTime: false,
+						firstTypeWasCOAT: false,
+						specularTime: false,
+						sampleSunLight: false,
+						intersectionType: ''
+					};
+					_this.spawnRay(_this.origin, _this.direction, pixelColor, 0, {}, staticProp);
+
+					// convert from linear to gamma
+					renderedColor.red += Math.sqrt(pixelColor.r) * 255; 
+					renderedColor.green += Math.sqrt(pixelColor.g) * 255;
+					renderedColor.blue += Math.sqrt(pixelColor.b) * 255;
+				}
+			}
+
+			renderedColor.red /= multisamplingFactorSquare;
+			renderedColor.green /= multisamplingFactorSquare;
+			renderedColor.blue /= multisamplingFactorSquare;
+
 			cell.rawImage.imageData.setPixel(posX, posY, renderedColor);
 
 			let progress = Math.round(Math.toPercentage((posY + 1) * (posX + 1), height * width));
@@ -962,10 +1341,10 @@ RaytracingWebWorker.prototype._onCellRendered = function()
 
 	let _this = this;
 
-	if (_this.antialiasingFactor > 1)
+	/*if (_this.antialiasingFactor > 1)
 	{
 		_this.cell.rawImage.scale(namespace.enums.Direction.DOWN, _this.antialiasingFactor);
-	}
+	}*/
 
 	mainThread.invoke('globals.renderer.onCellRendered', _this.cell);
 

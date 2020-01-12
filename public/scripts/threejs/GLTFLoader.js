@@ -496,6 +496,7 @@ THREE.GLTFLoader = ( function () {
 		this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
 		this.json = json;
 		this.dracoLoader = dracoLoader;
+		THREE.DRACOLoader.getDecoderModule();
 
 	}
 
@@ -2052,7 +2053,8 @@ THREE.GLTFLoader = ( function () {
 
 			// Load Texture resource.
 
-			var loader = THREE.Loader.Handlers.get( sourceURI );
+			// NOTE: @Luka not sure if this is the correct way to get handlers, because it will always be null!
+			var loader = THREE.DefaultLoadingManager.getHandler( sourceURI );
 
 			if ( ! loader ) {
 
@@ -2125,6 +2127,7 @@ THREE.GLTFLoader = ( function () {
 				case 'roughnessMap':
 					texture.format = THREE.RGBFormat;
 					break;
+
 			}
 
 			if ( parser.extensions[ EXTENSIONS.KHR_TEXTURE_TRANSFORM ] ) {
@@ -2139,15 +2142,16 @@ THREE.GLTFLoader = ( function () {
 
 			}
 
-
+			
 			// -----------------------------
 			// convert image to pixels data
 			// -----------------------------
 
 			// NOTE: Added by Luka Prijatelj
 			texture.rawImage = texture.image.toRawImage();
-			
+
 			materialParams[ mapName ] = texture;
+
 		} );
 
 	};

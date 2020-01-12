@@ -12,11 +12,6 @@ var globals = new namespace.core.Globals();
 globals.scene = null;
 
 /**
- * GLTF loader.
- */
-globals.loader = null;
-
-/**
  * Camera controls affected by mouse movement.
  */
 globals.controls = null;
@@ -29,7 +24,7 @@ globals.camera = null;
 /**
  * Additional scene lights.
  */
-globals.lights = [];
+globals.lights = null;
 
 /**
  * Canvas for editor aka preview.
@@ -40,6 +35,8 @@ globals.editorCanvas = null;
  * Is rendering service running.
  */
 globals.renderingServiceState = namespace.enums.renderingServiceState.IDLE;
+
+
 
 
 
@@ -59,21 +56,41 @@ cache.clients = new Array();
 
 var AdminPage = new namespace.core.WebPage('Admin');
 
+/**
+ * Loader properties.
+ */
 AdminPage.loadingText = null;
-
 AdminPage.loadingBar = null;
-
 AdminPage.loadingCounter = null;
+
+/**
+ * Loader properties.
+ */
+AdminPage.renderingText = null;
+AdminPage.renderingBar = null;
+AdminPage.renderingCounter = null;
+
+/**
+ * Last animationFrame ID.
+ */
+AdminPage.animationFrameID = -1;
+
+/**
+ * Timeout ID for hiding loading layer.
+ */
+AdminPage.hideLoadingLayerTimeoutID = -1;
+
 
 /**
  * Initializes page.
  */
 AdminPage.init = function()
 {	
+	let loadingLayer = document.querySelector('layer#loading');
+
 	globals.editorCanvas = new namespace.html.EditorCanvas();
 	globals.editorCanvas.init();
 
-	let loadingLayer = document.querySelector('layer#loading');
 	let wrapper = loadingLayer.querySelector('.centered-text wrapper_');
 
 	let loadingTextElement = new namespace.html.Div();
@@ -85,6 +102,34 @@ AdminPage.init = function()
 	AdminPage.loadingBar = new namespace.html.LoadingBar();
 	AdminPage.loadingCounter = new namespace.core.LoadingCounter(100, AdminPage.loadingBar);
 	wrapper.appendChild(AdminPage.loadingBar);
+
+	AdminPage.loadingText.setValue('Initializing ...');
+	AdminPage.loadingCounter.setValue(0);
+
+
+
+	let renderingLayer = document.querySelector('layer#rendering');
+	let renderingContent = renderingLayer.querySelector('.centered-text wrapper_ .loading-section');
+	let renderingTextElement = new namespace.html.Div();
+	AdminPage.renderingText = new namespace.html.ObservableString(renderingTextElement);
+	renderingContent.appendChild(renderingTextElement);
+
+	renderingContent.appendChild('<divider-x-small></divider-x-small>');
+
+	AdminPage.renderingBar = new namespace.html.LoadingBar();
+	AdminPage.renderingCounter = new namespace.core.LoadingCounter(100, AdminPage.renderingBar);
+	renderingContent.appendChild(AdminPage.renderingBar);
+
+	AdminPage.renderingText.setValue('Rendering ...');
+	AdminPage.renderingCounter.setValue(0);
+
+	let downloadImageButton = document.getElementById('download-image');
+	downloadImageButton.setAttribute('href', '/' + RENDERED_IMAGE_FILEPATH);
+
+	let downloadInfoButton = document.getElementById('download-info');
+	downloadInfoButton.setAttribute('href', '/' + RENDERING_INFO_FILEPATH);
+
+
 	
 	DEBUG.init();
 
@@ -93,11 +138,34 @@ AdminPage.init = function()
 	API.connect(AdminPage._onServerConnected, AdminPage._onServerDisconnect);
 };
 
+
+/**
+ * Hides loading layer after a while so that blinking of showing/hiding is avoided.
+ */
+AdminPage._hideLoadingLayer = function()
+{
+	if (AdminPage.hideLoadingLayerTimeoutID == -1)
+	{
+		window.clearTimeout(AdminPage.hideLoadingLayerTimeoutID);
+		AdminPage.hideLoadingLayerTimeoutID = -1;
+	}
+
+	AdminPage.hideLoadingLayerTimeoutID = window.setTimeout(() =>
+	{
+		let loadingLayer = document.querySelector('layer#loading');
+		loadingLayer.hide();
+
+		AdminPage.hideLoadingLayerTimeoutID = -1;
+	}, 100);
+};
+
 /**
  * Opens scene and loads cameras and lights.
  */
 AdminPage.openScene = async function()
 {
+	let gltf = null;
+
 	try
 	{
 		/**
@@ -107,21 +175,27 @@ AdminPage.openScene = async function()
 		 * gltf.cameras; // Array<THREE.Camera>
 		 * gltf.asset; // Object
 		 */
-		var gltf = await AdminPage._loadGltfModel();
-
-		await AdminPage._initScene(gltf.scene);
-		await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
-
-		AdminPage._initCamera(gltf.cameras);
-		AdminPage._initLights();
-		AdminPage._initRenderer();
-		AdminPage._initCameraControls();		
+		gltf = await AdminPage._loadGltfModel();			
 	}
 	catch (err)
 	{
 		console.error(err.message);
-	}		
+		return;
+	}	
 	
+	AdminPage._initScene(gltf.scene);
+
+	await AdminPage._initSceneBackground(options.SKY_CUBE_FILEPATH, options.SKY_CUBE_IMAGES);
+
+	AdminPage._initCamera(gltf.cameras);
+
+	AdminPage._initLights();
+
+	AdminPage._initRenderer();
+
+	AdminPage._initCameraControls();	
+	
+	// start rendering
 	AdminPage.onRenderFrame();
 };
 
@@ -155,11 +229,14 @@ AdminPage._onServerConnected = async function(socket)
 	data = await API.request('rendering/getState');
 	AdminPage._updateRenderingServiceState(data);
 
+	AdminPage.dispose();
+
 	AdminPage.openScene();
 };
 
 /**
  * Client has disconnected from server.
+ * @private
  */
 AdminPage._onServerDisconnect = function()
 {
@@ -168,22 +245,32 @@ AdminPage._onServerDisconnect = function()
 
 /**
  * Rendering has finished.
+ * @private
  */
-AdminPage._onRenderingFinished = function()
+AdminPage._onRenderingFinished = function(thread, data)
 {
 	console.log('[AdminPage] Rendering has finished successfully');
-	AdminPage._changeRenderingState('stop');
+
+	AdminPage._updateRenderingServiceState(data);
 };
 
+/**
+ * Rendering progress was updated (some new cells finished rendering).
+ * @private
+ */
 AdminPage._onRenderingProgress = function(thread, data, resolve, reject)
 {
 	let progress = data;
 
 	console.log('[AdminPage] Rendering progress "' + progress + '%" updated');	
+
+	AdminPage.renderingText.setValue('Rendered ' + progress + '%');
+	AdminPage.renderingCounter.setValue(Math.roundToTwoDecimals(progress));
 };
 
 /**
  * Updates clients list.
+ * @private
  */
 AdminPage._updateClients = function(data)
 {
@@ -196,6 +283,7 @@ AdminPage._updateClients = function(data)
 
 /**
  * Server has notified us that clients were updated.
+ * @private
  */
 AdminPage._onClientAdd = function(thread, data, resolve, reject)
 {
@@ -208,6 +296,7 @@ AdminPage._onClientAdd = function(thread, data, resolve, reject)
 
 /**
  * Client has removed.
+ * @private
  */
 AdminPage._onClientRemove = function(thread, data, resolve, reject)
 {
@@ -231,6 +320,7 @@ AdminPage._onClientRemove = function(thread, data, resolve, reject)
 
 /**
  * Updated bottom left label for number of connected clients.
+ * @private
  */
 AdminPage._updateClientsLabel = function(data)
 {
@@ -242,6 +332,7 @@ AdminPage._updateClientsLabel = function(data)
 
 /**
  * Updates options.
+ * @private
  */
 AdminPage._updateOptions = function(dataOptions)
 {
@@ -254,6 +345,7 @@ AdminPage._updateOptions = function(dataOptions)
 
 /**
  * Updates rendering service state.
+ * @private
  */
 AdminPage._updateRenderingServiceState = function(renderingServiceState)
 {
@@ -266,6 +358,7 @@ AdminPage._updateRenderingServiceState = function(renderingServiceState)
 
 /**
  * Starts loading GLTF model.
+ * @private
  */
 AdminPage._loadGltfModel = function()
 {
@@ -292,7 +385,7 @@ AdminPage._loadGltfModel = function()
 		{
 			console.log('[AdminPage] Scene finished loading');
 		
-			loadingLayer.hide();
+			AdminPage._hideLoadingLayer();
 
 			resolve(gltf);
 		};
@@ -305,6 +398,7 @@ AdminPage._loadGltfModel = function()
 
 /**
  * Initializes scene.
+ * @private
  */
 AdminPage._initScene = function(gltfScene)
 {
@@ -314,6 +408,7 @@ AdminPage._initScene = function(gltfScene)
 
 /**
  * Sets background for scene.
+ * @private
  */
 AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 {
@@ -337,7 +432,8 @@ AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 		{
 			console.log('[AdminPage] Scene background finished loading');	
 
-			loadingLayer.hide();
+			AdminPage._hideLoadingLayer();
+
 			resolve();
 		};
 
@@ -358,6 +454,7 @@ AdminPage._initSceneBackground = function(skyCubeFilePath, skyCubeImages)
 
 /**
  * Intializes camera in the scene.
+ * @private
  */
 AdminPage._initCamera = function(cameras)
 {
@@ -396,11 +493,12 @@ AdminPage._initCamera = function(cameras)
 	}	
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
  * Initializes camera mouse controls, so that changing view is easier.
+ * @private
  */
 AdminPage._initCameraControls = function()
 {
@@ -411,7 +509,8 @@ AdminPage._initCameraControls = function()
 };
 
 /**
- * Initializes lights.
+ * Initializes additional lights like ambient light.
+ * @private
  */
 AdminPage._initLights = function()
 {
@@ -422,6 +521,8 @@ AdminPage._initLights = function()
 
 	AdminPage.loadingText.setValue('Loading lights ...');
 	AdminPage.loadingCounter.setValue(0);
+
+	globals.lights = new Array();
 
 	var light = new THREE.AmbientLight(0x404040, 3);
 	globals.scene.add(light);
@@ -445,11 +546,12 @@ AdminPage._initLights = function()
 	globals.lights.push(light);*/
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
  * Initializes renderer.
+ * @private
  */
 AdminPage._initRenderer = async function()
 {
@@ -473,16 +575,16 @@ AdminPage._initRenderer = async function()
 	globals.editorCanvas.resize();
 
 	AdminPage.loadingCounter.setValue(100);
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
 /**
  * Main rendering loop.
  */
 AdminPage.onRenderFrame = function()
-{
+{	
 	// will start loop for this function
-	requestAnimationFrame(AdminPage.onRenderFrame);	
+	AdminPage.animationFrameID = requestAnimationFrame(AdminPage.onRenderFrame);	
 
 	// render current frame
 	globals.renderer.render(globals.scene, globals.camera);
@@ -492,20 +594,8 @@ AdminPage.onRenderFrame = function()
 };
 
 /**
- * Clears scene.
- */
-AdminPage.clearScene = function()
-{
-	let scene = globals.scene;
-
-	while(scene.children.length > 0)
-	{ 
-		scene.remove(scene.children[0]); 
-	}
-};
-
-/**
  * Updates buttons and popups when rendering state is switched.
+ * @private
  */
 AdminPage._updateRenderingState = function()
 {
@@ -518,55 +608,97 @@ AdminPage._updateRenderingState = function()
 	let sceneButton = document.getElementById('scene-button');
 	let optionsButton = document.getElementById('options-button');
 	let backgroundButton = document.getElementById('background-button');
-	let newRendererButton = document.getElementById('new-renderer-button');
+	//let newRendererButton = document.getElementById('new-renderer-button');
+
+	let renderingLayer = document.querySelector('layer#rendering');
+
+	let closeRenderingButtonV = document.getElementById('close-rendering-button');
+	
+	let finishedSection = renderingLayer.querySelector('.finished-section');
+	let renderingSpacing = renderingLayer.querySelector('.loading-section divider-x-small');
+	let renderingBar = renderingLayer.querySelector('.loading-section loadingbar');
 
 	if (globals.renderingServiceState == namespace.enums.renderingServiceState.RUNNING)
 	{
+		renderingLayer.show();
+
+		AdminPage.renderingText.setValue('Rendering ...');
+
 		interfaceV.addClass('rendering');
 		canvasV.disable();
-		sceneButton.disable();
-		optionsButton.disable();
-		backgroundButton.disable();
 
-		startRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
 
-		newRendererButton.show();
-		stopRenderingButtonV.show();
+		//newRendererButton.show();
 		pauseRenderingButtonV.show();
+		stopRenderingButtonV.show();
 	}
 	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.PAUSED)
 	{		
+		renderingLayer.show();
+
+		AdminPage.renderingText.setValue('Rendering paused!');
+
 		interfaceV.addClass('rendering');
 		canvasV.disable();
-		sceneButton.disable();
-		optionsButton.disable();
-		backgroundButton.disable();
 
-		newRendererButton.show();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
+
+		//newRendererButton.show();
 		resumeRenderingButtonV.show();
-		stopRenderingButtonV.show();
 		pauseRenderingButtonV.hide();
-		startRenderingButtonV.hide();
+		stopRenderingButtonV.show();
 	}
-	else
+	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.IDLE)
 	{
+		renderingLayer.hide();
+
 		interfaceV.removeClass('rendering');
 		canvasV.enable();
-		sceneButton.enable();
-		optionsButton.enable();
-		backgroundButton.enable();
 
-		newRendererButton.hide();
-		startRenderingButtonV.show();
+		closeRenderingButtonV.hide();
+		finishedSection.hide();
+		renderingSpacing.show();
+		renderingBar.show();
+
+		//newRendererButton.hide();
+		pauseRenderingButtonV.hide();
+		resumeRenderingButtonV.hide();
+		stopRenderingButtonV.show();
+	}
+	else if (globals.renderingServiceState == namespace.enums.renderingServiceState.FINISHED)
+	{
+		renderingLayer.show();
+
+		interfaceV.addClass('rendering');
+
+		renderingBar.hide();
+		renderingSpacing.hide();
+		finishedSection.show();
+		AdminPage.renderingText.setValue('Rendering done!');
+		
 		stopRenderingButtonV.hide();
 		pauseRenderingButtonV.hide();
 		resumeRenderingButtonV.hide();
+
+		closeRenderingButtonV.show();	
+	}
+	else
+	{
+		new Exception.Other('Unknown rendering service type!');
 	}
 };
 
 /**
  * Scene button od dropdown was clicked.
+ * @private
 */
 AdminPage._onSceneButtonClick = async function(button)
 {
@@ -587,12 +719,12 @@ AdminPage._onSceneButtonClick = async function(button)
 		wrapper.appendChild(div);
 	}
 
-	let uploadDiv = new namespace.html.Div();
+	/*let uploadDiv = new namespace.html.Div();
 	uploadDiv.id = 'upload-button';
 	uploadDiv.addClass('entry');
 	uploadDiv.setAttribute('onclick', 'AdminPage.onUploadSceneClick()');
 	uploadDiv.appendChild('UPLOAD SCENE');
-	wrapper.appendChild(uploadDiv);
+	wrapper.appendChild(uploadDiv);*/
 
 	let dropdown = new namespace.html.Dropdown();
 	dropdown.setAttribute('id', 'scene-dropdown');
@@ -614,6 +746,10 @@ AdminPage._onSceneButtonClick = async function(button)
 	layer.show();
 };
 
+/**
+ * New renderer button was clicked, which will open new window.
+ * @private
+ */
 AdminPage._onNewRendererClick = function()
 {
 	/*var a = document.createElement("a");    
@@ -625,8 +761,8 @@ AdminPage._onNewRendererClick = function()
 
 	if (options.OPEN_NEW_RENDERER_IN_WINDOW == true)
 	{
-		let width = (options.CANVAS_WIDTH * options.RESOLUTION_FACTOR);
-		let height = (options.CANVAS_HEIGHT * options.RESOLUTION_FACTOR);
+		let width = options.CANVAS_WIDTH;
+		let height = options.CANVAS_HEIGHT;
 
 		window.open("/client", "", "width=" + width + ",height=" + height);
 	}
@@ -637,6 +773,10 @@ AdminPage._onNewRendererClick = function()
 	}	
 };
 
+/**
+ * Options button was clicked.
+ * @private
+ */
 AdminPage._onOptionsButtonClick = async function(button)
 {
 	let dropdown = new namespace.html.OptionsDropdown();
@@ -673,6 +813,8 @@ AdminPage.onPreloadedSceneClick = async function(element)
 {
 	options.SCENE_FILEPATH = 'scenes/' + element.innerHTML;
 
+	AdminPage.dispose();
+
 	AdminPage.openScene();
 
 	AdminPage.onDropdownsCurtainClick();
@@ -699,14 +841,19 @@ AdminPage.onFileUploadChange = async function(event)
 	AdminPage.onFileUploadDone();
 };
 
+/**
+ * File has done uploading.
+ */
 AdminPage.onFileUploadDone = function()
 {
 	AdminPage.resetFilesInput();
 
-	let loadingLayer = document.querySelector('layer#loading');
-	loadingLayer.hide();
+	AdminPage._hideLoadingLayer();
 };
 
+/**
+ * Resets input field for file upload.
+ */
 AdminPage.resetFilesInput = function()
 {
 	var input = document.getElementById('upload-file-input');
@@ -715,14 +862,19 @@ AdminPage.resetFilesInput = function()
 	input.value = String();
 };
 
+/**
+ * Upload scene button was clicked.
+ */
 AdminPage.onUploadSceneClick = function()
 {
 	document.getElementById('upload-file-input').click();
 };
 
+/**
+ * Dropdown curtain was clicked, which means we must hide/cancel dropdown.
+ */
 AdminPage.onDropdownsCurtainClick = function(event)
 {
-	let mouse = new namespace.core.Mouse(event);
 	let list = document.querySelector('layer#dropdowns');
 	
 	if (event && mouse.isTarget(list) == false)
@@ -745,7 +897,11 @@ AdminPage.hideLastDropdown = function()
 	popup.remove();
 };
 
-AdminPage._onStartStopRenderingClick = function(type)
+/**
+ * Start/stop/pause/resume button was clicked.
+ * @private
+ */
+AdminPage._onRenderButtonClick = function(type)
 {
 	AdminPage._changeRenderingState(type);
 };
@@ -756,20 +912,22 @@ AdminPage._onStartStopRenderingClick = function(type)
  */
 AdminPage._changeRenderingState = async function(type)
 {
-	var stopRenderingButtonV = document.getElementById('stop-rendering-button');
-	var pauseRenderingButtonV = document.getElementById('pause-rendering-button');
-	var startRenderingButtonV = document.getElementById('start-rendering-button');
-	var resumeRenderingButtonV = document.getElementById('resume-rendering-button');
+	let renderingLayer = document.querySelector('layer#rendering');
+	
+	let stopRenderingButtonV = document.getElementById('stop-rendering-button');
+	let pauseRenderingButtonV = document.getElementById('pause-rendering-button');
+	let startRenderingButtonV = document.getElementById('start-rendering-button');
+	let resumeRenderingButtonV = document.getElementById('resume-rendering-button');
 	
 	startRenderingButtonV.disable();
 	pauseRenderingButtonV.disable();
-	stopRenderingButtonV.disable();
 	resumeRenderingButtonV.disable();
 
 	let data;
 
 	if (type == 'stop')
 	{
+		renderingLayer.hide();
 		data = await API.request('rendering/stop');	
 	}
 	else if (type == 'pause')
@@ -780,8 +938,11 @@ AdminPage._changeRenderingState = async function(type)
 	{
 		data = await API.request('rendering/resume');	
 	}
-	else
+	else if (type == 'start')
 	{
+		AdminPage.renderingText.setValue('Rendering ...');
+		AdminPage.renderingCounter.setValue(0);
+
 		options.CAMERA = globals.camera.toJSON();
 	
 		options.LIGHTS = [];
@@ -795,12 +956,15 @@ AdminPage._changeRenderingState = async function(type)
 
 		data = await API.request('rendering/start');				
 	}
+	else
+	{
+		new Exception.Other('Unknown rendering type!');
+	}
 
 	globals.renderingServiceState = data;
 	
 	startRenderingButtonV.enable();
 	pauseRenderingButtonV.enable();
-	stopRenderingButtonV.enable();
 	resumeRenderingButtonV.enable();
 
 	AdminPage._updateRenderingState();
@@ -808,6 +972,7 @@ AdminPage._changeRenderingState = async function(type)
 
 /**
  * Background button was clicked.
+ * @private
  */
 AdminPage._onBackgroundButtonClick = function(button)
 {
@@ -844,4 +1009,49 @@ AdminPage._onBackgroundButtonClick = function(button)
 	layer.appendChild(curtain);
 	layer.appendChild(dropdown);
 	layer.show();
+};
+
+/**
+ * Disposes of the current rendering, scene, cameras, etc.
+ */
+AdminPage.dispose = function()
+{
+	if (AdminPage.animationFrameID >= 0)
+	{
+		cancelAnimationFrame(AdminPage.animationFrameID);
+		AdminPage.animationFrameID = -1;
+	}
+	
+	if (globals.renderer)
+	{		
+		globals.renderer.dispose();
+		globals.renderer = null;
+	}
+
+	if (globals.scene)
+	{
+		let scene = globals.scene;
+
+		while(scene.children.length > 0)
+		{ 
+			scene.remove(scene.children[0]); 
+		}		
+
+		globals.scene = null;
+	}
+	
+	if (globals.camera)
+	{
+		globals.camera = null;
+	}
+
+	if (globals.controls)
+	{
+		globals.controls = null;
+	}
+
+	if (globals.lights)
+	{
+		globals.lights = null;
+	}
 };
