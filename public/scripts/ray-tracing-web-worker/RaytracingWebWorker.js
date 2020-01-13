@@ -1226,7 +1226,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	let height = cell.height;
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 
-	let startRenderingTime = Date.nowInNanoseconds();
+	let startRenderingTime = Date.nowInMicroseconds();
 	let stateStartTime = 0;
 
 	let multisamplingFactorSquare = _this.multisamplingFactor * _this.multisamplingFactor;
@@ -1324,7 +1324,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 		}
 	}
 
-	let endRenderingTime = Date.nowInNanoseconds();
+	let endRenderingTime = Date.nowInMicroseconds();
 	_this.cell.timeRendering = endRenderingTime - startRenderingTime;
 
 	await mainThread.invokeRequest('globals.renderer.checkRenderingState', cell);

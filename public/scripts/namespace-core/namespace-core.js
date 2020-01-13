@@ -793,6 +793,9 @@ var namespace;
     var core;
     (function (core) {
         class Cache {
+            static clear(cache) {
+                console.log('[Cache] Clearing cached data');
+            }
         }
         core.Cache = Cache;
     })(core = namespace.core || (namespace.core = {}));
@@ -809,7 +812,7 @@ _global.Char = (() => {
     return Char;
 })();
 _global.Color = (() => {
-    let Color = function (arg1, arg2, arg3, arg4) {
+    var Color = function (arg1, arg2, arg3, arg4) {
         if (arg1 || arg1 == 0) {
             if (!arg2 && arg2 != 0) {
                 return Color._parse(value);
@@ -835,6 +838,26 @@ _global.Color = (() => {
         this.blue = 0;
         this.alpha = 255;
     };
+    Color.getStringType = function (value) {
+        if (value instanceof Color) {
+            return 'Color';
+        }
+        if (typeof value !== 'string') {
+            new Exception.ArgumentInvalid(value);
+        }
+        if (value[0] == '#') {
+            return 'hex';
+        }
+        else if (value.match('rgba')) {
+            return 'rgba';
+        }
+        else if (value.match('rgb')) {
+            return 'rgb';
+        }
+        else {
+            new Exception.ArgumentInvalid(value);
+        }
+    };
     Color._parse = function (value) {
         if (!value) {
             new Exception.ArgumentUndefined();
@@ -846,7 +869,8 @@ _global.Color = (() => {
             new Exception.ArgumentInvalid(value);
         }
         let internalColor = new Color();
-        if (value[0] == '#') {
+        let type = Color.getStringType(value);
+        if (type == 'hex') {
             value = value.substr(1);
             if (value.length >= 2) {
                 let number = parseInt(value.substr(0, 2), 16);
@@ -865,9 +889,9 @@ _global.Color = (() => {
                 internalColor.alpha = number;
             }
         }
-        else if (value.match('rgb') == true) {
+        else if (type == 'rgb') {
             value = value.substr(4);
-            value = value.substr(0, value.length - 2);
+            value = value.substr(0, value.length - 1);
             let values = value.split(',');
             let number;
             number = parseInt(values[0]);
@@ -877,9 +901,9 @@ _global.Color = (() => {
             number = parseInt(values[2]);
             internalColor.blue = number;
         }
-        else if (value.match('rgba') == true) {
+        else if (type == 'rgba') {
             value = value.substr(5);
-            value = value.substr(0, value.length - 2);
+            value = value.substr(0, value.length - 1);
             let values = value.split(',');
             let number;
             number = parseInt(values[0]);
@@ -985,6 +1009,28 @@ _global.Color = (() => {
         let alpha = Math.round(_this.alpha / 255);
         return [h, s, v, alpha];
     };
+    Color.invert = function (rawValue) {
+        let type = Color.getStringType(rawValue);
+        let _this = Color._parse(rawValue);
+        _this.red = _this.alpha - _this.red;
+        _this.green = _this.alpha - _this.green;
+        _this.blue = _this.alpha - _this.blue;
+        if (type == 'hex') {
+            return Color.toHexString(_this);
+        }
+        else if (type == 'rgb') {
+            return Color.toRgbString(_this);
+        }
+        else if (type == 'rgba') {
+            return Color.toRgbAlphaString(_this);
+        }
+        else if (type == 'Color') {
+            return _this;
+        }
+        else {
+            new Exception.ArgumentInvalid(rawValue);
+        }
+    };
     return Color;
 })();
 var namespace;
@@ -1040,7 +1086,7 @@ Date.nowInMiliseconds = function () {
     var now = new Date();
     return now.getTime();
 };
-Date.nowInNanoseconds = function () {
+Date.nowInMicroseconds = function () {
     return performance.now();
 };
 Date.today = function () {
@@ -1257,6 +1303,15 @@ if (typeof Image !== 'undefined') {
             var rawImage = new namespace.core.RawImage(_this.src);
             rawImage.imageData = canvas.toImageData();
             return rawImage;
+        };
+        Image.prototype.scale = function (scaleWidth, scaleHeight) {
+            let _this = this;
+            let canvas = new namespace.html.Canvas();
+            canvas.width = _this.clientWidth * scaleWidth;
+            canvas.height = _this.clientHeight * scaleHeight;
+            let ctx = canvas.getContext("2d");
+            ctx.drawImage(_this, 0, 0, _this.clientWidth, _this.clientHeight, 0, 0, canvas.width, canvas.height);
+            _this.src = canvas.toDataURL('image/png');
         };
         Image.toPNGString = function (buffer, width, height) {
             var canvas = new namespace.html.Canvas(false);
@@ -1812,7 +1867,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     })();
 }
 Number.fromMetricPrefix = function (unit) {
-    if (unit == namespace.enums.MetricPrefix.pico) {
+    if (unit == namespace.enums.MetricPrefix.Pico) {
         return Math.pow(10, -12);
     }
     else if (unit == namespace.enums.MetricPrefix.Nano) {
@@ -1866,16 +1921,14 @@ var namespace;
     })(core = namespace.core || (namespace.core = {}));
 })(namespace || (namespace = {}));
 (() => {
-    let PathInfo = _global.PathInfo = function (value) {
-        if (value) {
-            return PathInfo._parse(value);
-        }
-        this.value = '';
-        this.extension = '';
-        this.isFile = false;
+    let Path = _global.Path = function (value) {
     };
-    PathInfo._parse = function (value) {
-        let _this = new PathInfo();
+    Path.getInfo = function (value) {
+        let _this = {
+            value: '',
+            extension: '',
+            isFile: false
+        };
         _this.value = value;
         let i = value.length - 1;
         while (i >= 0) {
@@ -1899,16 +1952,6 @@ var namespace;
             i++;
         }
         return _this;
-    };
-    let Path = _global.Path = function (value) {
-    };
-    Path.getExtension = function (value) {
-        let obj = new PathInfo(value);
-        return obj.extension;
-    };
-    Path.isFile = function (value) {
-        let obj = new PathInfo(value);
-        return obj.isFile;
     };
 })();
 var namespace;
@@ -1964,7 +2007,13 @@ function Reflection(value, parent) {
     let parts = value.split('.');
     let currentPart = parent[Array.getFirst(parts)];
     for (let i = 1; i < parts.length; i++) {
-        currentPart = currentPart[parts[i]];
+        let current = parts[i];
+        if (currentPart.hasOwnProperty(current) == true) {
+            currentPart = currentPart[current];
+        }
+        else {
+            new Exception.Other('Cannot reflect on specific property!');
+        }
     }
     return currentPart;
 }
@@ -2538,7 +2587,7 @@ var namespace;
     (function (enums) {
         enums.MetricPrefix = (() => {
             return new Enum({
-                pico: 'p',
+                Pico: 'p',
                 Nano: 'n',
                 Micro: 'μ',
                 Mili: 'm',

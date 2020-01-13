@@ -181,7 +181,7 @@ var DATABASE =
 				htmlString += '<td></td>';
 			}
 			
-			htmlString += '<td>' + cell.timeRendering + 'ns</td>';
+			htmlString += '<td>' + cell.timeRendering + '&micro;s</td>';
 			htmlString += '<td>' + cell.fullTime + 'ms</td>';
 			htmlString += '</tr>';
 		}
