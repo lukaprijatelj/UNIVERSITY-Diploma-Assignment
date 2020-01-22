@@ -289,7 +289,10 @@ ClientPage._onResumeRenderingService = function(thread, data, resolve, reject)
 
 	API.renderingServiceState = data;
 
-	globals.renderer.resumeRendering();
+	if (globals.renderer)
+	{
+		globals.renderer.resumeRendering();
+	}	
 };
 
 /**
