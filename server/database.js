@@ -311,6 +311,27 @@ var DATABASE =
 	/**
 	 * Gets free cells.
 	 */
+	areCellsFinished: function()
+	{
+		var table = DATABASE.tables.renderingCells;
+
+		for (let i=0; i<table.rows.length; i++)
+		{
+			let current = table.rows[i];
+
+			if (current.progress != 100)
+			{
+				// cell is already rendered
+				return false;
+			}
+		}
+
+		return true;
+	},
+
+	/**
+	 * Gets free cells.
+	 */
 	getFreeCells: function(socketIoClient, cellsLength)
 	{
 		var table = DATABASE.tables.renderingCells;

@@ -296,9 +296,11 @@ var API =
 
 		if (!freeCells)
 		{
-			console.log("[Api] All cells are already rendered! (aborting)");
-
-			API.onFinish();
+			if (DATABASE.areCellsFinished())
+			{
+				console.log("[Api] All cells are already rendered! (aborting)");
+				API.onFinish();
+			}
 
 			return;
 		}
