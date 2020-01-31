@@ -72,6 +72,8 @@
 
 	loadingBlock = new Array();
 	loadingBlock.push(document.loadScript('scripts/socket.io/socket.io.js'));
+
+	// ThreeJS includes changes that are not official
 	loadingBlock.push(document.loadScript('scripts/threejs/three.js'));
 	await Promise.all(loadingBlock);
 

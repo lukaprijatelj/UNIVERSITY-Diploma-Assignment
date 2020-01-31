@@ -935,40 +935,42 @@ AdminPage._changeRenderingState = async function(type)
 
 	let data;
 
-	if (type == 'stop')
+	switch (type)
 	{
-		renderingLayer.hide();
-		data = await API.request('rendering/stop');	
-	}
-	else if (type == 'pause')
-	{
-		data = await API.request('rendering/pause');
-	}
-	else if (type == 'resume')
-	{
-		data = await API.request('rendering/resume');	
-	}
-	else if (type == 'start')
-	{
-		AdminPage.renderingText.setValue('Rendering ...');
-		AdminPage.renderingCounter.setValue(0);
+		case  'stop':
+			renderingLayer.hide();
+			data = await API.request('rendering/stop');	
+			break;
 
-		options.CAMERA = globals.camera.toJSON();
+		case  'pause':
+			data = await API.request('rendering/pause');
+			break;
+
+		case  'resume':
+			data = await API.request('rendering/resume');	
+			break;
+
+		case  'start':
+			AdminPage.renderingText.setValue('Rendering ...');
+			AdminPage.renderingCounter.setValue(0);
 	
-		options.LIGHTS = [];
-
-		for (let i=0; i<globals.lights.length; i++)
-		{			
-			options.LIGHTS.push(globals.lights[i].toJSON());
-		}
+			options.CAMERA = globals.camera.toJSON();
 		
-		await API.request('rendering/setOptions', options);
+			options.LIGHTS = [];
+	
+			for (let i=0; i<globals.lights.length; i++)
+			{			
+				options.LIGHTS.push(globals.lights[i].toJSON());
+			}
+			
+			await API.request('rendering/setOptions', options);
+	
+			data = await API.request('rendering/start');	
+			break;
 
-		data = await API.request('rendering/start');				
-	}
-	else
-	{
-		new Exception.Other('Unknown rendering type!');
+		default:
+			new Exception.Other('Unknown rendering type!');
+			break;
 	}
 
 	globals.renderingServiceState = data;
