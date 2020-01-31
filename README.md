@@ -11,12 +11,17 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 	npm run build
 Build task will be read from scripts property of the package.json file.
 
-## Compiling typescript
-	cd <folder-with-tsconfig.json> && tsc
+# Ports
+HTTP Port 30003 
+SocketIO port 30004
 
-## Compiling Sass (scss)
-	sass stylesheets/_root.scss namespace-html.css --style compressed
+# Client
+	<base-url>:<http-port>/client
+	(example: localhost:30003/client)
 
+# Admin
+	<base-url>:<http-port>/admin
+	(example: localhost:30003/admin)
 
 
 # TODO:
