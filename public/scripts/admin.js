@@ -937,20 +937,20 @@ AdminPage._changeRenderingState = async function(type)
 
 	switch (type)
 	{
-		case  'stop':
+		case 'stop':
 			renderingLayer.hide();
 			data = await API.request('rendering/stop');	
 			break;
 
-		case  'pause':
+		case 'pause':
 			data = await API.request('rendering/pause');
 			break;
 
-		case  'resume':
+		case 'resume':
 			data = await API.request('rendering/resume');	
 			break;
 
-		case  'start':
+		case 'start':
 			AdminPage.renderingText.setValue('Rendering ...');
 			AdminPage.renderingCounter.setValue(0);
 	
