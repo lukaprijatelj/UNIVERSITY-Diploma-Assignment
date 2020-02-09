@@ -158,6 +158,7 @@ var DATABASE =
 		htmlString += '<th>Index</th>';
 		htmlString += '<th>Size</th>';
 		htmlString += '<th>Position</th>';
+		htmlString += '<th>Client Index</th>';
 		htmlString += '<th>Client IP</th>';
 		htmlString += '<th>Time rendering</th>';
 		htmlString += '<th>Full time</th>';
@@ -174,14 +175,16 @@ var DATABASE =
 
 			if (cell.socketIoClient)
 			{
+				htmlString += '<td>' + cell.socketIoClient.index + '</td>';
 				htmlString += '<td>' + cell.socketIoClient.ipAddress + '</td>';
 			}
 			else
 			{
 				htmlString += '<td></td>';
+				htmlString += '<td></td>';
 			}
 			
-			htmlString += '<td>' + cell.timeRendering + '&micro;s</td>';
+			htmlString += '<td>' + cell.timeRendering + 'ms</td>';
 			htmlString += '<td>' + cell.fullTime + 'ms</td>';
 			htmlString += '</tr>';
 		}
