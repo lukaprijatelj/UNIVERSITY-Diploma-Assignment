@@ -9,7 +9,7 @@ var screenTextureShader = {
         ] ),
 
         vertexShader: [
-                '#version 300 es',
+              //  '#version 300 es',
                 
                 'precision highp float;',
 		'precision highp int;',
@@ -22,18 +22,18 @@ var screenTextureShader = {
         ].join( '\n' ),
 
         fragmentShader: [
-                '#version 300 es',
+               // '#version 300 es',
                 
                 'precision highp float;',
 		'precision highp int;',
 		'precision highp sampler2D;',
 
                 'uniform sampler2D tPathTracedImageTexture;',
-                'out vec4 out_FragColor;',
+               // 'out vec4 out_FragColor;',
 		
 		'void main()',
 		'{',	
-			'out_FragColor = texelFetch(tPathTracedImageTexture, ivec2(gl_FragCoord.xy), 0);',	
+			'gl_FragData[0] = texture2D(tPathTracedImageTexture, vec2(gl_FragCoord.xy));',	
 		'}'
 		
         ].join( '\n' )
@@ -52,7 +52,7 @@ var screenOutputShader = {
         ] ),
 
         vertexShader: [
-                '#version 300 es',
+              //  '#version 300 es',
                 
                 'precision highp float;',
 		'precision highp int;',
@@ -65,7 +65,7 @@ var screenOutputShader = {
         ].join( '\n' ),
 
         fragmentShader: [
-                '#version 300 es',
+              //  '#version 300 es',
                 
                 'precision highp float;',
 		'precision highp int;',
@@ -73,12 +73,12 @@ var screenOutputShader = {
 
                 'uniform float uOneOverSampleCounter;',
 		'uniform sampler2D tPathTracedImageTexture;',
-                'out vec4 out_FragColor;',
+                //'out vec4 out_FragColor;',
 		
 		'void main()',
 		'{',
-			'vec3 pixelColor = texelFetch(tPathTracedImageTexture, ivec2(gl_FragCoord.xy), 0).rgb * uOneOverSampleCounter;',
-			'out_FragColor = vec4( pow(pixelColor, vec3(0.4545)), 1.0 );',	
+			'vec3 pixelColor = texture2D(tPathTracedImageTexture, vec2(gl_FragCoord.xy)).rgb * uOneOverSampleCounter;',
+			'gl_FragData[0] = vec4( pow(pixelColor, vec3(0.4545)), 1.0 );',	
 		'}'
 		
         ].join( '\n' )
@@ -109,7 +109,13 @@ uniform mat4 uCameraMatrix;
 uniform sampler2D tPreviousTexture;
 
 in vec2 vUv;
-out vec4 out_FragColor;
+
+//layout(location = 0) out vec4 out_FragColor;
+layout(location = 0) out vec4 outColor0;
+layout(location = 1) out vec4 outColor1;
+layout(location = 2) out vec4 outColor2;
+layout(location = 3) out vec4 outColor3;
+
 
 #define PI               3.14159265358979323
 #define TWO_PI           6.28318530717958648
@@ -123,6 +129,7 @@ out vec4 out_FragColor;
 #define INFINITY         1000000.0
 
 
+#define NONE         	 -1000000
 #define SPOT_LIGHT -2
 #define POINT_LIGHT -1
 #define LIGHT 0

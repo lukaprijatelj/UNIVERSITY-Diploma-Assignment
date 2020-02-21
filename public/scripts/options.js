@@ -1,6 +1,6 @@
 var options = { };
 
-options.RENDERER_TYPE = 'ray-tracing';
+options.RENDERER_TYPE = 'path-tracing';
 
 //options.SCENE_FILEPATH = 'scenes/Castle/Scene.gltf';
 //options.SCENE_FILEPATH = 'scenes/Textured-box/Scene.gltf';
@@ -34,8 +34,11 @@ options.BLOCK_HEIGHT = 25;
 options.NUM_OF_BLOCKS_IN_CHUNK = 3;
 
 // ray bounces for path-tracing and recursion depth for ray-tracing
-options.MAX_RECURSION_DEPTH = 5;
+options.MAX_RECURSION_DEPTH = 1;
 options.MAX_THREADS = 2;
+
+// for path-tracing
+options.MAX_TEXTURES_IN_ARRAY = 10;
 
 options.CAMERA = null;
 

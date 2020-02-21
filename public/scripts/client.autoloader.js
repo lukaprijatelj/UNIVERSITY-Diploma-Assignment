@@ -47,6 +47,8 @@
 	console.log('[Admin.autoloader] Loading threeJS library');
 
 	loadingBlock = new Array();
+	
+	// ThreeJS includes changes that are not official
 	loadingBlock.push(document.loadScript('scripts/threejs/three.js'));
 	await Promise.all(loadingBlock);
 
@@ -92,6 +94,14 @@
 	loadingBlock = new Array();	
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BufferGeometryUtils.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/threex.keyboardstate.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/FirstPersonCameraControls.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/WebGlContextProgram.js'));
+	await Promise.all(loadingBlock);
+
+	loadingBlock = new Array();	
+	loadingBlock.push(document.loadScript('scripts/path-tracing/DrawingProgram.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/TextureProgram.js'));
+	loadingBlock.push(document.loadScript('scripts/path-tracing/RenderingProgram.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/FirstPersonCameraControls.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/BVH_Acc_Structure_Iterative_Builder.js'));
 	loadingBlock.push(document.loadScript('scripts/path-tracing/pathTracingCommon.js'));

@@ -1,12 +1,99 @@
 #version 300 es
 
+
 precision highp float;
 precision highp int;
 precision highp sampler2D;
 
-// include defines
-#include <pathtracing_uniforms_and_defines>
 
+// -----------------------------
+// DEFINES
+// -----------------------------
+
+// this line is dynamically replaced when compiling shader program
+@import-defines
+
+#define PI               3.14159265358979323
+#define TWO_PI           6.28318530717958648
+#define FOUR_PI          12.5663706143591729
+#define ONE_OVER_PI      0.31830988618379067
+#define ONE_OVER_TWO_PI  0.15915494309
+#define ONE_OVER_FOUR_PI 0.07957747154594767
+#define PI_OVER_TWO      1.57079632679489662
+#define ONE_OVER_THREE   0.33333333333333333
+#define E                2.71828182845904524
+#define INFINITY         1000000.0
+
+#define NONE         	 -1000000
+#define SPOT_LIGHT -2
+#define POINT_LIGHT -1
+#define LIGHT 0
+#define DIFF 1
+#define REFR 2
+#define SPEC 3
+#define COAT 4
+#define CARCOAT 5
+#define TRANSLUCENT 6
+#define SPECSUB 7
+#define CHECK 8
+#define WATER 9
+#define PBR_MATERIAL 10
+#define WOOD 11
+#define SEAFLOOR 12
+#define TERRAIN 13
+#define CLOTH 14
+#define LIGHTWOOD 15
+#define DARKWOOD 16
+#define PAINTING 17
+#define METALCOAT 18
+
+// (1 / 2048 texture width)
+#define INV_TEXTURE_WIDTH 1.0 / 2048.0
+
+#define N_POINTS 32.0
+
+
+// -----------------------------
+// OUT COLORS
+// -----------------------------
+layout(location = 0) out vec4 outColor0;   // vec4(texture-ID, U, V, <non-reserved>)
+layout(location = 1) out vec4 outColor1;   // vec4(ray-origin-X, ray-origin-Y, ray-origin-Z, <non-reserved>)
+layout(location = 2) out vec4 outColor2;   // vec4(ray-direction-X, ray-direction-Y, ray-direction-Z, <non-reserved>)
+
+
+// -----------------------------
+// IN COLORS
+// -----------------------------
+
+uniform sampler2D inColor0;
+uniform sampler2D inColor1;
+uniform sampler2D inColor2;
+
+// -----------------------------
+// UNIFORMS
+// -----------------------------
+
+uniform bool uCameraIsMoving;
+uniform bool uCameraJustStartedMoving;
+
+uniform float uEPS_intersect;
+uniform float uTime;
+uniform float uSampleCounter;
+uniform float uFrameCounter;
+uniform float uULen;
+uniform float uVLen;
+uniform float uApertureSize;
+uniform float uFocusDistance;
+
+uniform float CANVAS_WIDTH;
+uniform float CANVAS_HEIGHT;
+
+uniform mat4 uCameraMatrix;
+uniform vec3 cameraPosition;
+
+
+// previously rendered texture
+uniform sampler2D tPreviousTexture;
 
 // actual model triangles with info about position and texture
 uniform sampler2D tTriangleTexture;
@@ -14,19 +101,23 @@ uniform sampler2D tTriangleTexture;
 // AABB tree for checking if ray hit model
 uniform sampler2D tAABBTexture;
 
-// textures
-uniform sampler2D tSkyCubeTextures[NUM_OF_SKYCUBE_TEXTURES]; 
-uniform sampler2D tAlbedoTextures[MAX_TEXTURES_IN_ARRAY]; 
+uniform float uAmbientLightIntensity;
+uniform vec3 uAmbientLightColor;
+
+uniform int uBounces;
 
 
-uniform float uSkyLightIntensity;
-uniform float uSunLightIntensity;
-uniform vec3 uSunColor;
-uniform vec3 uSunDirection;
+// -----------------------------
+// GLOBAL VARIABLES
+// -----------------------------
+
+uvec2 seed;
 
 
-// (1 / 2048 texture width)
-#define INV_TEXTURE_WIDTH 1.0 / 2048.0
+
+// -----------------------------
+// Structs
+// -----------------------------
 
 struct Ray 
 {
@@ -45,15 +136,6 @@ struct Intersection
 	float opacity;
 };
 
-
-#include <pathtracing_random_functions>
-#include <pathtracing_calc_fresnel_reflectance>
-#include <pathtracing_sphere_intersect>
-#include <pathtracing_plane_intersect>
-#include <pathtracing_triangle_intersect>
-#include <pathtracing_boundingbox_intersect>
-#include <pathtracing_bvhTriangle_intersect>
-
 struct StackLevelData
 {
 	float id;
@@ -69,6 +151,140 @@ struct BoxNode
 };
 
 
+
+//-----------------------------------------------------------------------
+// Taken from iq https://www.shadertoy.com/view/4tXyWN
+// float rand( inout uvec2 seed )
+// //-----------------------------------------------------------------------
+// {
+// 	seed += uvec2(1);
+// 
+//     uvec2 q = 1103515245 * ( (seed>>1) ^ (seed.yx) );
+//     uint  n = 1103515245 * ( (q.x) ^ (q.y>>3) );
+// 
+// 	return float(n) * (1.0 / float(0xffffffffU));
+// }
+float rand( inout uvec2 seed )
+{
+	seed += uvec2(1);
+
+    	uvec2 q = 1103515245U * ( (seed >> 1U) ^ (seed.yx) );
+    	uint  n = 1103515245U * ( (q.x) ^ (q.y >> 3U) );
+	return float(n) * (1.0 / float(0xffffffffU));
+}
+
+
+
+//-----------------------------------------------------------------------
+vec3 randomCosWeightedDirectionInHemisphere( vec3 nl, inout uvec2 seed )
+//-----------------------------------------------------------------------
+{
+	float i = floor(N_POINTS * rand(seed)) + (rand(seed) * 0.5);
+			// the Golden angle in radians
+	float theta = i * 2.39996322972865332 + mod(uSampleCounter, TWO_PI);
+	theta = mod(theta, TWO_PI);
+	float r = sqrt(i / N_POINTS); // sqrt pushes points outward to prevent clumping in center of disk
+	float x = r * cos(theta);
+	float y = r * sin(theta);
+	vec3 p = vec3(x, y, sqrt(1.0 - x * x - y * y)); // project XY disk points outward along Z axis
+	
+	vec3 u = normalize( cross( abs(nl.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0), nl ) );
+	vec3 v = cross(nl, u);
+
+	return (u * p.x + v * p.y + nl * p.z);
+}
+
+
+
+//-----------------------------------------------------------------------
+float calcFresnelReflectance(vec3 rayDirection, vec3 n, float etai, float etat, out float ratioIoR)
+//-----------------------------------------------------------------------
+{
+	float temp;
+	float cosi = clamp(dot(rayDirection, n), -1.0, 1.0);
+	if (cosi > 0.0)
+	{
+		temp = etai;
+		etai = etat;
+		etat = temp;
+	}
+	
+	ratioIoR = etai / etat;
+	float sint = ratioIoR * sqrt(max(0.0, 1.0 - (cosi * cosi)));
+	if (sint >= 1.0) 
+		return 1.0; // total internal reflection
+
+	float cost = sqrt(max(0.0, 1.0 - (sint * sint)));
+	cosi = abs(cosi);
+	float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+	float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+
+	return ((Rs * Rs) + (Rp * Rp)) * 0.5;
+}
+
+
+
+//--------------------------------------------------------------------------------------
+float BoundingBoxIntersect( vec3 minCorner, vec3 maxCorner, vec3 rayOrigin, vec3 invDir )
+//--------------------------------------------------------------------------------------
+{
+	vec3 near = (minCorner - rayOrigin) * invDir;
+	vec3 far  = (maxCorner - rayOrigin) * invDir;
+	
+	vec3 tmin = min(near, far);
+	vec3 tmax = max(near, far);
+	
+	float t0 = max( max(tmin.x, tmin.y), tmin.z);
+	float t1 = min( min(tmax.x, tmax.y), tmax.z);
+	
+	if (t0 > t1 || t1 < 0.0) return INFINITY;
+	
+	return t0;	
+}
+
+
+
+//---------------------------------------------------------------------------------------
+float BVH_TriangleIntersect( vec3 v0, vec3 v1, vec3 v2, Ray r, out float u, out float v )
+//---------------------------------------------------------------------------------------
+{
+	vec3 edge1 = v1 - v0;
+	vec3 edge2 = v2 - v0;
+	vec3 pvec = cross(r.direction, edge2);
+	float det = 1.0 / dot(edge1, pvec);
+
+	// comment out the following line if double-sided triangles are wanted, or ...
+	// uncomment the following line if back-face culling is desired (front-facing triangles only)
+	if (det < 0.0) return INFINITY;
+
+	vec3 tvec = r.origin - v0;
+	u = dot(tvec, pvec) * det;
+
+	if (u < 0.0 || u > 1.0) return INFINITY;
+
+	vec3 qvec = cross(tvec, edge1);
+	v = dot(r.direction, qvec) * det;
+
+	if (v < 0.0 || u + v > 1.0) return INFINITY;
+
+	return dot(edge2, qvec) * det;
+}
+
+
+
+// //-----------------------------------------------------------------------
+// // Gets element on specified index from array.
+// vec4 Array_getByIndex(int index, vec4 array[])
+// //-----------------------------------------------------------------------
+// {
+// 	ivec2 uv = ivec2(index, 0);
+// 	int depth = 0;
+// 
+// 	return texelFetch(array, uv, depth);
+// }
+
+
+
 //-----------------------------------------------------------------------
 // Because array indexing cannot be done via for loop it will be done via function and static indexing.
 // sampler2d also cannot be return type of the function. Any of the opaque types cannot be.
@@ -79,43 +295,34 @@ vec3 GetTexturePixelsFromArray(int index, sampler2D array[MAX_TEXTURES_IN_ARRAY]
 	{
 		case 0:
 			return texture(array[0], uv).rgb;
-			break;
 
 		case 1:
 			return texture(array[1], uv).rgb;
-			break;
 
-		case 2:
+/*		case 2:
 			return texture(array[2], uv).rgb;
-			break;
 
 		case 3:
 			return texture(array[3], uv).rgb;
-			break;
 
 		case 4:
 			return texture(array[4], uv).rgb;
-			break;
 
 		case 5:
 			return texture(array[5], uv).rgb;
-			break;
-/*
+
 		case 6:
 			return texture(array[6], uv).rgb;
-			break;
 
 		case 7:
 			return texture(array[7], uv).rgb;
-			break;
 
 		case 8:
 			return texture(array[8], uv).rgb;
-			break;
 
 		case 9:
 			return texture(array[9], uv).rgb;
-			break;*/
+			*/
 	}
 
 	return vec3(-1, -1, -1);
@@ -141,32 +348,6 @@ BoxNode GetBoxNode(const in float i)
 
 	return BN;
 }
-
-
-
-// vec4 GetPixel(sampler image, vec2 uv)
-// {
-// 	int NUM_OF_CHANNELS = 4;
-// 	int position = 0;
-// 
-// 	// add rows
-// 	position += uv.y * image.width;
-// 	
-// 	// add columns
-// 	position += uv.x;
-// 
-// 	position *= NUM_OF_CHANNELS;
-// 
-// 	vec4 color;
-// 
-// 	color.x = imageData[position + 0];  // red
-// 	color.y = imageData[position + 1];	// green
-// 	color.z = imageData[position + 2];	// blue
-// 	color.w = imageData[position + 3];	// alpha
-// 
-// 	return color;
-// }
-
 
 
 //-----------------------------------------------------------------------
@@ -269,40 +450,44 @@ vec3 GetSkycubeColor(Ray r)
 	posU = (1.0 + posU) / 2.0;
 	posV = (1.0 + posV) / 2.0;
 
-	vec2 uv = vec2(posU, posV);
-	vec3 pixelColor;
+	outColor0 = vec4(skyMap, posU, posV, 0.0);
 
+	return vec3(0.0);
+
+	/*vec2 uv = vec2(posU, posV);
+	vec3 pixelColor;
+	
 	switch(skyMap)
 	{
 		case 0:
 			pixelColor = texture(tSkyCubeTextures[0], uv).rgb;
 			break;
-
+	
 		case 1:
 			pixelColor = texture(tSkyCubeTextures[1], uv).rgb;
 			break;
-
+	
 		case 2:
 			pixelColor = texture(tSkyCubeTextures[2], uv).rgb;
 			break;
-
+	
 		case 3:
 			pixelColor = texture(tSkyCubeTextures[3], uv).rgb;
 			break;
-
+	
 		case 4:
 			pixelColor = texture(tSkyCubeTextures[4], uv).rgb;
 			break;
-
+	
 		case 5:
 			pixelColor = texture(tSkyCubeTextures[5], uv).rgb;
 			break;
 	}
-
+	
 	// gama to linear color space	
 	pixelColor = pow(pixelColor, vec3(2.2));
-
-	return pixelColor;
+	
+	return pixelColor;*/
 }
 
 
@@ -478,14 +663,7 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 		intersec.albedoTextureID = int(vd7.x);
 
-		if (intersec.albedoTextureID >= 0)
-		{
-			intersec.color = GetTexturePixelsFromArray(intersec.albedoTextureID, tAlbedoTextures, intersec.uv);	
-		}
-		else
-		{
-			intersec.color = vd6.yzw;
-		}
+		intersec.color = vd6.yzw;
 	}
 
 	return t;
@@ -493,16 +671,29 @@ float SceneIntersect( Ray r, inout Intersection intersec )
 
 
 //-----------------------------------------------------------------------
-vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
+// Convert from gamma to linear color space
+vec3 gammaToLinearColorSpace(vec3 color)
+//-----------------------------------------------------------------------
+{
+	return pow(color, vec3(2.2));
+}
+
+
+//-----------------------------------------------------------------------
+vec3 SpawnRay( Ray r, inout uvec2 seed )
 //-----------------------------------------------------------------------
 {
 	vec3 randVec = vec3(rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0, rand(seed) * 2.0 - 1.0);
 
 	Intersection intersec;
-	vec3 accumCol = vec3(0.0);
+
+	vec3 outputColor = uAmbientLightColor / 255.0;
+	outputColor *= uAmbientLightIntensity / 255.0;
+
+	//uvec2 seed = uvec2(1.0, 1.0 + 1.0) * uvec2(gl_FragCoord);
+
 	vec3 mask = vec3(1.0);
 	vec3 n, nl, x;
-	vec3 firstX = vec3(0);
 	vec3 tdir;
 
 	float hitDistance;
@@ -511,82 +702,65 @@ vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
 	float t = INFINITY;
 	float epsIntersect = 0.01;
 	
-	int previousIntersecType = -100;
+	int previousIntersecType = NONE;
 	int diffuseCount = 0;
 
 	bool bounceIsSpecular = true;
-	bool sampleSunLight = false;
 
-	for (int bounces = 0; bounces < MAX_BOUNCES; bounces++)
+	//for (int bounces = 0; bounces < MAX_BOUNCES; bounces++)
+	for (int i=0; i<1; i++)
 	{
 		float t = SceneIntersect(r, intersec);
 		
-		if (t == INFINITY && bounces == 0)
+		if (t == INFINITY)
 		{
-			// ray hits sky first
-
-			accumCol = GetSkycubeColor(r);
-			break;	
-		}
-
-		if (t == INFINITY && previousIntersecType == DIFF)
-		{
-			// if ray bounced off of diffuse material and hits sky
-
-			if (sampleSunLight)
+			if (uBounces == 0)
 			{
-				accumCol = mask * uSunColor * uSunLightIntensity;
+				// ray hits sky first
+
+				outputColor += GetSkycubeColor(r);
+				break;
 			}
-			else
+				
+			if (previousIntersecType == DIFF)
 			{
-				accumCol = mask * GetSkycubeColor(r) * uSkyLightIntensity;
-			}				
+				// if ray bounced off of diffuse material and hits sky
 
-			break;
-		}
-        
-		if (t == INFINITY && previousIntersecType == REFR)
-		{
-			// if ray bounced off of glass and hits sky
+				outputColor += mask * GetSkycubeColor(r);			
 
-            if (diffuseCount == 0)
-			{
-				// camera looking through glass, hitting the sky
-				mask *= GetSkycubeColor(r);
+				break;
 			}
-			else if (sampleSunLight)
+			
+			if (previousIntersecType == REFR)
 			{
-				// sun rays going through glass, hitting another surface
-				mask *= uSunColor * uSunLightIntensity;
-			}				
-			else 
-			{
+				// if ray bounced off of glass and hits sky
+
 				// sky rays going through glass, hitting another surface
-				mask *= GetSkycubeColor(r) * uSkyLightIntensity;
-			} 
-               
-			if (bounceIsSpecular)
-			{
-				// prevents sun 'fireflies' on diffuse surfaces
-				accumCol = mask;
+				mask *= GetSkycubeColor(r);
+
+				if (bounceIsSpecular)
+				{
+					// prevents sun 'fireflies' on diffuse surfaces
+					outputColor += mask;
+				}
+				
+				break;
 			}
-               
-			break;
-		}
+		}		
         
 		if (intersec.type == LIGHT)
 		{
 			// other lights, like houselights, could be added to the scene
 			// if we reached light material, don't spawn any more rays
 
-            accumCol = mask * intersec.emission;
+            outputColor += mask * intersec.emission;
 
 			break;
 		}
 
 		// useful data
 		vec3 n = intersec.normal;
-        vec3 nl = dot(n,r.direction) <= 0.0 ? normalize(n) : normalize(n * -1.0);
+        vec3 nl = dot(n, r.direction) <= 0.0 ? normalize(n) : normalize(n * -1.0);
 		vec3 x = r.origin + r.direction * t;
 
 		if (intersec.type == DIFF) 
@@ -598,15 +772,12 @@ vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
 			
             bounceIsSpecular = false;
 
-			// convert from gamma to linear color space
-			vec3 intersecColor = pow(intersec.color, vec3(2.2));
-
-			mask *= intersecColor;
+			mask *= gammaToLinearColorSpace(intersec.color);
 				
 			// Russian Roulette
 			float p = max(mask.r, max(mask.g, mask.b));
 
-			if (bounces > 0)
+			if (uBounces > 0)
 			{
 				if (rand(seed) < p)
 				{
@@ -625,23 +796,6 @@ vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
 				r = Ray( x, randomCosWeightedDirectionInHemisphere(nl, seed) );
 				r.origin += r.direction * epsIntersect;
 
-				continue;
-			}
-			else
-			{
-				// this branch acts like a traditional shadowRay, checking for direct light from the Sun..
-				// if it has a clear path and hits the Sun on the next bounce, sunlight is gathered, otherwise returns black (shadow)
-				r = Ray( x, normalize(sunDirection + (randVec * 0.01)) );
-				r.origin += nl * epsIntersect;
-				weight = dot(r.direction, nl);
-
-				if (weight < 0.01)
-				{
-					break;
-				}
-
-				mask *= weight;
-				sampleSunLight = true;
 				continue;
 			}
 		}
@@ -707,13 +861,35 @@ vec3 SpawnRay( Ray r, vec3 sunDirection, inout uvec2 seed )
 										
 				continue;
 			}
-
 		}
 
+		if (uBounces == MAX_BOUNCES - 1)
+		{
+			outputColor += mask;
+		}
 	} 
 
-	return accumCol;
+	return outputColor;
 }
+
+
+
+//-----------------------------------------------------------------------
+vec4 getPixel(sampler2D image, int column, int row)
+//-----------------------------------------------------------------------
+{
+	return texelFetch(image, ivec2(column, row), 0);
+}
+
+//-----------------------------------------------------------------------
+vec4 getPixel(sampler2D image, vec2 pixelPos)
+//-----------------------------------------------------------------------
+{
+	return texture(image, pixelPos);
+}
+
+
+
 
 
 //-----------------------------------------------------------------------
@@ -725,50 +901,67 @@ void main( void )
 	vec3 camForward = vec3(-uCameraMatrix[2][0], -uCameraMatrix[2][1], -uCameraMatrix[2][2]);
 
 	// seed for rand(seed) function
-	uvec2 seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
+	seed = uvec2(uFrameCounter, uFrameCounter + 1.0) * uvec2(gl_FragCoord);
 
-	vec2 pixelPos = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
-	vec2 pixelOffset = vec2(0);
-	vec3 pixelColor = vec3(0);
+	ivec2 pixelPosInt = ivec2(gl_FragCoord.xy);
+	vec2 pixelPosFloat = (gl_FragCoord.xy / vec2(CANVAS_WIDTH, CANVAS_HEIGHT));
 
-	float multisamplingFactor = float(MULTISAMPLING_FACTOR);
+	
 
-	// pick random point on aperture
-	float randomAngle = rand(seed) * TWO_PI; 
-
-	float randomRadius = rand(seed) * uApertureSize;
-	vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * randomRadius;
-
-	for (int j=0; j<MULTISAMPLING_FACTOR; j++)
+/*	if (uStage == 1.0)
 	{
-		pixelOffset.y = float(j) / multisamplingFactor;
-		pixelOffset.y /= (uResolution.y * 0.5);
-
-		for (int i=0; i<MULTISAMPLING_FACTOR; i++)
-		{
-			pixelOffset.x = float(i) / multisamplingFactor;
-			pixelOffset.x /= (uResolution.x * 0.5);
-
-			vec3 rayDir = normalize( (pixelPos.x + pixelOffset.x) * camRight * uULen + (pixelPos.y + pixelOffset.y) * camUp * uVLen + camForward );
-			
-			// depth of field
-			vec3 focalPoint = uFocusDistance * rayDir;
-			
-			// point on aperture to focal point
-			vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
-			
-			Ray ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
-
-			// perform path tracing and get resulting pixel color
-			vec3 currPixelColor = SpawnRay( ray, uSunDirection, seed );
-
-			pixelColor += currPixelColor; 
-		}
+		outColor0 = texelFetch(inColor0, ivec2(gl_FragCoord.xy), 0);// texture(inColor0, vec2(gl_FragCoord.xy));
 	}
+	else*/
+	
+	Ray ray;
 
-	pixelColor /= pow(multisamplingFactor, 2.0);
+	if (uBounces == 0)
+	{
+		vec2 uResolution = vec2(CANVAS_WIDTH, CANVAS_HEIGHT);
+		vec2 pixelPos = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
 
-	vec3 previousColor = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+		// pick random point on aperture
+		float randomAngle = rand(seed) * TWO_PI; 
+
+		float randomRadius = rand(seed) * uApertureSize;
+		vec3  randomAperturePos = ( cos(randomAngle) * camRight + sin(randomAngle) * camUp ) * randomRadius;
+
+
+		vec3 rayDir = normalize(pixelPos.x * camRight * uULen + pixelPos.y* camUp * uVLen + camForward );
+		
+		// depth of field
+		vec3 focalPoint = uFocusDistance * rayDir;
+		
+		// point on aperture to focal point
+		vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+		
+		ray = Ray( cameraPosition + randomAperturePos, finalRayDir );
+
+		// perform path tracing and get resulting pixel color
+		//vec3 currPixelColor = SpawnRay( ray, seed );
+		vec3 pixelColor = GetSkycubeColor(ray);
+
+		outColor1 = vec4(0.0);
+		outColor2 = vec4(0.0);
+	}
+	/*else
+	{
+		/*vec4 tmpRayOrigin = getPixel(inColor1, pixelPosInt.x, pixelPosInt.y);
+		vec4 tmpRayDirection = getPixel(inColor2, pixelPosInt.x, pixelPosInt.y);
+
+		ray = Ray(tmpRayOrigin.xyz, tmpRayDirection.xyz);
+
+		outColor0 = getPixel(inColor0, pixelPosInt.x, pixelPosInt.y);
+	}*/
+
+	//outColor1 = vec4(ray, 0.0);
+
+	
+
+
+
+	/*vec3 previousColor = texelFetch(tPreviousTexture, ivec2(gl_FragCoord.xy), 0).rgb;
 	
 	if (uCameraJustStartedMoving)
 	{
@@ -779,6 +972,13 @@ void main( void )
 		previousColor *= 0.5; // motion-blur trail amount (old image)
 		pixelColor *= 0.5; // brightness of new image (noisy)
 	}
+
+	outColor0 = vec4( pixelColor + previousColor, 1.0 );*/
 	
-	out_FragColor = vec4( pixelColor + previousColor, 1.0 );	
+
+	//outColor0 = vec4( pixelColor, 1.0);
+	
+
+	//outColor0 = vec4(0.0);
+	
 }
