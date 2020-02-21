@@ -42,12 +42,32 @@ globals.rendererCanvas = null;
 /**
  * Vertex shader script text.
  */
-globals.vertexShader = null;
+globals.renderingVertexShader = null;
 
 /**
  * Fragment shader script text.
  */
-globals.fragmentShader = null;
+globals.renderingFragmentShader = null;
+
+/**
+ * Vertex shader script text.
+ */
+globals.texturesVertexShader = null;
+
+/**
+ * Fragment shader script text.
+ */
+globals.texturesFragmentShader = null;
+
+/**
+ * Vertex shader script text.
+ */
+globals.drawingVertexShader = null;
+
+/**
+ * Fragment shader script text.
+ */
+globals.drawingFragmentShader = null;
 
 
 
@@ -82,15 +102,38 @@ ClientPage.init = async function()
 		new Exception.Other('Client does not have enough cores/threads to work properly!');
 	}
 
-	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingVertexShader.glsl');
+	// rendering shaders
+	let vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/renderingVertexShader.glsl');
 	vertexAjax.method = 'GET';
 	let vertexShader = await vertexAjax.send();
-	globals.vertexShader = vertexShader.responseText;
+	globals.renderingVertexShader = vertexShader.responseText;
 
-	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/pathTracingFragmentShader.glsl');
+	let fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/renderingFragmentShader.glsl');
 	fragmentAjax.method = 'GET';
 	let fragmentShader = await fragmentAjax.send();
-	globals.fragmentShader = fragmentShader.responseText;
+	globals.renderingFragmentShader = fragmentShader.responseText;
+
+	// texture shaders
+	vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/texturesVertexShader.glsl');
+	vertexAjax.method = 'GET';
+	vertexShader = await vertexAjax.send();
+	globals.texturesVertexShader = vertexShader.responseText;
+
+	fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/texturesFragmentShader.glsl');
+	fragmentAjax.method = 'GET';
+	fragmentShader = await fragmentAjax.send();
+	globals.texturesFragmentShader = fragmentShader.responseText;
+
+	// drawing shaders
+	vertexAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/drawingVertexShader.glsl');
+	vertexAjax.method = 'GET';
+	vertexShader = await vertexAjax.send();
+	globals.drawingVertexShader = vertexShader.responseText;
+
+	fragmentAjax = new namespace.core.Ajax('scripts/path-tracing/shaders/drawingFragmentShader.glsl');
+	fragmentAjax.method = 'GET';
+	fragmentShader = await fragmentAjax.send();
+	globals.drawingFragmentShader = fragmentShader.responseText;
 
 	let interfaceHtml = new namespace.html.ScrollViewer(document.querySelector('interface'));
 	interfaceHtml.removeClass('loading');

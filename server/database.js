@@ -109,7 +109,7 @@ var DATABASE =
 		let NUM_OF_CHANNELS = 4;
 		let buffer = new Uint8Array(width * height * NUM_OF_CHANNELS);
 
-		var cellsTable = DATABASE.tables.renderingCells;
+		let cellsTable = DATABASE.tables.renderingCells;
 
 		for (let a=0; a<cellsTable.rows.length; a++)
 		{

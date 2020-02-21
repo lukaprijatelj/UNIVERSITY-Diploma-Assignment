@@ -426,7 +426,7 @@ var API =
 			new Exception.ValueUndefined();
 		}
 
-		var socket = this;
+		let socket = this;
 
 		// update rendering options
 		options = data;
@@ -438,23 +438,23 @@ var API =
 
 		DATABASE.removeAllCells();
 
-		var startY = 0;
-		var MAX_WIDTH = options.CANVAS_WIDTH;
-		var MAX_HEIGHT = options.CANVAS_HEIGHT;
+		let startY = 0;
+		let MAX_WIDTH = options.CANVAS_WIDTH;
+		let MAX_HEIGHT = options.CANVAS_HEIGHT;
 
 		let index = 0;
 
 		while(startY < MAX_HEIGHT)
 		{
-			var startX = 0;
+			let startX = 0;
 
 			while(startX < MAX_WIDTH)
 			{
-				var endX = startX + options.BLOCK_WIDTH;
-				var endY = startY + options.BLOCK_HEIGHT;
+				let endX = startX + options.BLOCK_WIDTH;
+				let endY = startY + options.BLOCK_HEIGHT;
 
-				var MAX_X = endX < MAX_WIDTH ? endX : MAX_WIDTH;
-				var MAX_Y = endY < MAX_HEIGHT ? endY : MAX_HEIGHT;
+				let MAX_X = endX < MAX_WIDTH ? endX : MAX_WIDTH;
+				let MAX_Y = endY < MAX_HEIGHT ? endY : MAX_HEIGHT;
 
 				DATABASE.createSharedCell(index, startX, startY, MAX_X - startX, MAX_Y - startY);
 				index++;

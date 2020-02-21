@@ -13,6 +13,7 @@ var PathtracingRenderer = function()
 {	
 	// Three.js related variables
 	this.canvas;
+	this.context;
 	
 	this.controls;
 	this.renderer;
@@ -33,9 +34,6 @@ var PathtracingRenderer = function()
 	this.worldCamera = null;
 
 	// Environment variables
-	this.skyLightIntensity = 1;
-	this.sunLightIntensity = 1;
-	this.sunColor = [255, 250, 235];
 	this.cameraControlsObject; //for positioning and moving the camera itself
 	this.cameraControlsYawObject; //allows access to control camera's left/right movements through mobile input
 	this.cameraControlsPitchObject; //allows access to control camera's up/down movements through mobile input
@@ -44,6 +42,9 @@ var PathtracingRenderer = function()
 	this.apertureSize = 0.0;
 	this.focusDistance = 100.0;
 	this.speed = 60;
+
+	this.lights = [];
+	this.ambientLight = null;
 
 	// Rendering variables
 	this.sunAngle = Math.PI / 2.5;
@@ -121,7 +122,13 @@ PathtracingRenderer.prototype.initCamera = function()
 
 	_this.worldCamera.aspect = options.CANVAS_WIDTH / options.CANVAS_HEIGHT;
 	_this.worldCamera.updateProjectionMatrix();
+	_this.worldCamera.updateMatrixWorld();
+	
 
+
+
+	return;
+/*
 	// the following scales all scene objects by the worldCamera's field of view,
 	// taking into account the screen aspect ratio and multiplying the uniform uULen,
 	// the x-coordinate, by this ratio
@@ -149,6 +156,7 @@ PathtracingRenderer.prototype.initCamera = function()
 
 	// TODO: why is this
 	_this.pathTracingScene.add(_this.cameraControlsObject);	
+	*/
 };
 
 /**
@@ -167,8 +175,36 @@ PathtracingRenderer.prototype.initLights = function()
 PathtracingRenderer.prototype.setWaitingCells = function()
 {
 	let _this = this;
+
+		
 	
-	// do nothing
+	
+
+	_this.renderingProgram = new RenderingProgram(_this.gl);
+	_this.renderingProgram.prepareDefines();
+	_this.renderingProgram.initialize();
+	
+	_this.textureProgram = new TextureProgram(_this.gl);
+	_this.textureProgram.prepareDefines();
+	_this.textureProgram.initialize();
+
+	_this.drawingProgram = new DrawingProgram(_this.gl);
+	_this.drawingProgram.prepareDefines();
+	_this.drawingProgram.initialize();
+
+	_this.renderingProgram.inTexture0 = _this.textureProgram.outTexture0;
+	_this.renderingProgram.inTexture1 = _this.textureProgram.outTexture1;
+	_this.renderingProgram.inTexture2 = _this.textureProgram.outTexture2;
+	
+	_this.textureProgram.inTexture0 = _this.renderingProgram.outTexture0;
+	_this.textureProgram.inTexture1 = _this.renderingProgram.outTexture1;
+	_this.textureProgram.inTexture2 = _this.renderingProgram.outTexture2;
+
+	_this.drawingProgram.inTexture0 = _this.textureProgram.outTexture0;
+
+	_this.renderingProgram.prepareUniforms();
+	_this.textureProgram.prepareUniforms();	
+	_this.drawingProgram.prepareUniforms();
 };
 
 /**
@@ -347,6 +383,19 @@ PathtracingRenderer.prototype.prepareJsonData = async function()
 PathtracingRenderer.prototype.initScene = function () 
 {
 	let _this = this;
+
+	globals.scene.traverse(function(object) 
+	{
+		if (object instanceof THREE.PointLight || object instanceof THREE.SpotLight || object instanceof THREE.DirectionalLight)
+		{
+			_this.lights.push(object);
+		}
+
+		if (object instanceof THREE.AmbientLight)
+		{
+			_this.ambientLight = object;
+		}
+	});
 
 	let meshList = _this.meshList;
 	let geoList = [];
@@ -538,7 +587,7 @@ PathtracingRenderer.prototype.initScene = function ()
 		triangle_array[32 * i + 25] = _this.pathTracingMaterialList[materialNumber].color.r; // g or y
 		triangle_array[32 * i + 26] = _this.pathTracingMaterialList[materialNumber].color.g; // b or z
 		triangle_array[32 * i + 27] = _this.pathTracingMaterialList[materialNumber].color.b; // a or w
-
+		
 		//slot 7
 		triangle_array[32 * i + 28] = _this.pathTracingMaterialList[materialNumber].albedoTextureID; // r or x
 		triangle_array[32 * i + 29] = _this.pathTracingMaterialList[materialNumber].opacity; // g or y
@@ -636,7 +685,14 @@ PathtracingRenderer.prototype.initThree = function()
 
 	_this.canvas = document.getElementById('rendering-canvas');
 
-	let context = _this.canvas.getContext('webgl2');
+	let gl = _this.canvas.getContext('webgl2');
+
+	_this.gl = gl;
+
+	if (!gl) 
+	{
+		return alert("need WebGL2");
+	}
 
 	window.addEventListener('wheel', _this.onMouseWheel, false);
 
@@ -662,12 +718,20 @@ PathtracingRenderer.prototype.initThree = function()
 		event.preventDefault();
 	}, false);
 
-	_this.renderer = new THREE.WebGLRenderer({canvas: _this.canvas, context: context});
+	_this.renderer = new THREE.WebGLRenderer({canvas: _this.canvas, context: gl});
 	_this.renderer.autoClear = false;
 	_this.renderer.setSize(_this.canvas.width, _this.canvas.height);
 
-	//required by WebGL 2.0 for rendering to FLOAT textures
-	_this.renderer.getContext().getExtension('EXT_color_buffer_float');
+	// required by WebGL 2.0 for rendering to FLOAT textures
+	let extension_EXT_color_buffer_float = gl.getExtension('EXT_color_buffer_float');  // webgl1 = WEBGL_color_buffer_float 
+	
+	if (!extension_EXT_color_buffer_float)
+	{
+		new Exception.Other('WebGL extension "EXT_color_buffer_float" is not supported!');
+		return;
+	}
+
+	
 
 	_this.clock = new THREE.Clock();
 
@@ -709,7 +773,7 @@ PathtracingRenderer.prototype.prepareGeometryForPT = function()
 {
 	let _this = this;	        
 
-	let screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
+/*	let screenTextureGeometry = new THREE.PlaneBufferGeometry(2, 2);
 	let screenTextureMaterial = new THREE.ShaderMaterial({
 		uniforms: screenTextureShader.uniforms,
 		vertexShader: screenTextureShader.vertexShader,
@@ -717,9 +781,9 @@ PathtracingRenderer.prototype.prepareGeometryForPT = function()
 		depthWrite: false,
 		depthTest: false
 	});
-	screenTextureMaterial.uniforms.tPathTracedImageTexture.value = _this.pathTracingRenderTarget.texture;
+	screenTextureMaterial.uniforms.tPathTracedImageTexture.value = _this.pathTracingRenderTarget.texture;*/
 
-	let screenTextureMesh = new THREE.Mesh(screenTextureGeometry, screenTextureMaterial);
+/*	let screenTextureMesh = new THREE.Mesh(screenTextureGeometry, screenTextureMaterial);
 	_this.screenTextureScene.add(screenTextureMesh);
 
 	let screenOutputGeometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -733,59 +797,14 @@ PathtracingRenderer.prototype.prepareGeometryForPT = function()
 	_this.screenOutputMaterial.uniforms.tPathTracedImageTexture.value = _this.pathTracingRenderTarget.texture;
 
 	let screenOutputMesh = new THREE.Mesh(screenOutputGeometry, _this.screenOutputMaterial);
-	_this.screenOutputScene.add(screenOutputMesh);
+	_this.screenOutputScene.add(screenOutputMesh);*/
 
-	let skycubeTextures = [];
-
-	for (let i=0; i<options.SKY_CUBE_IMAGES.length; i++)
-	{
-		let text = new THREE.Texture(globals.scene.background.image[i]);
-		text.needsUpdate = true;
-		text.minFilter = THREE.NearestFilter;
-		text.magFilter = THREE.NearestFilter;
-		text.generateMipmaps = false;
-		text.flipY = false;
-		
-		skycubeTextures.push(text);
-	}
 	
-	_this.pathTracingDefines = 
-	{
-		// don't know why, but current glsl setting only allows max 16 textures per shader unit (tSkyCubeTextures + tAlbedoTextures = 10 already) 
-		MAX_TEXTURES_IN_ARRAY: 6,
-		MAX_BOUNCES: options.MAX_RECURSION_DEPTH,
-		NUM_OF_SKYCUBE_TEXTURES: options.SKY_CUBE_IMAGES.length,
-		MULTISAMPLING_FACTOR: options.MULTISAMPLING_FACTOR
-	};
-	_this.pathTracingUniforms = 
-	{
-		tSkyCubeTextures: { type: "t", value: skycubeTextures },			
-
-		tPreviousTexture: { type: "t", value: _this.screenTextureRenderTarget.texture },
-		tTriangleTexture: { type: "t", value: _this.triangleDataTexture },
-		tAABBTexture: { type: "t", value: _this.aabbDataTexture },
-		tAlbedoTextures: { type: "t", value: _this.uniqueMaterialTextures },		
-
-		uTime: {type: "f", value: 0.0},
-		uFrameCounter: {type: "f", value: 1.0},
-		uULen: {type: "f", value: 1.0},
-		uVLen: {type: "f", value: 1.0},
-		uApertureSize: {type: "f", value: _this.apertureSize},
-		uFocusDistance: {type: "f", value: _this.focusDistance},
-
-		uSkyLightIntensity: {type: "f", value: _this.skyLightIntensity},
-		uSunLightIntensity: {type: "f", value: _this.sunLightIntensity},
-		uSunColor: {type: "v3", value: new THREE.Color().fromArray(_this.sunColor.map(x => x / 255))},
-		uSunDirection: {type: "v3", value: new THREE.Vector3()},
-
-		uResolution: {type: "v2", value: new THREE.Vector2()},
-			
-		uCameraMatrix: {type: "m4", value: new THREE.Matrix4()},
-		uCameraIsMoving: { type: "b1", value: false },
-		uCameraJustStartedMoving: {type: "b1", value: false}
-	};
 	
-	let pathTracingMaterial = new THREE.ShaderMaterial({
+	return;
+	
+	
+/*	let pathTracingMaterial = new THREE.ShaderMaterial({
 		uniforms: _this.pathTracingUniforms,
 		defines: _this.pathTracingDefines,
 		vertexShader: globals.vertexShader,
@@ -794,10 +813,12 @@ PathtracingRenderer.prototype.prepareGeometryForPT = function()
 		depthWrite: false
 	});
 
+	
+
 	let pathTracingGeometry = new THREE.PlaneBufferGeometry(2, 2);
 	let pathTracingMesh = new THREE.Mesh(pathTracingGeometry, pathTracingMaterial);
 	_this.pathTracingScene.add(pathTracingMesh);
-
+*/
 	// the following keeps the large scene ShaderMaterial quad right in front
 	//   of the camera at all times. This is necessary because without it, the scene
 	//   quad will fall out of view and get clipped when the camera rotates past 180 degrees.
@@ -831,12 +852,12 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 		_this.stateStartTime = Date.nowInMiliseconds();
 	}
 
-	_this.animationFrameID = requestAnimationFrame(_this.onRenderFrame);
+	//_this.animationFrameID = requestAnimationFrame(_this.onRenderFrame);
 
 	let frameTime = _this.clock.getDelta();
 
 	// reset flags
-	_this.cameraIsMoving = false;
+/*	_this.cameraIsMoving = false;
 
 	if (_this.forceUpdate) 
 	{
@@ -971,10 +992,6 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 		_this.cameraRecentlyMoving = false;
 	}
 
-	let sunDirection = new THREE.Vector3(Math.cos(_this.sunAngle) * 1.2, Math.sin(_this.sunAngle), -Math.cos(_this.sunAngle) * 3.0);
-	sunDirection.normalize();
-
-	_this.pathTracingUniforms.uSunDirection.value.copy(sunDirection);
 	_this.pathTracingUniforms.uCameraIsMoving.value = _this.cameraIsMoving;
 	_this.pathTracingUniforms.uCameraJustStartedMoving.value = _this.cameraJustStartedMoving;
 	_this.pathTracingUniforms.uFrameCounter.value = _this.frameCounter;
@@ -984,26 +1001,29 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 	_this.pathTracingUniforms.uCameraMatrix.value.copy(_this.worldCamera.matrixWorld);
 	_this.screenOutputMaterial.uniforms.uOneOverSampleCounter.value = 1.0 / _this.sampleCounter;
 	
+*/
 
-	// RENDERING in 3 steps
+	_this.renderingProgram.render();
+	_this.textureProgram.render();
 
-	// STEP 1
-	// Perform PathTracing and Render(save) into pathTracingRenderTarget, a full-screen texture.
-	// Read previous screenTextureRenderTarget(via texelFetch inside fragment shader) to use as a new starting point to blend with
-	_this.renderer.setRenderTarget(_this.pathTracingRenderTarget);
-	_this.renderer.render(_this.pathTracingScene, _this.worldCamera);
+	_this.drawingProgram.render();
+
+
+	//_this.renderer.setViewport(0, 0, 1280, 720);
+	//_this.renderer.setRenderTarget(_this.pathTracingRenderTarget);
+	//_this.renderer.render(_this.pathTracingScene, _this.worldCamera);
 
 	// STEP 2
 	// Render(copy) the pathTracingScene output(pathTracingRenderTarget above) into screenTextureRenderTarget.
 	// This will be used as a new starting point for Step 1 above (essentially creating ping-pong buffers)
-	_this.renderer.setRenderTarget(_this.screenTextureRenderTarget);
-	_this.renderer.render(_this.screenTextureScene, _this.quadCamera);
+//	_this.renderer.setRenderTarget(_this.screenTextureRenderTarget);
+//	_this.renderer.render(_this.screenTextureScene, _this.quadCamera);
 
 	// STEP 3
 	// Render full screen quad with generated pathTracingRenderTarget in STEP 1 above.
 	// After the image is gamma-corrected, it will be shown on the screen as the final accumulated output
-	_this.renderer.setRenderTarget(null);
-	_this.renderer.render(_this.screenOutputScene, _this.quadCamera);
+//	_this.renderer.setRenderTarget(null);
+//	_this.renderer.render(_this.screenOutputScene, _this.quadCamera);
 };
 
 

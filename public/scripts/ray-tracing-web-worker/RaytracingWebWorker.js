@@ -284,46 +284,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 {
 	let _this = this;
 
-	/*
-	let staticProp = 
-	{
-		accumCol: new THREE.Vector3(0),
-		mask: new THREE.Vector3(1.0),
-		firstMask: new THREE.Vector3(1),
-		checkCol0: new THREE.Vector3(1),
-		checkCol1: new THREE.Vector3(0.5),
-		dirToLight: null,
-		tdir: null,
-		metallicRoughness = new THREE.Vector3(0),
-		x: null, 
-		n: null, 
-		nl: null,
-	
-		t: INFINITY,
-		nc: 0, 
-		nt: 0, 
-		ratioIoR: 0, 
-		Re: 0,
-		Tr: 0,
-		weight: 0,
-		diffuseColorBleeding: 0.3, // range: 0.0 - 0.5, amount of color bleeding between surfaces
-	
-		diffuseCount: 0,
-		previousIntersecType: -100,
-
-		bounceIsSpecular: true,
-		sampleLight: false,
-		firstTypeWasREFR: false,
-		reflectionTime: false,
-		firstTypeWasDIFF: false,
-		shadowTime: false,
-		firstTypeWasCOAT: false,
-		specularTime: false,
-		sampleSunLight: false,
-		intersectionType: ''
-	};
-	*/
-
 	var intersectionType = '';
 
 	_this.ray.origin = rayOrigin;
@@ -1226,7 +1186,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 	let height = cell.height;
 	cell.rawImage = new namespace.core.RawImage('', width, height);
 
-	let startRenderingTime = Date.nowInMicroseconds();
+	let startRenderingTime = Date.nowInMiliseconds();
 	let stateStartTime = 0;
 
 	let multisamplingFactorSquare = _this.multisamplingFactor * _this.multisamplingFactor;
@@ -1324,7 +1284,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 		}
 	}
 
-	let endRenderingTime = Date.nowInMicroseconds();
+	let endRenderingTime = Date.nowInMiliseconds();
 	_this.cell.timeRendering = endRenderingTime - startRenderingTime;
 
 	await mainThread.invokeRequest('globals.renderer.checkRenderingState', cell);
