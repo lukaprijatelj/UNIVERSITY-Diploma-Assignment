@@ -981,7 +981,6 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 					_this.spawnRay(_this.origin, _this.direction, pixelColor, 0);
 
-					// convert from linear to gamma
 					renderedColor.red += Math.sqrt(pixelColor.r) * 255; 
 					renderedColor.green += Math.sqrt(pixelColor.g) * 255;
 					renderedColor.blue += Math.sqrt(pixelColor.b) * 255;
