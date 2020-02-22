@@ -46,12 +46,12 @@ HTTP protocol uses port 30003
 SocketIO library uses port 30004
 
 ## How to open admin
-\<base-url>:\<http-port>/admin
-(example: localhost:30003/admin)
+	<base-url>:<http-port>/admin
+	(example: localhost:30003/admin)
 
 ## How to open client
-\<base-url>:\<http-port>/client
-(example: localhost:30003/client)
+	<base-url>:<http-port>/client
+	(example: localhost:30003/client)
 
 
 # Notes and development
