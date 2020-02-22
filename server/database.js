@@ -10,11 +10,13 @@ var DATABASE =
 {
 	/**
 	 * Root url of the database.
+	 * @type {string}
 	 */
 	root: 'database/',
 
 	/**
 	 * List of index ports indicating if they are taken or not.
+	 * @type {Array}
 	 */
 	listOfClientIndexes: null,
 
@@ -44,6 +46,7 @@ var DATABASE =
 
 	/**
 	 * Number of cells that are already finished rendering.
+	 * @type {number}
 	 */
 	finishedCells: 0,
 	
@@ -77,6 +80,8 @@ var DATABASE =
 
 	/**
 	 * Adds uploaded file record to DATABASE.
+	 * @param {string} filename - name of the file
+	 * @param {string} path - path to file
 	 */
 	addUploadedFile: function(filename, path)
     {
@@ -93,7 +98,7 @@ var DATABASE =
     },
 
 	/**
-	 * Gets all files that are uploaded
+	 * Gets all files that are uploaded.
 	 */
     getUploadedFiles: function()
     {
@@ -103,6 +108,8 @@ var DATABASE =
 
 	/**
 	 * Merges all cells data into one buffer.
+	 * @param {number} width - width of the canvas
+	 * @param {number} height - height of the canvas
 	 */
 	getImagesBuffer: function(width, height)
 	{
@@ -197,6 +204,11 @@ var DATABASE =
 	
 	/**
 	 * Adds render client.
+	 * @param {string} sessionId - id of the session
+	 * @param {number} index - index of the client
+	 * @param {string} ipAddress - ip of the client
+	 * @param {boolean} isAdmin - is client admin
+	 * @return {namespace.database.SocketIoClient}
 	 */
 	addRenderClient: function(sessionId, index, ipAddress, isAdmin)
 	{
@@ -215,6 +227,7 @@ var DATABASE =
 
 	/**
 	 * Removes render client.
+	 * @param {string} sessionId - id of the session
 	 */
 	removeRenderClient: function(sessionId)
 	{
@@ -259,6 +272,7 @@ var DATABASE =
 
 	/**
 	 * Finds socketIO client.
+	 * @param {string} sessionId - id of the session
 	 */
 	findClientBySessionId: function(sessionId)
 	{
@@ -288,6 +302,11 @@ var DATABASE =
 
 	/**
 	 * Adds grid layout.
+	 * @param {number} index - cell index
+	 * @param {number} startX - cell startX
+	 * @param {number} startY - cell startY
+	 * @param {number} width - cell width
+	 * @param {number} height - cell height
 	 */
 	createSharedCell: function(index, startX, startY, width, height)
 	{
@@ -334,6 +353,9 @@ var DATABASE =
 
 	/**
 	 * Gets free cells.
+	 * @param {namespace.database.SocketIoClient} socketIoClient - client
+	 * @param {number} cellsLength - cells length
+	 * @return {Array}
 	 */
 	getFreeCells: function(socketIoClient, cellsLength)
 	{
@@ -396,6 +418,7 @@ var DATABASE =
 
 	/**
 	 * Updates render progress of the client entry.
+	 * @param {Array} cells - list of cells that need to be updated
 	 */
 	updateCellsProgress: function(cells)
 	{

@@ -4,13 +4,17 @@ importScripts('../threejs/three.js');
 
 // only accesible in web worker thread
 var worker = null;
-var canvasWidth = -1;
-var canvasHeight = -1;
-var cell = null;
 
 var options = null;
 var mainThread = namespace.core.MainThread;
 
+
+/**
+ * Initializes WebWorker thread.
+ * @public
+ * @param {namespace.core.Thread} thread - instance of this web worker thread
+ * @param {Object} data - data that was sent from main thread
+ */
 function init(thread, data)
 {
 	options = data.options;
@@ -22,6 +26,7 @@ function init(thread, data)
 
 /**
  * DOM-less version of Raytracing Renderer.
+ * @constructor
  * @author erichlof / https://github.com/erichlof
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
@@ -34,59 +39,144 @@ var RaytracingWebWorker = function(threadIndex, maxRecursionDepth)
 
 	/**
 	 * Number of times ray bounces from objects. Each time bounce is detected new ray is cast.
+	 * @type {number}
 	 */
 	this.maxRecursionDepth = -1;
 
+	/**
+	 * Width of canvas element.
+	 * @type {number}
+	 */
 	this.canvasWidth = -1;
+
+	/**
+	 * Height of canvas element.
+	 * @type {number}
+	 */
 	this.canvasHeight = -1;
+
+	/**
+	 * Half width of canvas element.
+	 * @type {number}
+	 */
 	this.canvasWidthHalf = -1;
+
+	/**
+	 * Half height of canvas element.
+	 * @type {number}
+	 */
 	this.canvasHeightHalf = -1;
 
 	/**
 	 * Antialiasing must be odd number (1, 3, 5, 7, 9, etc.)
+	 * @type {number}
 	 */
 	this.multisamplingFactor = -1;
 
 	/**
 	 * Index of the thread that this web worker is on.
+	 * @type {number}
 	 */
 	this.threadIndex = -1;
 
 	/**
 	 * Cell that is currently rendering.
+	 * @type {namespace.database.BasicCell}
 	 */
 	this.cell = null;
 
+	/**
+	 * 3D scene.
+	 * @type {THREE.Scene}
+	 */
 	this.scene = null;
 
+	/**
+	 * Camera in the scene.
+	 * @type {THREE.Camera}
+	 */
 	this.camera = null;
+
+	/**
+	 * Position of the camera.
+	 * @type {THREE.Vector3}
+	 */
 	this.cameraPosition = null;
+
+	/**
+	 * Matrix of camera normal.
+	 * @type {THREE.Matrix3}
+	 */
 	this.cameraNormalMatrix = null;
+
+	/**
+	 * Camera's perspective.
+	 * @type {number}
+	 */
 	this.perspective;
 
+	/**
+	 * Camera origin.
+	 * @type {THREE.Vector3}
+	 */
 	this.origin = null;
-	this.direction = null;
 
+	/**
+	 * Camera direction.
+	 * @type {THREE.Vector3}
+	 */
+	this.direction = null;
 
 	/**
 	 * Ambient light is here in order to render shadowed area more beautifully.
+	 * @type {THREE.AmbientLight}
 	 */
 	this.ambientLight = null;
+
+	/**
+	 * Array of light in scene.
+	 * @type {Array<THREE.Light>}
+	 */
 	this.lights = null;
 
+	/**
+	 * Ray caster object.
+	 * @type {THREE.Raycaster}
+	 */
 	this.raycaster = null;
+
+	/**
+	 * Ray object.
+	 * @type {THREE.Ray}
+	 */
 	this.ray = null;
+
+	/**
+	 * Ray caster object for light.
+	 * @type {THREE.Raycaster}
+	 */
 	this.raycasterLight = null;
+
+	/**
+	 * Ray object for light.
+	 * @type {THREE.Ray}
+	 */
 	this.rayLight = null;
 		
+	/***
+	 * List of objects in scene.
+	 * @type {Array<THREE.Object3D>}
+	 */
 	this.objects = null;
+
+	/**
+	 * Hashed object properties.
+	 * @type {Array<Object>}
+	 */
 	this.cache = null;	
 
-	this.cachedX = -1;
-	this.cachedY = -1;
-	this.cachedImage = null;
-	this.cachedIndex = -1;
 
+	/** Rebinded event handlers */
 	this.initScene = this.initScene.bind(this);
 	this.initCamera = this.initCamera.bind(this);
 	this.initLights = this.initLights.bind(this);
@@ -102,6 +192,9 @@ Object.assign(RaytracingWebWorker.prototype, THREE.EventDispatcher.prototype);
 
 /**
  * Sets cell that needs to be rendered.
+ * @public
+ * @param {namespace.core.Thread} thread - instance of this web worker thread
+ * @param {Object} cell - data that was sent from main thread
  */
 RaytracingWebWorker.prototype.setCell = function(thread, cell)
 {
@@ -145,6 +238,7 @@ RaytracingWebWorker.prototype._init = function(threadIndex, maxRecursionDepth)
 
 /**
  * Initializes canvas.
+ * @public
  */
 RaytracingWebWorker.prototype.initCanvas = function(width, height, multisamplingFactor)
 {
@@ -164,6 +258,9 @@ RaytracingWebWorker.prototype.initCanvas = function(width, height, multisampling
 
 /**
  * Initializes scene.
+ * @public
+ * @param {namespace.core.Thread} thread - instance of this web worker thread
+ * @param {Object} sceneData - data that was sent from main thread
  */
 RaytracingWebWorker.prototype.initScene = function(thread, sceneData)
 {
@@ -204,6 +301,9 @@ RaytracingWebWorker.prototype.initScene = function(thread, sceneData)
 
 /**
  * Initializes camera.
+ * @public
+ * @param {namespace.core.Thread} thread - instance of this web worker thread
+ * @param {Object} cameraData - data that was sent from main thread
  */
 RaytracingWebWorker.prototype.initCamera = function(thread, cameraData)
 {
@@ -229,6 +329,7 @@ RaytracingWebWorker.prototype.initCamera = function(thread, cameraData)
 
 /**
  * Initializes lights.
+ * @public
  */
 RaytracingWebWorker.prototype.initLights = function()
 {
@@ -254,6 +355,7 @@ RaytracingWebWorker.prototype.initLights = function()
 
 /**
  * Sets canvas size.
+ * @public
  */
 RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY) 
 {
@@ -275,6 +377,7 @@ RaytracingWebWorker.prototype.getTexturePixel = function(texture, uvX, uvY)
 
 /**
  * Spawns ray for calculating colour.
+ * @public
  */
 RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outputColor, recursionDepth) 
 {
@@ -658,6 +761,9 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 
 /**
  * Gets pixel color of the skybox environment.
+ * @public
+ * @param {Array<namespace.core.RawImage>} images - list of images 
+ * @param {THREE.Vector3} rayDirection - direction of the ray
  */
 RaytracingWebWorker.prototype.texCUBE = function(images, rayDirection)
 {
@@ -764,6 +870,7 @@ RaytracingWebWorker.prototype.texCUBE = function(images, rayDirection)
 
 /**
  * Computes normal.
+ * @public
  */
 RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point, flatShading, face, geometry) 
 {
@@ -820,6 +927,7 @@ RaytracingWebWorker.prototype.computePixelNormal = function(outputVector, point,
 
 /**
  * Renders block with specified antialiasing factor.
+ * @public
  */
 RaytracingWebWorker.prototype.renderCell = async function() 
 {
@@ -902,6 +1010,7 @@ RaytracingWebWorker.prototype.renderCell = async function()
 
 /**
  * Clears data connected with current cell.
+ * @private
  */
 RaytracingWebWorker.prototype._onCellRendered = function()
 {
@@ -909,19 +1018,14 @@ RaytracingWebWorker.prototype._onCellRendered = function()
 
 	let _this = this;
 
-	/*if (_this.antialiasingFactor > 1)
-	{
-		_this.cell.rawImage.scale(namespace.enums.Direction.DOWN, _this.antialiasingFactor);
-	}*/
-
 	mainThread.invoke('globals.renderer.onCellRendered', _this.cell);
 
 	_this.cell = null;
-	_this.cachedIndex = -1;
 };
 
 /**
  * Starts rendering.
+ * @public
  */
 RaytracingWebWorker.prototype.startRendering = function() 
 {

@@ -6,6 +6,9 @@ const Jimp = require('jimp');
 
 require('../public/scripts/namespace-enums/types.js');
 
+/**
+ * Socket IO.
+ */
 global.socketIO = require('socket.io');
 const io = socketIO.listen(SOCKETIO_PORT, { pingTimeout: 1000 * 60 });
 
@@ -17,16 +20,19 @@ var API =
 {
 	/**
 	 * Base url API access.
+	 * @type {string}
 	 */
 	baseUrl: '/api',
 
 	/**
 	 * Is rendering service currently running.
+	 * @type {namespace.enums.renderingServiceState}
 	 */
 	renderingServiceState: namespace.enums.renderingServiceState.IDLE,
 
 	/**
 	 * Have users been notified that rendering has finished.
+	 * @type {boolean}
 	 */
 	hasNotifiedFinish: false,
 
@@ -48,6 +54,7 @@ var API =
 
 	/**
 	 * Creates deletes existing one and creates new one.
+	 * @param {string} path - path for folder
 	 */
 	createFolder: async function(path)
 	{
