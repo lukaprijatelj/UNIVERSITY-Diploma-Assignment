@@ -6,8 +6,8 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/All.jpg)
 
 ## Demo version (friMinecraft)
-http://minecraft.fri.uni-lj.si:30003/admin
-http://minecraft.fri.uni-lj.si:30003/client
+http://minecraft.fri.uni-lj.si:30003/admin  
+http://minecraft.fri.uni-lj.si:30003/client  
 
 ## Libraries/technologies used
 - SocketIO (bidirectional communication between server and client. It can also send to all clients at once)
@@ -41,7 +41,7 @@ tsc
 sass stylesheets/_root.scss ../../stylesheets/namespace-html.css --style compressed
 
 
-# UsedPorts
+# Used ports
 HTTP protocol uses port 30003 
 SocketIO library uses port 30004
 
