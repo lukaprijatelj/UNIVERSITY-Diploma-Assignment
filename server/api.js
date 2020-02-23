@@ -273,9 +273,16 @@ var API =
 			console.error(err.message);
 		}
 
-		let htmlString = DATABASE.getRenderingInfo();
-			
-		await fs.writeFileSync("public/" + RENDERING_INFO_FILEPATH, htmlString); 
+		try
+		{
+			let htmlString = DATABASE.getRenderingInfo();
+				
+			await fs.writeFileSync("public/" + RENDERING_INFO_FILEPATH, htmlString); 
+		}
+		catch(err)
+		{
+			console.error(err.message);
+		}
 
 		API.notifyFinished();
 	},

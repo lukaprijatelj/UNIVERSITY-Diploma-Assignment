@@ -153,7 +153,27 @@ var DATABASE =
 	getRenderingInfo: function()
 	{
 		let cellsTable = DATABASE.tables.renderingCells;
-		let htmlString = '<!DOCTYPE html>';
+		let array = [];
+
+		for (let a=0; a<cellsTable.rows.length; a++)
+		{
+			let cell = cellsTable.rows[a];
+			let dst = new Object();
+			
+			for (var key in cell) 
+			{
+				if (cell.hasOwnProperty(key) && key != 'rawImage')
+				{
+					dst[key] = cell[key];
+				}
+			}	
+
+			array.push(dst);
+		}
+
+		let htmlString = JSON.stringify(array);
+
+		/*let htmlString = '<!DOCTYPE html>';
 
 		htmlString += '<html lang="en">';
 		htmlString += '<head><meta charset="utf-8"></head>';
@@ -197,7 +217,7 @@ var DATABASE =
 		}
 
 		htmlString += '</table>';
-		htmlString += '</body>';
+		htmlString += '</body>';*/
 
 		return htmlString;
 	},
