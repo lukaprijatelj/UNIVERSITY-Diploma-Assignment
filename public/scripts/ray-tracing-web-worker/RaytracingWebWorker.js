@@ -383,8 +383,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 {
 	let _this = this;
 
-	var intersectionType = '';
-
 	_this.ray.origin = rayOrigin;
 	_this.ray.direction = rayDirection;
 
@@ -590,11 +588,6 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		}
 	}
 
-	if (roughnessMap && metalnessMap)
-	{
-		intersectionType = 'PBR';
-	}
-
 
 
 
@@ -659,12 +652,16 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		return;
 	}
 
-	let tmpColor = new Array();
+	var reflectivity;
 
-	for ( let i = 0; i < _this.maxRecursionDepth; i ++ ) 
+	if (material.reflectivity)
 	{
-		tmpColor[i] = new THREE.Color();
-	}	
+		reflectivity = material.reflectivity;
+	}
+	else
+	{
+		reflectivity = 0;
+	}
 
 	if (material.glass) 
 	{
@@ -693,7 +690,7 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 		let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
 		let weight = fresnel;
 
-		let zColor = tmpColor[ recursionDepth ];
+		let zColor = new THREE.Color();
 
 		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
 		
@@ -710,53 +707,32 @@ RaytracingWebWorker.prototype.spawnRay = function(rayOrigin, rayDirection, outpu
 	}
 
 
-	var reflectivity;
-
-	if (metalnessMap)
-	{
-		reflectivity = metalnessMap.b;
-	}
-
-	if (material.reflectivity)
-	{
-		reflectivity = material.reflectivity;
-	}
-
-	if (!reflectivity)
+	if (reflectivity <= 0)
 	{
 		// not reflection means we don't need to spawn ray
 		return;
 	}
-	else
+
+	reflectionVector.copy( rayDirection );
+	reflectionVector.reflect( normalVector );
+
+	let theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
+	let rf0 = reflectivity;
+	let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
+	let weight = fresnel;
+
+	let zColor = new THREE.Color();
+
+	_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
+	
+	if ( material.specular !== undefined ) 
 	{
-		material.mirror = true;
+		zColor.multiply( material.specular );
 	}
 
-	if (material.mirror) 
-	{
-		reflectionVector.copy( rayDirection );
-		reflectionVector.reflect( normalVector );
-
-		let theta = Math.max( eyeVector.dot( normalVector ), 0.0 );
-		let rf0 = reflectivity;
-		let fresnel = rf0 + ( 1.0 - rf0 ) * Math.pow( ( 1.0 - theta ), 5.0 );
-		let weight = fresnel;
-
-		let zColor = tmpColor[ recursionDepth ];
-
-		_this.spawnRay( point, reflectionVector, zColor, recursionDepth + 1 );
-		
-		if ( material.specular !== undefined ) 
-		{
-			zColor.multiply( material.specular );
-		}
-
-		zColor.multiplyScalar( weight );
-		outputColor.multiplyScalar( 1 - weight );
-		outputColor.add( zColor );
-
-		return;
-	}
+	zColor.multiplyScalar( weight );
+	outputColor.multiplyScalar( 1 - weight );
+	outputColor.add( zColor );
 };
 
 /**
