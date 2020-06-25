@@ -719,6 +719,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                 updateBody: function (event) {
                     let element = document.body;
                     let width = element.clientWidth;
+                    const RESPONSIVE_CLASSNAME = 'responsive-type';
                     if (width < 481) {
                         browser.responsiveType = 'smartphone';
                     }
@@ -737,7 +738,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                     else {
                         browser.responsiveType = 'desktop';
                     }
-                    element.setAttribute('responsive-type', browser.responsiveType);
+                    let expression = new RegExp('\\b' + RESPONSIVE_CLASSNAME + '\\S+', 'g');
+                    element.className = element.className.replace(expression, '');
+                    element.classList.add(RESPONSIVE_CLASSNAME + '-' + browser.responsiveType);
                 },
                 setTitle: function (value) {
                     document.title = value;
@@ -1086,9 +1089,6 @@ Date.nowInMiliseconds = function () {
     var now = new Date();
     return now.getTime();
 };
-Date.nowInMicroseconds = function () {
-    return performance.now();
-};
 Date.today = function () {
     var today = new Date();
     return Date.getMidnightDate(today);
@@ -1295,7 +1295,7 @@ if (typeof Image !== 'undefined') {
     if (typeof HTMLCanvasElement !== 'undefined') {
         Image.prototype.toRawImage = function () {
             var _this = this;
-            var canvas = new namespace.html.Canvas(false);
+            var canvas = new namespace.html.Canvas();
             canvas.width = _this.width;
             canvas.height = _this.height;
             var context = canvas.getContext('2d');
@@ -1526,13 +1526,13 @@ Math.isNegative = function (value) {
     return value < 0;
 };
 Math.toNegative = function (value) {
-    if (Math.isNegative()) {
-        return value;
+    if (Math.isPositive(value)) {
+        return -value;
     }
-    return -value;
+    return value;
 };
 Math.toPositive = function (value) {
-    if (Math.isNegative()) {
+    if (Math.isNegative(value)) {
         return -value;
     }
     return value;
@@ -1550,6 +1550,20 @@ Math.randomFloatInterval = function (min, max, decimals) {
 };
 Math.clamp = function (num, min, max) {
     return Math.min(Math.max(num, min), max);
+};
+Math.carouselNumber = function (number, minLimit, maxLimit) {
+    var elements = maxLimit - minLimit + 1;
+    var offset = number <= minLimit ? maxLimit : minLimit;
+    return (number - offset) % elements + offset;
+};
+Math.getDistance = function (first, second) {
+    return Math.abs(second - first);
+};
+Math.getWidthfromRatio = function (height, ratio) {
+    return height * ratio;
+};
+Math.getHeightfromRatio = function (width, ratio) {
+    return width * ratio;
 };
 String.generateUUID = function () {
     var dt = new Date().getTime();
@@ -2368,6 +2382,7 @@ _global.Timer = (() => {
             return;
         }
         var preCallback = () => {
+            _this._id = null;
             if (_this.loop == true) {
                 _this.restart();
             }

@@ -23,7 +23,7 @@
 	console.log('[Admin.autoloader] Loading namespace.html library');
 
 	loadingBlock = new Array();
-	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.js"));
+	loadingBlock.push(document.loadScript("scripts/namespace-html/namespace-html.min.js"));
 	loadingBlock.push(document.loadScript('scripts/namespace-html/RendererCanvas.js'));
 	await Promise.all(loadingBlock);
 

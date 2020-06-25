@@ -37,9 +37,11 @@ RenderingProgram.prototype.initialize = function()
 
 	_this.program = _this.createProgram(gl, globals.renderingVertexShader, fragmentShader);
 
+	gl.useProgram(_this.program);
 
 	_this.frameBuffer = gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, _this.frameBuffer);
+
 
 	for (let i = 0; i < 3; i++) 
 	{

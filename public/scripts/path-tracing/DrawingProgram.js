@@ -29,6 +29,8 @@ DrawingProgram.prototype.initialize = function()
 	_this.program = _this.createProgram(gl, globals.drawingVertexShader, fragmentShader);
 
 	gl.useProgram(_this.program);
+
+	gl.useProgram(_this.program);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	
 	gl.viewport(0,0, options.CANVAS_WIDTH, options.CANVAS_HEIGHT);  // Viewport is not set automatically!
@@ -90,9 +92,11 @@ DrawingProgram.prototype.prepareUniforms = function()
 	gl.useProgram(_this.program);
 
 	let inColor0Loc = gl.getUniformLocation(_this.program, "inColor0");
+	gl.uniform1i(inColor0Loc, 0); // 1i means that this is 1 dimensional integer array (shouldn't it be float?)
+
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, _this.inTexture0);
-	gl.uniform1i(inColor0Loc, 0); // 1i means that this is 1 dimensional integer array (shouldn't it be float?)
+	
 	
 	_this.setUniformFloat("CANVAS_WIDTH", options.CANVAS_WIDTH);
 	_this.setUniformFloat("CANVAS_HEIGHT", options.CANVAS_HEIGHT);	

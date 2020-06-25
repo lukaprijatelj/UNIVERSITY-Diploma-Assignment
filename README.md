@@ -33,14 +33,6 @@ http://minecraft.fri.uni-lj.si:30003/client
 npm run build
 *Build task will be read from scripts property of the package.json file.
 
-## Building submodule with Typescript Compiler
-tsc
-*It will use properties from tsconfig.json file in the root directory.
-
-## Building submodule with SASS
-sass stylesheets/_root.scss ../../stylesheets/namespace-html.css --style compressed
-
-
 # Used ports
 HTTP protocol uses port 30003 
 SocketIO library uses port 30004

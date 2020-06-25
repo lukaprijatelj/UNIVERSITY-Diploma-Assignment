@@ -1004,6 +1004,7 @@ PathtracingRenderer.prototype.onRenderFrame = async function()
 */
 
 	_this.renderingProgram.render();
+
 	_this.textureProgram.render();
 
 	_this.drawingProgram.render();

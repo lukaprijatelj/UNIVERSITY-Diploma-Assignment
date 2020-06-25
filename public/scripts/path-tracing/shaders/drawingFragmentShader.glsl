@@ -61,8 +61,8 @@ out vec4 outColor;
 // -----------------------------
 
 uniform sampler2D inColor0;
-uniform sampler2D inColor1;
-uniform sampler2D inColor2;
+//uniform sampler2D inColor1;
+//uniform sampler2D inColor2;
 
 // -----------------------------
 // UNIFORMS
