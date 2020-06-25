@@ -1,5 +1,8 @@
+<!-- Tags (https://shields.io/) -->
+![GitHub](https://img.shields.io/github/license/lukaprijatelj/UNIVERSITY-Diploma-Assignment)
+
 # UNIVERSITY-Diploma-Assignment
-Run VS code debugger and go to browser and type "http://localhost:30003/admin"
+Run VS code debugger and go to browser and type "http://localhost:[var-port]/admin"
 
 ## Screenshots
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg)
@@ -77,3 +80,7 @@ I used browsersLocal storage for saving data received from server.
 	// and then
  	adb start-server (or "adb kill-server")
 - Connect phone and browse to about:inspect in Chrome on desktop, ensuring a Chrome browser is open on your device
+
+<!-- Variables -->
+[var-downloads-url]: https://npmjs.org/package/vmd
+[var-port]: 30003
