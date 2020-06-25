@@ -1,9 +1,0 @@
-DirectoryIndex disabled
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-
-RewriteEngine On
-RewriteRule ^$ http://127.0.0.1:30000/ [P,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ http://127.0.0.1:30000/$1 [P,L]
