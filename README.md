@@ -2,7 +2,7 @@
 ![GitHub](https://img.shields.io/github/license/lukaprijatelj/UNIVERSITY-Diploma-Assignment)
 
 # UNIVERSITY-Diploma-Assignment
-Run VS code debugger and go to browser and type "http://localhost:[var-port]/admin"
+Run VS code debugger and go to browser and type "http://localhost:/admin" [var-port]
 
 ## Screenshots
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg)
