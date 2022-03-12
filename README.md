@@ -9,6 +9,7 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 <!--  ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/All.jpg) -->
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/rendered-image-castle.jpg)
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/partially-rendered.jpg)
+![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/30-clients-rendering.jpg)
 
 ## Libraries/technologies used
 - SocketIO (bidirectional communication between server and client. It can also send to all clients at once)
