@@ -11,7 +11,7 @@ The main objective of our graduation thesis is to present development of the 3D 
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/partially-rendered.jpg)
 ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/30-clients-rendering.jpg)
 
-## NPM packages used (libraries/technologies)
+## Technologies used (libraries/NPM packages)
 - Javascript ES6
 - Sass 1.22
 - ThreeJS 0.103
