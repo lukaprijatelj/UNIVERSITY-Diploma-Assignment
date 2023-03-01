@@ -35,22 +35,21 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 ## Compiling project with NPM
 npm run build				(Compiling task will be read from scripts property of the package.json file)
 
-
-## Used ports
-HTTP protocol uses port 30003 
-SocketIO library uses port 30004
-
 ### How to open admin webpage
 <base-url>:<http-port>/admin		(example: localhost:30003/admin)
 
 ### How to open client webpage
 <base-url>:<http-port>/client		(example: localhost:30003/client)
 
+### Used ports
+HTTP protocol uses port 30003. SocketIO library uses port 30004
 
+  
 ## Notes and development
 I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
 I used browsers Local storage for saving data received from server.
 
+  
 ## Chrome browser connecting with Android mobile phone
 - Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type:
   adb.exe				(starts program)
