@@ -15,14 +15,14 @@ The main objective of our graduation thesis is to present development of the 3D 
 - Javascript ES6
 - Sass 1.22
 - ThreeJS 0.103
-- WebGL 2.0 	                 (OpenGL es 2.0 - glsl)
-- SocketIO 2.2.0 			         (bidirectional communication between server and client. It can also send to all clients at once)
+- WebGL 2.0 	                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(OpenGL es 2.0 - glsl)
+- SocketIO 2.2.0 			         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(bidirectional communication between server and client. It can also send to all clients at once)
 - ExpressJS 4.16
-- glMatrix 				             (vector and matrix operations)
-- uuidv1 				               (for GUID key generation for database tables)
+- glMatrix 				             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(vector and matrix operations)
+- uuidv1 				               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for GUID key generation for database tables)
 
 ## Browser compatibility
-- Internet Explorer 11 			   (not supported)
+- Internet Explorer 11 			   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(not supported)
 - Microsoft Edge 79
 - Mozilla Firefox 24
 - Google Chrome 33
@@ -32,18 +32,19 @@ The main objective of our graduation thesis is to present development of the 3D 
 npm run build				           (Compiling task will be read from scripts property of the package.json file)
 
 ### How to open ADMIN webpage
-Open Web browser and type address:   http://localhost:30003/admin <br />
-Now load desired 3D scene file like &#42;.obj. <br />
-Set up options for scene. <br />
-Press START button to send signal to client to start rendering.
+- Open Web browser and type address:   http://localhost:30003/admin
+- Now load desired 3D scene file like &#42;.obj
+- Set up options for scene
+- Press START button to send signal to client to start rendering
 
 ### How to open CLIENT webpage
-Open Web browser and type address:    http://localhost:30003/client <br />
-You should see that browser will automatically started rendering part of the 3D scene. <br />
-Open as many clients/tabs as you like.
+- Open Web browser and type address:    http://localhost:30003/client
+- You should see that browser will automatically started rendering part of the 3D scene
+- Open as many clients/tabs as you like
 
 ### Used ports
-HTTP protocol uses port 30003. SocketIO library uses port 30004.
+HTTP protocol uses port 30003. <br />
+SocketIO library uses port 30004.
 
 ### How to connect Chrome browser with Android mobile phone
 - Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type: <br />
