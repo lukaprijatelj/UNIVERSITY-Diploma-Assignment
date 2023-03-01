@@ -32,11 +32,11 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 - Opera 19
 
 
-# Compiling project with NPM
+## Compiling project with NPM
 npm run build				(Compiling task will be read from scripts property of the package.json file)
 
 
-# Used ports
+## Used ports
 HTTP protocol uses port 30003 
 SocketIO library uses port 30004
 
@@ -47,7 +47,7 @@ SocketIO library uses port 30004
 <base-url>:<http-port>/client		(example: localhost:30003/client)
 
 
-# Notes and development
+## Notes and development
 I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
 I used browsers Local storage for saving data received from server.
 
