@@ -19,7 +19,7 @@ The main objective of our graduation thesis is to present development of the 3D 
 - SocketIO 2.2.0 			         &emsp;&emsp;&emsp; (bidirectional communication between server and client. It can also send to all clients at once)
 - ExpressJS 4.16
 - glMatrix 				             &emsp;&emsp;&emsp;&emsp;&emsp;&emsp; (vector and matrix operations)
-- uuidv1 				               &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp; (for GUID key generation for database tables)
+- uuidv1 				               &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp; (for GUID key generation for database tables)
 
 ## Browser compatibility
 - Internet Explorer 11 			   &emsp;&emsp;&emsp; (not supported)
