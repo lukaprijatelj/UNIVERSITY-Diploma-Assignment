@@ -32,13 +32,13 @@ The main objective of our graduation thesis is to present development of the 3D 
 npm run build				           (Compiling task will be read from scripts property of the package.json file)
 
 ### How to open ADMIN webpage
-- Open Web browser and type address:   http://localhost:30003/admin
+- Open Web browser and type address:&emsp;   http://localhost:30003/admin
 - Load desired 3D scene file like &#42;.obj
 - Set up options for scene
 - Press START button to send signal to client to start rendering
 
 ### How to open CLIENT webpage
-- Open Web browser and type address:    http://localhost:30003/client
+- Open Web browser and type address:&emsp;    http://localhost:30003/client
 - Browser will automatically start rendering part of the 3D scene
 - You can open as many clients/tabs as you like (every client will receive a portion of scene to render)
 
