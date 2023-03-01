@@ -22,14 +22,14 @@ The main objective of our graduation thesis is to present development of the 3D 
 - uuidv1 				               (for GUID key generation for database tables)
 
 ## Browser compatibility
-- Internet Explorer 11 			(not supported - because of CSS3 variables and anonymous functions)
+- Internet Explorer 11 			   (not supported)
 - Microsoft Edge 79
 - Mozilla Firefox 24
 - Google Chrome 33
 - Opera 19
 
 ## Compiling project with NPM
-npm run build				(Compiling task will be read from scripts property of the package.json file)
+npm run build				           (Compiling task will be read from scripts property of the package.json file)
 
 ### How to open ADMIN webpage
 Open Web browser and type address:   http://localhost:30003/admin
