@@ -15,14 +15,14 @@ The main objective of our graduation thesis is to present development of the 3D 
 - Javascript ES6
 - Sass 1.22
 - ThreeJS 0.103
-- WebGL 2.0 	                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(OpenGL es 2.0 - glsl)
-- SocketIO 2.2.0 			         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(bidirectional communication between server and client. It can also send to all clients at once)
+- WebGL 2.0 	                 &emsp;&emsp;&emsp; (OpenGL es 2.0 - glsl)
+- SocketIO 2.2.0 			         &emsp;&emsp;&emsp; (bidirectional communication between server and client. It can also send to all clients at once)
 - ExpressJS 4.16
-- glMatrix 				             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(vector and matrix operations)
-- uuidv1 				               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for GUID key generation for database tables)
+- glMatrix 				             &emsp;&emsp;&emsp; (vector and matrix operations)
+- uuidv1 				               &emsp;&emsp;&emsp; (for GUID key generation for database tables)
 
 ## Browser compatibility
-- Internet Explorer 11 			   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(not supported)
+- Internet Explorer 11 			   &emsp;&emsp;&emsp; (not supported)
 - Microsoft Edge 79
 - Mozilla Firefox 24
 - Google Chrome 33
