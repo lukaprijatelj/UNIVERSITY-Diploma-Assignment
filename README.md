@@ -18,11 +18,11 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 - Javascript ES6
 - Sass 1.22
 - ThreeJS 0.103
-- WebGL 2.0 				(OpenGL es 2.0 - glsl)
-- SocketIO 2.2.0 			(bidirectional communication between server and client. It can also send to all clients at once)
+- WebGL 2.0 	                 (OpenGL es 2.0 - glsl)
+- SocketIO 2.2.0 			         (bidirectional communication between server and client. It can also send to all clients at once)
 - ExpressJS 4.16
-- glMatrix 				(vector and matrix operations)
-- uuidv1 				(for GUID key generation for database tables)
+- glMatrix 				             (vector and matrix operations)
+- uuidv1 				               (for GUID key generation for database tables)
 
 ## Browser compatibility
 - Internet Explorer 11 			(not supported - because of CSS3 variables and anonymous functions)
