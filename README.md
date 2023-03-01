@@ -29,7 +29,7 @@ The main objective of our graduation thesis is to present development of the 3D 
 - Opera 19
 
 ## Compiling project with NPM
-npm run build				           &emsp;&emsp;&emsp; (Compiling task will be read from scripts property of the package.json file)
+npm run build				           &emsp;&emsp;&emsp;&emsp;&emsp;&emsp; (Compiling task will be read from scripts property of the package.json file)
 
 ### How to open ADMIN webpage
 - Open Web browser and type address:&emsp;   http://localhost:30003/admin
