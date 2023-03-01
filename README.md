@@ -4,9 +4,6 @@
 # UNIVERSITY-Diploma-Assignment
 The main objective of our graduation thesis is to present development of the 3D scenes rendering system by using distributed devices that require only web browser for their functioning. The system we developed enables new devices to integrate in the system during the rendering process itself. Client taking part in rendering can monitor progress of other clients. When rendering is completed, every client sees entire rendered image. We will present implementation plan and initial conditions that guided us during planning. We will describe server operations and its role in the system. We will represent various types of communications among the server and clients. In the client’s scope, we will describe their operations and method used to render 3D scene. Further, we will also present problems we encountered during implementation of scene rendering. We will describe results obtained by rendering the two test scenes. Results will be represented in graphs which also present time complexity of rendering cells. At the end, we will describe our findings and potential improvements for system’s acceleration.
 
-
-Run VS code debugger and go to browser and type "http://localhost:30003/admin"
-
 ## Screenshots
 <!--  ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/Screenshot_1.jpg) -->
 <!--  ![alt tag](https://raw.githubusercontent.com/lukaprijatelj/UNIVERSITY-Diploma-Assignment/master/images/All.jpg) -->
@@ -31,26 +28,23 @@ Run VS code debugger and go to browser and type "http://localhost:30003/admin"
 - Google Chrome 33
 - Opera 19
 
-
 ## Compiling project with NPM
 npm run build				(Compiling task will be read from scripts property of the package.json file)
 
-### How to open admin webpage
-<base-url>:<http-port>/admin		(example: localhost:30003/admin)
+### How to open ADMIN webpage
+Open Web browser and type address:   http://localhost:30003/admin
+Now load desired 3D scene file like &#42;.obj.
+Set up options for scene and press START button.
 
-### How to open client webpage
-<base-url>:<http-port>/client		(example: localhost:30003/client)
+### How to open CLIENT webpage
+Open Web browser and type address:    http://localhost:30003/client
+You should see that browser will automatically started rendering part of the 3D scene.
+Open as many clients/tabs as you like.
 
 ### Used ports
-HTTP protocol uses port 30003. SocketIO library uses port 30004
+HTTP protocol uses port 30003. SocketIO library uses port 30004.
 
-  
-## Notes and development
-I have used Typescript and Sass (scss) for submodules. For synchronization with server I have used SocketIO library.
-I used browsers Local storage for saving data received from server.
-
-  
-## Chrome browser connecting with Android mobile phone
+### How to connect Chrome browser with Android mobile phone
 - Use command prompt to run ADB, in cmd go to the install directory of the ADB tools and type:
   adb.exe				(starts program)
   adb start-server 			(or "adb kill-server")
