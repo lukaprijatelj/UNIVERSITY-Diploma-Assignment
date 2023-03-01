@@ -33,14 +33,14 @@ npm run build				           (Compiling task will be read from scripts property o
 
 ### How to open ADMIN webpage
 - Open Web browser and type address:   http://localhost:30003/admin
-- Now load desired 3D scene file like &#42;.obj
+- Load desired 3D scene file like &#42;.obj
 - Set up options for scene
 - Press START button to send signal to client to start rendering
 
 ### How to open CLIENT webpage
 - Open Web browser and type address:    http://localhost:30003/client
-- You should see that browser will automatically started rendering part of the 3D scene
-- Open as many clients/tabs as you like
+- Browser will automatically start rendering part of the 3D scene
+- You can open as many clients/tabs as you like (every client will receive a portion of scene to render)
 
 ### Used ports
 HTTP protocol uses port 30003. <br />
