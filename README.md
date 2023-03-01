@@ -40,10 +40,10 @@ npm run build				(Compiling task will be read from scripts property of the packa
 HTTP protocol uses port 30003 
 SocketIO library uses port 30004
 
-## How to open admin webpage
+### How to open admin webpage
 <base-url>:<http-port>/admin		(example: localhost:30003/admin)
 
-## How to open client webpage
+### How to open client webpage
 <base-url>:<http-port>/client		(example: localhost:30003/client)
 
 
