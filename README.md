@@ -2,6 +2,8 @@
 ![GitHub](https://img.shields.io/github/license/lukaprijatelj/UNIVERSITY-Diploma-Assignment)
 
 # UNIVERSITY-Diploma-Assignment
+Distributed rendering with ray tracing in web browsers
+
 The main objective of our graduation thesis is to present development of the 3D scenes rendering system by using distributed devices that require only web browser for their functioning. The system we developed enables new devices to integrate in the system during the rendering process itself. Client taking part in rendering can monitor progress of other clients. When rendering is completed, every client sees entire rendered image. We will present implementation plan and initial conditions that guided us during planning. We will describe server operations and its role in the system. We will represent various types of communications among the server and clients. In the client’s scope, we will describe their operations and method used to render 3D scene. Further, we will also present problems we encountered during implementation of scene rendering. We will describe results obtained by rendering the two test scenes. Results will be represented in graphs which also present time complexity of rendering cells. At the end, we will describe our findings and potential improvements for system’s acceleration.
 
 ## Screenshots
